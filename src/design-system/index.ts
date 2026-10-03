@@ -12,3 +12,6 @@ export { Glass, glassVariants } from "./primitives/Glass";
 export type { GlassOwnProps } from "./primitives/Glass";
 export { Chip, ChipList, chipVariants } from "./primitives/Chip";
 export type { ChipTone } from "./primitives/Chip";
+export { KeyValueList } from "./primitives/KeyValueList";
+export { Legend } from "./primitives/Legend";
+export { ProgressSteps } from "./primitives/ProgressSteps";
