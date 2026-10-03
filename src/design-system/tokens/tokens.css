@@ -84,6 +84,11 @@
   --ref-white-a05: rgb(var(--rgb-white) / 0.05);
   --ref-white-a09: rgb(var(--rgb-white) / 0.09);
   --ref-white-a10: rgb(var(--rgb-white) / 0.1);
+  --ref-white-a16: rgb(var(--rgb-white) / 0.16);
+  --ref-ground-a35: rgb(var(--rgb-ground) / 0.35);
+  --ref-ground-a85: rgb(var(--rgb-ground) / 0.85);
+  --ref-ground-a90: rgb(var(--rgb-ground) / 0.9);
+  --ref-ground-a92: rgb(var(--rgb-ground) / 0.92);
 
   /* ---------- Layer 2: semantic ---------- */
   --surface-ground: var(--ref-ground);

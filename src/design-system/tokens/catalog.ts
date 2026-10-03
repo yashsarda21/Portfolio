@@ -54,6 +54,12 @@ export const TOKEN_CATALOG = {
     { name: "white-a04", className: "bg-white-a04" },
     { name: "white-a05", className: "bg-white-a05" },
     { name: "white-a10", className: "bg-white-a10" },
+    { name: "white-a09", className: "bg-white-a09" },
+    { name: "white-a16", className: "bg-white-a16" },
+    { name: "ground-a35", className: "bg-ground-a35" },
+    { name: "ground-a85", className: "bg-ground-a85" },
+    { name: "ground-a90", className: "bg-ground-a90" },
+    { name: "ground-a92", className: "bg-ground-a92" },
   ],
   type: [
     "type-hero",
@@ -86,6 +92,8 @@ export const TOKEN_CATALOG = {
     "type-caption",
     "type-comm",
     "type-challenge",
+    "type-score",
+    "type-score-lg",
   ],
   shadows: [
     { name: "board", className: "shadow-board" },

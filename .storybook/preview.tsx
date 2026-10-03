@@ -8,11 +8,16 @@ const preview: Preview = {
     a11y: { test: "error" },
   },
   decorators: [
-    (Story) => (
-      <div className="min-h-dvh bg-ground p-6 text-floodlight">
-        <Story />
-      </div>
-    ),
+    (Story, context) =>
+      context.parameters.layout === "fullscreen" ? (
+        <div className="bg-ground text-floodlight">
+          <Story />
+        </div>
+      ) : (
+        <div className="min-h-dvh bg-ground p-6 text-floodlight">
+          <Story />
+        </div>
+      ),
   ],
 };
 

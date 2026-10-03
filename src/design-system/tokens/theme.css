@@ -89,6 +89,12 @@
   --color-white-a04: var(--ref-white-a04);
   --color-white-a05: var(--ref-white-a05);
   --color-white-a10: var(--ref-white-a10);
+  --color-white-a09: var(--ref-white-a09);
+  --color-white-a16: var(--ref-white-a16);
+  --color-ground-a35: var(--ref-ground-a35);
+  --color-ground-a85: var(--ref-ground-a85);
+  --color-ground-a90: var(--ref-ground-a90);
+  --color-ground-a92: var(--ref-ground-a92);
   /* venue (set by data-venue) */
   --color-venue-tint: var(--venue-tint);
   --color-venue-mid: var(--venue-mid);

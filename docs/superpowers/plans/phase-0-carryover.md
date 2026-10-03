@@ -11,7 +11,7 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] Alias import violations are reported twice (alias rule + import-x zone) — optional tidy.
 
 ## 0C — Broadcast kit + scene
-- [ ] Add the ground alpha ramp (×4) and white ramp to ×6 (spec §5.1) when HUD/bars are built.
+- [x] Add the ground alpha ramp (×4) and white ramp to ×6 (spec §5.1) when HUD/bars are built.
 
 ## 0D — Stage, shell, routes
 - [ ] Validate content at build time (prerender/Vite plugin) and ship plain typed JSON to the client, instead of parsing with Zod in the browser on every load.

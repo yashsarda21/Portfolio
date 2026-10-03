@@ -100,4 +100,25 @@ describe("text contrast (WCAG AA 4.5:1)", () => {
   it("volt on glass over ground (pressed glass icon button)", () => {
     expect(contrast(ref("volt"), glassOnGround)).toBeGreaterThanOrEqual(4.5);
   });
+
+  const board = ref("board-bg");
+  it("led-white on board-bg (scoreboard text)", () => {
+    expect(contrast(ref("led-white"), board)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("dim on board-bg (scoreboard labels)", () => {
+    expect(contrast(ref("dim"), board)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("text-2 on line (ScoreBug meta cell)", () => {
+    expect(contrast(ref("text-2"), ref("line"))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("scout-grey on stand (ScoreBug away chip)", () => {
+    expect(contrast(ref("scout-grey"), stand)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("stand on floodlight (ScoreBug name chip, dark text on white)", () => {
+    expect(contrast(stand, ref("floodlight"))).toBeGreaterThanOrEqual(4.5);
+  });
 });
