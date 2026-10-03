@@ -1,0 +1,39 @@
+/* Motion presets owned by primitives. Phase 0D adds the rest (fade, rise, pop…). */
+
+@keyframes cta-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 30px rgb(var(--rgb-volt) / 0.25);
+  }
+  50% {
+    box-shadow: 0 0 60px rgb(var(--rgb-volt) / 0.55);
+  }
+}
+
+@utility animate-cta-glow {
+  animation: cta-glow 2.4s var(--ease-standard) infinite;
+}
+
+/* Floodlight sweep: a soft light band crosses the element on hover (300ms, spec §6). */
+@utility floodlight-sweep {
+  isolation: isolate;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgb(var(--rgb-white) / 0.22) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform var(--dur-hover) var(--ease-follow);
+  }
+  &:hover::before {
+    transform: translateX(120%);
+  }
+}

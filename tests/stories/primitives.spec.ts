@@ -1,0 +1,46 @@
+import { expect, test } from "@playwright/test";
+
+const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
+
+test.describe("Button", () => {
+  test("XL hero CTA matches the artboard box and skew", async ({ page }, testInfo) => {
+    await page.goto(story("primitives-button--hero-pair"));
+    const cta = page.getByTestId("cta-primary");
+    const box = await cta.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const { offsetWidth: w, offsetHeight: h } = el as HTMLElement;
+      return { w, h, transform: s.transform, bg: s.backgroundColor };
+    });
+    expect(box.w).toBe(310);
+    expect(box.h).toBe(78);
+    expect(box.bg).toBe("rgb(215, 255, 63)");
+    if (testInfo.project.name === "desktop") {
+      // skewX(-12deg) → matrix(1, 0, -tan(12deg), 1, 0, 0) ≈ c = 0.2126
+      expect(box.transform).toMatch(
+        /^matrix\(1, 0, 0\.21\d*, 1, 0, 0\)$|^matrix\(1, 0, -0\.21\d*, 1, 0, 0\)$/,
+      );
+    } else {
+      expect(box.transform).toBe("none");
+    }
+  });
+
+  test("button focus ring is the volt outline", async ({ page }) => {
+    await page.goto(story("primitives-button--hero-pair"));
+    await page.getByTestId("cta-primary").waitFor();
+    await page.keyboard.press("Tab");
+    const ring = await page.evaluate(() => {
+      const s = getComputedStyle(document.activeElement as Element);
+      return { style: s.outlineStyle, color: s.outlineColor, width: s.outlineWidth };
+    });
+    expect(ring).toEqual({ style: "solid", color: "rgb(215, 255, 63)", width: "2px" });
+  });
+
+  test("reduced motion stops the CTA pulse", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(story("primitives-button--sizes"));
+    const iterations = await page
+      .getByTestId("cta-pulse")
+      .evaluate((el) => getComputedStyle(el).animationIterationCount);
+    expect(iterations).toBe("1");
+  });
+});
