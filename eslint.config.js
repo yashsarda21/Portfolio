@@ -1,14 +1,44 @@
+import { existsSync, readdirSync } from "node:fs";
 import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import prettier from "eslint-config-prettier";
+import { importX, createNodeResolver } from "eslint-plugin-import-x";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import globals from "globals";
 
 const restrictImports = (groups, message) => ({
   "no-restricted-imports": ["error", { patterns: [{ group: groups, message }] }],
 });
+
+// Filesystem-based zones: these catch relative imports as well as the @/ and ~/ aliases.
+const FEATURES_DIR = "src/features";
+const featureNames = existsSync(FEATURES_DIR)
+  ? readdirSync(FEATURES_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+  : [];
+
+const FOLDER_ZONES = [
+  {
+    target: "./src/design-system",
+    from: ["./src/content", "./src/features", "./src/shell", "./app"],
+    message: "design-system must not depend on app code (spec §4.2).",
+  },
+  {
+    target: ["./src/content", "./src/lib"],
+    from: ["./src/design-system", "./src/features", "./src/shell", "./app"],
+    message: "content/ and lib/ are leaf layers (spec §4.2).",
+  },
+  ...featureNames.map((name) => ({
+    target: `./src/features/${name}`,
+    from: "./src/features",
+    except: [`./${name}`],
+    message: "Features never import each other; move shared code down (spec §4.2).",
+  })),
+];
 
 const RAW_STYLE_LITERALS = [
   {
@@ -24,7 +54,15 @@ const RAW_STYLE_LITERALS = [
     message: "Use design tokens, not raw rgb()/rgba() (spec §4.2).",
   },
   {
+    selector: "TemplateElement[value.raw=/rgba?\\(/]",
+    message: "Use design tokens, not raw rgb()/rgba() (spec §4.2).",
+  },
+  {
     selector: "Literal[value=/cubic-bezier\\(/]",
+    message: "Use motion tokens (ease-follow / ease-snap / ease-swing) (spec §4.2).",
+  },
+  {
+    selector: "TemplateElement[value.raw=/cubic-bezier\\(/]",
     message: "Use motion tokens (ease-follow / ease-snap / ease-swing) (spec §4.2).",
   },
 ];
@@ -57,6 +95,22 @@ export default defineConfig(
   {
     files: ["**/*.mjs", "*.config.{js,ts}", "tools/**/*"],
     languageOptions: { globals: globals.node },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { "import-x": importX },
+    settings: {
+      "import-x/resolver-next": [
+        createTypeScriptImportResolver({ project: "./tsconfig.json" }),
+        createNodeResolver(),
+      ],
+    },
+    rules: {
+      "import-x/no-restricted-paths": [
+        "error",
+        { basePath: import.meta.dirname, zones: FOLDER_ZONES },
+      ],
+    },
   },
   {
     files: ["src/design-system/**/*.{ts,tsx}"],
