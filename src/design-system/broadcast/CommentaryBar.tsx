@@ -23,7 +23,7 @@ export function CommentaryBar({ tag, line, variant = "overlay", className }: Com
         key={line}
         className={cn(
           "flex animate-comm-in items-center type-comm text-text-1",
-          variant === "overlay" ? "glass px-4.5 py-3" : "bg-panel px-3.5 py-2.5",
+          variant === "overlay" ? "glass px-4.5 py-2.5" : "bg-panel px-3.5 py-2.5",
         )}
       >
         {line}

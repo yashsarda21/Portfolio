@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import { IconButton } from "../primitives/IconButton";
 import { HUDButton } from "./HUDButton";
 
@@ -22,13 +23,14 @@ export function AudioToggle({
   className,
 }: AudioToggleProps) {
   if (variant === "icon") {
+    // The artboards keep the speaker floodlight-white when on; the loud/off glyph and aria-pressed carry state.
     return (
       <IconButton
         icon={on ? "speaker-loud" : "speaker-off"}
         label={name}
         pressed={on}
         onClick={onToggle}
-        className={className}
+        className={cn("aria-pressed:text-floodlight", className)}
       />
     );
   }

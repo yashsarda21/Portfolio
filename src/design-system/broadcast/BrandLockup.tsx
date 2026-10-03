@@ -2,7 +2,7 @@ import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { PolymorphicProps } from "../lib/polymorphic";
 
-const MARK = { lg: "size-9.5", md: "size-9", sm: "size-8.5" } as const;
+const MARK = { lg: "size-10", md: "size-9.5", sm: "size-9" } as const;
 
 type Own = { mark: string; label?: ReactNode; size?: "lg" | "md" | "sm" };
 
