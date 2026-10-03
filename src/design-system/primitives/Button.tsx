@@ -5,14 +5,17 @@ import type { PolymorphicProps } from "../lib/polymorphic";
 import { Icon } from "./Icon";
 import type { IconName } from "./icons";
 
+// The root is never transformed: text stays on an un-skewed layer so Chromium rasterizes it
+// crisply (a skewed backdrop-filter layer resamples the label twice and stripes the glyphs).
+// The slanted shape is a separate background plate (see buttonPlateVariants).
 export const buttonVariants = cva(
-  "floodlight-sweep relative inline-flex cursor-pointer items-center justify-center select-none transition-[background-color,border-color,color,transform] duration-(--dur-snap) ease-snap active:scale-97 disabled:pointer-events-none disabled:opacity-40",
+  "group relative isolate inline-flex cursor-pointer items-center justify-center select-none outline-none transition-[color,transform] duration-(--dur-snap) ease-snap active:scale-97 disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
-        primary: "bg-volt text-volt-ink shadow-glow-cta hover:bg-volt-hover",
-        secondary: "glass text-floodlight hover:bg-white-a10",
-        outline: "border border-line-3 text-floodlight hover:border-volt",
+        primary: "text-volt-ink",
+        secondary: "text-floodlight",
+        outline: "text-floodlight",
         ghost: "text-floodlight hover:text-volt",
       },
       size: {
@@ -21,18 +24,30 @@ export const buttonVariants = cva(
         l: "h-18.5 px-10 type-btn-xl",
         xl: "h-19.5 w-77.5 flex-col gap-1 type-btn-xl",
       },
+    },
+    defaultVariants: { variant: "primary", size: "m" },
+  },
+);
+
+export const buttonPlateVariants = cva(
+  "floodlight-sweep pointer-events-none absolute inset-0 -z-10 transition-[background-color,border-color] duration-(--dur-snap) ease-snap group-focus-visible:outline-2 group-focus-visible:outline-solid group-focus-visible:outline-offset-3 group-focus-visible:outline-volt",
+  {
+    variants: {
+      variant: {
+        primary: "bg-volt shadow-glow-cta group-hover:bg-volt-hover",
+        secondary: "glass group-hover:bg-white-a10",
+        outline: "border border-line-3 group-hover:border-volt",
+        ghost: "",
+      },
       skew: {
         always: "-skew-x-12",
         desktop: "md:-skew-x-12",
         never: "",
       },
     },
-    defaultVariants: { variant: "primary", size: "m", skew: "desktop" },
+    defaultVariants: { variant: "primary", skew: "desktop" },
   },
 );
-
-// The label is counter-skewed so text stays upright inside the parallelogram.
-const LABEL_SKEW = { always: "skew-x-12", desktop: "md:skew-x-12", never: "" } as const;
 
 type Variant = "primary" | "secondary" | "outline" | "ghost";
 
@@ -66,22 +81,20 @@ export function Button<T extends ElementType = "button">({
   const subTone = variant === "primary" ? "text-volt-ink-2" : "text-scout";
 
   return (
-    <Comp
-      {...rest}
-      {...typeProp}
-      className={cn(
-        buttonVariants({ variant, size, skew: skewKey }),
-        pulse && variant === "primary" && "animate-cta-glow",
-        className,
-      )}
-    >
-      <span className={cn("inline-flex items-center gap-2.5", LABEL_SKEW[skewKey])}>
+    <Comp {...rest} {...typeProp} className={cn(buttonVariants({ variant, size }), className)}>
+      <span
+        aria-hidden="true"
+        data-plate
+        className={cn(
+          buttonPlateVariants({ variant, skew: skewKey }),
+          pulse && variant === "primary" && "animate-cta-glow",
+        )}
+      />
+      <span className="inline-flex items-center gap-2.5">
         {children}
         {iconRight ? <Icon name={iconRight} size={18} /> : null}
       </span>
-      {subLabel ? (
-        <span className={cn("type-mono-tag", subTone, LABEL_SKEW[skewKey])}>{subLabel}</span>
-      ) : null}
+      {subLabel ? <span className={cn("type-mono-tag", subTone)}>{subLabel}</span> : null}
     </Comp>
   );
 }

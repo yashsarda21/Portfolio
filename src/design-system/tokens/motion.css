@@ -33,7 +33,8 @@
     transform: translateX(-120%);
     transition: transform var(--dur-hover) var(--ease-follow);
   }
-  &:hover::before {
+  &:hover::before,
+  :where(.group):hover > &::before {
     transform: translateX(120%);
   }
 }

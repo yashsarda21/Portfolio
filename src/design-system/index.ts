@@ -6,5 +6,5 @@ export { Icon } from "./primitives/Icon";
 export { ICONS } from "./primitives/icons";
 export type { IconName } from "./primitives/icons";
 export { IconButton } from "./primitives/IconButton";
-export { Button, buttonVariants } from "./primitives/Button";
+export { Button, buttonPlateVariants, buttonVariants } from "./primitives/Button";
 export type { ButtonOwnProps } from "./primitives/Button";
