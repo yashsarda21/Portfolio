@@ -49,3 +49,6 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - References are not byte-identical between runs (Chromium raster noise); pixel diff uses tolerance — never hash-compare.
 - Motion artboard's wipe bar is off-screen at frame 0 — Motion is a reference board, never pixel-diffed.
 - With a stray `pnpm preview` on :4173, `pnpm verify` fails fast ("port already used") — stop stray previews before running verify.
+
+## All later plans (convention found in 0C)
+- [ ] Any font-weight / size / leading / tracking override that sits next to a `type-*` class must be passed as a **separate `cn()` argument after the type class** (e.g. `cn("type-mono-tag", "font-bold")`). Prettier's Tailwind class sorter reorders literal strings, and `cn`'s type-recipe conflict group then silently drops the override.
