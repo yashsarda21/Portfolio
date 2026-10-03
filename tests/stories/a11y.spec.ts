@@ -12,7 +12,9 @@ interface IndexEntry {
 
 const INDEX = join(process.cwd(), "storybook-static/index.json");
 if (!existsSync(INDEX)) {
-  throw new Error("storybook-static/index.json not found — run `pnpm build-storybook` first.");
+  throw new Error(
+    "storybook-static/index.json not found — run `pnpm build-storybook` first. This gate tests whatever is in storybook-static; `pnpm verify` rebuilds it first.",
+  );
 }
 const entries = Object.values(
   (JSON.parse(readFileSync(INDEX, "utf8")) as { entries: Record<string, IndexEntry> }).entries,
