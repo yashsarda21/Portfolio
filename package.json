@@ -11,7 +11,7 @@
     "build": "react-router build",
     "preview": "sirv build/client --port 4173 --host 127.0.0.1",
     "typecheck": "react-router typegen && tsc",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
@@ -21,7 +21,7 @@
     "build-storybook": "storybook build --quiet",
     "references": "node tools/render-artboards/render.mjs",
     "test:visual-refs": "playwright test tests/e2e/visual-harness.spec.ts",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm references && pnpm build-storybook && pnpm test:e2e"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && VERIFY=1 pnpm test && pnpm references && pnpm build-storybook && VERIFY=1 pnpm test:e2e"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",

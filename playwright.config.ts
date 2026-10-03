@@ -1,12 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 4173;
+// `pnpm verify` is the only merge gate: never reuse a stale server, never allow focused tests.
+const strict = !!process.env.CI || process.env.VERIFY === "1";
 
 export default defineConfig({
   testDir: "tests/e2e",
   outputDir: "test-results/playwright",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
+  forbidOnly: strict,
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [["list"], ["html", { open: "never" }]],
@@ -33,7 +35,7 @@ export default defineConfig({
   webServer: {
     command: "pnpm build && pnpm preview",
     url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !strict,
     timeout: 180_000,
   },
 });
