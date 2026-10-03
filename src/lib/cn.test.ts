@@ -37,4 +37,17 @@ describe("cn", () => {
   it("lets a later type recipe replace earlier font classes", () => {
     expect(cn("font-mono", "type-d1")).toBe("type-d1");
   });
+
+  it("treats glass surfaces as one conflict group", () => {
+    expect(cn("glass-solid", "glass")).toBe("glass");
+    expect(cn("bar", "glass-solid")).toBe("glass-solid");
+  });
+
+  it("keeps glass alongside border and background utilities", () => {
+    expect(cn("glass", "border-volt bg-panel")).toBe("glass border-volt bg-panel");
+  });
+
+  it("keeps a type recipe alongside font-mono (CSS order makes font-mono win)", () => {
+    expect(cn("type-d1", "font-mono")).toBe("type-d1 font-mono");
+  });
 });

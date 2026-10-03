@@ -8,10 +8,17 @@ export const Colours: StoryObj = {
   render: () => (
     <div className="grid grid-cols-6 gap-4">
       {TOKEN_CATALOG.colors.map((name) => (
-        <figure key={name} className="flex flex-col gap-2">
+        // Gold only resolves inside the trophy zone (spec §5.1), so its swatch lives in one.
+        <figure
+          key={name}
+          className="flex flex-col gap-2"
+          data-zone={name === "gold" ? "trophy" : undefined}
+        >
           <div
             className="h-16 border border-line"
-            style={{ background: `var(--color-${name})` }}
+            style={{
+              background: name === "gold" ? "var(--accent-gold)" : `var(--color-${name})`,
+            }}
             aria-hidden="true"
           />
           <figcaption className="type-mono-tag text-scout">{name}</figcaption>
@@ -53,9 +60,9 @@ export const Shadows: StoryObj = {
 export const Surfaces: StoryObj = {
   render: () => (
     <div className="flex gap-6">
-      <div className="p-5 type-body glass">glass</div>
-      <div className="p-5 type-body glass-solid">glass-solid</div>
-      <div className="p-5 type-body bar">bar</div>
+      <div className="glass p-5 type-body">glass</div>
+      <div className="glass-solid p-5 type-body">glass-solid</div>
+      <div className="bar p-5 type-body">bar</div>
     </div>
   ),
 };

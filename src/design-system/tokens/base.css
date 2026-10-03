@@ -1,5 +1,6 @@
 @layer base {
   html {
+    color-scheme: dark;
     background: var(--surface-ground);
     color: var(--text-primary);
     font-family: var(--font-body);
@@ -40,19 +41,24 @@
 }
 
 /* ---------- surfaces ---------- */
+/* Longhands only: a shorthand would beat border and bg utilities depending on CSS order. */
 @utility glass {
-  background: var(--surface-glass);
-  border: 1px solid var(--border-glass);
+  background-color: var(--surface-glass);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--border-glass);
   /* prefixed first: the minifier keeps the last duplicate, which must be the standard one */
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
 @utility glass-solid {
-  background: var(--surface-glass-solid);
-  border: 1px solid var(--border-control);
+  background-color: var(--surface-glass-solid);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--border-control);
 }
 @utility bar {
-  background: var(--surface-bar);
+  background-color: var(--surface-bar);
 }
 
 /* ---------- type recipes (audit §2.4 consolidated scale) ---------- */

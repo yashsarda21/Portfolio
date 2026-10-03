@@ -76,6 +76,40 @@ test.describe("design tokens", () => {
     expect(backdrop).toBe(testInfo.project.name === "desktop" ? "blur(14px)" : "blur(0px)");
   });
 
+  test("glass surfaces yield to border and background utilities", async ({ page }) => {
+    await page.goto("/");
+    const styles = await page.evaluate(() => {
+      const make = (className: string) => {
+        const el = document.createElement("div");
+        el.className = className;
+        document.body.append(el);
+        const s = getComputedStyle(el);
+        return { border: s.borderColor, bg: s.backgroundColor, width: s.borderTopWidth };
+      };
+      return { border: make("glass border-volt"), bg: make("glass bg-panel") };
+    });
+    expect(styles.border.border).toBe("rgb(215, 255, 63)");
+    expect(styles.border.width).toBe("1px");
+    expect(styles.bg.bg).toBe("rgb(14, 20, 27)");
+  });
+
+  test("gold exists only inside the trophy zone", async ({ page }) => {
+    await page.goto("/");
+    const colours = await page.evaluate(() => {
+      const zone = document.createElement("div");
+      zone.dataset.zone = "trophy";
+      const inside = document.createElement("span");
+      inside.className = "text-gold";
+      zone.append(inside);
+      const outside = document.createElement("span");
+      outside.className = "text-gold";
+      document.body.append(outside, zone);
+      return { outside: getComputedStyle(outside).color, inside: getComputedStyle(inside).color };
+    });
+    expect(colours.outside).not.toBe("rgb(212, 178, 106)");
+    expect(colours.inside).toBe("rgb(212, 178, 106)");
+  });
+
   test("built CSS keeps the unprefixed backdrop-filter", () => {
     expect(builtCss()).toMatch(/[{;]backdrop-filter:blur\(var\(--glass-blur\)\)/);
   });

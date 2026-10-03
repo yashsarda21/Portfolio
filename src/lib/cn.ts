@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 // Tell tailwind-merge about the Arena scales so it groups our utilities correctly.
-const twMerge = extendTailwindMerge<"type-recipe">({
+const twMerge = extendTailwindMerge<"type-recipe" | "surface">({
   extend: {
     theme: {
       shadow: [
@@ -24,6 +24,8 @@ const twMerge = extendTailwindMerge<"type-recipe">({
     classGroups: {
       // Each `type-*` utility sets a full type recipe, so two of them always conflict.
       "type-recipe": [{ type: [(value: string) => value.length > 0] }],
+      // glass / glass-solid / bar each set the surface background, so only one applies.
+      surface: ["glass", "glass-solid", "bar"],
     },
     conflictingClassGroups: {
       // A later type recipe replaces earlier font classes it would override anyway.
