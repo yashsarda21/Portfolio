@@ -36,12 +36,17 @@ function FieldChrome({ id, label, hint, hintId, error, errorId, children }: Fiel
   );
 }
 
-function useFieldIds(id: string | undefined, hint?: string, error?: string) {
+function useFieldIds(
+  id: string | undefined,
+  hint?: string,
+  error?: string,
+  callerDescribedBy?: string,
+) {
   const auto = useId();
   const base = id ?? auto;
   const hintId = hint ? `${base}-hint` : undefined;
   const errorId = error ? `${base}-error` : undefined;
-  const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
+  const describedBy = [callerDescribedBy, hintId, errorId].filter(Boolean).join(" ") || undefined;
   return { base, hintId, errorId, describedBy };
 }
 
@@ -53,9 +58,10 @@ export function TextField({
   hint,
   id,
   className,
+  "aria-describedby": callerDescribedBy,
   ...rest
 }: FieldOwn & ComponentPropsWithRef<"input">) {
-  const ids = useFieldIds(id, hint, error);
+  const ids = useFieldIds(id, hint, error, callerDescribedBy);
   return (
     <FieldChrome
       id={ids.base}
@@ -66,11 +72,11 @@ export function TextField({
       errorId={ids.errorId}
     >
       <input
+        {...rest}
         id={ids.base}
         aria-invalid={error ? true : undefined}
         aria-describedby={ids.describedBy}
         className={cn(CONTROL, "h-13", className)}
-        {...rest}
       />
     </FieldChrome>
   );
@@ -82,9 +88,10 @@ export function TextArea({
   hint,
   id,
   className,
+  "aria-describedby": callerDescribedBy,
   ...rest
 }: FieldOwn & ComponentPropsWithRef<"textarea">) {
-  const ids = useFieldIds(id, hint, error);
+  const ids = useFieldIds(id, hint, error, callerDescribedBy);
   return (
     <FieldChrome
       id={ids.base}
@@ -95,11 +102,11 @@ export function TextArea({
       errorId={ids.errorId}
     >
       <textarea
+        {...rest}
         id={ids.base}
         aria-invalid={error ? true : undefined}
         aria-describedby={ids.describedBy}
         className={cn(CONTROL, "h-27.5 resize-none py-3.5", className)}
-        {...rest}
       />
     </FieldChrome>
   );

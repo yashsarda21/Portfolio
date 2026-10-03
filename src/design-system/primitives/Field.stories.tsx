@@ -50,6 +50,13 @@ export const FormatCards: StoryObj = {
           title="Friendly rally"
           description="Just a conversation."
         />
+        <RadioCard
+          name="format"
+          value="booked"
+          title="Fully booked"
+          description="Not taking new work."
+          disabled
+        />
       </div>
     </Fieldset>
   ),

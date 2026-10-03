@@ -5,7 +5,7 @@ import { Icon } from "./Icon";
 import type { IconName } from "./icons";
 
 const iconButtonVariants = cva(
-  "inline-flex size-11 cursor-pointer items-center justify-center text-floodlight transition-colors duration-(--dur-snap) ease-snap hover:text-volt",
+  "inline-flex size-11 cursor-pointer items-center justify-center text-floodlight transition-colors duration-(--dur-snap) ease-snap hover:text-volt aria-pressed:text-volt",
   {
     variants: {
       variant: {

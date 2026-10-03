@@ -27,6 +27,33 @@ describe("TextField", () => {
     expect(screen.getByLabelText("EMAIL").getAttribute("aria-describedby")).toContain(hint.id);
   });
 
+  it("merges a caller aria-describedby with hint and error ids, caller first", () => {
+    render(
+      <TextField
+        label="EMAIL"
+        hint="We reply within a day"
+        error="Enter a valid email"
+        aria-describedby="extra-note"
+      />,
+    );
+    const hint = screen.getByText("We reply within a day");
+    const msg = screen.getByText("Enter a valid email");
+    expect(screen.getByLabelText("EMAIL")).toHaveAttribute(
+      "aria-describedby",
+      `extra-note ${hint.id} ${msg.id}`,
+    );
+  });
+
+  it("keeps a caller aria-describedby when there is no hint or error", () => {
+    render(<TextArea label="NOTE" aria-describedby="extra-note" />);
+    expect(screen.getByLabelText("NOTE")).toHaveAttribute("aria-describedby", "extra-note");
+  });
+
+  it("never lets rest props override aria-invalid", () => {
+    render(<TextField label="EMAIL" error="Bad" aria-invalid={false} />);
+    expect(screen.getByLabelText("EMAIL")).toHaveAttribute("aria-invalid", "true");
+  });
+
   it("accepts typing", async () => {
     render(<TextField label="YOUR NAME" />);
     await userEvent.type(screen.getByLabelText("YOUR NAME"), "Rohit");
@@ -59,9 +86,38 @@ describe("Fieldset + RadioCard", () => {
     );
     const group = screen.getByRole("group", { name: "CHOOSE YOUR FORMAT" });
     expect(group).toBeInTheDocument();
-    const doubles = screen.getByRole("radio", { name: /Doubles/ });
+    const doubles = screen.getByRole("radio", { name: "Doubles" });
     await userEvent.click(doubles);
     expect(doubles).toBeChecked();
-    expect(screen.getByRole("radio", { name: /Sign a player/ })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: "Sign a player" })).not.toBeChecked();
+  });
+
+  it("names the radio by its title only and describes it with the description", () => {
+    render(
+      <RadioCard name="format" value="doubles" title="Doubles" description="Project collab" />,
+    );
+    const radio = screen.getByRole("radio", { name: "Doubles" });
+    expect(radio).toHaveAccessibleDescription("Project collab");
+  });
+
+  it("keeps a caller aria-describedby ahead of the description id", () => {
+    render(
+      <RadioCard
+        name="format"
+        value="doubles"
+        title="Doubles"
+        description="Project collab"
+        aria-describedby="extra-note"
+      />,
+    );
+    const ids = screen.getByRole("radio").getAttribute("aria-describedby")?.split(" ");
+    expect(ids?.[0]).toBe("extra-note");
+    expect(ids).toHaveLength(2);
+  });
+
+  it("dims and defaults the cursor when disabled", () => {
+    render(<RadioCard name="format" value="x" title="Full" disabled />);
+    const card = screen.getByRole("radio").closest("label");
+    expect(card).toHaveClass("has-disabled:opacity-40", "has-disabled:cursor-default");
   });
 });

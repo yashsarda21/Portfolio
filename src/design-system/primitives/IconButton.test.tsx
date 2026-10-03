@@ -18,6 +18,11 @@ describe("IconButton", () => {
     expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("turns volt when pressed", () => {
+    render(<IconButton icon="speaker" label="Audio" pressed />);
+    expect(screen.getByRole("button")).toHaveClass("aria-pressed:text-volt");
+  });
+
   it("calls onClick", async () => {
     const onClick = vi.fn();
     render(<IconButton icon="copy" label="Copy link" onClick={onClick} />);
