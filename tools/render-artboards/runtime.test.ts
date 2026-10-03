@@ -49,6 +49,45 @@ describe("artboard runtime", () => {
     expect(el.querySelector("sc-for")).toBeNull();
   });
 
+  it("renders nested sc-for loops (groups of skills)", () => {
+    const el = host(
+      '<sc-for list="{{groups}}" as="g"><section><h2>{{g.name}}</h2>' +
+        '<sc-for list="{{g.skills}}" as="s"><i>{{g.name}}:{{s}}</i></sc-for></section></sc-for>',
+    );
+    window.__dcTemplate.renderTemplate(el, {
+      groups: [
+        { name: "Backend", skills: ["Java", "Kafka"] },
+        { name: "Data", skills: ["SQL"] },
+      ],
+    });
+    expect(Array.from(el.querySelectorAll("h2")).map((h) => h.textContent)).toEqual([
+      "Backend",
+      "Data",
+    ]);
+    expect(Array.from(el.querySelectorAll("i")).map((i) => i.textContent)).toEqual([
+      "Backend:Java",
+      "Backend:Kafka",
+      "Data:SQL",
+    ]);
+    expect(el.querySelectorAll("section")[1]!.querySelectorAll("i")).toHaveLength(1);
+  });
+
+  it("interpolates attributes inside a loop", () => {
+    const el = host(
+      '<sc-for list="{{skills}}" as="s"><b style="background:{{s.bg}}">{{s.label}}</b></sc-for>',
+    );
+    window.__dcTemplate.renderTemplate(el, {
+      skills: [
+        { label: "A", bg: "red" },
+        { label: "B", bg: "blue" },
+      ],
+    });
+    expect(Array.from(el.querySelectorAll("b")).map((b) => b.getAttribute("style"))).toEqual([
+      "background:red",
+      "background:blue",
+    ]);
+  });
+
   it("uses hint-placeholder-count when the list is undefined", () => {
     const el = host(
       '<sc-for list="{{nothing}}" as="x" hint-placeholder-count="2"><b>slot</b></sc-for>',

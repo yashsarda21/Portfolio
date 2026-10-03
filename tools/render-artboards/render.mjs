@@ -6,7 +6,7 @@
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
@@ -24,13 +24,16 @@ const BLOBS = {
   f8a90aea8f1ad9cd7e8273aa370812df: "character-rig/rest.webp",
 };
 
-// Boards driven by JS timelines need time to reach their final frame.
-const SETTLE_MS = { "Intro.dc.html": 7000 };
+// Short pause after animations are settled, before the screenshot.
+const SETTLE_MS = 300;
+
+// Only these directories (and the runtime stand-in) may be served.
+const SERVED_DIRS = [SOURCE, ASSETS, join(ROOT, "node_modules/@fontsource")];
 
 const FONTS = [
-  ["Big Shoulders Display", "big-shoulders-display", [700, 800, 900], ["normal"]],
+  ["Big Shoulders Display", "big-shoulders-display", [600, 700, 800, 900], ["normal"]],
   ["Archivo", "archivo", [400, 500, 600, 700], ["normal", "italic"]],
-  ["JetBrains Mono", "jetbrains-mono", [400, 700], ["normal"]],
+  ["JetBrains Mono", "jetbrains-mono", [400, 500, 700], ["normal"]],
 ];
 
 const TYPES = {
@@ -42,10 +45,8 @@ const TYPES = {
   ".woff2": "font/woff2",
 };
 
-// Force every CSS animation/transition to its end state.
-const FREEZE =
-  "*,*::before,*::after{animation-delay:0s!important;animation-duration:1ms!important;" +
-  "animation-iteration-count:1!important;transition:none!important}";
+// Transitions jump straight to their end state. Animations are settled with the Web Animations API instead.
+const FREEZE = "*,*::before,*::after{transition:none!important}";
 
 function fontCss(origin) {
   const faces = [];
@@ -65,22 +66,31 @@ function fontCss(origin) {
 
 function fileFor(pathname) {
   if (pathname === "/support.js") return RUNTIME;
+  let target;
   if (pathname.startsWith("/_blob/")) {
     const asset = BLOBS[pathname.slice("/_blob/".length)];
-    return asset ? join(ASSETS, asset) : null;
+    if (!asset) return null;
+    target = join(ASSETS, asset);
+  } else if (pathname.startsWith("/__fonts/")) {
+    target = resolve(ROOT, "node_modules/@fontsource", pathname.slice("/__fonts/".length));
+  } else {
+    let decoded;
+    try {
+      decoded = decodeURIComponent(pathname);
+    } catch {
+      return null;
+    }
+    target = resolve(SOURCE, "." + decoded);
   }
-  if (pathname.startsWith("/__fonts/")) {
-    const [pkg, ...rest] = pathname.slice("/__fonts/".length).split("/");
-    return join(ROOT, "node_modules/@fontsource", pkg, ...rest);
-  }
-  return join(SOURCE, decodeURIComponent(pathname));
+  target = resolve(target);
+  return SERVED_DIRS.some((dir) => target.startsWith(dir + sep)) ? target : null;
 }
 
 function startServer() {
   return new Promise((resolveServer) => {
     const server = createServer(async (req, res) => {
       const file = fileFor(new URL(req.url ?? "/", "http://x").pathname);
-      if (!file || !file.startsWith(ROOT) || !existsSync(file)) {
+      if (!file || !existsSync(file)) {
         res.writeHead(404);
         res.end();
         return;
@@ -117,7 +127,18 @@ for (const [file, board] of Object.entries(canvas.boards)) {
     await page.waitForSelector("html[data-dc-ready]", { timeout: 10_000 });
     await page.addStyleTag({ content: FREEZE });
     await page.evaluate(() => document.fonts.ready);
-    await page.waitForTimeout(SETTLE_MS[file] ?? 300);
+    // Looping animations rest at their first frame (authored look); finite ones jump to their end.
+    await page.evaluate(() => {
+      for (const a of document.getAnimations()) {
+        if (a.effect.getComputedTiming().iterations === Infinity) {
+          a.pause();
+          a.currentTime = 0;
+        } else {
+          a.finish();
+        }
+      }
+    });
+    await page.waitForTimeout(SETTLE_MS);
     const out = join(OUT, `${name}@${board.w}x${board.h}.png`);
     await page.screenshot({ path: out, clip: { x: 0, y: 0, width: board.w, height: board.h } });
     console.log(`✓ ${name} → ${out}`);
