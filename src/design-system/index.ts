@@ -8,3 +8,7 @@ export type { IconName } from "./primitives/icons";
 export { IconButton } from "./primitives/IconButton";
 export { Button, buttonPlateVariants, buttonVariants } from "./primitives/Button";
 export type { ButtonOwnProps } from "./primitives/Button";
+export { Glass, glassVariants } from "./primitives/Glass";
+export type { GlassOwnProps } from "./primitives/Glass";
+export { Chip, ChipList, chipVariants } from "./primitives/Chip";
+export type { ChipTone } from "./primitives/Chip";

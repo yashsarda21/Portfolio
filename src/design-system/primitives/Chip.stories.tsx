@@ -1,0 +1,29 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Chip, ChipList } from "./Chip";
+
+const meta: Meta<typeof Chip> = { title: "Primitives/Chip", component: Chip };
+export default meta;
+
+export const Tones: StoryObj<typeof Chip> = {
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      <Chip>Java</Chip>
+      <Chip tone="strong">System Design</Chip>
+      <Chip tone="meta" size="lg">
+        SOFTWARE ENGINEER 1 · SINCE JUL 2024
+      </Chip>
+      <Chip tone="volt">React</Chip>
+      <Chip tone="volt-outline">Pune, India</Chip>
+    </div>
+  ),
+};
+
+export const StackList: StoryObj<typeof Chip> = {
+  render: () => (
+    <ChipList
+      label="Stack"
+      size="sm"
+      items={["React", "Spring Boot", "Oracle", "JUnit", "TeamCity"]}
+    />
+  ),
+};
