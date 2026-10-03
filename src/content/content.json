@@ -1,0 +1,296 @@
+{
+  "player": {
+    "name": "Yash Sarda",
+    "title": "Software Engineer",
+    "tagline": "PLAYER 01 • ENGINEER • BUILDER • COMPETITOR",
+    "summary": "Software engineer with hands-on full-stack experience. Strong in problem-solving and programming, focused on building practical, real-world software that delivers measurable impact.",
+    "cardBio": "Software engineer with hands-on full-stack experience. I like problems that need solving properly — and software that delivers measurable, real-world impact.",
+    "location": "Pune, India",
+    "currentClub": "Deutsche Bank",
+    "proSince": "2024-07",
+    "contact": {
+      "email": "yashsarda2002@gmail.com",
+      "linkedin": "https://www.linkedin.com/in/yash-sarda2107/",
+      "github": "https://github.com/yashsarda21",
+      "leetcode": "https://leetcode.com/u/yash_sarda",
+      "codeforces": "https://codeforces.com/profile/yashsarda2002",
+      "codechef": "https://www.codechef.com/users/yash0721"
+    },
+    "resumePdf": null,
+    "cardStats": [
+      {
+        "label": "PROBLEMS",
+        "value": "750+"
+      },
+      {
+        "label": "CGPA",
+        "value": "8.94"
+      },
+      {
+        "label": "CET %ILE",
+        "value": "99.5"
+      },
+      {
+        "label": "LISTS",
+        "value": "200+"
+      },
+      {
+        "label": "RECORDS",
+        "value": "10K+"
+      },
+      {
+        "label": "TESTS",
+        "value": "75+"
+      }
+    ]
+  },
+  "careerStats": [
+    {
+      "innings": "01",
+      "status": "NOT OUT",
+      "team": "Deutsche Bank",
+      "role": "Software Engineer 1",
+      "location": "Pune, MH",
+      "start": "2024-07",
+      "end": null,
+      "ballByBall": [
+        "Improving the sanctions compliance system that keeps restricted people and entities in line with each country's law.",
+        "Supporting 200+ country-specific sanctions lists for global regulatory adherence.",
+        "Designed Excel bulk upload: 10,000+ records validated per upload across 50+ fields — manual entry down 60%.",
+        "Shipped dashboard features end-to-end; 75+ JUnit tests raised coverage and cut production defects."
+      ],
+      "stack": ["Java", "Spring Boot", "React", "Redux", "Oracle", "JUnit", "TeamCity", "uDeploy"],
+      "scoutLine": "Bulk upload cut manual data entry by 60%."
+    },
+    {
+      "innings": "02",
+      "status": "DEBUT",
+      "team": "Deutsche Bank",
+      "role": "Graduate Analyst Intern",
+      "location": "Pune, MH",
+      "start": "2023-06",
+      "end": "2023-07",
+      "ballByBall": [
+        "Built a Kudo Board platform from the ground up to celebrate individual and team wins for 10,000+ employees.",
+        "Drove engagement with 4+ interaction types — messages, GIFs, short videos and gesture-based responses.",
+        "Enabled personalised delivery so recognition lands with the right person or team."
+      ],
+      "stack": ["React", "Spring Boot", "Oracle"],
+      "scoutLine": "Built a Kudo Board recognition platform from scratch for 10,000+ employees."
+    }
+  ],
+  "matchHighlights": [
+    {
+      "round": "THE FINAL",
+      "name": "AI Interview Grooming Platform",
+      "kind": "Published research · PICT",
+      "line": "A conversational AI interviewer that asks real follow-ups and scores you at the end.",
+      "serve": "Interview practice rarely feels real — no follow-up questions, no honest score.",
+      "rally": "Google Gemini generates questions, asks follow-ups based on your answers and evaluates them. React client, Node.js server, Firebase for auth and real-time data.",
+      "winner": "An end-of-interview score and feedback — and a paper published in a journal.",
+      "stack": ["React", "Node.js", "Firebase", "Google Gemini", "Gen AI"],
+      "media": null,
+      "facts": [
+        {
+          "k": "TYPE",
+          "v": "Academic project · PICT"
+        },
+        {
+          "k": "RECOGNITION",
+          "v": "Journal publication"
+        }
+      ],
+      "scoutLine": "A conversational AI interviewer: Google Gemini generates questions, asks follow-ups based on your answers, evaluates them and scores you at the end. Published in a journal."
+    },
+    {
+      "round": "SEMI-FINAL",
+      "name": "Kudo Board",
+      "kind": "Deutsche Bank · built from scratch",
+      "line": "A recognition platform celebrating individual and team wins for 10,000+ employees.",
+      "serve": "Recognition across a 10,000+ person organisation was scattered and generic.",
+      "rally": "Built from the ground up with 4+ interaction types — messages, GIFs, short videos and gesture-based responses.",
+      "winner": "Personalised delivery to the right person or team, across 10,000+ employees.",
+      "stack": ["React", "Spring Boot", "Oracle"],
+      "media": null,
+      "facts": [
+        {
+          "k": "TYPE",
+          "v": "Internship project · Deutsche Bank"
+        },
+        {
+          "k": "REACH",
+          "v": "10,000+ employees"
+        }
+      ],
+      "scoutLine": "A recognition platform built from the ground up for 10,000+ employees, with messages, GIFs, short videos and gesture-based responses."
+    },
+    {
+      "round": "QUARTER-FINAL",
+      "name": "Power BI Dashboard",
+      "kind": "Embedded analytics platform",
+      "line": "An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
+      "serve": "Teams needed live, interactive Power BI reports inside their own web platform — not in a separate tool.",
+      "rally": "REST-based Embedding API, with server-side logic for session management, dashboard embedding and token generation.",
+      "winner": "Interactive reports that work in both desktop and mobile layouts.",
+      "stack": ["Power BI Embedded", "REST API", "Token auth"],
+      "media": null,
+      "facts": [
+        {
+          "k": "TYPE",
+          "v": "Analytics web platform"
+        },
+        {
+          "k": "KEY PIECE",
+          "v": "Secure token generation"
+        }
+      ],
+      "scoutLine": "Interactive Power BI dashboards embedded via the REST Embedding API, with server-side session management and token generation — on desktop and mobile."
+    }
+  ],
+  "playerAttributes": {
+    "levels": {
+      "shipped": "Used in production at Deutsche Bank",
+      "built": "Used in projects / academic work",
+      "kit": "Listed on resume, not yet tied to a shipped role"
+    },
+    "groups": [
+      {
+        "name": "Backend",
+        "shot": "Smash",
+        "note": "Power and pace — where most of my points are won.",
+        "skills": [
+          ["Java", "shipped"],
+          ["Spring Boot", "shipped"],
+          ["JUnit", "shipped", "75+ tests"],
+          ["Apache Kafka", "kit"]
+        ]
+      },
+      {
+        "name": "Frontend",
+        "shot": "Drop shot",
+        "note": "Finesse at the net — the part users actually touch.",
+        "skills": [
+          ["React", "shipped"],
+          ["Redux", "shipped"],
+          ["JavaScript", "built"],
+          ["HTML / CSS", "built"]
+        ]
+      },
+      {
+        "name": "Data",
+        "shot": "Defence",
+        "note": "Consistent, reliable, never gives away a cheap point.",
+        "skills": [
+          ["Oracle", "shipped"],
+          ["SQL", "shipped"],
+          ["MySQL", "kit"],
+          ["MongoDB", "kit"]
+        ]
+      },
+      {
+        "name": "Craft",
+        "shot": "Court vision",
+        "note": "Reading the whole court before the shuttle lands.",
+        "skills": [
+          ["DSA", "shipped", "750+ solved"],
+          ["OOP", "shipped"],
+          ["System Design", "built", "Blogs"],
+          ["Gen AI · Gemini", "built"]
+        ]
+      }
+    ],
+    "languages": ["Java", "JavaScript", "Python"],
+    "kitBag": ["Git", "Google Cloud", "CI/CD", "Postman", "Cursor", "Gen AI", "TeamCity", "uDeploy"]
+  },
+  "trophyRoom": [
+    {
+      "type": "cup",
+      "title": "750+ Problems Solved",
+      "sub": "LeetCode · Codeforces · CodeChef",
+      "description": "Competitive programming across three platforms — the daily practice behind fast, clean problem-solving on the job.",
+      "links": [
+        {
+          "label": "LEETCODE",
+          "href": "https://leetcode.com/u/yash_sarda"
+        },
+        {
+          "label": "CODEFORCES",
+          "href": "https://codeforces.com/profile/yashsarda2002"
+        },
+        {
+          "label": "CODECHEF",
+          "href": "https://www.codechef.com/users/yash0721"
+        }
+      ],
+      "draftCopy": false
+    },
+    {
+      "type": "medal",
+      "title": "99.5 Percentile",
+      "sub": "MHT-CET 2020 · State Merit Rank 709",
+      "description": "Top half-percent of the state engineering entrance exam — 99.5 percentile, State Merit Rank 709. Preparing properly started here.",
+      "links": [],
+      "draftCopy": true
+    },
+    {
+      "type": "plaque",
+      "title": "Published Research",
+      "sub": "AI-Enhanced Interview Grooming Platform · Journal",
+      "description": "A conversational AI interviewer built on Google Gemini — designed, built and written up as a paper published in a journal.",
+      "links": [],
+      "draftCopy": true
+    },
+    {
+      "type": "pennant",
+      "title": "Distinction · CGPA 8.94",
+      "sub": "SPPU · B.Tech 2024",
+      "description": "Four years of Information Technology at PICT, finished with Distinction and a CGPA of 8.94.",
+      "links": [],
+      "draftCopy": true
+    },
+    {
+      "type": "round",
+      "title": "System Design Blogs",
+      "sub": "Written & shared on LinkedIn",
+      "description": "System design write-ups shared on LinkedIn — how big systems hold up, one diagram at a time.",
+      "links": [
+        {
+          "label": "LINKEDIN",
+          "href": "https://www.linkedin.com/in/yash-sarda2107/"
+        }
+      ],
+      "draftCopy": true
+    },
+    {
+      "type": "locked",
+      "title": "Giant Killer",
+      "sub": "Hidden · beat Yash to unlock",
+      "description": "Hidden. Beat Yash at any venue to unlock it.",
+      "links": [],
+      "draftCopy": true
+    }
+  ],
+  "trainingAcademy": {
+    "school": "Pune Institute of Computer Technology (PICT)",
+    "shortName": "PICT",
+    "city": "Pune",
+    "degree": "B.Tech, Information Technology",
+    "start": "2020-07",
+    "end": "2024-06",
+    "cgpa": "8.94",
+    "honours": "Distinction, SPPU",
+    "extras": [
+      "Published paper: AI-Enhanced Interview Grooming Platform",
+      "MHT-CET 99.5 percentile, State Merit Rank 709"
+    ]
+  },
+  "commentary": {
+    "entrance": ["New challenger enters the arena.", "Let's see what you've got."],
+    "inPlay": ["Good length. Respect.", "Your ball. Let's see what you've got."],
+    "reveal": ["Another project shipped.", "Career high score updated."],
+    "closeCall": ["Match point.", "Close. Not close enough."],
+    "yashWins": ["Still undefeated.", "Still not out.", "He doesn't like losing. Noted."],
+    "visitorWins": ["Okay… you got me. That doesn't happen often."],
+    "intro": ["The player has entered the arena."]
+  }
+}
