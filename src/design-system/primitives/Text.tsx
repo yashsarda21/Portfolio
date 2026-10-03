@@ -1,0 +1,108 @@
+import { cva } from "class-variance-authority";
+import type { ComponentPropsWithRef, ElementType } from "react";
+import { cn } from "@/lib/cn";
+import type { PolymorphicProps } from "../lib/polymorphic";
+
+// Every class is written out in full so Tailwind generates it (never build class names).
+export const textVariants = cva("", {
+  variants: {
+    variant: {
+      hero: "type-hero",
+      "hero-fluid": "type-hero-fluid",
+      call: "type-call",
+      d1: "type-d1",
+      d2: "type-d2",
+      d2s: "type-d2s",
+      stat: "type-stat",
+      d3: "type-d3",
+      d3s: "type-d3s",
+      d4: "type-d4",
+      d4s: "type-d4s",
+      "btn-xl": "type-btn-xl",
+      btn: "type-btn",
+      d5: "type-d5",
+      sub: "type-sub",
+      "mono-lg": "type-mono-lg",
+      "mono-md": "type-mono-md",
+      "mono-eyebrow": "type-mono-eyebrow",
+      "mono-brand": "type-mono-brand",
+      "mono-label": "type-mono-label",
+      "mono-tag": "type-mono-tag",
+      "mono-comm": "type-mono-comm",
+      "mono-xs": "type-mono-xs",
+      "body-lg": "type-body-lg",
+      body: "type-body",
+      "body-md": "type-body-md",
+      "body-sm": "type-body-sm",
+      caption: "type-caption",
+      comm: "type-comm",
+      challenge: "type-challenge",
+    },
+    tone: {
+      primary: "text-floodlight",
+      led: "text-led",
+      body: "text-text-1",
+      secondary: "text-text-2",
+      label: "text-scout",
+      dim: "text-dim",
+      volt: "text-volt",
+      gold: "text-gold",
+      ink: "text-volt-ink",
+      "ink-2": "text-volt-ink-2",
+    },
+  },
+  defaultVariants: { variant: "body" },
+});
+
+export type TypeVariant = NonNullable<Parameters<typeof textVariants>[0]>["variant"] & string;
+export type TextTone = NonNullable<NonNullable<Parameters<typeof textVariants>[0]>["tone"]>;
+export type MonoVariant = Extract<TypeVariant, `mono-${string}`>;
+
+type TextOwnProps = { variant?: TypeVariant; tone?: TextTone };
+
+/** Any run of text, styled by an Arena type recipe. */
+export function Text<T extends ElementType = "span">({
+  as,
+  variant,
+  tone,
+  className,
+  ...rest
+}: PolymorphicProps<T, TextOwnProps>) {
+  const Comp: ElementType = as ?? "span";
+  return <Comp className={cn(textVariants({ variant, tone }), className)} {...rest} />;
+}
+
+const HEADING_DEFAULT: Record<1 | 2 | 3 | 4 | 5 | 6, TypeVariant> = {
+  1: "d1",
+  2: "d2",
+  3: "d3",
+  4: "d4",
+  5: "d5",
+  6: "d5",
+};
+
+type HeadingProps = {
+  level: 1 | 2 | 3 | 4 | 5 | 6;
+  variant?: TypeVariant;
+  tone?: TextTone;
+} & ComponentPropsWithRef<"h1">;
+
+/** A real <h1>–<h6>; the look defaults by level and can be overridden. */
+export function Heading({ level, variant, tone = "primary", className, ...rest }: HeadingProps) {
+  const Tag = `h${level}` as const;
+  return (
+    <Tag
+      className={cn(textVariants({ variant: variant ?? HEADING_DEFAULT[level], tone }), className)}
+      {...rest}
+    />
+  );
+}
+
+/** The engineer's voice: uppercase mono labels, tags and eyebrows. */
+export function MonoLabel<T extends ElementType = "span">({
+  variant = "mono-label",
+  tone = "label",
+  ...rest
+}: PolymorphicProps<T, { variant?: MonoVariant; tone?: TextTone }>) {
+  return <Text variant={variant} tone={tone} {...(rest as PolymorphicProps<T, TextOwnProps>)} />;
+}
