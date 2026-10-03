@@ -1,0 +1,26 @@
+import type { CSSProperties } from "react";
+import { cn } from "@/lib/cn";
+
+const SIDE = {
+  left: "scene-cone-left",
+  right: "scene-cone-right",
+  down: "scene-cone-down",
+} as const;
+
+export function LightCone({
+  side,
+  alpha = 0.16,
+  className,
+}: {
+  side: keyof typeof SIDE;
+  alpha?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn("pointer-events-none absolute scene-cone", SIDE[side], className)}
+      style={{ "--cone-a": alpha } as CSSProperties}
+    />
+  );
+}
