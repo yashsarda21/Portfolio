@@ -38,15 +38,45 @@ test.describe("Button", () => {
   });
 
   test("reduced motion stops the CTA pulse", async ({ page }) => {
+    const pulseIterations = () =>
+      page
+        .getByTestId("cta-pulse")
+        .evaluate(
+          (el) =>
+            getComputedStyle(el.querySelector("[data-plate]") as Element).animationIterationCount,
+        );
+    // Control: without the preference the pulse loops, so the "1" below can't pass vacuously.
+    await page.goto(story("primitives-button--sizes"));
+    await page.getByTestId("cta-pulse").waitFor();
+    expect(await pulseIterations()).toBe("infinite");
+
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(story("primitives-button--sizes"));
-    const iterations = await page
-      .getByTestId("cta-pulse")
-      .evaluate(
-        (el) =>
-          getComputedStyle(el.querySelector("[data-plate]") as Element).animationIterationCount,
+    await page.getByTestId("cta-pulse").waitFor();
+    expect(await pulseIterations()).toBe("1");
+  });
+
+  test("a button inside a .group card ignores the card's hover", async ({ page }, testInfo) => {
+    // Tailwind wraps hover: in (hover: hover); the touch-emulated mobile project has no hover.
+    test.skip(testInfo.project.name === "mobile", "needs a hover-capable pointer");
+    await page.goto(story("primitives-button--inside-hover-card"));
+    const card = page.getByTestId("hover-card");
+    const button = page.getByTestId("card-button");
+    await button.waitFor();
+    const plateBg = () =>
+      button.evaluate(
+        (el) => getComputedStyle(el.querySelector("[data-plate]") as Element).backgroundColor,
       );
-    expect(iterations).toBe("1");
+    const idle = await plateBg();
+
+    // Hover the card's padding, well away from the button.
+    await card.hover({ position: { x: 8, y: 8 } });
+    await page.waitForTimeout(500); // longer than the --dur-snap colour fade
+    expect(await plateBg()).toBe(idle);
+
+    // Control: hovering the button itself does change the plate, so the check above is not vacuous.
+    await button.hover();
+    await expect.poll(plateBg).not.toBe(idle);
   });
 
   test("glass text is never on a transformed or blurred layer (crisp text)", async ({ page }) => {

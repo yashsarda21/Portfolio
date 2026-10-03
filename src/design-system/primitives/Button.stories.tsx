@@ -52,9 +52,26 @@ export const Variants: Story = {
 
 export const AsLink: Story = {
   render: () => (
-    <Button as="a" href="#scout" variant="secondary" iconRight="arrow-right">
-      Quick view
-    </Button>
+    <div className="flex flex-wrap gap-6 p-6">
+      <Button as="a" href="#scout" variant="secondary" iconRight="arrow-right">
+        Quick view
+      </Button>
+      <Button as="a" aria-disabled="true" variant="secondary" iconRight="arrow-right">
+        Coming soon
+      </Button>
+    </div>
+  ),
+};
+
+/** Cards use `group` for their own hover styles; a button inside must not react to the card's hover. */
+export const InsideHoverCard: Story = {
+  render: () => (
+    <div className="group w-120 border border-line p-6" data-testid="hover-card">
+      <p className="mb-4 type-body text-text-2">Hovering this card must not light the button.</p>
+      <Button variant="secondary" skew={false} size="s" data-testid="card-button">
+        Secondary
+      </Button>
+    </div>
   ),
 };
 

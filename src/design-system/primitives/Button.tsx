@@ -9,7 +9,7 @@ import type { IconName } from "./icons";
 // crisply (a skewed backdrop-filter layer resamples the label twice and stripes the glyphs).
 // The slanted shape is a separate background plate (see buttonPlateVariants).
 export const buttonVariants = cva(
-  "group relative isolate inline-flex cursor-pointer items-center justify-center select-none outline-none transition-[color,transform] duration-(--dur-snap) ease-snap active:scale-97 disabled:pointer-events-none disabled:opacity-40",
+  "group/button relative isolate inline-flex cursor-pointer items-center justify-center select-none outline-none transition-[color,transform] duration-(--dur-snap) ease-snap active:scale-97 disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40",
   {
     variants: {
       variant: {
@@ -30,13 +30,13 @@ export const buttonVariants = cva(
 );
 
 export const buttonPlateVariants = cva(
-  "floodlight-sweep pointer-events-none absolute inset-0 -z-10 transition-[background-color,border-color] duration-(--dur-snap) ease-snap group-focus-visible:outline-2 group-focus-visible:outline-solid group-focus-visible:outline-offset-3 group-focus-visible:outline-volt",
+  "floodlight-sweep pointer-events-none absolute inset-0 -z-10 transition-[background-color,border-color] duration-(--dur-snap) ease-snap group-focus-visible/button:outline-2 group-focus-visible/button:outline-solid group-focus-visible/button:outline-offset-3 group-focus-visible/button:outline-volt",
   {
     variants: {
       variant: {
-        primary: "bg-volt shadow-glow-cta group-hover:bg-volt-hover",
-        secondary: "glass group-hover:bg-white-a10",
-        outline: "border border-line-3 group-hover:border-volt",
+        primary: "bg-volt shadow-glow-cta group-hover/button:bg-volt-hover",
+        secondary: "glass group-hover/button:bg-white-a10",
+        outline: "border border-line-3 group-hover/button:border-volt",
         ghost: "",
       },
       skew: {
@@ -81,7 +81,16 @@ export function Button<T extends ElementType = "button">({
   const subTone = variant === "primary" ? "text-volt-ink-2" : "text-scout";
 
   return (
-    <Comp {...rest} {...typeProp} className={cn(buttonVariants({ variant, size }), className)}>
+    <Comp
+      {...rest}
+      {...typeProp}
+      data-sweep-host=""
+      className={cn(
+        buttonVariants({ variant, size }),
+        subLabel ? "flex-col gap-1" : undefined,
+        className,
+      )}
+    >
       <span
         aria-hidden="true"
         data-plate

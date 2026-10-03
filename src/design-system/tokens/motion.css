@@ -34,7 +34,7 @@
     transition: transform var(--dur-hover) var(--ease-follow);
   }
   &:hover::before,
-  :where(.group):hover > &::before {
+  [data-sweep-host]:hover > &::before {
     transform: translateX(120%);
   }
 }

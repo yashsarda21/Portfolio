@@ -76,4 +76,36 @@ describe("Button", () => {
     await userEvent.click(screen.getByRole("button"));
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it("scopes hover styles to its own named group, not any ancestor .group", () => {
+    render(<Button variant="secondary">A</Button>);
+    const btn = screen.getByRole("button");
+    expect(btn).toHaveClass("group/button");
+    expect(btn).toHaveAttribute("data-sweep-host");
+    expect(btn.className).not.toMatch(/(^|\s)group(\s|$)/);
+    expect(plateOf(btn)).toHaveClass("group-hover/button:bg-white-a10");
+    expect(plateOf(btn).className).not.toMatch(/group-hover:|group-focus-visible:/);
+  });
+
+  it("looks and acts disabled when a link-button is aria-disabled", () => {
+    render(
+      <Button as="a" href="/x" aria-disabled="true">
+        Soon
+      </Button>,
+    );
+    expect(screen.getByRole("link", { name: "Soon" })).toHaveClass(
+      "aria-disabled:pointer-events-none",
+      "aria-disabled:opacity-40",
+    );
+  });
+
+  it("stacks a sub-label under the label at any size", () => {
+    render(<Button subLabel="~3 MIN">Enter</Button>);
+    expect(screen.getByRole("button", { name: /Enter/ })).toHaveClass("flex-col", "gap-1");
+  });
+
+  it("stays a single row without a sub-label", () => {
+    render(<Button>Enter</Button>);
+    expect(screen.getByRole("button")).not.toHaveClass("flex-col");
+  });
 });
