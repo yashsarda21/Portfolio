@@ -65,6 +65,22 @@ const RAW_STYLE_LITERALS = [
     selector: "TemplateElement[value.raw=/cubic-bezier\\(/]",
     message: "Use motion tokens (ease-follow / ease-snap / ease-swing) (spec §4.2).",
   },
+  {
+    selector: "Literal[value=/\\b(text|leading|tracking)-\\[\\d/]",
+    message: "Use type-* recipes, not arbitrary type sizes (spec §4.2).",
+  },
+  {
+    selector: "TemplateElement[value.raw=/\\b(text|leading|tracking)-\\[\\d/]",
+    message: "Use type-* recipes, not arbitrary type sizes (spec §4.2).",
+  },
+  {
+    selector: "Literal[value=/\\btext-(line-3|line-hover|seg-empty|mast|fixture)\\b/]",
+    message: "Decoration colour used as text fails contrast (spec A1).",
+  },
+  {
+    selector: "TemplateElement[value.raw=/\\btext-(line-3|line-hover|seg-empty|mast|fixture)\\b/]",
+    message: "Decoration colour used as text fails contrast (spec A1).",
+  },
 ];
 
 export default defineConfig(
@@ -134,7 +150,12 @@ export default defineConfig(
     ),
   },
   {
-    files: ["app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
+    files: [
+      "app/**/*.{ts,tsx}",
+      "src/features/**/*.{ts,tsx}",
+      "src/design-system/**/*.{ts,tsx}",
+      "src/shell/**/*.{ts,tsx}",
+    ],
     rules: { "no-restricted-syntax": ["error", ...RAW_STYLE_LITERALS] },
   },
   prettier,
