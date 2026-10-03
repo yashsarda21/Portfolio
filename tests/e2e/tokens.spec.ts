@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { TOKEN_CATALOG } from "../../src/design-system/tokens/catalog";
 
 function builtCss(): string {
   const dir = join(process.cwd(), "build/client/assets");
@@ -130,6 +131,17 @@ test.describe("design tokens", () => {
     }
     for (const allowed of [".bg-volt", ".type-d1", ".glass", ".ease-follow"]) {
       expect(css, `${allowed} must exist`).toContain(allowed);
+    }
+  });
+
+  test("every catalogue swatch and shadow class is generated in the built CSS", () => {
+    const css = builtCss();
+    const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const classes = [...TOKEN_CATALOG.colors, ...TOKEN_CATALOG.shadows].map((t) => t.className);
+    for (const className of classes) {
+      expect(css, `.${className} must be generated`).toMatch(
+        new RegExp(`\\.${escape(className)}[{,:]`),
+      );
     }
   });
 });

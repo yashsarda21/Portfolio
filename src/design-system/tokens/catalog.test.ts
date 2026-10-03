@@ -8,14 +8,16 @@ const theme = readFileSync(join(dir, "theme.css"), "utf8");
 const base = readFileSync(join(dir, "base.css"), "utf8");
 
 describe("token catalogue", () => {
-  it.each(TOKEN_CATALOG.colors)("colour %s exists in theme.css", (name) => {
+  it.each(TOKEN_CATALOG.colors)("colour $name exists in theme.css", ({ name, className }) => {
     expect(theme).toContain(`--color-${name}:`);
+    expect(className).toBe(`bg-${name}`);
   });
   it.each(TOKEN_CATALOG.type)("type recipe %s exists in base.css", (name) => {
     expect(base).toContain(`@utility ${name} {`);
   });
-  it.each(TOKEN_CATALOG.shadows)("shadow %s exists in theme.css", (name) => {
+  it.each(TOKEN_CATALOG.shadows)("shadow $name exists in theme.css", ({ name, className }) => {
     expect(theme).toContain(`--shadow-${name}:`);
+    expect(className).toBe(`shadow-${name}`);
   });
   it.each(TOKEN_CATALOG.eases)("ease %s exists in theme.css", (name) => {
     expect(theme).toContain(`--ease-${name}:`);

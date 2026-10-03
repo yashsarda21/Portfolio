@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { cn } from "@/lib/cn";
 import { TOKEN_CATALOG } from "./catalog";
 
 const meta: Meta = { title: "Foundations/Tokens" };
@@ -7,21 +8,15 @@ export default meta;
 export const Colours: StoryObj = {
   render: () => (
     <div className="grid grid-cols-6 gap-4">
-      {TOKEN_CATALOG.colors.map((name) => (
+      {TOKEN_CATALOG.colors.map((c) => (
         // Gold only resolves inside the trophy zone (spec §5.1), so its swatch lives in one.
         <figure
-          key={name}
+          key={c.name}
           className="flex flex-col gap-2"
-          data-zone={name === "gold" ? "trophy" : undefined}
+          data-zone={c.name === "gold" ? "trophy" : undefined}
         >
-          <div
-            className="h-16 border border-line"
-            style={{
-              background: name === "gold" ? "var(--accent-gold)" : `var(--color-${name})`,
-            }}
-            aria-hidden="true"
-          />
-          <figcaption className="type-mono-tag text-scout">{name}</figcaption>
+          <div className={cn("h-16 border border-line", c.className)} aria-hidden="true" />
+          <figcaption className="type-mono-tag text-scout">{c.name}</figcaption>
         </figure>
       ))}
     </div>
@@ -44,13 +39,9 @@ export const Type: StoryObj = {
 export const Shadows: StoryObj = {
   render: () => (
     <div className="grid grid-cols-4 gap-10 p-10">
-      {TOKEN_CATALOG.shadows.map((name) => (
-        <div
-          key={name}
-          className="flex h-24 items-end bg-panel p-3"
-          style={{ boxShadow: `var(--shadow-${name})` }}
-        >
-          <span className="type-mono-tag text-scout">{name}</span>
+      {TOKEN_CATALOG.shadows.map((s) => (
+        <div key={s.name} className={cn("flex h-24 items-end bg-panel p-3", s.className)}>
+          <span className="type-mono-tag text-scout">{s.name}</span>
         </div>
       ))}
     </div>
