@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Player Attributes — Skills</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.09)}
+@keyframes fill{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+.seg{animation:fill .35s cubic-bezier(.22,1,.36,1) both}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#06060A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 30% 110%,rgba(120,84,44,0.40),rgba(6,6,10,0) 70%),radial-gradient(ellipse 50% 40% at 50% -10%,rgba(255,228,184,0.10),rgba(6,6,10,0) 70%)"></div>
+
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:10">
+    <a href="Hub.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:#F2F4F5">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">HUB / BADMINTON HALL / PLAYER ATTRIBUTES</span>
+    </a>
+    <div style="display:flex;gap:10px">
+      <a href="Badminton-Play.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">REMATCH</a>
+      <a href="QuickView.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">QUICK VIEW</a>
+    </div>
+  </header>
+
+  <div style="position:absolute;left:36px;right:36px;top:100px;display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span class="m" style="font-size:12px;letter-spacing:.22em;color:#D7FF3F">EVERY SKILL IS A SHOT IN THE BAG</span>
+      <h1 class="d" style="margin:0;font-size:84px;line-height:.85;font-weight:900">PLAYER ATTRIBUTES</h1>
+    </div>
+    <div class="m" style="display:flex;gap:18px;font-size:11px;letter-spacing:.16em;color:#A3ADB7">
+      <span style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:8px;background:#D7FF3F"></span>SHIPPED AT DEUTSCHE BANK</span>
+      <span style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:8px;background:#F2F4F5"></span>BUILT IN PROJECTS</span>
+      <span style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:8px;background:#7D8893"></span>IN THE KIT BAG</span>
+    </div>
+  </div>
+
+  <!-- player profile -->
+  <aside class="glass" style="position:absolute;left:36px;top:236px;width:300px;bottom:110px;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;gap:16px">
+    <div style="position:relative;height:250px;background:linear-gradient(180deg,#141B23,#0B0F14);border:1px solid #1C232C;display:flex;align-items:center;justify-content:center;overflow:hidden">
+      <img src="/_blob/f8a90aea8f1ad9cd7e8273aa370812df" alt="Yash Sarda" style="position:absolute;left:50%;bottom:0;width:320px;height:258px;margin-left:-160px;object-fit:cover;mix-blend-mode:lighten;-webkit-mask-image:linear-gradient(180deg,#000 75%,transparent 100%);mask-image:linear-gradient(180deg,#000 75%,transparent 100%)">
+      <span class="d" style="position:absolute;left:14px;top:10px;font-size:52px;font-weight:900;color:#D7FF3F;line-height:1">SE</span>
+      <span class="m" style="position:absolute;left:16px;top:66px;font-size:10px;letter-spacing:.2em;color:#A3ADB7">POSITION</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-size:34px;font-weight:900;line-height:1">YASH SARDA</span><span style="font-size:14px;color:#C3CBD3">Software Engineer 1 · Deutsche Bank</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid #1C232C;padding-top:14px">
+      <div style="display:flex;justify-content:space-between"><span style="font-size:14px;color:#A3ADB7">Playing style</span><span style="font-size:14px">Full-stack</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:14px;color:#A3ADB7">Languages</span><span style="font-size:14px">Java · JavaScript · Python</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#A3ADB7">Kit bag</span><span class="m" style="font-size:12px;line-height:1.6;color:#F2F4F5">Git · Google Cloud · CI/CD · Postman · Cursor · Gen AI · TeamCity · uDeploy</span></div>
+    </div>
+  </aside>
+
+  <!-- attribute groups -->
+  <section style="position:absolute;left:360px;right:36px;top:236px;bottom:110px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:16px">
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+      <div class="glass" style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="d" style="font-size:32px;font-weight:900;letter-spacing:.02em">{{g.name}}</span>
+          <span class="m" style="font-size:11px;letter-spacing:.18em;color:#A3ADB7">SHOT · {{g.shot}}</span>
+        </div>
+        <span style="font-size:13px;color:#A3ADB7;margin-top:-8px">{{g.note}}</span>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{g.skills}}" as="s" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:130px minmax(0,1fr) 92px;gap:14px;align-items:center">
+              <span class="m" style="font-size:13px;color:{{s.nameColor}}">{{s.name}}</span>
+              <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px">
+                <sc-for list="{{s.segs}}" as="x" hint-placeholder-count="10">
+                  <span class="seg" style="height:10px;background:{{x.c}};animation-delay:{{x.delay}}"></span>
+                </sc-for>
+              </div>
+              <span class="m" style="font-size:11px;letter-spacing:.14em;text-align:right;color:{{s.tierColor}}">{{s.tier}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </section>
+
+  <div style="position:absolute;left:36px;bottom:36px;display:flex;align-items:stretch">
+    <span class="m" style="display:flex;align-items:center;padding:0 14px;background:#D7FF3F;color:#0A0C08;font-size:11px;font-weight:700;letter-spacing:.2em">COMM</span>
+    <span class="glass" style="display:flex;align-items:center;padding:12px 18px;font-size:16px;font-style:italic;color:#E6EAEE">Full kit bag. Still undefeated.</span>
+  </div>
+  <a href="Trophy-Room.dc.html" style="position:absolute;right:36px;bottom:36px;height:52px;padding:0 26px;display:flex;align-items:center;background:#D7FF3F;color:#0A0C08;text-decoration:none;transform:skewX(-12deg)"><span class="d" style="transform:skewX(12deg);font-size:20px;font-weight:800;letter-spacing:.14em">ENTER THE TROPHY ROOM →</span></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // evidence-based levels taken from the resume, not self-ratings
+    const lv = { shipped: { n: 9, c: '#D7FF3F', tag: 'SHIPPED' }, built: { n: 7, c: '#F2F4F5', tag: 'BUILT' }, kit: { n: 5, c: '#7D8893', tag: 'KIT BAG' } };
+    const skill = (name, level, tag) => {
+      const L = lv[level];
+      return {
+        name,
+        tier: tag || L.tag,
+        tierColor: L.c,
+        nameColor: '#F2F4F5',
+        segs: Array.from({ length: 10 }, (_, i) => ({ c: i < L.n ? L.c : '#1E262F', delay: (i * 0.04).toFixed(2) + 's' }))
+      };
+    };
+    const groups = [
+      { name: 'BACKEND', shot: 'SMASH', note: 'Power and pace — where most of my points are won.', skills: [skill('Java', 'shipped'), skill('Spring Boot', 'shipped'), skill('JUnit', 'shipped', '75+ TESTS'), skill('Apache Kafka', 'kit')] },
+      { name: 'FRONTEND', shot: 'DROP SHOT', note: 'Finesse at the net — the part users actually touch.', skills: [skill('React', 'shipped'), skill('Redux', 'shipped'), skill('JavaScript', 'built'), skill('HTML / CSS', 'built')] },
+      { name: 'DATA', shot: 'DEFENCE', note: 'Consistent, reliable, never gives away a cheap point.', skills: [skill('Oracle', 'shipped'), skill('SQL', 'shipped'), skill('MySQL', 'kit'), skill('MongoDB', 'kit')] },
+      { name: 'CRAFT', shot: 'COURT VISION', note: 'Reading the whole court before the shuttle lands.', skills: [skill('DSA', 'shipped', '750+ SOLVED'), skill('OOP', 'shipped'), skill('System Design', 'built', 'BLOGS'), skill('Gen AI · Gemini', 'built')] }
+    ];
+    return { groups };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Badminton-Attributes.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "09 · Player Attributes — skills",
+      "w": 1440,
+      "x": 1520,
+      "y": 4100
+    },
+    "Badminton-Play.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "06 · Badminton — Smash or Clear",
+      "w": 1440,
+      "x": 0,
+      "y": 4100
+    },
+    "Cricket-Career.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "07 · Career Stats — the scorecard",
+      "w": 1440,
+      "x": 3040,
+      "y": 1500
+    },
+    "Cricket-Play.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "04 · Cricket — Bowl at Me (playable · Yash bats)",
+      "w": 1440,
+      "x": 1520,
+      "y": 1500
+    },
+    "Direction.dc.html": {
+      "h": 1100,
+      "title": "01 · Visual direction — Night Match",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Easter-Egg.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "13b · The 1% — Giant Killer",
+      "w": 1440,
+      "x": 1520,
+      "y": 6700
+    },
+    "Game-System.dc.html": {
+      "h": 1100,
+      "title": "13 · Play Against Me — game system",
+      "w": 1440,
+      "x": 0,
+      "y": 6700
+    },
+    "Hub.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "03 · Arena Hub — navigation",
+      "w": 1440,
+      "x": 0,
+      "y": 1500
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "02 · Landing — the scoreboard",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Mobile-Game.dc.html": {
+      "h": 844,
+      "title": "15 · Mobile — one-thumb game",
+      "w": 390,
+      "x": 2460,
+      "y": 8200
+    },
+    "Mobile-Hub.dc.html": {
+      "h": 844,
+      "title": "15 · Mobile — fixtures hub",
+      "w": 390,
+      "x": 1990,
+      "y": 8200
+    },
+    "Mobile-Landing.dc.html": {
+      "h": 844,
+      "title": "15 · Mobile — landing",
+      "w": 390,
+      "x": 1520,
+      "y": 8200
+    },
+    "Mobile-QuickView.dc.html": {
+      "h": 844,
+      "title": "15 · Mobile — scouting report",
+      "w": 390,
+      "x": 2930,
+      "y": 8200
+    },
+    "Motion.dc.html": {
+      "h": 1100,
+      "title": "14 · Motion, camera & transitions",
+      "w": 1440,
+      "x": 3040,
+      "y": 6700
+    },
+    "Opening.dc.html": {
+      "h": 900,
+      "title": "02b · Cinematic opening — storyboard",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Player-Card.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "11 · Player Card — resume",
+      "w": 1440,
+      "x": 1520,
+      "y": 5400
+    },
+    "QuickView.dc.html": {
+      "expand": "fill",
+      "h": 3300,
+      "is_interactive": true,
+      "title": "Recruiter Quick View — Scouting Report",
+      "w": 1440,
+      "x": 0,
+      "y": 8200
+    },
+    "Responsive.dc.html": {
+      "h": 844,
+      "title": "15 · Desktop → mobile behavior",
+      "w": 1080,
+      "x": 3400,
+      "y": 8200
+    },
+    "Team-Up.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "12 · Team Up — contact",
+      "w": 1440,
+      "x": 3040,
+      "y": 5400
+    },
+    "Tennis-Highlights.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "08 · Match Highlights — projects",
+      "w": 1440,
+      "x": 1520,
+      "y": 2800
+    },
+    "Tennis-Play.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "05 · Tennis — Return of Serve",
+      "w": 1440,
+      "x": 0,
+      "y": 2800
+    },
+    "Trophy-Room.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "10 · Trophy Room + Training Academy",
+      "w": 1440,
+      "x": 0,
+      "y": 5400
+    },
+    "Intro.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "02c · Screen 2 — Player introduction (animated, ~6s)",
+      "is_interactive": true
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-02T15:10:50.503Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "row1": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Foundations & the cinematic opening",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "The Arena Hub → Cricket Ground = Career",
+      "w": 240,
+      "x": 0,
+      "y": 1200
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Tennis Court = Projects",
+      "w": 240,
+      "x": 0,
+      "y": 2500
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Badminton Hall = Skills",
+      "w": 240,
+      "x": 0,
+      "y": 3800
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Trophy Room · Player Card · Team Up",
+      "w": 240,
+      "x": 0,
+      "y": 5100
+    },
+    "row6": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Play Against Me — rules, the 1%, and motion",
+      "w": 240,
+      "x": 0,
+      "y": 6400
+    },
+    "row7": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Recruiter fast path & mobile",
+      "w": 240,
+      "x": 0,
+      "y": 7900
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Intro.dc.html",
+    "Direction.dc.html",
+    "Opening.dc.html",
+    "Hub.dc.html",
+    "Cricket-Play.dc.html",
+    "Cricket-Career.dc.html",
+    "Tennis-Play.dc.html",
+    "Tennis-Highlights.dc.html",
+    "Badminton-Play.dc.html",
+    "Badminton-Attributes.dc.html",
+    "Trophy-Room.dc.html",
+    "Player-Card.dc.html",
+    "Team-Up.dc.html",
+    "Game-System.dc.html",
+    "Easter-Egg.dc.html",
+    "Motion.dc.html",
+    "QuickView.dc.html",
+    "Mobile-Landing.dc.html",
+    "Mobile-Hub.dc.html",
+    "Mobile-Game.dc.html",
+    "Mobile-QuickView.dc.html",
+    "Responsive.dc.html"
+  ],
+  "pages": [],
+  "title": "The Arena — Yash Sarda Portfolio"
+}

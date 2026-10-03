@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build --quiet"
+    "build-storybook": "storybook build --quiet",
+    "references": "node tools/render-artboards/render.mjs"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",

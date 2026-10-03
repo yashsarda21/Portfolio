@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cricket — Bowl at Me</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.09)}
+@keyframes sweep{from{left:0%}to{left:100%}}
+@keyframes pop{0%{opacity:0;transform:scale(.8)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(215,255,63,0.5)}50%{box-shadow:0 0 0 10px rgba(215,255,63,0)}}
+.cursor{animation:sweep 1.1s linear infinite alternate}
+.pop{animation:pop .45s cubic-bezier(.22,1,.36,1) both}
+.ring{animation:ring 1.8s ease-in-out infinite}
+.swing:hover{background:#E6FF7A!important}
+.swing:active{transform:skewX(-12deg) scale(.97)!important}
+@media (prefers-reduced-motion: reduce){.cursor{animation-duration:2.2s}}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+
+  <!-- stadium from behind the bowler's arm: you bowl, Yash bats at the far end -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 30%,rgba(150,172,200,0.14),rgba(5,7,10,0) 70%)"></div>
+  <div style="position:absolute;left:-60px;right:-60px;top:150px;height:200px;background-image:radial-gradient(rgba(214,224,236,0.26) 1px,transparent 1.6px);background-size:7px 6px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 45%,transparent);mask-image:linear-gradient(180deg,transparent,#000 45%,transparent);opacity:.7"></div>
+  <div style="position:absolute;left:170px;top:70px;width:100px;height:40px;background:radial-gradient(circle,#fff 0 2.4px,transparent 3.4px) 0 0/12px 11px,#1A2027;box-shadow:0 0 40px 12px rgba(228,238,252,0.42),0 0 200px 70px rgba(200,216,238,0.12)"></div>
+  <div style="position:absolute;right:170px;top:70px;width:100px;height:40px;background:radial-gradient(circle,#fff 0 2.4px,transparent 3.4px) 0 0/12px 11px,#1A2027;box-shadow:0 0 40px 12px rgba(228,238,252,0.42),0 0 200px 70px rgba(200,216,238,0.12)"></div>
+
+  <!-- outfield + pitch in perspective -->
+  <div style="position:absolute;left:0;right:0;top:300px;bottom:0;background:repeating-linear-gradient(180deg,#123E28 0 46px,#0F3622 46px 92px);clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,0.5),#000 40%);mask-image:linear-gradient(180deg,rgba(0,0,0,0.5),#000 40%)"></div>
+  <div style="position:absolute;left:0;right:0;top:300px;bottom:0;background:linear-gradient(90deg,#05070A,rgba(5,7,10,0) 30%,rgba(5,7,10,0) 70%,#05070A)"></div>
+  <div style="position:absolute;left:0;right:0;top:318px;bottom:0;background:linear-gradient(180deg,#6E5E40,#A08A5E);clip-path:polygon(48.4% 0,51.6% 0,58% 100%,42% 100%)"></div>
+  <div style="position:absolute;left:687px;top:335px;width:66px;height:2px;background:rgba(255,255,255,0.8)"></div>
+  <div style="position:absolute;left:575px;top:790px;width:290px;height:3px;background:rgba(255,255,255,0.85)"></div>
+  <div style="position:absolute;left:712px;top:308px;display:flex;gap:4px"><span style="width:3px;height:26px;background:#E8DCC0"></span><span style="width:3px;height:26px;background:#E8DCC0"></span><span style="width:3px;height:26px;background:#E8DCC0"></span></div>
+
+  <!-- target lengths painted on the pitch (Hawk-Eye style) -->
+  <svg width="1440" height="900" viewBox="0 0 1440 900" style="position:absolute;left:0;top:0;pointer-events:none" aria-hidden="true">
+    <polygon points="689,365 751,365 756,400 684,400" fill="rgba(215,255,63,0.16)"></polygon>
+    <polygon points="692,346 748,346 750,360 690,360" fill="rgba(215,255,63,0.55)"></polygon>
+    <path d="M714 836 Q 716 560 719 352 Q 721 340 724 326" fill="none" stroke="#D7FF3F" stroke-width="2.5" stroke-dasharray="2 8" stroke-linecap="round" opacity=".85"></path>
+    <ellipse cx="719" cy="353" rx="12" ry="4" fill="none" stroke="#FFFFFF" stroke-width="2"></ellipse>
+  </svg>
+  <span class="m" style="position:absolute;left:762px;top:346px;font-size:10px;letter-spacing:.16em;color:#D7FF3F">YORKER</span>
+  <span class="m" style="position:absolute;left:766px;top:378px;font-size:10px;letter-spacing:.16em;color:#A3ADB7">GOOD LENGTH</span>
+
+  <!-- Yash on strike -->
+  <div style="position:absolute;left:690px;top:322px;width:60px;height:16px;border-radius:50%;border:2px solid #D7FF3F;box-shadow:0 0 18px rgba(215,255,63,0.6)"></div>
+  <div style="position:absolute;left:716px;top:286px;width:8px;height:40px;background:linear-gradient(180deg,#E8DCC0,#9C8660);transform:rotate(-22deg);transform-origin:50% 100%;box-shadow:0 0 8px rgba(0,0,0,0.6)"></div>
+  <div class="m glass" style="position:absolute;left:650px;top:244px;padding:6px 10px;font-size:11px;letter-spacing:.16em;color:#F2F4F5;display:flex;gap:8px;align-items:center"><span style="width:6px;height:6px;border-radius:50%;background:#FF4D3D"></span>YASH · ON STRIKE · {{score}}</div>
+
+  <!-- your end: non-striker's stumps + your release mark -->
+  <div style="position:absolute;left:596px;top:790px;display:flex;gap:11px;opacity:.85"><span style="width:7px;height:120px;background:linear-gradient(180deg,#F1E6CC,#B9A57C)"></span><span style="width:7px;height:120px;background:linear-gradient(180deg,#F1E6CC,#B9A57C)"></span><span style="width:7px;height:120px;background:linear-gradient(180deg,#F1E6CC,#B9A57C)"></span></div>
+  <div style="position:absolute;left:678px;top:828px;width:72px;height:18px;border-radius:50%;border:2px solid #F2F4F5"></div>
+  <span class="m" style="position:absolute;left:760px;top:830px;font-size:11px;letter-spacing:.16em;color:#F2F4F5">YOU · BOWLING</span>
+
+  <!-- HUD -->
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:10;background:linear-gradient(180deg,rgba(5,7,10,0.85),rgba(5,7,10,0))">
+    <a href="Hub.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:#F2F4F5">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">HUB / CRICKET GROUND</span>
+    </a>
+    <div style="display:flex;align-items:stretch;height:44px">
+      <span class="d" style="display:flex;align-items:center;padding:0 14px;background:#F2F4F5;color:#05070A;font-size:20px;font-weight:800;letter-spacing:.06em">YASH</span>
+      <span class="d" style="display:flex;align-items:center;padding:0 16px;background:#0E141B;font-size:24px;font-weight:800">{{score}}</span>
+      <span class="m" style="display:flex;align-items:center;padding:0 14px;background:#1C232C;color:#C3CBD3;font-size:11px;letter-spacing:.16em">{{ballLabel}}</span>
+      <span class="d" style="display:flex;align-items:center;padding:0 14px;background:#0E141B;color:#A3ADB7;font-size:20px;font-weight:800;letter-spacing:.06em;border-left:1px solid #1C232C">YOU BOWLING</span>
+    </div>
+    <div style="display:flex;gap:10px">
+      <a href="QuickView.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">QUICK VIEW</a>
+      <button class="glass" aria-label="Toggle crowd audio" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#F2F4F5;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"></path><path d="M16.5 8.5a5 5 0 0 1 0 7"></path></svg></button>
+    </div>
+  </header>
+
+  <!-- left: the over -->
+  <section class="glass" style="position:absolute;left:36px;top:110px;width:300px;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;gap:14px;z-index:5">
+    <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">BOWL AT ME</span>
+    <span class="d" style="font-size:32px;font-weight:900;line-height:.95">3 BALLS. ONE BATTER WHO HATES GETTING OUT.</span>
+    <div style="display:flex;gap:8px">
+      <sc-for list="{{balls}}" as="b" hint-placeholder-count="3">
+        <span class="d" style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;background:{{b.bg}};color:{{b.fg}};border:1px solid {{b.bd}}">{{b.label}}</span>
+      </sc-for>
+    </div>
+    <span style="font-size:14px;color:#C3CBD3;line-height:1.5">Release when the marker hits the yorker zone. Every ball you bowl — wicket or six — unlocks an innings of my career.</span>
+  </section>
+
+  <!-- right: stadium screen reveal -->
+  <section class="glass" style="position:absolute;right:36px;top:110px;width:360px;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;gap:12px;z-index:5">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">STADIUM SCREEN</span><span class="m" style="font-size:11px;letter-spacing:.14em;color:#D7FF3F">{{unlockedLabel}}</span></div>
+    <sc-for list="{{slots}}" as="s" hint-placeholder-count="3">
+      <div style="border-top:1px solid #1C232C;padding-top:12px">
+        <sc-if value="{{s.open}}" hint-placeholder-val="{{false}}">
+          <div class="pop" style="display:flex;flex-direction:column;gap:4px">
+            <span class="m" style="font-size:11px;letter-spacing:.16em;color:#D7FF3F">INNINGS {{s.n}} · {{s.status}}</span>
+            <span class="d" style="font-size:24px;font-weight:800;letter-spacing:.03em">{{s.team}}</span>
+            <span style="font-size:14px;color:#C3CBD3">{{s.role}} · {{s.span}}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{s.locked}}" hint-placeholder-val="{{true}}">
+          <div style="display:flex;justify-content:space-between;align-items:center;height:56px">
+            <span class="m" style="font-size:11px;letter-spacing:.16em;color:#7D8893">INNINGS {{s.n}} · LOCKED</span>
+            <span class="m" style="font-size:11px;color:#7D8893">BOWL BALL {{s.ballNo}}</span>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </section>
+
+  <!-- the call -->
+  <sc-if value="{{hasCall}}" hint-placeholder-val="{{false}}">
+    <div class="d pop" style="position:absolute;left:0;right:0;top:420px;text-align:center;font-size:120px;font-weight:900;letter-spacing:.04em;color:{{callColor}};text-shadow:0 0 40px rgba(0,0,0,0.8);z-index:6">{{call}}</div>
+  </sc-if>
+
+  <!-- length meter + bowl -->
+  <div style="position:absolute;left:400px;right:400px;top:610px;display:flex;flex-direction:column;align-items:center;gap:14px;z-index:7">
+    <div class="m" style="width:100%;display:flex;justify-content:space-between;font-size:11px;letter-spacing:.2em;color:#A3ADB7"><span>SHORT</span><span style="color:#D7FF3F">YORKER</span><span>FULL TOSS</span></div>
+    <div class="glass" style="position:relative;width:100%;height:18px;box-sizing:border-box">
+      <span style="position:absolute;left:38%;width:24%;top:0;bottom:0;background:rgba(215,255,63,0.22)"></span>
+      <span style="position:absolute;left:46.5%;width:7%;top:0;bottom:0;background:#D7FF3F"></span>
+      <span class="cursor" style="position:absolute;top:-8px;width:4px;height:34px;margin-left:-2px;background:#FFFFFF;box-shadow:0 0 12px rgba(255,255,255,0.9)"></span>
+    </div>
+    <sc-if value="{{notDone}}" hint-placeholder-val="{{true}}">
+      <button class="swing ring" onClick="{{bowl}}" style="height:62px;padding:0 44px;border:0;background:#D7FF3F;color:#0A0C08;cursor:pointer;transform:skewX(-12deg)"><span class="d" style="display:block;transform:skewX(12deg);font-size:26px;font-weight:900;letter-spacing:.16em">BOWL · SPACE</span></button>
+    </sc-if>
+    <sc-if value="{{lost}}" hint-placeholder-val="{{false}}">
+      <div style="display:flex;gap:14px">
+        <a href="Cricket-Career.dc.html" style="height:62px;padding:0 34px;display:flex;align-items:center;background:#D7FF3F;color:#0A0C08;text-decoration:none;transform:skewX(-12deg)"><span class="d" style="transform:skewX(12deg);font-size:24px;font-weight:900;letter-spacing:.14em">SEE THE FULL SCORECARD</span></a>
+        <button onClick="{{reset}}" class="glass" style="height:62px;padding:0 30px;color:#F2F4F5;cursor:pointer;transform:skewX(-12deg)"><span class="d" style="display:block;transform:skewX(12deg);font-size:24px;font-weight:900;letter-spacing:.14em">BOWL AGAIN</span></button>
+      </div>
+    </sc-if>
+    <sc-if value="{{won}}" hint-placeholder-val="{{false}}">
+      <a href="Easter-Egg.dc.html" style="height:62px;padding:0 34px;display:flex;align-items:center;background:#D7FF3F;color:#0A0C08;text-decoration:none;transform:skewX(-12deg)"><span class="d" style="transform:skewX(12deg);font-size:24px;font-weight:900;letter-spacing:.14em">CLAIM YOUR WICKET</span></a>
+    </sc-if>
+  </div>
+
+  <!-- commentary + skip -->
+  <div style="position:absolute;left:36px;bottom:36px;display:flex;align-items:stretch;z-index:8">
+    <span class="m" style="display:flex;align-items:center;padding:0 14px;background:#D7FF3F;color:#0A0C08;font-size:11px;font-weight:700;letter-spacing:.2em">COMM</span>
+    <span class="glass" style="display:flex;align-items:center;padding:12px 18px;font-size:16px;font-style:italic;color:#E6EAEE">{{comm}}</span>
+  </div>
+  <a href="Cricket-Career.dc.html" class="m glass" style="position:absolute;right:36px;bottom:36px;height:48px;box-sizing:border-box;padding:0 20px;display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none;z-index:8">SKIP TO CAREER STATS <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { results: [], won: false };
+    this.t0 = Date.now();
+  }
+  componentDidMount() {
+    this.t0 = Date.now();
+  }
+  renderVals() {
+    const s = this.state;
+    const ball = s.results.length;
+    const innings = [
+      { n: '01', team: 'DEUTSCHE BANK', role: 'Software Engineer 1', span: 'Jul 2024 – now', status: 'NOT OUT' },
+      { n: '02', team: 'DEUTSCHE BANK', role: 'Graduate Analyst Intern', span: 'Jun – Jul 2023', status: 'DEBUT' },
+      { n: '03', team: 'PICT, PUNE', role: 'B.Tech, Information Technology', span: '2020 – 2024', status: 'ACADEMY' }
+    ];
+    // seen from the bowler's end: dots and wickets are yours (volt), runs are his
+    const balls = [0, 1, 2].map((i) => {
+      const r = s.results[i];
+      if (r) return r.forYou
+        ? { label: r.short, bg: '#D7FF3F', fg: '#0A0C08', bd: '#D7FF3F' }
+        : { label: r.short, bg: '#0E141B', fg: '#F2F4F5', bd: '#3A434C' };
+      if (i === ball) return { label: String(i + 1), bg: 'rgba(215,255,63,0.08)', fg: '#D7FF3F', bd: '#D7FF3F' };
+      return { label: String(i + 1), bg: 'transparent', fg: '#7D8893', bd: '#2A323C' };
+    });
+    const slots = innings.map((x, i) => Object.assign({}, x, { open: i < ball, locked: i >= ball, ballNo: i + 1 }));
+    const last = s.results[ball - 1];
+    const done = ball >= 3;
+    const runs = s.results.reduce((a, r) => a + (r.runs || 0), 0);
+    return {
+      balls,
+      slots,
+      score: s.won ? runs + ' OUT' : runs + '*',
+      ballLabel: done ? 'OVER COMPLETE' : 'BALL ' + (ball + 1) + ' OF 3',
+      unlockedLabel: ball + ' / 3 UNLOCKED',
+      hasCall: !!last,
+      call: last ? last.call : '',
+      callColor: last && last.forYou ? '#D7FF3F' : '#F2F4F5',
+      comm: last ? last.comm : "Your ball. Let's see what you've got.",
+      notDone: !done,
+      lost: done && !s.won,
+      won: done && s.won,
+      bowl: () => this.bowl(),
+      reset: () => { this.t0 = Date.now(); this.setState({ results: [], won: false }); }
+    };
+  }
+  bowl() {
+    const s = this.state;
+    const i = s.results.length;
+    if (i >= 3) return;
+    const per = 1.1;
+    const t = ((Date.now() - this.t0) / 1000) % (2 * per);
+    const p = t <= per ? t / per : 2 - t / per;
+    const d = Math.abs(p - 0.5);
+    const q = d < 0.035 ? 'perfect' : d < 0.12 ? 'good' : 'miss';
+    let r;
+    if (i === 2) {
+      const streak = s.results.every((x) => x.q === 'perfect') && q === 'perfect';
+      if (streak && Math.random() < 0.12) {
+        r = { q, short: 'W', runs: 0, forYou: true, call: 'BOWLED HIM.', comm: "Middle stump. Okay… you got me. That doesn't happen often." };
+        this.setState({ results: s.results.concat([r]), won: true });
+        return;
+      }
+      if (q === 'perfect') r = { q, short: '4', runs: 4, call: 'FOUR.', comm: 'Perfect yorker. Flicked off the toes anyway. Still not out.' };
+      else if (q === 'good') r = { q, short: '4', runs: 4, call: 'FOUR.', comm: 'Good ball. Better shot. Career high score updated.' };
+      else r = { q, short: '6', runs: 6, call: 'SIX.', comm: 'Into the second tier. Still not out.' };
+    } else if (q === 'perfect') {
+      r = { q, short: '•', runs: 0, forYou: true, call: 'DOT BALL.', comm: 'Yorker. Dug out. I respect that.' };
+    } else if (q === 'good') {
+      r = { q, short: '4', runs: 4, call: 'FOUR.', comm: 'On a length. Still found the gap.' };
+    } else {
+      r = { q, short: '6', runs: 6, call: 'SIX.', comm: 'Too short. That one is going on the highlight reel.' };
+    }
+    this.setState({ results: s.results.concat([r]) });
+  }
+}
+</script>
+</body>
+</html>

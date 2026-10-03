@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trophy Room and Training Academy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.09)}
+@keyframes spin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+@keyframes drop{from{opacity:0}to{opacity:1}}
+.spot{animation:drop 1.2s ease-out both}
+.trophy{transition:transform .4s cubic-bezier(.22,1,.36,1)}
+.trophy:hover{transform:translateY(-6px)}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#040508;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:10">
+    <a href="Hub.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:#F2F4F5">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">HUB / TROPHY ROOM</span>
+    </a>
+    <a href="QuickView.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">QUICK VIEW</a>
+  </header>
+
+  <div style="position:absolute;left:36px;top:100px;display:flex;flex-direction:column;gap:6px">
+    <span class="m" style="font-size:12px;letter-spacing:.22em;color:#D4B26A">ACHIEVEMENTS · LIT ONE BY ONE</span>
+    <h1 class="d" style="margin:0;font-size:84px;line-height:.85;font-weight:900">TROPHY ROOM</h1>
+  </div>
+
+  <!-- cabinet -->
+  <section style="position:absolute;left:36px;top:236px;width:870px;bottom:36px;background:linear-gradient(180deg,#0A0C10,#07080B);border:1px solid #1C232C;box-shadow:inset 0 0 120px rgba(0,0,0,0.8);overflow:hidden">
+    <div style="position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 60%,rgba(255,255,255,0.03) 70%,rgba(255,255,255,0) 80%);pointer-events:none;z-index:3"></div>
+
+    <!-- shelf 1 -->
+    <div style="position:absolute;left:0;right:0;top:0;height:310px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+      <!-- cup (selected) -->
+      <button class="trophy" aria-label="750+ problems solved, selected" style="position:relative;border:0;background:transparent;color:#F2F4F5;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:16px;font-family:inherit">
+        <span class="spot" style="position:absolute;left:50%;top:0;width:220px;height:300px;margin-left:-110px;background:linear-gradient(180deg,rgba(255,236,200,0.30),rgba(255,236,200,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%)"></span>
+        <span style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <span style="position:relative;width:84px;height:70px;border-radius:4px 4px 42px 42px;background:linear-gradient(90deg,#7A5E2A,#F0D998 38%,#B8934A 62%,#6A5023)"><span style="position:absolute;left:-22px;top:8px;width:18px;height:30px;border:5px solid #B8934A;border-right:0;border-radius:18px 0 0 18px"></span><span style="position:absolute;right:-22px;top:8px;width:18px;height:30px;border:5px solid #B8934A;border-left:0;border-radius:0 18px 18px 0"></span></span>
+          <span style="width:12px;height:30px;background:linear-gradient(90deg,#7A5E2A,#E8CF8E,#7A5E2A)"></span>
+          <span style="width:64px;height:12px;background:linear-gradient(90deg,#6A5023,#D9BE7C,#6A5023)"></span>
+          <span style="width:90px;height:26px;background:#13171C;border-top:1px solid #2A323C"></span>
+        </span>
+        <span class="d" style="margin-top:14px;font-size:20px;font-weight:800;letter-spacing:.04em">750+ PROBLEMS SOLVED</span>
+        <span class="m" style="font-size:11px;color:#D4B26A;letter-spacing:.14em">LEETCODE · CODEFORCES · CODECHEF</span>
+      </button>
+      <!-- medal -->
+      <button class="trophy" aria-label="99.5 percentile, MHT-CET 2020" style="position:relative;border:0;background:transparent;color:#F2F4F5;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:16px;font-family:inherit">
+        <span class="spot" style="position:absolute;left:50%;top:0;width:220px;height:300px;margin-left:-110px;background:linear-gradient(180deg,rgba(255,236,200,0.18),rgba(255,236,200,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);animation-delay:.3s"></span>
+        <span style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <span style="width:40px;height:44px;background:linear-gradient(90deg,#1E2A3A 0 45%,#D7FF3F 45% 55%,#1E2A3A 55%);clip-path:polygon(0 0,100% 0,80% 100%,20% 100%)"></span>
+          <span style="width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F4F6F7,#A9B2BA 45%,#5E6770);box-shadow:inset 0 0 0 6px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center"><span class="d" style="font-size:20px;font-weight:900;color:#2A3138">99.5</span></span>
+          <span style="width:90px;height:26px;margin-top:10px;background:#13171C;border-top:1px solid #2A323C"></span>
+        </span>
+        <span class="d" style="margin-top:14px;font-size:20px;font-weight:800;letter-spacing:.04em">99.5 PERCENTILE</span>
+        <span class="m" style="font-size:11px;color:#A3ADB7;letter-spacing:.14em">MHT-CET 2020 · STATE RANK 709</span>
+      </button>
+      <!-- plaque -->
+      <button class="trophy" aria-label="Published research paper" style="position:relative;border:0;background:transparent;color:#F2F4F5;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:16px;font-family:inherit">
+        <span class="spot" style="position:absolute;left:50%;top:0;width:220px;height:300px;margin-left:-110px;background:linear-gradient(180deg,rgba(255,236,200,0.18),rgba(255,236,200,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);animation-delay:.6s"></span>
+        <span style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <span style="width:96px;height:118px;background:linear-gradient(160deg,#2B1E12,#140E08);border:3px solid #B8934A;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:60px;height:70px;background:linear-gradient(135deg,#F0D998,#8C6E33);display:flex;align-items:center;justify-content:center"><span class="d" style="font-size:13px;font-weight:900;color:#2B1E12;letter-spacing:.08em">PAPER</span></span></span>
+          <span style="width:90px;height:26px;margin-top:10px;background:#13171C;border-top:1px solid #2A323C"></span>
+        </span>
+        <span class="d" style="margin-top:14px;font-size:20px;font-weight:800;letter-spacing:.04em">PUBLISHED RESEARCH</span>
+        <span class="m" style="font-size:11px;color:#A3ADB7;letter-spacing:.14em">AI INTERVIEW PLATFORM · JOURNAL</span>
+      </button>
+    </div>
+    <div style="position:absolute;left:24px;right:24px;top:308px;height:6px;background:linear-gradient(180deg,rgba(220,236,250,0.35),rgba(220,236,250,0.05));box-shadow:0 8px 30px rgba(220,236,250,0.08)"></div>
+
+    <!-- shelf 2 -->
+    <div style="position:absolute;left:0;right:0;top:322px;bottom:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+      <button class="trophy" aria-label="Distinction, SPPU" style="position:relative;border:0;background:transparent;color:#F2F4F5;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:20px;font-family:inherit">
+        <span class="spot" style="position:absolute;left:50%;top:0;width:200px;height:260px;margin-left:-100px;background:linear-gradient(180deg,rgba(255,236,200,0.16),rgba(255,236,200,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);animation-delay:.9s"></span>
+        <span style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <span style="width:0;height:0;border-left:34px solid transparent;border-right:34px solid transparent;border-bottom:84px solid #C9A55A"></span>
+          <span style="width:80px;height:12px;background:linear-gradient(90deg,#6A5023,#D9BE7C,#6A5023)"></span>
+          <span style="width:90px;height:22px;background:#13171C;border-top:1px solid #2A323C"></span>
+        </span>
+        <span class="d" style="margin-top:14px;font-size:20px;font-weight:800;letter-spacing:.04em">DISTINCTION · CGPA 8.94</span>
+        <span class="m" style="font-size:11px;color:#A3ADB7;letter-spacing:.14em">SPPU · B.TECH 2024</span>
+      </button>
+      <button class="trophy" aria-label="System design blogs" style="position:relative;border:0;background:transparent;color:#F2F4F5;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:20px;font-family:inherit">
+        <span class="spot" style="position:absolute;left:50%;top:0;width:200px;height:260px;margin-left:-100px;background:linear-gradient(180deg,rgba(255,236,200,0.16),rgba(255,236,200,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);animation-delay:1.2s"></span>
+        <span style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <span style="width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F0D998,#B8934A 50%,#6A5023);display:flex;align-items:center;justify-content:center"><span style="width:30px;height:30px;border-radius:50%;border:2px solid rgba(43,30,18,0.6)"></span></span>
+          <span style="width:12px;height:24px;background:linear-gradient(90deg,#7A5E2A,#E8CF8E,#7A5E2A)"></span>
+          <span style="width:90px;height:22px;background:#13171C;border-top:1px solid #2A323C"></span>
+        </span>
+        <span class="d" style="margin-top:14px;font-size:20px;font-weight:800;letter-spacing:.04em">SYSTEM DESIGN BLOGS</span>
+        <span class="m" style="font-size:11px;color:#A3ADB7;letter-spacing:.14em">WRITTEN &amp; SHARED ON LINKEDIN</span>
+      </button>
+      <!-- locked -->
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:20px">
+        <span style="position:relative;display:flex;flex-direction:column;align-items:center;opacity:.6">
+          <span style="width:84px;height:70px;border-radius:4px 4px 42px 42px;border:2px dashed #3A434C;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span class="d" style="font-size:28px;font-weight:900;color:#3A434C">?</span></span>
+          <span style="width:12px;height:30px;border-left:2px dashed #3A434C;border-right:2px dashed #3A434C;box-sizing:border-box"></span>
+          <span style="width:90px;height:22px;border:2px dashed #3A434C;box-sizing:border-box"></span>
+        </span>
+        <span class="d" style="margin-top:14px;font-size:20px;font-weight:800;letter-spacing:.04em;color:#7D8893">GIANT KILLER</span>
+        <span class="m" style="font-size:11px;color:#7D8893;letter-spacing:.14em">HIDDEN · BEAT YASH TO UNLOCK</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- detail -->
+  <section class="glass" style="position:absolute;left:930px;right:36px;top:236px;height:262px;box-sizing:border-box;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;justify-content:space-between"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#D4B26A">ON THE PLINTH</span><span class="m" style="font-size:11px;color:#A3ADB7">1 / 5</span></div>
+    <span class="d" style="font-size:36px;font-weight:900;line-height:.95">750+ PROBLEMS SOLVED</span>
+    <span class="m" style="font-size:12px;color:#A3ADB7;letter-spacing:.12em">LEETCODE · CODEFORCES · CODECHEF</span>
+    <p style="margin:0;font-size:15px;line-height:1.5;color:#E6EAEE">Competitive programming across three platforms — the daily practice behind fast, clean problem-solving on the job.</p>
+    <div class="m" style="margin-top:auto;display:flex;gap:18px;font-size:12px;letter-spacing:.14em"><a href="https://leetcode.com/u/yash_sarda" style="text-decoration:none">LEETCODE ↗</a><a href="https://codeforces.com/profile/yashsarda2002" style="text-decoration:none">CODEFORCES ↗</a><a href="https://www.codechef.com/users/yash0721" style="text-decoration:none">CODECHEF ↗</a></div>
+  </section>
+
+  <!-- training academy -->
+  <section style="position:absolute;left:930px;right:36px;top:514px;bottom:36px;box-sizing:border-box;padding:20px 22px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(160deg,#0E141B,#0A0E13);border:1px solid #1C232C">
+    <div style="display:flex;justify-content:space-between"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#D7FF3F">EDUCATION</span><span class="m" style="font-size:11px;color:#A3ADB7">WHERE THE FUNDAMENTALS CAME FROM</span></div>
+    <span class="d" style="font-size:36px;font-weight:900;line-height:.95">TRAINING ACADEMY</span>
+    <div style="display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;border-top:1px solid #1C232C;padding-top:12px">
+      <span style="width:72px;height:72px;border:1px solid #2A323C;display:flex;align-items:center;justify-content:center"><span class="d" style="font-size:22px;font-weight:900;color:#D7FF3F;letter-spacing:.06em">PICT</span></span>
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:18px;font-weight:600">Pune Institute of Computer Technology</span><span style="font-size:14px;color:#C3CBD3">B.Tech, Information Technology</span><span class="m" style="font-size:12px;color:#A3ADB7">JUL 2020 – JUN 2024 · CGPA 8.94 · DISTINCTION</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid #1C232C;padding-top:12px">
+      <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">EXTRA DRILLS</span>
+      <span style="font-size:14px;color:#E6EAEE">Published paper: AI-Enhanced Interview Grooming Platform · MHT-CET 99.5 percentile, State Merit Rank 709</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

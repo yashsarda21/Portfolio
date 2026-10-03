@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Desktop to Mobile Behavior</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+</style>
+</helmet>
+<div style="width:1080px;height:844px;box-sizing:border-box;padding:44px 48px;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5;display:flex;flex-direction:column;gap:22px;overflow:hidden">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <span class="m" style="font-size:12px;letter-spacing:.24em;color:#D7FF3F">15 — DESKTOP &amp; MOBILE BEHAVIOUR</span>
+    <h2 class="d" style="margin:0;font-size:48px;line-height:.9;font-weight:900">SAME MATCH. SMALLER STADIUM.</h2>
+  </div>
+
+  <div style="display:flex;flex-direction:column;font-size:13px;line-height:1.45">
+    <div class="m" style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding-bottom:10px;border-bottom:1px solid #2A323C;font-size:11px;letter-spacing:.14em;color:#A3ADB7"><span></span><span style="color:#F2F4F5">DESKTOP ≥1200</span><span style="color:#F2F4F5">TABLET 768–1199</span><span style="color:#F2F4F5">MOBILE &lt;768</span><span style="color:#D7FF3F">REDUCED MOTION</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">RENDERER</span><span>Full WebGL scene, dynamic floodlights, soft shadows</span><span>WebGL lite: baked lighting, half-res shadows</span><span>2.5D layered parallax (CSS + images), no WebGL</span><span>Static plates, crossfades only</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">INTRO</span><span>6.5s cinematic, sound gate</span><span>4s, sound gate</span><span>2s: lights + name only, sound off</span><span>Instant scoreboard</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">NAVIGATION</span><span>3D hub + left index rail</span><span>3D hub, index in drawer</span><span>Fixtures list + 5-tab bar</span><span>Same as device, no camera moves</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">GAMES</span><span>Keyboard + mouse, ±35ms perfect window</span><span>Touch + keyboard</span><span>One thumb: tap, swipe, hold. Window ±60ms, haptics</span><span>3s auto-rally, then reveal</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">CAMERA</span><span>Crane, orbit, tunnel push, wipe</span><span>Tunnel push + wipe</span><span>Wipe only (vertical)</span><span>None</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">EFFECTS</span><span>Beam dust, glass blur, card tilt</span><span>Glass blur, no particles</span><span>Solid panels (no blur), no particles</span><span>None</span></div>
+    <div style="display:grid;grid-template-columns:120px repeat(4,minmax(0,1fr));gap:14px;padding:11px 0;border-bottom:1px solid #1C232C"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">FIRST SCREEN</span><span>Landing → Hub</span><span>Landing → Hub</span><span>Landing; both CTAs full-width</span><span>Landing</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:auto">
+    <div style="padding:16px;border:1px solid #1C232C;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:22px;font-weight:900">CONTENT FIRST</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Quick View is plain HTML, server-rendered and readable with JS or WebGL off. The 3D loads after it.</span></div>
+    <div style="padding:16px;border:1px solid #1C232C;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:22px;font-weight:900">BUDGETS</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Landing text visible &lt;1.5s. 3D scene ≤3MB, lazy per venue. Holds 60fps desktop, 30fps tablet.</span></div>
+    <div style="padding:16px;border:1px solid #D7FF3F;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:22px;font-weight:900;color:#D7FF3F">DEEP LINKS</span><span style="font-size:13px;color:#C3CBD3;line-height:1.5">/scout opens Quick View directly — the link that goes on the resume and in recruiter emails.</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1080,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

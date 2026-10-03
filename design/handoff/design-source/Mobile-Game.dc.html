@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — One-Thumb Cricket</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+@keyframes sweep{from{left:0%}to{left:100%}}
+.cursor{animation:sweep 1.1s linear infinite alternate}
+</style>
+</helmet>
+<div style="position:relative;width:390px;height:844px;overflow:hidden;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 100% 40% at 50% 20%,rgba(150,172,200,0.14),rgba(5,7,10,0) 70%)"></div>
+  <div style="position:absolute;left:0;right:0;top:200px;bottom:0;background:repeating-linear-gradient(180deg,#123E28 0 40px,#0F3622 40px 80px);clip-path:polygon(28% 0,72% 0,100% 100%,0 100%)"></div>
+  <div style="position:absolute;left:0;right:0;top:210px;bottom:0;background:linear-gradient(180deg,#6E5E40,#A08A5E);clip-path:polygon(46% 0,54% 0,66% 100%,34% 100%)"></div>
+  <div style="position:absolute;left:186px;top:198px;display:flex;gap:3px"><span style="width:2px;height:18px;background:#E8DCC0"></span><span style="width:2px;height:18px;background:#E8DCC0"></span><span style="width:2px;height:18px;background:#E8DCC0"></span></div>
+  <div style="position:absolute;left:174px;top:214px;width:42px;height:12px;border-radius:50%;border:2px solid #D7FF3F"></div>
+  <svg width="390" height="844" viewBox="0 0 390 844" style="position:absolute;left:0;top:0" aria-hidden="true"><path d="M192 640 Q 194 420 195 236 Q 196 226 197 218" fill="none" stroke="#D7FF3F" stroke-width="2" stroke-dasharray="2 7"></path></svg>
+
+  <!-- top bar -->
+  <div style="position:absolute;left:12px;right:12px;top:14px;display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;align-items:stretch;height:40px">
+      <span class="d" style="display:flex;align-items:center;padding:0 10px;background:#F2F4F5;color:#05070A;font-size:16px;font-weight:800">YASH</span>
+      <span class="d" style="display:flex;align-items:center;padding:0 10px;background:#0E141B;font-size:20px;font-weight:800">6*</span>
+      <span class="m" style="display:flex;align-items:center;padding:0 8px;background:#1C232C;color:#C3CBD3;font-size:10px;letter-spacing:.12em">YOU BOWLING · 2/3</span>
+    </div>
+    <a href="#" class="m" style="height:44px;display:flex;align-items:center;padding:0 12px;background:rgba(14,19,26,0.8);border:1px solid #2A323C;color:#F2F4F5;text-decoration:none;font-size:11px;letter-spacing:.14em">SKIP →</a>
+  </div>
+
+  <!-- reveal chip -->
+  <div style="position:absolute;left:12px;right:12px;top:72px;padding:12px 14px;background:rgba(14,19,26,0.85);border:1px solid rgba(215,255,63,0.45);display:flex;flex-direction:column;gap:2px">
+    <span class="m" style="font-size:10px;letter-spacing:.16em;color:#D7FF3F">INNINGS 01 UNLOCKED · NOT OUT</span>
+    <span class="d" style="font-size:22px;font-weight:800">DEUTSCHE BANK</span>
+    <span style="font-size:13px;color:#C3CBD3">Software Engineer 1 · Jul 2024 – now</span>
+  </div>
+
+  <span class="m" style="position:absolute;left:222px;top:212px;padding:4px 7px;background:rgba(14,19,26,0.85);border:1px solid #2A323C;font-size:9px;letter-spacing:.14em">YASH · ON STRIKE</span>
+  <div style="position:absolute;left:176px;top:232px;width:38px;height:6px;background:rgba(215,255,63,0.55)"></div>
+
+  <!-- length meter + tap zone -->
+  <div style="position:absolute;left:0;right:0;bottom:0;height:300px;background:linear-gradient(180deg,rgba(5,7,10,0),rgba(5,7,10,0.92) 30%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:16px;padding:0 20px 34px;box-sizing:border-box">
+    <div style="position:relative;width:100%;height:16px;background:#0E141B;border:1px solid #2A323C;box-sizing:border-box">
+      <span style="position:absolute;left:36%;width:28%;top:0;bottom:0;background:rgba(215,255,63,0.22)"></span>
+      <span style="position:absolute;left:45%;width:10%;top:0;bottom:0;background:#D7FF3F"></span>
+      <span class="cursor" style="position:absolute;top:-8px;width:4px;height:30px;margin-left:-2px;background:#fff;box-shadow:0 0 10px #fff"></span>
+    </div>
+    <span class="m" style="font-size:10px;letter-spacing:.14em;color:#A3ADB7">WIDER YORKER ZONE ON TOUCH · HAPTIC ON RELEASE</span>
+    <button style="width:100%;height:110px;border:0;background:#D7FF3F;color:#0A0C08"><span class="d" style="font-size:34px;font-weight:900;letter-spacing:.14em">TAP TO BOWL</span></button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

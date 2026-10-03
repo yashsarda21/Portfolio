@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Arena — Landing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#030405}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.10)}
+@keyframes bank{0%,18%{opacity:.05}22%{opacity:1}25%{opacity:.2}29%{opacity:1}100%{opacity:1}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes boot{0%{opacity:0;filter:blur(10px);letter-spacing:.3em}55%{opacity:.7}100%{opacity:1;filter:blur(0);letter-spacing:.02em}}
+@keyframes scan{0%{transform:translateY(-120%);opacity:1}100%{transform:translateY(420%);opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.bank{animation:bank 1.6s ease-out both}
+.fade{animation:fadein 1.8s ease-out both}
+.rise{animation:rise .9s cubic-bezier(.22,1,.36,1) both}
+.boot{animation:boot 1.2s cubic-bezier(.22,1,.36,1) both}
+.scan{animation:scan 1.4s ease-in both}
+.live{animation:pulse 1.6s ease-in-out infinite}
+.cta-p:hover{background:#E6FF7A!important}
+.cta-s:hover{background:rgba(255,255,255,0.10)!important}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#030405;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+
+  <!-- night sky lift once lights are on -->
+  <div class="fade" style="position:absolute;inset:0;background:radial-gradient(ellipse 75% 50% at 50% 0%,rgba(150,172,200,0.20),rgba(3,4,5,0) 70%);animation-delay:2.2s"></div>
+
+  <!-- crowd tiers -->
+  <div class="fade" style="position:absolute;left:-120px;right:-120px;top:380px;height:360px;border-radius:50% 50% 0 0/60% 60% 0 0;background-image:radial-gradient(rgba(214,224,236,0.30) 1px,transparent 1.7px);background-size:7px 6px;-webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 30%,#000 55%,transparent 90%);mask-image:linear-gradient(180deg,transparent 0%,#000 30%,#000 55%,transparent 90%);opacity:.7;animation-delay:.3s"></div>
+
+  <!-- the field, in perspective -->
+  <div style="position:absolute;left:0;right:0;top:600px;height:420px;perspective:900px">
+    <div class="fade" style="width:1240px;height:760px;margin:0 auto;border-radius:50%;transform:rotateX(70deg);transform-origin:50% 0;background:radial-gradient(ellipse at 50% 40%,rgba(46,132,78,0.75),rgba(14,52,32,0.55) 45%,rgba(5,10,8,0) 70%),repeating-linear-gradient(90deg,rgba(255,255,255,0.035) 0 70px,rgba(255,255,255,0) 70px 140px);animation-delay:2.4s"></div>
+  </div>
+  <div class="fade" style="position:absolute;left:684px;top:640px;width:72px;height:200px;background:linear-gradient(180deg,rgba(150,128,88,0.0),rgba(150,128,88,0.45));clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);animation-delay:2.6s"></div>
+
+  <!-- light cones -->
+  <div class="fade" style="position:absolute;left:60px;top:70px;width:520px;height:760px;background:linear-gradient(180deg,rgba(225,236,250,0.16),rgba(225,236,250,0));clip-path:polygon(18% 0,32% 0,100% 100%,40% 100%);filter:blur(6px);animation-delay:1.0s"></div>
+  <div class="fade" style="position:absolute;right:60px;top:70px;width:520px;height:760px;background:linear-gradient(180deg,rgba(225,236,250,0.16),rgba(225,236,250,0));clip-path:polygon(68% 0,82% 0,60% 100%,0 100%);filter:blur(6px);animation-delay:1.5s"></div>
+
+  <!-- floodlight towers (banks switch on one by one) -->
+  <div style="position:absolute;left:150px;top:118px;width:2px;height:300px;background:linear-gradient(180deg,#2A3138,rgba(42,49,56,0))"></div>
+  <div style="position:absolute;right:150px;top:118px;width:2px;height:300px;background:linear-gradient(180deg,#2A3138,rgba(42,49,56,0))"></div>
+  <div class="bank" style="position:absolute;left:96px;top:70px;width:112px;height:48px;border-radius:3px;background:radial-gradient(circle,#FFFFFF 0 2.6px,rgba(255,255,255,0) 3.6px) 0 0/12px 11px,#1A2027;box-shadow:0 0 40px 12px rgba(228,238,252,0.45),0 0 220px 80px rgba(200,216,238,0.14);animation-delay:.6s"></div>
+  <div class="bank" style="position:absolute;left:356px;top:40px;width:84px;height:36px;border-radius:3px;background:radial-gradient(circle,#FFFFFF 0 2.4px,rgba(255,255,255,0) 3.4px) 0 0/12px 11px,#1A2027;box-shadow:0 0 30px 10px rgba(228,238,252,0.40),0 0 160px 60px rgba(200,216,238,0.10);animation-delay:1.1s"></div>
+  <div class="bank" style="position:absolute;right:356px;top:40px;width:84px;height:36px;border-radius:3px;background:radial-gradient(circle,#FFFFFF 0 2.4px,rgba(255,255,255,0) 3.4px) 0 0/12px 11px,#1A2027;box-shadow:0 0 30px 10px rgba(228,238,252,0.40),0 0 160px 60px rgba(200,216,238,0.10);animation-delay:1.6s"></div>
+  <div class="bank" style="position:absolute;right:96px;top:70px;width:112px;height:48px;border-radius:3px;background:radial-gradient(circle,#FFFFFF 0 2.6px,rgba(255,255,255,0) 3.6px) 0 0/12px 11px,#1A2027;box-shadow:0 0 40px 12px rgba(228,238,252,0.45),0 0 220px 80px rgba(200,216,238,0.14);animation-delay:2.0s"></div>
+
+  <!-- top chrome -->
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:5">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">THE ARENA</span>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="m glass" aria-label="Crowd audio on" style="height:44px;padding:0 16px;display:flex;align-items:center;gap:10px;color:#F2F4F5;font-size:12px;letter-spacing:.16em;cursor:pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"></path><path d="M16.5 8.5a5 5 0 0 1 0 7"></path><path d="M19 6a8.5 8.5 0 0 1 0 12"></path></svg>
+        CROWD ON
+      </button>
+      <button class="m glass" style="height:44px;padding:0 16px;color:#F2F4F5;font-size:12px;letter-spacing:.16em;cursor:pointer">SKIP INTRO</button>
+    </div>
+  </header>
+
+  <!-- the scoreboard -->
+  <div style="position:absolute;left:270px;top:140px;width:900px;height:372px;background:#06080B radial-gradient(rgba(255,255,255,0.045) 1px,rgba(255,255,255,0) 1.4px) 0 0/4px 4px;border:1px solid #232A33;box-shadow:0 0 0 8px #0A0D11,0 0 0 9px #1B2129,0 50px 140px rgba(0,0,0,0.7);overflow:hidden">
+    <div class="scan" style="position:absolute;left:0;right:0;top:0;height:90px;background:linear-gradient(180deg,rgba(215,255,63,0),rgba(215,255,63,0.16),rgba(215,255,63,0));animation-delay:2.7s"></div>
+    <div class="m fade" style="height:52px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1A2028;font-size:12px;letter-spacing:.22em;color:#A3ADB7;animation-delay:2.7s">
+      <span style="display:flex;align-items:center;gap:10px"><span class="live" style="width:8px;height:8px;border-radius:50%;background:#FF4D3D"></span>LIVE · THE ARENA</span>
+      <span>PLAYER 01 / 01</span>
+    </div>
+    <div style="height:248px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+      <div class="d boot" style="font-size:156px;line-height:.86;font-weight:900;letter-spacing:.02em;color:#F4F6F7;text-shadow:0 0 28px rgba(255,255,255,0.35);animation-delay:3.0s">YASH SARDA</div>
+      <div class="d boot" style="font-size:30px;font-weight:700;letter-spacing:.42em;padding-left:.42em;color:#D7FF3F;text-shadow:0 0 18px rgba(215,255,63,0.45);animation-delay:3.6s">SOFTWARE ENGINEER</div>
+    </div>
+    <div class="fade" style="height:70px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #1A2028;animation-delay:4.0s">
+      <div style="display:flex;align-items:center;gap:14px;padding:0 28px">
+        <span class="m" style="font-size:11px;letter-spacing:.2em;color:#7D8893">HOME</span>
+        <span class="d" style="font-size:24px;font-weight:800;letter-spacing:.08em">YASH</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;border-left:1px solid #1A2028;border-right:1px solid #1A2028">
+        <span class="m" style="font-size:11px;letter-spacing:.2em;color:#7D8893">STATUS</span>
+        <span class="d" style="font-size:24px;font-weight:800;letter-spacing:.08em;color:#D7FF3F">UNDEFEATED</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:0 28px">
+        <span class="m" style="font-size:11px;letter-spacing:.2em;color:#7D8893">AWAY</span>
+        <span class="d" style="font-size:24px;font-weight:800;letter-spacing:.08em;color:#A3ADB7">YOU?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- challenge + CTAs -->
+  <div class="rise" style="position:absolute;left:0;right:0;top:556px;display:flex;flex-direction:column;align-items:center;gap:30px;animation-delay:4.5s">
+    <div style="font-size:30px;font-style:italic;font-weight:500;color:#E3E8EC">Think you can beat me?</div>
+    <div style="display:flex;gap:22px">
+      <a href="Intro.dc.html" class="cta-p" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:310px;height:78px;background:#D7FF3F;color:#0A0C08;text-decoration:none;transform:skewX(-12deg);box-shadow:0 0 40px rgba(215,255,63,0.25)">
+        <span class="d" style="transform:skewX(12deg);font-size:26px;font-weight:800;letter-spacing:.14em">ENTER THE ARENA</span>
+        <span class="m" style="transform:skewX(12deg);font-size:11px;letter-spacing:.14em;color:#2E3A0A">INTERACTIVE · ~3 MIN</span>
+      </a>
+      <a href="QuickView.dc.html" class="cta-s glass" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:310px;height:78px;color:#F2F4F5;text-decoration:none;transform:skewX(-12deg)">
+        <span class="d" style="transform:skewX(12deg);font-size:26px;font-weight:800;letter-spacing:.14em">VIEW PORTFOLIO</span>
+        <span class="m" style="transform:skewX(12deg);font-size:11px;letter-spacing:.14em;color:#A3ADB7">RECRUITER VIEW · 90 SEC</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- commentary + footer -->
+  <div class="rise" style="position:absolute;left:36px;bottom:36px;display:flex;align-items:stretch;animation-delay:5.2s">
+    <span class="m" style="display:flex;align-items:center;padding:0 14px;background:#D7FF3F;color:#0A0C08;font-size:11px;font-weight:700;letter-spacing:.2em">COMM</span>
+    <span class="glass" style="display:flex;align-items:center;padding:12px 18px;font-size:16px;font-style:italic;color:#E6EAEE">New challenger enters the arena.</span>
+  </div>
+  <div class="m fade" style="position:absolute;right:36px;bottom:46px;font-size:12px;letter-spacing:.14em;color:#7D8893;animation-delay:5.2s">ENTER ↵ TO PLAY · Q FOR QUICK VIEW</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

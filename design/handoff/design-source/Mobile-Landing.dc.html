@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile — Landing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#030405}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+</style>
+</helmet>
+<div style="position:relative;width:390px;height:844px;overflow:hidden;background:#030405;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 40% at 50% 0%,rgba(150,172,200,0.20),rgba(3,4,5,0) 70%),radial-gradient(ellipse 120% 30% at 50% 100%,rgba(46,132,78,0.35),rgba(3,4,5,0) 70%)"></div>
+  <div style="position:absolute;left:30px;top:56px;width:60px;height:22px;background:radial-gradient(circle,#fff 0 1.8px,transparent 2.8px) 0 0/9px 8px,#1A2027;box-shadow:0 0 30px 10px rgba(228,238,252,0.35)"></div>
+  <div style="position:absolute;right:30px;top:56px;width:60px;height:22px;background:radial-gradient(circle,#fff 0 1.8px,transparent 2.8px) 0 0/9px 8px,#1A2027;box-shadow:0 0 30px 10px rgba(228,238,252,0.35)"></div>
+  <div style="position:absolute;left:-20px;right:-20px;top:420px;height:160px;background-image:radial-gradient(rgba(214,224,236,0.22) 1px,transparent 1.6px);background-size:6px 5px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 50%,transparent);mask-image:linear-gradient(180deg,transparent,#000 50%,transparent)"></div>
+
+  <div style="position:absolute;left:16px;right:16px;top:16px;display:flex;justify-content:space-between;align-items:center">
+    <span class="d" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:16px">YS</span>
+    <button class="m" aria-label="Crowd audio off" style="height:44px;padding:0 12px;background:rgba(14,19,26,0.7);border:1px solid rgba(255,255,255,0.1);color:#C3CBD3;font-size:11px;letter-spacing:.14em">SOUND OFF</button>
+  </div>
+
+  <!-- scoreboard -->
+  <div style="position:absolute;left:16px;right:16px;top:130px;background:#06080B radial-gradient(rgba(255,255,255,0.045) 1px,transparent 1.4px) 0 0/4px 4px;border:1px solid #232A33;box-shadow:0 0 0 5px #0A0D11">
+    <div class="m" style="height:38px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1A2028;font-size:10px;letter-spacing:.2em;color:#A3ADB7"><span style="display:flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#FF4D3D"></span>LIVE · THE ARENA</span><span>01 / 01</span></div>
+    <div style="padding:26px 14px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <span class="d" style="font-size:96px;line-height:.82;font-weight:900;text-align:center;text-shadow:0 0 20px rgba(255,255,255,0.3)">YASH<br>SARDA</span>
+      <span class="d" style="font-size:18px;font-weight:700;letter-spacing:.38em;padding-left:.38em;color:#D7FF3F">SOFTWARE ENGINEER</span>
+    </div>
+    <div style="height:48px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid #1A2028"><span style="display:flex;align-items:center;justify-content:center;gap:8px;border-right:1px solid #1A2028"><span class="m" style="font-size:10px;color:#7D8893;letter-spacing:.16em">STATUS</span><span class="d" style="font-size:18px;font-weight:800;color:#D7FF3F">UNDEFEATED</span></span><span style="display:flex;align-items:center;justify-content:center;gap:8px"><span class="m" style="font-size:10px;color:#7D8893;letter-spacing:.16em">AWAY</span><span class="d" style="font-size:18px;font-weight:800;color:#A3ADB7">YOU?</span></span></div>
+  </div>
+
+  <div style="position:absolute;left:16px;right:16px;bottom:40px;display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:22px;font-style:italic;font-weight:500;text-align:center;margin-bottom:8px">Think you can beat me?</span>
+    <a href="#" style="height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#D7FF3F;color:#0A0C08;text-decoration:none"><span class="d" style="font-size:22px;font-weight:900;letter-spacing:.14em">ENTER THE ARENA</span><span class="m" style="font-size:10px;letter-spacing:.14em;color:#2E3A0A">LITE · ONE-THUMB GAMES</span></a>
+    <a href="#" style="height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #3A434C;background:rgba(14,19,26,0.7);color:#F2F4F5;text-decoration:none"><span class="d" style="font-size:22px;font-weight:900;letter-spacing:.14em">VIEW PORTFOLIO</span><span class="m" style="font-size:10px;letter-spacing:.14em;color:#A3ADB7">RECRUITER VIEW · 90 SEC</span></a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

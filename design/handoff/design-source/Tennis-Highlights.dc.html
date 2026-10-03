@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Match Highlights — Projects</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.09)}
+.reel{transition:background .2s}
+.reel:hover{background:rgba(255,255,255,0.04)!important}
+.lnk:hover{border-color:#D7FF3F!important}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 110%,rgba(31,78,122,0.45),rgba(5,7,10,0) 70%),radial-gradient(ellipse 60% 40% at 50% -10%,rgba(150,172,200,0.12),rgba(5,7,10,0) 70%)"></div>
+
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:10">
+    <a href="Hub.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:#F2F4F5">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">HUB / CENTRE COURT / MATCH HIGHLIGHTS</span>
+    </a>
+    <div style="display:flex;gap:10px">
+      <a href="Tennis-Play.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">REMATCH</a>
+      <a href="QuickView.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">QUICK VIEW</a>
+    </div>
+  </header>
+
+  <div style="position:absolute;left:36px;right:36px;top:100px;display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span class="m" style="font-size:12px;letter-spacing:.22em;color:#D7FF3F">THE TOURNAMENT RUN · BEST PROJECT PLAYS THE FINAL</span>
+      <h1 class="d" style="margin:0;font-size:84px;line-height:.85;font-weight:900">MATCH HIGHLIGHTS</h1>
+    </div>
+    <span class="m" style="font-size:12px;letter-spacing:.16em;color:#A3ADB7">3 OF 3 UNLOCKED</span>
+  </div>
+
+  <!-- reel -->
+  <nav aria-label="Projects" class="glass" style="position:absolute;left:36px;top:236px;width:300px;bottom:110px;display:flex;flex-direction:column">
+    <span class="m" style="height:44px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid #1C232C;font-size:11px;letter-spacing:.2em;color:#A3ADB7">THE DRAW</span>
+    <sc-for list="{{reel}}" as="p" hint-placeholder-count="4">
+      <button class="reel" onClick="{{p.pick}}" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:96px;padding:14px 18px;border:0;border-bottom:1px solid #1C232C;border-left:3px solid {{p.edge}};background:{{p.bg}};color:#F2F4F5;cursor:pointer;text-align:left;font-family:inherit">
+        <span class="m" style="font-size:11px;letter-spacing:.18em;color:{{p.roundColor}}">{{p.round}}</span>
+        <span class="d" style="font-size:24px;font-weight:800;letter-spacing:.02em">{{p.name}}</span>
+        <span style="font-size:13px;color:#A3ADB7">{{p.kind}}</span>
+      </button>
+    </sc-for>
+  </nav>
+
+  <!-- replay -->
+  <section style="position:absolute;left:360px;width:720px;top:236px;bottom:110px;display:flex;flex-direction:column;gap:18px">
+    <div style="position:relative;height:230px;background:repeating-linear-gradient(135deg,#0B1118 0 14px,#0F1720 14px 28px);border:1px solid #1C232C;display:flex;align-items:center;justify-content:center">
+      <span class="m" style="font-size:12px;letter-spacing:.14em;color:#7D8893">[{{sel.name}} · ADD A 10s SCREEN RECORDING]</span>
+      <span class="m" style="position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:8px;padding:6px 10px;background:#05070A;font-size:11px;letter-spacing:.2em"><span style="width:6px;height:6px;border-radius:50%;background:#FF4D3D"></span>REPLAY</span>
+      <span class="m" style="position:absolute;right:14px;top:14px;padding:6px 10px;background:#05070A;font-size:11px;letter-spacing:.16em;color:#D7FF3F">{{sel.round}}</span>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:4px;background:#1C232C"><span style="display:block;width:38%;height:4px;background:#D7FF3F"></span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h2 class="d" style="margin:0;font-size:44px;line-height:.9;font-weight:900">{{sel.name}}</h2>
+      <span style="font-size:17px;color:#C3CBD3">{{sel.line}}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px">
+      <div class="glass" style="padding:16px;display:flex;flex-direction:column;gap:8px"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">THE SERVE · PROBLEM</span><span style="font-size:14px;line-height:1.5;color:#E6EAEE">{{sel.serve}}</span></div>
+      <div class="glass" style="padding:16px;display:flex;flex-direction:column;gap:8px"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">THE RALLY · APPROACH</span><span style="font-size:14px;line-height:1.5;color:#E6EAEE">{{sel.rally}}</span></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:8px;background:rgba(215,255,63,0.08);border:1px solid rgba(215,255,63,0.35)"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#D7FF3F">THE WINNER · RESULT</span><span style="font-size:14px;line-height:1.5;color:#F2F4F5">{{sel.winner}}</span></div>
+    </div>
+  </section>
+
+  <!-- shot data -->
+  <aside class="glass" style="position:absolute;left:1104px;right:36px;top:236px;bottom:110px;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;gap:18px">
+    <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">SHOT DATA</span>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{sel.facts}}" as="f" hint-placeholder-count="2">
+        <div style="display:flex;flex-direction:column;gap:3px;border-bottom:1px solid #1C232C;padding-bottom:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">{{f.k}}</span><span style="font-size:14px">{{f.v}}</span></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">STACK</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{sel.stack}}" as="t" hint-placeholder-count="4">
+          <span class="m" style="height:30px;display:flex;align-items:center;padding:0 10px;border:1px solid #2A323C;font-size:12px">{{t}}</span>
+        </sc-for>
+      </div>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+      <a href="https://github.com/yashsarda21" class="lnk m" style="height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border:1px solid #2A323C;color:#F2F4F5;text-decoration:none;font-size:12px;letter-spacing:.14em">CODE ON GITHUB <span>↗</span></a>
+      <a href="#" class="lnk m" style="height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border:1px solid #2A323C;color:#F2F4F5;text-decoration:none;font-size:12px;letter-spacing:.14em">LIVE DEMO <span>↗</span></a>
+      <a href="#" class="m" style="height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#D7FF3F;color:#0A0C08;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.14em">FULL CASE STUDY <span>→</span></a>
+    </div>
+  </aside>
+
+  <div style="position:absolute;left:36px;bottom:36px;display:flex;align-items:stretch">
+    <span class="m" style="display:flex;align-items:center;padding:0 14px;background:#D7FF3F;color:#0A0C08;font-size:11px;font-weight:700;letter-spacing:.2em">COMM</span>
+    <span class="glass" style="display:flex;align-items:center;padding:12px 18px;font-size:16px;font-style:italic;color:#E6EAEE">{{comm}}</span>
+  </div>
+  <a href="Badminton-Play.dc.html" style="position:absolute;right:36px;bottom:36px;height:52px;padding:0 26px;display:flex;align-items:center;background:#D7FF3F;color:#0A0C08;text-decoration:none;transform:skewX(-12deg)"><span class="d" style="transform:skewX(12deg);font-size:20px;font-weight:800;letter-spacing:.14em">NEXT VENUE · BADMINTON HALL →</span></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 2 };
+  }
+  renderVals() {
+    const data = [
+      { round: 'QUARTER-FINAL', name: 'POWER BI DASHBOARD', kind: 'Embedded analytics platform', line: 'An analytics-driven web platform with interactive Power BI dashboards embedded right inside it.',
+        serve: 'Teams needed live, interactive Power BI reports inside their own web platform — not in a separate tool.',
+        rally: 'Used the REST-based Embedding API, with server-side logic for session management, dashboard embedding and token generation.',
+        winner: 'Interactive reports that work in both desktop and mobile layouts.',
+        facts: [{ k: 'TYPE', v: 'Analytics web platform' }, { k: 'KEY PIECE', v: 'Secure token generation' }],
+        stack: ['Power BI Embedded', 'REST API', 'Token auth'] },
+      { round: 'SEMI-FINAL', name: 'KUDO BOARD', kind: 'Deutsche Bank · built from scratch', line: 'A recognition platform celebrating individual and team wins for 10,000+ employees.',
+        serve: 'Recognition across a 10,000+ person organisation was scattered and generic.',
+        rally: 'Built it from the ground up with 4+ interaction types — messages, GIFs, short videos and gesture-based responses.',
+        winner: 'Personalised delivery to the right person or team, across 10,000+ employees.',
+        facts: [{ k: 'TYPE', v: 'Internship project · Deutsche Bank' }, { k: 'REACH', v: '10,000+ employees' }],
+        stack: ['React', 'Spring Boot', 'Oracle'] },
+      { round: 'THE FINAL', name: 'AI INTERVIEW GROOMING PLATFORM', kind: 'Published research', line: 'A conversational AI interviewer that asks real follow-ups and scores you at the end.',
+        serve: 'Interview practice rarely feels real — no follow-up questions, no honest score.',
+        rally: 'Google Gemini generates questions, asks follow-ups based on your answers and evaluates them. React client, Node.js server, Firebase for auth and real-time data.',
+        winner: 'An end-of-interview score and feedback — and a paper published in a journal.',
+        facts: [{ k: 'TYPE', v: 'Academic project · PICT' }, { k: 'RECOGNITION', v: 'Journal publication' }],
+        stack: ['React', 'Node.js', 'Firebase', 'Google Gemini', 'Gen AI'] }
+    ];
+    const reel = data.map((d, i) => {
+      const on = i === this.state.sel;
+      return Object.assign({}, d, {
+        pick: () => this.setState({ sel: i }),
+        bg: on ? 'rgba(215,255,63,0.06)' : 'transparent',
+        edge: on ? '#D7FF3F' : 'transparent',
+        roundColor: on ? '#D7FF3F' : '#7D8893'
+      });
+    });
+    const comm = this.state.sel === 2 ? 'Match point. This one went the distance.' : 'Another project shipped.';
+    return { reel, sel: data[this.state.sel], comm };
+  }
+}
+</script>
+</body>
+</html>

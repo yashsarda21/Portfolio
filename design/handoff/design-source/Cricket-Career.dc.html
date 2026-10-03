@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Career Stats — Scorecard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.09)}
+.row{transition:background .2s}
+.row:hover{background:rgba(255,255,255,0.04)!important}
+@keyframes tick{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tick{animation:tick .6s cubic-bezier(.22,1,.36,1) both}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 115%,rgba(30,110,64,0.40),rgba(5,7,10,0) 70%),radial-gradient(ellipse 60% 40% at 50% -10%,rgba(150,172,200,0.14),rgba(5,7,10,0) 70%)"></div>
+
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:10">
+    <a href="Hub.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:#F2F4F5">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">HUB / CRICKET GROUND / CAREER STATS</span>
+    </a>
+    <div style="display:flex;gap:10px">
+      <a href="Cricket-Play.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">REMATCH</a>
+      <a href="QuickView.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">QUICK VIEW</a>
+    </div>
+  </header>
+
+  <!-- title + summary -->
+  <div style="position:absolute;left:36px;right:36px;top:100px;display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span class="m" style="font-size:12px;letter-spacing:.22em;color:#D7FF3F">THE SCORECARD</span>
+      <h1 class="d" style="margin:0;font-size:84px;line-height:.85;font-weight:900">CAREER STATS</h1>
+    </div>
+    <div style="display:flex;gap:2px">
+      <div class="glass" style="width:170px;padding:14px 18px;display:flex;flex-direction:column;gap:2px"><span class="m" style="font-size:11px;letter-spacing:.18em;color:#A3ADB7">PRO SINCE</span><span class="d tick" style="font-size:40px;font-weight:900;line-height:1">JUL 2024</span></div>
+      <div class="glass" style="width:170px;padding:14px 18px;display:flex;flex-direction:column;gap:2px"><span class="m" style="font-size:11px;letter-spacing:.18em;color:#A3ADB7">CLUB</span><span class="d tick" style="font-size:40px;font-weight:900;line-height:1;animation-delay:.1s">DEUTSCHE</span></div>
+      <div style="width:170px;padding:14px 18px;display:flex;flex-direction:column;gap:2px;background:#D7FF3F;color:#0A0C08"><span class="m" style="font-size:11px;letter-spacing:.18em;color:#2E3A0A">CURRENT</span><span class="d tick" style="font-size:40px;font-weight:900;line-height:1;animation-delay:.2s">NOT OUT</span></div>
+    </div>
+  </div>
+
+  <!-- scorecard -->
+  <section class="glass" style="position:absolute;left:36px;top:236px;width:800px;bottom:110px;display:flex;flex-direction:column">
+    <div class="m" style="display:grid;grid-template-columns:56px minmax(0,1.4fr) minmax(0,1.2fr) minmax(0,1.3fr) 110px;gap:16px;align-items:center;height:48px;padding:0 22px;border-bottom:1px solid #1C232C;font-size:11px;letter-spacing:.18em;color:#A3ADB7">
+      <span>INN</span><span>TEAM</span><span>ROLE</span><span>SPAN</span><span style="text-align:right">STATUS</span>
+    </div>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+      <button class="row" onClick="{{r.pick}}" style="display:grid;grid-template-columns:56px minmax(0,1.4fr) minmax(0,1.2fr) minmax(0,1.3fr) 110px;gap:16px;align-items:center;min-height:84px;padding:0 22px;border:0;border-bottom:1px solid #1C232C;border-left:3px solid {{r.edge}};background:{{r.bg}};color:#F2F4F5;text-align:left;cursor:pointer;font-family:inherit">
+        <span class="d" style="font-size:34px;font-weight:900;color:{{r.numColor}}">{{r.n}}</span>
+        <span class="d" style="font-size:24px;font-weight:800;letter-spacing:.03em">{{r.team}}</span>
+        <span style="font-size:15px;color:#C3CBD3">{{r.role}}</span>
+        <span class="m" style="font-size:12px;color:#C3CBD3">{{r.span}}</span>
+        <span class="m" style="font-size:11px;letter-spacing:.16em;text-align:right;color:{{r.statusColor}}">{{r.status}}</span>
+      </button>
+    </sc-for>
+    <div style="margin-top:auto;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1C232C">
+      <span class="m" style="font-size:11px;letter-spacing:.16em;color:#7D8893">NOT OUT = CURRENT ROLE · DEBUT = FIRST INNINGS</span>
+      <a href="Player-Card.dc.html" class="m" style="font-size:12px;letter-spacing:.16em;text-decoration:none">VIEW PLAYER CARD →</a>
+    </div>
+  </section>
+
+  <!-- innings detail -->
+  <section class="glass" style="position:absolute;left:860px;right:36px;top:236px;bottom:110px;box-sizing:border-box;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="m" style="font-size:11px;letter-spacing:.2em;color:#D7FF3F">INNINGS {{sel.n}} · BALL BY BALL</span><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7">{{sel.span}}</span></div>
+    <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-size:40px;font-weight:900;line-height:.95">{{sel.team}}</span><span style="font-size:16px;color:#C3CBD3">{{sel.role}} · Pune, MH</span></div>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <sc-for list="{{sel.balls}}" as="b" hint-placeholder-count="3">
+        <div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid #1C232C">
+          <span class="m" style="font-size:12px;color:#D7FF3F;padding-top:2px">{{b.over}}</span>
+          <span style="font-size:14px;line-height:1.42;color:#E6EAEE">{{b.text}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:auto">
+      <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">SHOTS PLAYED</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{sel.stack}}" as="t" hint-placeholder-count="4">
+          <span class="m" style="height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid #2A323C;font-size:12px;color:#F2F4F5">{{t}}</span>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- commentary + next -->
+  <div style="position:absolute;left:36px;bottom:36px;display:flex;align-items:stretch">
+    <span class="m" style="display:flex;align-items:center;padding:0 14px;background:#D7FF3F;color:#0A0C08;font-size:11px;font-weight:700;letter-spacing:.2em">COMM</span>
+    <span class="glass" style="display:flex;align-items:center;padding:12px 18px;font-size:16px;font-style:italic;color:#E6EAEE">Career high score updated.</span>
+  </div>
+  <a href="Tennis-Play.dc.html" style="position:absolute;right:36px;bottom:36px;height:52px;padding:0 26px;display:flex;align-items:center;gap:12px;background:#D7FF3F;color:#0A0C08;text-decoration:none;transform:skewX(-12deg)"><span class="d" style="transform:skewX(12deg);font-size:20px;font-weight:800;letter-spacing:.14em">NEXT VENUE · CENTRE COURT →</span></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0 };
+  }
+  renderVals() {
+    const data = [
+      { n: '01', team: 'DEUTSCHE BANK', role: 'Software Engineer 1', span: 'JUL 2024 – NOW', status: 'NOT OUT',
+        balls: [
+          { over: '0.1', text: 'Improving the sanctions compliance system that keeps restricted people and entities in line with each country’s law.' },
+          { over: '0.2', text: 'Supporting 200+ country-specific sanctions lists for global regulatory adherence.' },
+          { over: '0.3', text: 'Designed Excel bulk upload: 10,000+ records validated per upload across 50+ fields — manual entry down 60%.' },
+          { over: '0.4', text: 'Shipped dashboard features end-to-end; 75+ JUnit tests raised coverage and cut production defects.' }
+        ],
+        stack: ['Java', 'Spring Boot', 'React', 'Redux', 'Oracle', 'JUnit', 'TeamCity', 'uDeploy'] },
+      { n: '02', team: 'DEUTSCHE BANK', role: 'Graduate Analyst Intern', span: 'JUN – JUL 2023', status: 'DEBUT',
+        balls: [
+          { over: '0.1', text: 'Built a Kudo Board platform from the ground up to celebrate individual and team wins for 10,000+ employees.' },
+          { over: '0.2', text: 'Drove engagement with 4+ interaction types — messages, GIFs, short videos and gesture-based responses.' },
+          { over: '0.3', text: 'Enabled personalised delivery so recognition lands with the right person or team.' }
+        ],
+        stack: ['React', 'Spring Boot', 'Oracle'] }
+    ];
+    const rows = data.map((d, i) => {
+      const on = i === this.state.sel;
+      return Object.assign({}, d, {
+        pick: () => this.setState({ sel: i }),
+        bg: on ? 'rgba(215,255,63,0.06)' : 'transparent',
+        edge: on ? '#D7FF3F' : 'transparent',
+        numColor: on ? '#D7FF3F' : '#7D8893',
+        statusColor: d.status === 'NOT OUT' ? '#D7FF3F' : '#F2F4F5'
+      });
+    });
+    return { rows, sel: data[this.state.sel] };
+  }
+}
+</script>
+</body>
+</html>

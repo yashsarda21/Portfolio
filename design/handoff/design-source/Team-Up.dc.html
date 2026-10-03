@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Team Up — Contact</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.glass{background:rgba(14,19,26,0.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.09)}
+.field{width:100%;box-sizing:border-box;background:#0B0F14;border:1px solid #2A323C;color:#F2F4F5;font-family:'Archivo','Helvetica Neue',sans-serif;font-size:16px;padding:0 14px;outline:none}
+.field:focus{border-color:#D7FF3F}
+.field::placeholder{color:#7D8893}
+.chan:hover{border-color:#D7FF3F!important}
+.fmt:hover{border-color:#5D6670!important}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:900px;overflow:hidden;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 78% 50%,rgba(215,255,63,0.06),rgba(5,7,10,0) 70%),radial-gradient(ellipse 60% 40% at 30% -10%,rgba(150,172,200,0.14),rgba(5,7,10,0) 70%)"></div>
+
+  <header style="position:absolute;left:0;right:0;top:0;height:76px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;z-index:10">
+    <a href="Hub.dc.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:#F2F4F5">
+      <span class="d" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid #D7FF3F;color:#D7FF3F;font-weight:800;font-size:18px">YS</span>
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#A3ADB7">HUB / TEAM UP</span>
+    </a>
+    <a href="QuickView.dc.html" class="m glass" style="height:44px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;font-size:12px;letter-spacing:.16em;color:#F2F4F5;text-decoration:none">QUICK VIEW</a>
+  </header>
+
+  <!-- left: the challenge form -->
+  <section style="position:absolute;left:36px;top:100px;width:760px;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="m" style="font-size:12px;letter-spacing:.22em;color:#D7FF3F">CONTACT</span>
+      <h1 class="d" style="margin:0;font-size:96px;line-height:.85;font-weight:900">TEAM UP</h1>
+      <p style="margin:0;font-size:20px;line-height:1.45;color:#C3CBD3;max-width:640px">You've seen how I play. I'd rather be on your side of the net.</p>
+    </div>
+
+    <fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+      <legend class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7;margin-bottom:10px;padding:0">CHOOSE YOUR FORMAT</legend>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+        <label class="fmt" style="display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid #D7FF3F;background:rgba(215,255,63,0.07);cursor:pointer">
+          <span style="display:flex;align-items:center;gap:10px"><input type="radio" name="fmt" checked style="accent-color:#D7FF3F;width:18px;height:18px;margin:0"><span class="d" style="font-size:22px;font-weight:900;letter-spacing:.06em">SIGN A PLAYER</span></span>
+          <span style="font-size:13px;color:#C3CBD3">You're hiring for a role.</span>
+        </label>
+        <label class="fmt" style="display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid #2A323C;cursor:pointer">
+          <span style="display:flex;align-items:center;gap:10px"><input type="radio" name="fmt" style="accent-color:#D7FF3F;width:18px;height:18px;margin:0"><span class="d" style="font-size:22px;font-weight:900;letter-spacing:.06em">DOUBLES</span></span>
+          <span style="font-size:13px;color:#C3CBD3">Let's build something together.</span>
+        </label>
+        <label class="fmt" style="display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid #2A323C;cursor:pointer">
+          <span style="display:flex;align-items:center;gap:10px"><input type="radio" name="fmt" style="accent-color:#D7FF3F;width:18px;height:18px;margin:0"><span class="d" style="font-size:22px;font-weight:900;letter-spacing:.06em">FRIENDLY RALLY</span></span>
+          <span style="font-size:13px;color:#C3CBD3">Just saying hi. Or talking sport.</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+      <div style="display:flex;flex-direction:column;gap:6px"><label for="tu-name" class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">YOUR NAME</label><input id="tu-name" class="field" type="text" placeholder="Who's challenging?" style="height:52px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><label for="tu-email" class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">EMAIL</label><input id="tu-email" class="field" type="email" placeholder="you@company.com" style="height:52px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px"><label for="tu-msg" class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">THE CHALLENGE</label><textarea id="tu-msg" class="field" placeholder="The role, the problem, or the match you want to talk about." style="height:110px;padding:14px;resize:none"></textarea></div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <button style="height:62px;padding:0 40px;border:0;background:#D7FF3F;color:#0A0C08;cursor:pointer;transform:skewX(-12deg)"><span class="d" style="display:block;transform:skewX(12deg);font-size:24px;font-weight:900;letter-spacing:.14em">SEND CHALLENGE</span></button>
+      <span class="m" style="font-size:12px;letter-spacing:.12em;color:#A3ADB7">OR EMAIL YASHSARDA2002@GMAIL.COM</span>
+    </div>
+  </section>
+
+  <!-- right: direct lines -->
+  <section style="position:absolute;left:860px;right:36px;top:236px;display:flex;flex-direction:column;gap:10px">
+    <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">OR SKIP THE FORM</span>
+    <a href="mailto:yashsarda2002@gmail.com" class="chan glass" style="height:70px;display:grid;grid-template-columns:44px minmax(0,1fr) 20px;gap:14px;align-items:center;padding:0 18px;color:#F2F4F5;text-decoration:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D7FF3F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14"></rect><path d="M3 6l9 7 9-7"></path></svg><span style="display:flex;flex-direction:column"><span class="d" style="font-size:20px;font-weight:800;letter-spacing:.08em">EMAIL</span><span class="m" style="font-size:12px;color:#A3ADB7">yashsarda2002@gmail.com</span></span><span>↗</span></a>
+    <a href="https://www.linkedin.com/in/yash-sarda2107/" class="chan glass" style="height:70px;display:grid;grid-template-columns:44px minmax(0,1fr) 20px;gap:14px;align-items:center;padding:0 18px;color:#F2F4F5;text-decoration:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D7FF3F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"></rect><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"></path></svg><span style="display:flex;flex-direction:column"><span class="d" style="font-size:20px;font-weight:800;letter-spacing:.08em">LINKEDIN</span><span class="m" style="font-size:12px;color:#A3ADB7">linkedin.com/in/yash-sarda2107</span></span><span>↗</span></a>
+    <a href="https://github.com/yashsarda21" class="chan glass" style="height:70px;display:grid;grid-template-columns:44px minmax(0,1fr) 20px;gap:14px;align-items:center;padding:0 18px;color:#F2F4F5;text-decoration:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D7FF3F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l-5-5 5-5M16 7l5 5-5 5M14 4l-4 16"></path></svg><span style="display:flex;flex-direction:column"><span class="d" style="font-size:20px;font-weight:800;letter-spacing:.08em">GITHUB</span><span class="m" style="font-size:12px;color:#A3ADB7">github.com/yashsarda21</span></span><span>↗</span></a>
+    <a href="https://leetcode.com/u/yash_sarda" class="chan glass" style="height:70px;display:grid;grid-template-columns:44px minmax(0,1fr) 20px;gap:14px;align-items:center;padding:0 18px;color:#F2F4F5;text-decoration:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D7FF3F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6-5-6"></path><path d="M12 19h8"></path></svg><span style="display:flex;flex-direction:column"><span class="d" style="font-size:20px;font-weight:800;letter-spacing:.08em">CODING PROFILES</span><span class="m" style="font-size:12px;color:#A3ADB7">LeetCode · Codeforces · CodeChef — 750+ solved</span></span><span>↗</span></a>
+
+    <div style="margin-top:20px;padding:20px;border:1px dashed #2A323C;display:flex;flex-direction:column;gap:10px">
+      <span class="m" style="font-size:11px;letter-spacing:.2em;color:#A3ADB7">AFTER YOU SEND</span>
+      <div style="display:flex;align-items:stretch">
+        <span class="m" style="display:flex;align-items:center;padding:0 12px;background:#D7FF3F;color:#0A0C08;font-size:11px;font-weight:700;letter-spacing:.2em">COMM</span>
+        <span style="display:flex;align-items:center;padding:10px 14px;background:#0E141B;font-size:15px;font-style:italic;color:#E6EAEE">Challenge received. I'll serve first.</span>
+      </div>
+      <span style="font-size:13px;color:#A3ADB7;line-height:1.5">Floodlights pulse once, the crowd lifts, and the scoreboard reads <span class="m" style="color:#F2F4F5">NEW FIXTURE · VISITOR vs YASH</span>.</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

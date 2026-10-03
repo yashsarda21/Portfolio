@@ -1,0 +1,67 @@
+/* The Arena — design tokens ("Night Match") */
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  /* colour */
+  --pitch-black: #05070A;      /* page ground */
+  --night:       #030405;      /* landing / intro ground */
+  --stand:       #0E141B;      /* panels (use at 66% for glass) */
+  --stand-2:     #0B0F14;      /* inset cells, inputs */
+  --line:        #1C232C;      /* hairlines */
+  --line-strong: #2A323C;      /* control borders */
+  --floodlight:  #F2F4F5;      /* primary text */
+  --text-2:      #C3CBD3;      /* body secondary */
+  --scout-grey:  #A3ADB7;      /* labels */
+  --dim:         #7D8893;      /* tertiary (≥4.5:1 on ground) */
+  --volt:        #D7FF3F;      /* THE accent: "act here" or "you earned this" */
+  --volt-hover:  #E6FF7A;
+  --volt-ink:    #0A0C08;      /* text on volt */
+  --live-red:    #FF4D3D;      /* signal dot only, never a fill */
+  --gold:        #D4B26A;      /* trophy room only */
+
+  /* venue tints (used as light, not paint) */
+  --turf:        #0E3322;      /* cricket */
+  --hard-court:  #0C2236;      /* tennis */
+  --hall:        #24180E;      /* badminton */
+
+  /* glass */
+  --glass-bg:     rgba(14, 19, 26, 0.66);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-blur:   14px;
+
+  /* type */
+  --font-display: 'Big Shoulders Display', 'Oswald', 'Arial Narrow', sans-serif; /* the competitor: scoreboards, venues, numbers */
+  --font-body:    'Archivo', 'Helvetica Neue', sans-serif;                      /* the narrator: copy, forms; italic = commentary */
+  --font-mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;             /* the engineer: labels, stats, tags */
+
+  --fs-h1: 120px;  --lh-h1: .85;
+  --fs-h2: 84px;   --lh-h2: .85;
+  --fs-h3: 34px;
+  --fs-body: 16px; --lh-body: 1.5;
+  --fs-label: 12px; --ls-label: .2em;   /* mono labels, uppercase */
+
+  /* shape + space */
+  --radius: 0;                 /* broadcast graphics are square */
+  --skew: -12deg;              /* CTA parallelogram; counter-skew the label */
+  --gutter: 36px;              /* screen edge padding on desktop */
+  --hit: 44px;                 /* minimum touch target */
+
+  /* motion */
+  --ease-follow: cubic-bezier(.22, 1, .36, 1);   /* camera, panels, reveals 600–1200ms */
+  --ease-snap:   cubic-bezier(.2, .9, .1, 1);    /* hovers, presses, digits 160–240ms */
+  --ease-swing:  cubic-bezier(.65, 0, .35, 1);   /* ball arcs, broadcast wipe 400–500ms */
+  --dur-wipe: 480ms;
+  --dur-count: 900ms;
+  --comm-hold: 4s;
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

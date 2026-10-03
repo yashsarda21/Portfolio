@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion, Camera and Transitions</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+@keyframes wipe{0%{transform:translateX(-140%) skewX(-18deg)}100%{transform:translateX(340%) skewX(-18deg)}}
+.wipe{animation:wipe 2.4s cubic-bezier(.65,0,.35,1) infinite}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="width:1440px;height:1100px;box-sizing:border-box;padding:56px 64px;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5;display:flex;flex-direction:column;gap:30px;overflow:hidden">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#D7FF3F">14 — ANIMATION &amp; TRANSITIONS</span>
+      <h2 class="d" style="margin:0;font-size:64px;line-height:.9;font-weight:900">SHOT LIKE A BROADCAST</h2>
+    </div>
+    <p style="margin:0;max-width:540px;font-size:16px;line-height:1.5;color:#C3CBD3;text-align:right">Four camera moves, one transition, three easing curves. Motion is reserved for moments that mean something: arrival, reveal, victory.</p>
+  </div>
+
+  <!-- camera moves -->
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px">
+    <div style="border:1px solid #1C232C;display:flex;flex-direction:column">
+      <svg width="100%" height="130" viewBox="0 0 300 130" aria-hidden="true" style="display:block;background:#0A0E13"><ellipse cx="150" cy="112" rx="120" ry="14" fill="none" stroke="#2A323C"></ellipse><path d="M150 14 L150 92" stroke="#D7FF3F" stroke-width="2" stroke-dasharray="3 5"></path><path d="M142 84 L150 96 L158 84" fill="none" stroke="#D7FF3F" stroke-width="2"></path><rect x="138" y="8" width="24" height="12" fill="none" stroke="#F2F4F5"></rect></svg>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:24px;font-weight:900">CRANE IN</span><span class="m" style="font-size:11px;color:#D7FF3F;letter-spacing:.12em">LANDING · 1.2s · FOLLOW</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Roof to big-screen height as the lights finish. Sells the scale once.</span></div>
+    </div>
+    <div style="border:1px solid #1C232C;display:flex;flex-direction:column">
+      <svg width="100%" height="130" viewBox="0 0 300 130" aria-hidden="true" style="display:block;background:#0A0E13"><ellipse cx="150" cy="70" rx="110" ry="34" fill="none" stroke="#2A323C"></ellipse><path d="M70 92 A110 34 0 0 0 230 92" fill="none" stroke="#D7FF3F" stroke-width="2" stroke-dasharray="3 5"></path><path d="M222 84 L232 93 L220 98" fill="none" stroke="#D7FF3F" stroke-width="2"></path><circle cx="150" cy="70" r="5" fill="#F2F4F5"></circle></svg>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:24px;font-weight:900">IDLE ORBIT</span><span class="m" style="font-size:11px;color:#D7FF3F;letter-spacing:.12em">HUB · ±6° OVER 40s · SINE</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Barely-there drift so the hub feels alive. Stops the moment the cursor moves.</span></div>
+    </div>
+    <div style="border:1px solid #1C232C;display:flex;flex-direction:column">
+      <svg width="100%" height="130" viewBox="0 0 300 130" aria-hidden="true" style="display:block;background:#0A0E13"><path d="M60 20 L120 50 L180 50 L240 20 M60 110 L120 80 L180 80 L240 110" fill="none" stroke="#2A323C"></path><path d="M40 65 L250 65" stroke="#D7FF3F" stroke-width="2" stroke-dasharray="3 5"></path><path d="M242 57 L254 65 L242 73" fill="none" stroke="#D7FF3F" stroke-width="2"></path><path d="M80 35 L110 35 M190 95 L220 95 M90 100 L115 100" stroke="#F2F4F5" stroke-opacity=".5"></path></svg>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:24px;font-weight:900">TUNNEL PUSH</span><span class="m" style="font-size:11px;color:#D7FF3F;letter-spacing:.12em">HUB → VENUE · 1.1s · FOLLOW</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Through the players' tunnel, light streaks, crowd swells. Hides the scene load.</span></div>
+    </div>
+    <div style="border:1px solid #1C232C;display:flex;flex-direction:column">
+      <div style="position:relative;height:130px;background:#0A0E13;overflow:hidden;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))"><div style="background:linear-gradient(135deg,#0E3322,#05070A)"></div><div style="background:linear-gradient(135deg,#141B23,#05070A);display:flex;align-items:center;justify-content:center"><span class="d" style="font-size:20px;font-weight:900">STATS</span></div><span class="wipe" style="position:absolute;top:-20px;bottom:-20px;left:0;width:60px;background:#D7FF3F"></span></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px"><span class="d" style="font-size:24px;font-weight:900">BROADCAST WIPE</span><span class="m" style="font-size:11px;color:#D7FF3F;letter-spacing:.12em">GAME → REVEAL · 480ms · SWING</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">A volt bar sweeps at 18°, the YS mark flashes mid-wipe — the replay sting.</span></div>
+    </div>
+  </div>
+
+  <!-- easing + micro -->
+  <div style="display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:40px;flex-grow:1">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span class="m" style="font-size:12px;letter-spacing:.2em;color:#A3ADB7">EASING TOKENS</span>
+      <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:center;padding:12px 0;border-top:1px solid #1C232C">
+        <svg width="96" height="64" viewBox="0 0 96 64" aria-hidden="true"><rect x="0" y="0" width="96" height="64" fill="#0A0E13"></rect><path d="M6 58 C 27 2, 40 6, 90 6" fill="none" stroke="#D7FF3F" stroke-width="2"></path></svg>
+        <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-size:22px;font-weight:900">FOLLOW-THROUGH</span><span class="m" style="font-size:12px;color:#C3CBD3">cubic-bezier(.22,1,.36,1) · 600–1200ms</span><span style="font-size:13px;color:#A3ADB7">Camera, panels, reveals. Fast start, long settle.</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:center;padding:12px 0;border-top:1px solid #1C232C">
+        <svg width="96" height="64" viewBox="0 0 96 64" aria-hidden="true"><rect x="0" y="0" width="96" height="64" fill="#0A0E13"></rect><path d="M6 58 C 25 4, 12 6, 90 6" fill="none" stroke="#F2F4F5" stroke-width="2"></path></svg>
+        <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-size:22px;font-weight:900">SNAP</span><span class="m" style="font-size:12px;color:#C3CBD3">cubic-bezier(.2,.9,.1,1) · 160–240ms</span><span style="font-size:13px;color:#A3ADB7">Hovers, presses, score-bug digits.</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:center;padding:12px 0;border-top:1px solid #1C232C;border-bottom:1px solid #1C232C">
+        <svg width="96" height="64" viewBox="0 0 96 64" aria-hidden="true"><rect x="0" y="0" width="96" height="64" fill="#0A0E13"></rect><path d="M6 58 C 38 58, 58 6, 90 6" fill="none" stroke="#A3ADB7" stroke-width="2"></path></svg>
+        <div style="display:flex;flex-direction:column;gap:2px"><span class="d" style="font-size:22px;font-weight:900">SWING</span><span class="m" style="font-size:12px;color:#C3CBD3">cubic-bezier(.65,0,.35,1) · 400–500ms</span><span style="font-size:13px;color:#A3ADB7">Ball arcs, shuttle flight, the broadcast wipe.</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span class="m" style="font-size:12px;letter-spacing:.2em;color:#A3ADB7">MICRO-INTERACTIONS</span>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px">
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Buttons</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">A floodlight sweep crosses the face on hover (300ms). Press compresses 3%.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Cards</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Lift 8px and tilt toward the cursor (max 6°). Border lights volt.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Numbers</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Stats count up over 900ms with tabular digits; score bugs flip digit by digit.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Trophies</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Spotlight drops in 400ms, then a slow 12s turntable on the selected one.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Commentary</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Slides in from the left, holds 4s, leaves. Never two at once.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Particles</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Dust in the floodlight beams only — ≤60 specks at 15% opacity. Off on mobile.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C;border-bottom:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Sound</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">Crowd bed at low volume; swells on reveal; one mute toggle, remembered.</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;padding:12px 0;border-top:1px solid #1C232C;border-bottom:1px solid #1C232C"><span style="font-size:15px;font-weight:600">Cursor</span><span style="font-size:13px;color:#A3ADB7;line-height:1.5">In venues it becomes a small tracking ring, like a Hawk-Eye marker.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

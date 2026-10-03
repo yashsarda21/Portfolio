@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Play Against Me — Game System</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#05070A}
+a{color:#D7FF3F}a:hover{color:#EBFF9E}
+.d{font-family:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif}
+.m{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+</style>
+</helmet>
+<div style="width:1440px;height:1100px;box-sizing:border-box;padding:56px 64px;background:#05070A;font-family:'Archivo','Helvetica Neue',sans-serif;color:#F2F4F5;display:flex;flex-direction:column;gap:30px;overflow:hidden">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="m" style="font-size:12px;letter-spacing:.24em;color:#D7FF3F">13 — PLAY AGAINST ME</span>
+      <h2 class="d" style="margin:0;font-size:64px;line-height:.9;font-weight:900">THE 99% RULE</h2>
+    </div>
+    <p style="margin:0;max-width:560px;font-size:16px;line-height:1.5;color:#C3CBD3;text-align:right">Games decide who wins, never what you see. Every attempt — win, lose or skip — reveals the content. The only thing at stake is bragging rights.</p>
+  </div>
+
+  <!-- the loop -->
+  <div style="position:relative;height:150px">
+    <div style="position:absolute;left:0;top:30px;width:220px;height:96px;border:1px solid #2A323C;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:4px"><span class="m" style="font-size:10px;letter-spacing:.2em;color:#A3ADB7">01 · 1.1s</span><span class="d" style="font-size:24px;font-weight:900">ENTER VENUE</span><span style="font-size:12px;color:#A3ADB7">Tunnel push, crowd lifts</span></div>
+    <div style="position:absolute;left:220px;top:77px;width:60px;height:2px;background:#5D6670"></div>
+    <div style="position:absolute;left:280px;top:30px;width:220px;height:96px;border:1px solid #2A323C;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:4px"><span class="m" style="font-size:10px;letter-spacing:.2em;color:#A3ADB7">02 · 5–15s</span><span class="d" style="font-size:24px;font-weight:900">PLAY</span><span style="font-size:12px;color:#A3ADB7">One input, one mechanic</span></div>
+    <div style="position:absolute;left:500px;top:77px;width:60px;height:2px;background:#5D6670"></div>
+    <div style="position:absolute;left:560px;top:30px;width:220px;height:96px;border:1px solid #D7FF3F;background:rgba(215,255,63,0.06);box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:4px"><span class="m" style="font-size:10px;letter-spacing:.2em;color:#D7FF3F">03 · EVERY INPUT</span><span class="d" style="font-size:24px;font-weight:900">REVEAL</span><span style="font-size:12px;color:#C3CBD3">Content lands on the big screen</span></div>
+    <div style="position:absolute;left:780px;top:77px;width:60px;height:2px;background:#5D6670"></div>
+    <div style="position:absolute;left:840px;top:30px;width:220px;height:96px;border:1px solid #2A323C;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:4px"><span class="m" style="font-size:10px;letter-spacing:.2em;color:#A3ADB7">04 · 2s</span><span class="d" style="font-size:24px;font-weight:900">VERDICT</span><span style="font-size:12px;color:#A3ADB7">Yash 99 · You 1</span></div>
+    <div style="position:absolute;left:1060px;top:77px;width:60px;height:2px;background:#5D6670"></div>
+    <div style="position:absolute;left:1120px;top:30px;width:192px;height:96px;border:1px solid #2A323C;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:4px"><span class="m" style="font-size:10px;letter-spacing:.2em;color:#A3ADB7">05 · YOUR CALL</span><span class="d" style="font-size:24px;font-weight:900">CONTINUE</span><span style="font-size:12px;color:#A3ADB7">Full page · rematch · next</span></div>
+    <!-- skip path -->
+    <div style="position:absolute;left:110px;top:0;width:560px;height:30px;border:2px dashed #D7FF3F;border-bottom:0;box-sizing:border-box"></div>
+    <span class="m" style="position:absolute;left:300px;top:-9px;padding:0 10px;background:#05070A;font-size:11px;letter-spacing:.18em;color:#D7FF3F">SKIP — ALWAYS ONE CLICK</span>
+    <div style="position:absolute;left:840px;top:126px;width:2px;height:20px;background:#5D6670"></div>
+    <span class="m" style="position:absolute;left:852px;top:130px;font-size:11px;color:#A3ADB7">~1% → GIANT KILLER EASTER EGG</span>
+  </div>
+
+  <!-- games table -->
+  <div style="display:flex;flex-direction:column">
+    <div class="m" style="display:grid;grid-template-columns:150px 230px 210px 150px 80px 170px minmax(0,1fr);gap:16px;padding:0 0 10px;border-bottom:1px solid #2A323C;font-size:11px;letter-spacing:.16em;color:#A3ADB7">
+      <span>VENUE</span><span>GAME</span><span>DESKTOP</span><span>MOBILE</span><span>TIME</span><span>REVEALS</span><span>HOW YASH (ALMOST ALWAYS) WINS</span>
+    </div>
+    <div style="display:grid;grid-template-columns:150px 230px 210px 150px 80px 170px minmax(0,1fr);gap:16px;padding:14px 0;border-bottom:1px solid #1C232C;font-size:14px;line-height:1.45;align-items:start">
+      <span class="d" style="font-size:22px;font-weight:900">CRICKET</span><span>Bowl at Me — 3 balls, length meter</span><span class="m" style="font-size:12px;color:#C3CBD3">SPACE / CLICK to release</span><span class="m" style="font-size:12px;color:#C3CBD3">TAP to bowl</span><span class="m" style="font-size:12px">~10s</span><span>1 innings per ball</span><span style="color:#C3CBD3">Yash bats. Ball 3: even a perfect yorker gets flicked for four — unless the 1% roll lands and you hit middle stump.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:150px 230px 210px 150px 80px 170px minmax(0,1fr);gap:16px;padding:14px 0;border-bottom:1px solid #1C232C;font-size:14px;line-height:1.45;align-items:start">
+      <span class="d" style="font-size:22px;font-weight:900">TENNIS</span><span>Return of Serve — up to 3 returns</span><span class="m" style="font-size:12px;color:#C3CBD3">← → or click a side</span><span class="m" style="font-size:12px;color:#C3CBD3">SWIPE left / right</span><span class="m" style="font-size:12px">~12s</span><span>1 project per return</span><span style="color:#C3CBD3">Serve speed rises each rally; the 3rd return meets a winner that clips the line.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:150px 230px 210px 150px 80px 170px minmax(0,1fr);gap:16px;padding:14px 0;border-bottom:1px solid #1C232C;font-size:14px;line-height:1.45;align-items:start">
+      <span class="d" style="font-size:22px;font-weight:900">BADMINTON</span><span>Smash or Clear — 4 rallies, power hold</span><span class="m" style="font-size:12px;color:#C3CBD3">HOLD &amp; RELEASE space / mouse</span><span class="m" style="font-size:12px;color:#C3CBD3">PRESS &amp; HOLD</span><span class="m" style="font-size:12px">~10s</span><span>1 skill group per rally</span><span style="color:#C3CBD3">He reads every smash. Only a perfectly weighted drop at 20–19 can sneak through.</span>
+    </div>
+  </div>
+
+  <!-- three columns -->
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;flex-grow:1">
+    <div style="display:flex;flex-direction:column;gap:14px;border-top:2px solid #D7FF3F;padding-top:16px">
+      <span class="d" style="font-size:26px;font-weight:900">TUNING THE 1%</span>
+      <div class="m" style="padding:14px;background:#0E141B;font-size:13px;line-height:1.7;color:#E6EAEE">P(win) = P(perfect on every input)<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;× luck roll<br><span style="color:#A3ADB7">≈ 8% skilled players × 12%</span><br><span style="color:#D7FF3F">≈ 1% of matches</span></div>
+      <span style="font-size:14px;line-height:1.55;color:#C3CBD3">Perfect window ±35ms. The roll keeps it rare but honest: a win always means you actually played perfectly. Rematches are unlimited. After two losses, offer “Watch the highlight instead”.</span>
+      <span class="m" style="font-size:12px;color:#A3ADB7">RECORD SAVED IN-BROWSER · YASH 99 · YOU 1</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;border-top:2px solid #F2F4F5;padding-top:16px">
+      <span class="d" style="font-size:26px;font-weight:900">COMMENTARY LEXICON</span>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.4">
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7;padding-top:2px">ENTRANCE</span><span style="font-style:italic">New challenger enters the arena.</span></div>
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7;padding-top:2px">IN PLAY</span><span style="font-style:italic">Let's see what you've got. · Good length. Respect.</span></div>
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7;padding-top:2px">REVEAL</span><span style="font-style:italic">Another project shipped. · Career high score updated.</span></div>
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7;padding-top:2px">CLOSE CALL</span><span style="font-style:italic">Match point. · Close. Not close enough.</span></div>
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#A3ADB7;padding-top:2px">YASH WINS</span><span style="font-style:italic">Still undefeated. · He doesn't like losing. Noted.</span></div>
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px"><span class="m" style="font-size:11px;letter-spacing:.14em;color:#D7FF3F;padding-top:2px">YOU WIN</span><span style="font-style:italic">Okay… you got me. That doesn't happen often.</span></div>
+      </div>
+      <span style="font-size:13px;color:#A3ADB7;line-height:1.5">Max one line on screen, 4s hold, never during reading. Dry, short, a little self-aware.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;border-top:2px solid #5D6670;padding-top:16px">
+      <span class="d" style="font-size:26px;font-weight:900">RULES OF FAIR PLAY</span>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#E6EAEE">
+        <span><span class="m" style="color:#D7FF3F">01</span>&#160; Skip and Quick View visible on every game screen, ≥44px.</span>
+        <span><span class="m" style="color:#D7FF3F">02</span>&#160; No game longer than 15 seconds. No forced replays.</span>
+        <span><span class="m" style="color:#D7FF3F">03</span>&#160; Games are decorative to assistive tech; revealed content is announced in a live region.</span>
+        <span><span class="m" style="color:#D7FF3F">04</span>&#160; Reduced motion: the game becomes a 3s auto-rally, then the reveal.</span>
+        <span><span class="m" style="color:#D7FF3F">05</span>&#160; Losing is never punished — it's the expected, fun outcome.</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
