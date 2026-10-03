@@ -21,4 +21,20 @@ describe("cn", () => {
   it("keeps a type recipe alongside a colour", () => {
     expect(cn("type-d1 text-volt")).toBe("type-d1 text-volt");
   });
+
+  it("treats Arena easings as one conflict group", () => {
+    expect(cn("ease-follow", "ease-snap")).toBe("ease-snap");
+  });
+
+  it("treats Arena shadows as one conflict group", () => {
+    expect(cn("shadow-board", "shadow-toast")).toBe("shadow-toast");
+  });
+
+  it("keeps an Arena shadow alongside a shadow colour", () => {
+    expect(cn("shadow-board", "shadow-volt-a35")).toBe("shadow-board shadow-volt-a35");
+  });
+
+  it("lets a later type recipe replace earlier font classes", () => {
+    expect(cn("font-mono", "type-d1")).toBe("type-d1");
+  });
 });

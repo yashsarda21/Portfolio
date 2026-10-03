@@ -169,7 +169,7 @@
 }
 
 /* Mobile: solid panels, no blur, 16px gutter (Responsive board) */
-@media (max-width: 47.99rem) {
+@media (width < 48rem) {
   :root {
     --surface-glass: var(--surface-glass-solid);
     --border-glass: var(--ref-line-strong);

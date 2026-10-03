@@ -65,9 +65,33 @@ test.describe("design tokens", () => {
     expect(duration).toBeLessThan(0.001);
   });
 
+  test("glass surface blurs on desktop and goes solid on mobile", async ({ page }, testInfo) => {
+    await page.goto("/");
+    const backdrop = await page.evaluate(() => {
+      const el = document.createElement("div");
+      el.className = "glass";
+      document.body.append(el);
+      return getComputedStyle(el).backdropFilter;
+    });
+    expect(backdrop).toBe(testInfo.project.name === "desktop" ? "blur(14px)" : "blur(0px)");
+  });
+
+  test("built CSS keeps the unprefixed backdrop-filter", () => {
+    expect(builtCss()).toMatch(/[{;]backdrop-filter:blur\(var\(--glass-blur\)\)/);
+  });
+
   test("Tailwind defaults are locked out; tokens are in", () => {
     const css = builtCss();
-    for (const banned of [".bg-blue-500", ".rounded-lg", ".text-sm", ".shadow-md", ".font-sans"]) {
+    for (const banned of [
+      ".bg-blue-500",
+      ".rounded-lg",
+      ".text-sm",
+      ".shadow-md",
+      ".font-sans",
+      ".font-bold",
+      ".tracking-wide",
+      ".leading-tight",
+    ]) {
       expect(css, `${banned} must not exist`).not.toContain(banned);
     }
     for (const allowed of [".bg-volt", ".type-d1", ".glass", ".ease-follow"]) {

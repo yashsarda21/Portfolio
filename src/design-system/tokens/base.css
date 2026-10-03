@@ -32,7 +32,9 @@
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }
@@ -41,8 +43,9 @@
 @utility glass {
   background: var(--surface-glass);
   border: 1px solid var(--border-glass);
-  backdrop-filter: blur(var(--glass-blur));
+  /* prefixed first: the minifier keeps the last duplicate, which must be the standard one */
   -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
 }
 @utility glass-solid {
   background: var(--surface-glass-solid);
