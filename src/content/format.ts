@@ -32,9 +32,14 @@ export function experienceSince(ym: string): string {
   return `SINCE ${formatMonth(ym).toUpperCase()}`;
 }
 
-/** Whole months from startYm to now; 0 if now is before start. */
+/**
+ * Whole months from startYm to now; 0 if now is before start or `now` is an invalid Date.
+ * During prerender `now` is the build machine's clock, so call sites that show a live duration
+ * should compute it after mount on the client, or accept build-time staleness.
+ */
 export function monthsBetween(startYm: string, now: Date): number {
   const { year, month } = parseYm(startYm);
+  if (Number.isNaN(now.getTime())) return 0;
   const months = (now.getFullYear() - year) * 12 + (now.getMonth() + 1 - month);
   return Math.max(0, months);
 }

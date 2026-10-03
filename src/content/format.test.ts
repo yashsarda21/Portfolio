@@ -37,6 +37,10 @@ describe("formatters", () => {
     expect(monthsBetween("2030-01", new Date(2026, 9, 3))).toBe(0);
   });
 
+  it("returns 0 for an invalid date instead of NaN", () => {
+    expect(monthsBetween("2024-07", new Date("not a date"))).toBe(0);
+  });
+
   it("throws on malformed input", () => {
     expect(() => formatMonth("2024-7")).toThrow(/YYYY-MM/);
   });

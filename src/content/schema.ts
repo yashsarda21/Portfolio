@@ -1,8 +1,19 @@
 import { z } from "zod";
 
 const YearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Expected YYYY-MM");
-const Url = z.url();
-const Link = z.object({ label: z.string().min(1), href: z.string().min(1) });
+const Url = z.url({ protocol: /^https$/ });
+// https, mailto, or a single-slash root path ("//host" is protocol-relative, so it is rejected).
+const Link = z.strictObject({
+  label: z.string().min(1),
+  href: z
+    .string()
+    .regex(/^(https:\/\/|mailto:|\/(?!\/))/, "Must start with https://, mailto: or a single /"),
+});
+
+const PRIVATE_RESUME_NAME = "yash-sarda-resume.pdf"; // the original PDF contains a phone number
+const Lines = z.array(z.string().min(1)).min(1);
+
+const isUnique = (values: readonly string[]) => new Set(values).size === values.length;
 
 export const SkillLevelSchema = z.enum(["shipped", "built", "kit"]);
 const Skill = z.union([
@@ -10,8 +21,8 @@ const Skill = z.union([
   z.tuple([z.string().min(1), SkillLevelSchema, z.string().min(1)]),
 ]);
 
-export const ContentSchema = z.object({
-  player: z.object({
+export const ContentSchema = z.strictObject({
+  player: z.strictObject({
     name: z.string().min(1),
     title: z.string().min(1),
     tagline: z.string().min(1),
@@ -20,7 +31,7 @@ export const ContentSchema = z.object({
     location: z.string().min(1),
     currentClub: z.string().min(1),
     proSince: YearMonth,
-    contact: z.object({
+    contact: z.strictObject({
       email: z.email(),
       linkedin: Url,
       github: Url,
@@ -32,28 +43,53 @@ export const ContentSchema = z.object({
     resumePdf: z
       .string()
       .regex(/^\/[\w./-]+\.pdf$/, "Must be a public path like /Yash-Sarda-Resume-public.pdf")
+      .refine((p) => !p.startsWith("//"), "Must not be protocol-relative")
+      .refine((p) => !p.split("/").includes(".."), "Must not contain ..")
+      .refine(
+        (p) => p.split("/").pop()!.toLowerCase() !== PRIVATE_RESUME_NAME,
+        "Must not be the private resume file",
+      )
       .nullable(),
-    cardStats: z.array(z.object({ label: z.string().min(1), value: z.string().min(1) })).length(6),
+    cardStats: z
+      .array(z.strictObject({ label: z.string().min(1), value: z.string().min(1) }))
+      .length(6),
   }),
   careerStats: z
     .array(
-      z.object({
-        innings: z.string().regex(/^\d{2}$/),
-        status: z.enum(["NOT OUT", "DEBUT"]),
-        team: z.string().min(1),
-        role: z.string().min(1),
-        location: z.string().min(1),
-        start: YearMonth,
-        end: YearMonth.nullable(),
-        ballByBall: z.array(z.string().min(1)).min(1),
-        stack: z.array(z.string().min(1)).min(1),
-        scoutLine: z.string().min(1),
-      }),
+      z
+        .strictObject({
+          innings: z.string().regex(/^\d{2}$/),
+          status: z.enum(["NOT OUT", "DEBUT"]),
+          team: z.string().min(1),
+          role: z.string().min(1),
+          location: z.string().min(1),
+          start: YearMonth,
+          end: YearMonth.nullable(),
+          ballByBall: z.array(z.string().min(1)).min(1),
+          stack: z.array(z.string().min(1)).min(1),
+          scoutLine: z.string().min(1),
+        })
+        .superRefine((row, ctx) => {
+          if (row.end !== null && row.start > row.end) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["end"],
+              message: "end must not be before start",
+            });
+          }
+          if ((row.status === "NOT OUT") !== (row.end === null)) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["status"],
+              message: 'status "NOT OUT" must go with end: null (and only then)',
+            });
+          }
+        }),
     )
     .min(1),
   matchHighlights: z
     .array(
-      z.object({
+      z.strictObject({
         round: z.enum(["THE FINAL", "SEMI-FINAL", "QUARTER-FINAL"]),
         name: z.string().min(1),
         kind: z.string().min(1),
@@ -62,17 +98,21 @@ export const ContentSchema = z.object({
         rally: z.string().min(1),
         winner: z.string().min(1),
         stack: z.array(z.string().min(1)).min(1),
-        media: z.string().nullable(),
-        facts: z.array(z.object({ k: z.string().min(1), v: z.string().min(1) })).min(1),
+        media: z.string().min(1).nullable(),
+        facts: z.array(z.strictObject({ k: z.string().min(1), v: z.string().min(1) })).min(1),
         scoutLine: z.string().min(1),
       }),
     )
-    .length(3),
-  playerAttributes: z.object({
+    .length(3)
+    .refine(
+      (rows) => isUnique(rows.map((r) => r.round)),
+      "Each round (QF, SF, FINAL) must appear once",
+    ),
+  playerAttributes: z.strictObject({
     levels: z.record(SkillLevelSchema, z.string().min(1)),
     groups: z
       .array(
-        z.object({
+        z.strictObject({
           name: z.string().min(1),
           shot: z.string().min(1),
           note: z.string().min(1),
@@ -85,7 +125,7 @@ export const ContentSchema = z.object({
   }),
   trophyRoom: z
     .array(
-      z.object({
+      z.strictObject({
         type: z.enum(["cup", "medal", "plaque", "pennant", "round", "locked"]),
         title: z.string().min(1),
         sub: z.string().min(1),
@@ -94,19 +134,30 @@ export const ContentSchema = z.object({
         draftCopy: z.boolean(),
       }),
     )
-    .length(6),
-  trainingAcademy: z.object({
-    school: z.string().min(1),
-    shortName: z.string().min(1),
-    city: z.string().min(1),
-    degree: z.string().min(1),
-    start: YearMonth,
-    end: YearMonth,
-    cgpa: z.string().min(1),
-    honours: z.string().min(1),
-    extras: z.array(z.string().min(1)),
+    .length(6)
+    .refine((rows) => isUnique(rows.map((r) => r.type)), "Each trophy type must appear once"),
+  trainingAcademy: z
+    .strictObject({
+      school: z.string().min(1),
+      shortName: z.string().min(1),
+      city: z.string().min(1),
+      degree: z.string().min(1),
+      start: YearMonth,
+      end: YearMonth,
+      cgpa: z.string().min(1),
+      honours: z.string().min(1),
+      extras: z.array(z.string().min(1)),
+    })
+    .refine((a) => a.start <= a.end, { path: ["end"], message: "end must not be before start" }),
+  commentary: z.strictObject({
+    entrance: Lines,
+    inPlay: Lines,
+    reveal: Lines,
+    closeCall: Lines,
+    yashWins: Lines,
+    visitorWins: Lines,
+    intro: Lines,
   }),
-  commentary: z.record(z.string(), z.array(z.string().min(1)).min(1)),
 });
 
 export type Content = z.infer<typeof ContentSchema>;
