@@ -24,6 +24,7 @@
   --ref-line-3: #3a434c; /* borders/decoration only — 1.95:1 as text (spec A1) */
   --ref-line-hover: #5d6670; /* borders/decoration only — 3.44:1 as text (spec A1) */
   --ref-seg-empty: #26303a;
+  --ref-seg-track: #1e262f; /* empty cells of the 10px (md) skill bar, Badminton-Attributes */
   /* text */
   --ref-white: #ffffff;
   --ref-led-white: #f4f6f7;
@@ -37,6 +38,7 @@
   --ref-volt-hover: #e6ff7a;
   --ref-volt-ink: #0a0c08;
   --ref-volt-ink-2: #2e3a0a;
+  --ref-volt-deep: #b8d92e; /* serving dot on the white name chip (volt is invisible on white) */
   --ref-live-red: #ff4d3d; /* 6–8px live dot only, never a fill */
   --ref-gold: #d4b26a; /* trophy zone only */
   /* scoreboard (canonical set = Intro, audit §10 #22) */

@@ -14,9 +14,9 @@ interface SkillRowProps {
 export function SkillRow({ name, level, tierLabel, animate, className }: SkillRowProps) {
   return (
     <div className={cn("grid grid-cols-[130px_1fr_92px] items-center gap-3.5", className)}>
-      <span className="tracking-normal type-mono-md text-floodlight normal-case">{name}</span>
+      <span className="type-mono-code text-floodlight">{name}</span>
       <SegmentBar level={level} label={`${name}: ${tierLabel}`} animate={animate} />
-      <span className={cn("text-right type-mono-tag", TIER[level])}>{tierLabel}</span>
+      <span className={cn("text-right type-mono-xs", TIER[level])}>{tierLabel}</span>
     </div>
   );
 }

@@ -9,7 +9,7 @@ export default meta;
 export const Tiles: StoryObj = {
   render: () => (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-3">
+      <div className="flex gap-0.5">
         <StatTile label="PRO SINCE" value="JUL 2024" />
         <StatTile label="PROBLEMS" value="750+" countUp />
         <StatTile label="CURRENT" value="NOT OUT" tone="volt" />
@@ -25,7 +25,7 @@ export const Tiles: StoryObj = {
 
 export const Skills: StoryObj = {
   render: () => (
-    <Glass pad="md" className="flex w-130 flex-col gap-3">
+    <Glass pad="md" className="flex w-128.5 flex-col gap-3 px-5.5">
       <SkillRow name="Java" level="shipped" tierLabel="SHIPPED" animate />
       <SkillRow name="JUnit" level="shipped" tierLabel="75+ TESTS" animate />
       <SkillRow name="JavaScript" level="built" tierLabel="BUILT" animate />

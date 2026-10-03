@@ -38,7 +38,7 @@ function Name({ serving = false, children }: { serving?: boolean; children: Reac
         size === "md" ? "px-3.5 type-score" : "px-2.5 type-d5",
       )}
     >
-      {serving ? <span aria-hidden="true" className="size-1.75 rounded-full bg-volt" /> : null}
+      {serving ? <span aria-hidden="true" className="size-1.75 rounded-full bg-volt-deep" /> : null}
       {children}
     </span>
   );
@@ -50,7 +50,7 @@ function Cell({ muted = false, children }: { muted?: boolean; children: ReactNod
     <span
       className={cn(
         "flex items-center bg-panel tabular-nums",
-        size === "md" ? "px-4 type-score-lg" : "px-3 type-score",
+        size === "md" ? "px-4 type-score-num" : "px-3 type-score",
         muted ? "border-l border-line text-scout" : "text-floodlight",
       )}
     >
@@ -92,7 +92,7 @@ function Status({ alert = false, children }: { alert?: boolean; children: ReactN
   return (
     <span
       className={cn(
-        "flex items-center gap-2 px-3 type-mono-comm",
+        "font-bold flex items-center gap-2 px-3 type-mono-tag",
         alert ? "bg-panel text-floodlight" : "bg-volt text-volt-ink",
       )}
     >

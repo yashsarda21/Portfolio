@@ -59,6 +59,7 @@
   --color-line-hover: var(--border-hover);
   --color-glass-edge: var(--border-glass);
   --color-seg-empty: var(--ref-seg-empty);
+  --color-seg-track: var(--ref-seg-track);
   --color-board-line: var(--ref-board-line);
   /* text */
   --color-floodlight: var(--text-primary);
@@ -71,6 +72,7 @@
   /* accent & signals */
   --color-volt: var(--accent);
   --color-volt-hover: var(--accent-hover);
+  --color-volt-deep: var(--ref-volt-deep);
   --color-volt-ink: var(--text-on-accent);
   --color-volt-ink-2: var(--text-on-accent-2);
   --color-live: var(--signal-live);

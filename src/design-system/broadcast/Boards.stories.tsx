@@ -52,7 +52,7 @@ export const CricketExact: StoryObj = {
 
 export const LandingScoreboard: StoryObj = {
   render: () => (
-    <Scoreboard className="h-93 w-225">
+    <Scoreboard className="h-93.5 w-225.5">
       <Scoreboard.Header>
         <span className="flex items-center gap-2.5">
           <LiveDot pulse /> LIVE · THE ARENA

@@ -30,7 +30,7 @@ export function SegmentBar({
           className={cn(
             "flex-1",
             size === "md" ? "h-2.5" : "h-2",
-            i < FILLED[level] ? FILL[level] : "bg-seg-empty",
+            i < FILLED[level] ? FILL[level] : size === "md" ? "bg-seg-track" : "bg-seg-empty",
             animate && "animate-seg-fill",
           )}
           style={animate ? ({ "--i": i } as CSSProperties) : undefined}

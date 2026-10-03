@@ -17,7 +17,7 @@ function Root({ className, children }: { className?: string; children: ReactNode
 
 function Header({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-13 shrink-0 items-center justify-between border-b border-board-line px-7 type-mono-eyebrow text-scout">
+    <div className="flex h-13.25 shrink-0 items-center justify-between border-b border-board-line px-7 type-mono-eyebrow text-scout">
       {children}
     </div>
   );
@@ -38,7 +38,7 @@ function Subtitle({ children }: { children: ReactNode }) {
 
 function Footer({ children }: { children: ReactNode }) {
   return (
-    <div className="grid h-17.5 shrink-0 grid-cols-3 border-t border-board-line">{children}</div>
+    <div className="grid h-17.75 shrink-0 grid-cols-3 border-t border-board-line">{children}</div>
   );
 }
 

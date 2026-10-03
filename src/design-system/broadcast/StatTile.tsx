@@ -18,8 +18,8 @@ export function parseStat(value: string) {
 const tile = cva("flex flex-col gap-0.5", {
   variants: {
     tone: {
-      glass: "glass w-42.5 px-4.5 py-3.5",
-      volt: "w-42.5 bg-volt px-4.5 py-3.5",
+      glass: "glass w-52 px-4.5 py-3.5",
+      volt: "w-51.5 bg-volt px-4.5 py-3.5",
       cell: "bg-inset p-2.5",
     },
   },
