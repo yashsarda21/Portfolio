@@ -110,6 +110,18 @@ describe("text contrast (WCAG AA 4.5:1)", () => {
     expect(contrast(ref("dim"), board)).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("scout-grey on board-bg (scoreboard header)", () => {
+    expect(contrast(ref("scout-grey"), board)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("volt on board-bg (scoreboard subtitle and status)", () => {
+    expect(contrast(ref("volt"), board)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("scout-grey on line (ScoreBug away chip, line tone)", () => {
+    expect(contrast(ref("scout-grey"), ref("line"))).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("text-2 on line (ScoreBug meta cell)", () => {
     expect(contrast(ref("text-2"), ref("line"))).toBeGreaterThanOrEqual(4.5);
   });

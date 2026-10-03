@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import type { PolymorphicProps } from "../lib/polymorphic";
 import { MonoLabel } from "../primitives/Text";
 
 function Root({ className, children }: { className?: string; children: ReactNode }) {
@@ -15,30 +16,59 @@ function Root({ className, children }: { className?: string; children: ReactNode
   );
 }
 
-function Header({ children }: { children: ReactNode }) {
+interface PartProps {
+  className?: string;
+  children: ReactNode;
+}
+
+function Header({ className, children }: PartProps) {
   return (
-    <div className="flex h-13.25 shrink-0 items-center justify-between border-b border-board-line px-7 type-mono-eyebrow text-scout">
+    <div
+      className={cn(
+        "flex h-13.25 shrink-0 items-center justify-between border-b border-board-line px-7 type-mono-eyebrow text-scout",
+        className,
+      )}
+    >
       {children}
     </div>
   );
 }
 
-function Body({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center gap-3.5">{children}</div>;
-}
-
-function Title({ children }: { children: ReactNode }) {
-  return <span className="type-hero text-led glow-led">{children}</span>;
-}
-
-function Subtitle({ children }: { children: ReactNode }) {
-  // Padding-left equal to the tracking keeps wide-tracked text optically centred.
-  return <span className="pl-[0.42em] type-sub text-volt glow-volt">{children}</span>;
-}
-
-function Footer({ children }: { children: ReactNode }) {
+function Body({ className, children }: PartProps) {
   return (
-    <div className="grid h-17.75 shrink-0 grid-cols-3 border-t border-board-line">{children}</div>
+    <div className={cn("flex flex-1 flex-col items-center justify-center gap-3.5", className)}>
+      {children}
+    </div>
+  );
+}
+
+/** The big LED name. Renders a span; pass as="h1" where it is the page heading. */
+function Title<T extends ElementType = "span">({
+  as,
+  className,
+  children,
+  ...rest
+}: PolymorphicProps<T>) {
+  const Comp: ElementType = as ?? "span";
+  return (
+    <Comp className={cn("type-hero text-led glow-led", className)} {...rest}>
+      {children}
+    </Comp>
+  );
+}
+
+function Subtitle({ className, children }: PartProps) {
+  // Padding-left equal to the tracking keeps wide-tracked text optically centred.
+  return (
+    <span className={cn("pl-[0.42em] type-sub text-volt glow-volt", className)}>{children}</span>
+  );
+}
+
+function Footer({ className, children }: PartProps) {
+  return (
+    <div className={cn("grid h-17.75 shrink-0 grid-cols-3 border-t border-board-line", className)}>
+      {children}
+    </div>
   );
 }
 
@@ -54,14 +84,16 @@ function FooterCell({
   value,
   tone = "primary",
   align = "start",
+  className,
 }: {
+  className?: string;
   label: string;
   value: ReactNode;
   tone?: keyof typeof VALUE_TONE;
   align?: keyof typeof ALIGN;
 }) {
   return (
-    <div className={cn("flex items-center gap-3.5", ALIGN[align])}>
+    <div className={cn("flex items-center gap-3.5", ALIGN[align], className)}>
       <MonoLabel tone="dim">{label}</MonoLabel>
       <span className={cn("type-score-lg", VALUE_TONE[tone])}>{value}</span>
     </div>

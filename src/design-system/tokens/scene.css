@@ -24,7 +24,8 @@
 
 @utility scene-crowd {
   background-image: radial-gradient(
-    rgb(var(--venue-crowd-rgb, var(--rgb-crowd)) / var(--crowd-a, 0.3)) 1px,
+    rgb(var(--venue-crowd-rgb, var(--rgb-crowd)) / var(--crowd-a, var(--venue-crowd-alpha, 0.3)))
+      1px,
     transparent 1.7px
   );
   background-size: 7px 6px;
@@ -54,8 +55,8 @@
 @utility scene-bank {
   border-radius: 3px;
   background:
-    radial-gradient(circle, #fff 0 var(--bulb-r1), transparent var(--bulb-r2)) 0 0 / var(--bulb-gx)
-      var(--bulb-gy),
+    radial-gradient(circle, rgb(var(--rgb-white)) 0 var(--bulb-r1), transparent var(--bulb-r2)) 0
+      0 / var(--bulb-gx) var(--bulb-gy),
     var(--ref-fixture);
 }
 @utility scene-bank-off {
@@ -76,15 +77,15 @@
   background:
     radial-gradient(
       ellipse at 50% 40%,
-      rgb(46 132 78 / 0.75),
-      rgb(14 52 32 / 0.55) 45%,
+      rgb(var(--rgb-turf) / 0.75),
+      rgb(var(--rgb-turf-deep) / 0.55) 45%,
       transparent 70%
     ),
     repeating-linear-gradient(90deg, rgb(var(--rgb-white) / 0.035) 0 70px, transparent 70px 140px);
 }
 
 @utility scene-pitch-glow {
-  background: linear-gradient(180deg, rgb(150 128 88 / 0), rgb(150 128 88 / 0.45));
+  background: linear-gradient(180deg, rgb(var(--rgb-pitch) / 0), rgb(var(--rgb-pitch) / 0.45));
   clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
 }
 
@@ -134,7 +135,8 @@
   }
 }
 @utility animate-comm-in {
-  animation: comm-in 0.4s var(--ease-follow) both;
+  /* backwards, not both: once finished the line returns to its plain styles, so a data-state exit can transition. */
+  animation: comm-in 0.4s var(--ease-follow) backwards;
 }
 
 @keyframes seg-fill {

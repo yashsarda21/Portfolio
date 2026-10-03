@@ -71,6 +71,9 @@
   --rgb-white: 255 255 255;
   --rgb-ground: 5 7 10;
   --rgb-stand: 14 19 26;
+  --rgb-turf: 46 132 78;
+  --rgb-turf-deep: 14 52 32;
+  --rgb-pitch: 150 128 88;
 
   /* alpha ramps (replace the audit's 142 one-off rgba values) */
   --ref-volt-a04: rgb(var(--rgb-volt) / 0.04);
@@ -146,7 +149,7 @@
   --venue-tint: var(--ref-turf-tint);
   --venue-mid: var(--ref-turf-mid);
   --venue-deep: var(--ref-turf-deep);
-  --venue-glow-rgb: 46 132 78;
+  --venue-glow-rgb: var(--rgb-turf);
   --venue-light-rgb: var(--rgb-beam);
   --venue-crowd-rgb: var(--rgb-crowd);
   --venue-crowd-alpha: 0.26;

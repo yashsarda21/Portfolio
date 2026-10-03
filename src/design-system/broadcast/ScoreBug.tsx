@@ -29,22 +29,34 @@ function Root({
   );
 }
 
-function Name({ serving = false, children }: { serving?: boolean; children: ReactNode }) {
+interface PartProps {
+  className?: string;
+  children: ReactNode;
+}
+
+function Name({ serving = false, className, children }: PartProps & { serving?: boolean }) {
   const size = useContext(SizeCtx);
   return (
     <span
       className={cn(
         "flex items-center gap-2 bg-floodlight text-ground",
         size === "md" ? "px-3.5 type-score" : "px-2.5 type-d5",
+        className,
       )}
     >
-      {serving ? <span aria-hidden="true" className="size-1.75 rounded-full bg-volt-deep" /> : null}
+      {serving ? (
+        // The ring keeps the dot readable (3:1) against the white chip.
+        <span
+          aria-hidden="true"
+          className="size-1.75 rounded-full bg-volt-deep ring-1 ring-ground"
+        />
+      ) : null}
       {children}
     </span>
   );
 }
 
-function Cell({ muted = false, children }: { muted?: boolean; children: ReactNode }) {
+function Cell({ muted = false, className, children }: PartProps & { muted?: boolean }) {
   const size = useContext(SizeCtx);
   return (
     <span
@@ -52,6 +64,7 @@ function Cell({ muted = false, children }: { muted?: boolean; children: ReactNod
         "flex items-center bg-panel tabular-nums",
         size === "md" ? "px-4 type-score-num" : "px-3 type-score",
         muted ? "border-l border-line text-scout" : "text-floodlight",
+        className,
       )}
     >
       {children}
@@ -59,13 +72,14 @@ function Cell({ muted = false, children }: { muted?: boolean; children: ReactNod
   );
 }
 
-function Meta({ children }: { children: ReactNode }) {
+function Meta({ className, children }: PartProps) {
   const size = useContext(SizeCtx);
   return (
     <span
       className={cn(
         "flex items-center bg-line text-text-2",
         size === "md" ? "px-3.5 type-mono-tag" : "px-2.5 type-mono-xs",
+        className,
       )}
     >
       {children}
@@ -73,7 +87,7 @@ function Meta({ children }: { children: ReactNode }) {
   );
 }
 
-function Away({ tone = "panel", children }: { tone?: "panel" | "line"; children: ReactNode }) {
+function Away({ tone = "panel", className, children }: PartProps & { tone?: "panel" | "line" }) {
   const size = useContext(SizeCtx);
   return (
     <span
@@ -81,6 +95,7 @@ function Away({ tone = "panel", children }: { tone?: "panel" | "line"; children:
         "flex items-center text-scout",
         tone === "panel" ? "border-l border-line bg-panel" : "bg-line",
         size === "md" ? "px-3.5 type-score" : "px-2.5 type-d5",
+        className,
       )}
     >
       {children}
@@ -88,12 +103,16 @@ function Away({ tone = "panel", children }: { tone?: "panel" | "line"; children:
   );
 }
 
-function Status({ alert = false, children }: { alert?: boolean; children: ReactNode }) {
+function Status({ alert = false, className, children }: PartProps & { alert?: boolean }) {
   return (
     <span
       className={cn(
-        "font-bold flex items-center gap-2 px-3 type-mono-tag",
+        "flex items-center gap-2 px-3 type-mono-tag",
+        // Its own argument, after the type recipe: cn drops a weight that precedes one, and
+        // prettier's class sorter would move it to the front if it shared the string above.
+        "font-bold",
         alert ? "bg-panel text-floodlight" : "bg-volt text-volt-ink",
+        className,
       )}
     >
       {alert ? <LiveDot size={6} /> : null}

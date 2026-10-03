@@ -21,8 +21,9 @@ function Audio({ variant }: { variant: "labelled" | "icon" }) {
       variant={variant}
       on={on}
       onToggle={() => setOn(!on)}
-      labelOn="CROWD ON"
-      labelOff="CROWD OFF"
+      label="CROWD"
+      stateOn="ON"
+      stateOff="OFF"
     />
   );
 }
@@ -33,15 +34,7 @@ export const GameHUD: StoryObj = {
     <div className="relative h-40 bg-night">
       <HUD
         fade
-        left={
-          <BrandLockup
-            as="a"
-            href="#hub"
-            aria-label="Back to Arena Hub"
-            mark="YS"
-            label="HUB / CRICKET GROUND"
-          />
-        }
+        left={<BrandLockup as="a" href="#hub" mark="YS" label="HUB / CRICKET GROUND" />}
         center={<span className="type-mono-tag text-scout">[score bug]</span>}
         right={
           <>
@@ -89,6 +82,7 @@ export const Pieces: StoryObj = {
         </SkipChip>
       </div>
       <CommentaryBar tag="COMM" line="New challenger enters the arena." />
+      <CommentaryBar tag="COMM" line="Exit state: the line has faded out." state="out" />
       <CommentaryBar tag="COMM" variant="inline" line="Challenge received. I'll serve first." />
       <KeyboardHint>ENTER ↵ TO PLAY · Q FOR QUICK VIEW</KeyboardHint>
     </div>

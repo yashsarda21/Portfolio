@@ -11,6 +11,8 @@ interface SegmentBarProps {
   label: string;
   animate?: boolean;
   size?: "md" | "sm";
+  /** Hide from assistive tech when the surrounding text already states the evidence (SkillRow). */
+  decorative?: boolean;
   className?: string;
 }
 
@@ -20,10 +22,12 @@ export function SegmentBar({
   label,
   animate = false,
   size = "md",
+  decorative = false,
   className,
 }: SegmentBarProps) {
+  const a11y = decorative ? { "aria-hidden": true } : { role: "img", "aria-label": label };
   return (
-    <div role="img" aria-label={label} className={cn("flex gap-(--seg-gap)", className)}>
+    <div {...a11y} className={cn("flex gap-(--seg-gap)", className)}>
       {Array.from({ length: 10 }, (_, i) => (
         <span
           key={i}

@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { cn } from "@/lib/cn";
 import { useCountUp } from "./useCountUp";
 
+/** Split a stat into prefix / number / suffix. Numeric values only: "JUL 2024" is a date, so don't pass countUp. */
 export function parseStat(value: string) {
   const m = /^(\D*)(\d+(?:\.\d+)?)(.*)$/.exec(value);
   if (!m) return null;

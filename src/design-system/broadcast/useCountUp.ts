@@ -7,7 +7,7 @@ function inViewport(el: Element) {
   return r.top < window.innerHeight && r.bottom >= 0;
 }
 
-/** Count up to `target` once the element scrolls into view. Never flickers prerendered values (spec §6). */
+/** Count up to `target` once the element scrolls into view. Never flickers prerendered values (spec §7). */
 export function useCountUp(
   target: number,
   decimals: number,
@@ -15,6 +15,12 @@ export function useCountUp(
   ref: RefObject<Element | null>,
 ): string {
   const [value, setValue] = useState(target);
+  // A new target shows immediately; the effect below re-arms the animation if it is off screen.
+  const [prevTarget, setPrevTarget] = useState(target);
+  if (prevTarget !== target) {
+    setPrevTarget(target);
+    setValue(target);
+  }
 
   useEffect(() => {
     const el = ref.current;
@@ -29,6 +35,8 @@ export function useCountUp(
       ([entry]) => {
         if (!entry?.isIntersecting) return;
         arm.disconnect();
+        // Already scrolled past the fold (anchor jump, scroll restoration): keep the real number.
+        if (entry.boundingClientRect.top < window.innerHeight) return;
         setValue(0);
         // …then count up once it is properly visible.
         play = new IntersectionObserver(

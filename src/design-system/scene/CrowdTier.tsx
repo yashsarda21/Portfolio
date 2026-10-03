@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
 
+/** Dot-grid crowd. Density comes from the venue (--venue-crowd-alpha) unless `alpha` is passed. */
 export function CrowdTier({
-  alpha = 0.3,
+  alpha,
   curved = false,
   className,
 }: {
@@ -18,7 +19,7 @@ export function CrowdTier({
         curved && "[border-radius:50%_50%_0_0/60%_60%_0_0]",
         className,
       )}
-      style={{ "--crowd-a": alpha } as CSSProperties}
+      style={alpha === undefined ? undefined : ({ "--crowd-a": alpha } as CSSProperties)}
     />
   );
 }

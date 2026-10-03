@@ -11,13 +11,16 @@ describe("broadcast chrome", () => {
     const { rerender } = render(
       <AudioToggle
         name="Crowd audio"
+        label="CROWD"
         on={false}
         onToggle={onToggle}
-        labelOn="CROWD ON"
-        labelOff="CROWD OFF"
+        stateOn="ON"
+        stateOff="OFF"
       />,
     );
-    const btn = screen.getByRole("button", { name: "Crowd audio" });
+    // The visible word names the button (WCAG 2.5.3); the state word is visual only.
+    const btn = screen.getByRole("button", { name: "CROWD" });
+    expect(btn).not.toHaveAttribute("aria-label");
     expect(btn).toHaveAttribute("aria-pressed", "false");
     expect(btn).toHaveTextContent("CROWD OFF");
     await userEvent.click(btn);
@@ -25,14 +28,37 @@ describe("broadcast chrome", () => {
     rerender(
       <AudioToggle
         name="Crowd audio"
+        label="CROWD"
         on
         onToggle={onToggle}
-        labelOn="CROWD ON"
-        labelOff="CROWD OFF"
+        stateOn="ON"
+        stateOff="OFF"
       />,
     );
     expect(btn).toHaveAttribute("aria-pressed", "true");
     expect(btn).toHaveTextContent("CROWD ON");
+  });
+
+  it("AudioToggle icon variant is named by its aria-label", () => {
+    render(<AudioToggle name="Crowd audio" variant="icon" on onToggle={() => {}} />);
+    expect(screen.getByRole("button", { name: "Crowd audio" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("CommentaryBar passes rest props and exposes its state", () => {
+    const { container } = render(
+      <CommentaryBar tag="COMM" line="Bye." state="out" aria-hidden="true" />,
+    );
+    const bar = container.firstElementChild;
+    expect(bar).toHaveAttribute("aria-hidden", "true");
+    expect(bar).toHaveAttribute("data-state", "out");
+    expect(screen.getByText("Bye.")).toHaveClass(
+      "data-[state=out]:opacity-0",
+      "data-[state=out]:-translate-x-3",
+    );
+    expect(screen.getByText("Bye.")).toHaveAttribute("data-state", "out");
   });
 
   it("CommentaryBar shows the tag and the current line", () => {

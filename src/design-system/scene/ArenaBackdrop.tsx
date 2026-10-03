@@ -8,11 +8,18 @@ import { PitchGlow } from "./PitchGlow";
 import { SkyGlow } from "./SkyGlow";
 
 /** Main's floodlit stadium, laid out in the 1440×900 design space (0D's <Stage> scales it). */
-export function ArenaBackdrop({ className }: { variant?: "landing"; className?: string }) {
+export function ArenaBackdrop({
+  venue = "turf",
+  className,
+}: {
+  /** Re-tints every layer through the data-venue token overrides. */
+  venue?: "turf" | "court" | "hall";
+  className?: string;
+}) {
   return (
     <div
       aria-hidden="true"
-      data-venue="turf"
+      data-venue={venue}
       className={cn("pointer-events-none relative h-225 w-360 overflow-hidden bg-night", className)}
     >
       <SkyGlow />

@@ -6,7 +6,7 @@ const MARK = { lg: "size-10", md: "size-9.5", sm: "size-9" } as const;
 
 type Own = { mark: string; label?: ReactNode; size?: "lg" | "md" | "sm" };
 
-/** The YS mark + wordmark/breadcrumb. As a link, pass an aria-label naming the destination. */
+/** The YS mark + wordmark/breadcrumb. As a link, its visible text is the accessible name (don't add an aria-label that differs from it). */
 export function BrandLockup<T extends ElementType = "div">({
   as,
   mark,

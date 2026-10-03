@@ -3,13 +3,16 @@ import { IconButton } from "../primitives/IconButton";
 import { HUDButton } from "./HUDButton";
 
 interface AudioToggleProps {
-  /** Accessible name, e.g. "Crowd audio". State is conveyed by aria-pressed. */
+  /** Icon variant: the accessible name, e.g. "Crowd audio". State is conveyed by aria-pressed. */
   name: string;
   on: boolean;
   onToggle: () => void;
   variant?: "labelled" | "icon";
-  labelOn?: string;
-  labelOff?: string;
+  /** Labelled variant: the stable visible word that names the button, e.g. "CROWD". Defaults to `name`. */
+  label?: string;
+  /** Labelled variant: visual-only state words, e.g. "ON" / "OFF" (aria-pressed already says it). */
+  stateOn?: string;
+  stateOff?: string;
   className?: string;
 }
 
@@ -18,8 +21,9 @@ export function AudioToggle({
   on,
   onToggle,
   variant = "labelled",
-  labelOn,
-  labelOff,
+  label,
+  stateOn,
+  stateOff,
   className,
 }: AudioToggleProps) {
   if (variant === "icon") {
@@ -34,15 +38,15 @@ export function AudioToggle({
       />
     );
   }
+  // No aria-label: the visible word is the accessible name (WCAG 2.5.3), aria-pressed carries the state.
   return (
     <HUDButton
       icon={on ? "speaker-loud" : "speaker-off"}
-      aria-label={name}
       aria-pressed={on}
       onClick={onToggle}
       className={className}
     >
-      {on ? labelOn : labelOff}
+      <span>{label ?? name}</span> <span aria-hidden="true">{on ? stateOn : stateOff}</span>
     </HUDButton>
   );
 }

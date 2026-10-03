@@ -24,7 +24,7 @@ describe("ScoreBug", () => {
     );
     const chip = screen.getByText("MATCH POINT");
     expect(chip.className).not.toMatch(/bg-live/);
-    expect(chip).toHaveClass("bg-panel", "text-floodlight");
+    expect(chip).toHaveClass("bg-panel", "text-floodlight", "font-bold");
     expect(chip.querySelector(".bg-live")).not.toBeNull();
   });
 
@@ -36,5 +36,27 @@ describe("ScoreBug", () => {
     );
     expect(screen.getByRole("group")).toHaveClass("h-10");
     expect(screen.getByText("6*")).toHaveClass("type-score");
+  });
+
+  it("sub-parts and the root merge className last", () => {
+    render(
+      <ScoreBug label="x" className="mx-auto">
+        <ScoreBug.Name className="extra-name">A</ScoreBug.Name>
+        <ScoreBug.Cell className="extra-cell">1</ScoreBug.Cell>
+        <ScoreBug.Meta className="extra-meta">M</ScoreBug.Meta>
+        <ScoreBug.Away className="extra-away">B</ScoreBug.Away>
+        <ScoreBug.Status className="extra-status">S</ScoreBug.Status>
+      </ScoreBug>,
+    );
+    expect(screen.getByRole("group")).toHaveClass("mx-auto");
+    for (const [text, cls] of [
+      ["A", "extra-name"],
+      ["1", "extra-cell"],
+      ["M", "extra-meta"],
+      ["B", "extra-away"],
+      ["S", "extra-status"],
+    ] as const) {
+      expect(screen.getByText(text)).toHaveClass(cls);
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StatTile, parseStat } from "./StatTile";
 
@@ -50,5 +50,66 @@ describe("StatTile count-up", () => {
     render(<StatTile label="CGPA" value="8.94" countUp />);
     expect(screen.getByText("8.94", { selector: "[aria-hidden='true']" })).toBeInTheDocument();
     expect(observe).not.toHaveBeenCalled();
+  });
+
+  it("shows a changed target straight away", () => {
+    const { rerender } = render(<StatTile label="PROBLEMS" value="750+" countUp />);
+    rerender(<StatTile label="PROBLEMS" value="800+" countUp />);
+    expect(screen.getByText("800+", { selector: "[aria-hidden='true']" })).toBeInTheDocument();
+  });
+});
+
+describe("StatTile count-up from below the fold", () => {
+  type Callback = (entries: Partial<IntersectionObserverEntry>[]) => void;
+  let callbacks: Callback[];
+  let frames: FrameRequestCallback[];
+
+  beforeEach(() => {
+    callbacks = [];
+    frames = [];
+    class FakeObserver {
+      constructor(cb: Callback) {
+        callbacks.push(cb);
+      }
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    }
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => frames.push(cb));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    // Below the fold at mount, so the hook arms its observers.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+      top: window.innerHeight + 400,
+      bottom: window.innerHeight + 500,
+    } as DOMRect);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  const shown = () => screen.getByText(/\d/, { selector: "[aria-hidden='true']" });
+
+  it("keeps the real number when the tile is already visible by the time it arms", () => {
+    render(<StatTile label="PROBLEMS" value="750+" countUp />);
+    act(() =>
+      callbacks[0]?.([{ isIntersecting: true, boundingClientRect: { top: 100 } as DOMRect }]),
+    );
+    expect(shown()).toHaveTextContent("750+");
+    expect(callbacks).toHaveLength(1); // never armed the play observer
+  });
+
+  it("zeroes while below the fold, then counts up to the final value", () => {
+    render(<StatTile label="PROBLEMS" value="750+" countUp />);
+    act(() =>
+      callbacks[0]?.([
+        { isIntersecting: true, boundingClientRect: { top: window.innerHeight + 100 } as DOMRect },
+      ]),
+    );
+    expect(shown()).toHaveTextContent("0+");
+    act(() => callbacks[1]?.([{ isIntersecting: true }]));
+    act(() => frames.shift()?.(performance.now() + 5000));
+    expect(shown()).toHaveTextContent("750+");
   });
 });
