@@ -1,1 +1,7 @@
 @import "tailwindcss";
+@import "../src/design-system/tokens/fonts.css";
+@import "../src/design-system/tokens/tokens.css";
+@import "../src/design-system/tokens/theme.css";
+@import "../src/design-system/tokens/base.css";
+
+@source "../tests/fixtures/tailwind-probe.html";

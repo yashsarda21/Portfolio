@@ -1,0 +1,12 @@
+/* Self-hosted fonts, trimmed to the weights the designs use (spec §13). */
+@import "@fontsource/big-shoulders-display/700";
+@import "@fontsource/big-shoulders-display/800";
+@import "@fontsource/big-shoulders-display/900";
+@import "@fontsource/archivo/400";
+@import "@fontsource/archivo/500";
+@import "@fontsource/archivo/600";
+@import "@fontsource/archivo/700";
+@import "@fontsource/archivo/400-italic";
+@import "@fontsource/archivo/500-italic";
+@import "@fontsource/jetbrains-mono/400";
+@import "@fontsource/jetbrains-mono/700";

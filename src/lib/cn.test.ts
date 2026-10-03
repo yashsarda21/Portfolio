@@ -13,4 +13,12 @@ describe("cn", () => {
   it("accepts conditional objects", () => {
     expect(cn("base", { active: true, hidden: false })).toBe("base active");
   });
+
+  it("treats type-* recipes as one conflict group", () => {
+    expect(cn("type-d1", "type-d2")).toBe("type-d2");
+  });
+
+  it("keeps a type recipe alongside a colour", () => {
+    expect(cn("type-d1 text-volt")).toBe("type-d1 text-volt");
+  });
 });

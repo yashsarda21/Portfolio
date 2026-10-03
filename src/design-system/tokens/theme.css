@@ -1,0 +1,111 @@
+/* Tailwind theme: only Arena tokens exist. Defaults are reset so off-system classes can't be used. */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+  --blur-*: initial;
+  --breakpoint-*: initial;
+
+  --breakpoint-md: 48rem; /* 768 */
+  --breakpoint-lg: 75rem; /* 1200 */
+  --breakpoint-xl: 90rem; /* 1440 */
+
+  --font-display: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --ease-follow: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1);
+  --ease-swing: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-entrance: cubic-bezier(0.12, 0.9, 0.25, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-absorb: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --blur-beam: 6px;
+}
+
+@theme inline {
+  /* grounds & surfaces */
+  --color-ground: var(--surface-ground);
+  --color-night: var(--ref-night);
+  --color-void: var(--ref-void);
+  --color-ground-warm: var(--ref-ground-warm);
+  --color-ground-trophy: var(--ref-ground-trophy);
+  --color-panel: var(--surface-panel);
+  --color-inset: var(--surface-inset);
+  --color-stand-3: var(--ref-stand-3);
+  --color-stand-hi: var(--ref-stand-hi);
+  --color-fixture: var(--ref-fixture);
+  --color-plinth: var(--ref-plinth);
+  --color-mast: var(--ref-mast);
+  --color-board: var(--ref-board-bg);
+  --color-glass: var(--surface-glass);
+  --color-glass-solid: var(--surface-glass-solid);
+  --color-bar: var(--surface-bar);
+  /* lines */
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-control);
+  --color-line-3: var(--border-strong);
+  --color-line-hover: var(--border-hover);
+  --color-glass-edge: var(--border-glass);
+  --color-seg-empty: var(--ref-seg-empty);
+  --color-board-line: var(--ref-board-line);
+  /* text */
+  --color-floodlight: var(--text-primary);
+  --color-led: var(--ref-led-white);
+  --color-white: var(--ref-white);
+  --color-text-1: var(--text-body);
+  --color-text-2: var(--text-secondary);
+  --color-scout: var(--text-label);
+  --color-dim: var(--text-dim);
+  /* accent & signals */
+  --color-volt: var(--accent);
+  --color-volt-hover: var(--accent-hover);
+  --color-volt-ink: var(--text-on-accent);
+  --color-volt-ink-2: var(--text-on-accent-2);
+  --color-live: var(--signal-live);
+  --color-gold: var(--accent-gold, var(--ref-gold));
+  --color-court-line: var(--ref-court-line);
+  /* alpha ramps */
+  --color-volt-a04: var(--ref-volt-a04);
+  --color-volt-a08: var(--ref-volt-a08);
+  --color-volt-a12: var(--ref-volt-a12);
+  --color-volt-a16: var(--ref-volt-a16);
+  --color-volt-a22: var(--ref-volt-a22);
+  --color-volt-a35: var(--ref-volt-a35);
+  --color-volt-a45: var(--ref-volt-a45);
+  --color-volt-a60: var(--ref-volt-a60);
+  --color-white-a03: var(--ref-white-a03);
+  --color-white-a04: var(--ref-white-a04);
+  --color-white-a05: var(--ref-white-a05);
+  --color-white-a10: var(--ref-white-a10);
+  /* venue (set by data-venue) */
+  --color-venue-tint: var(--venue-tint);
+  --color-venue-mid: var(--venue-mid);
+  --color-venue-deep: var(--venue-deep);
+
+  /* shadows & glows (audit §2.7) */
+  --shadow-board:
+    0 0 0 8px var(--ref-board-bezel), 0 0 0 9px var(--ref-board-ring), 0 50px 140px rgb(0 0 0 / 0.7);
+  --shadow-card-3d: 0 30px 80px rgb(0 0 0 / 0.5);
+  --shadow-toast: 0 20px 60px rgb(0 0 0 / 0.6);
+  --shadow-holo: 0 60px 120px rgb(0 0 0 / 0.7), 0 0 60px rgb(var(--rgb-volt) / 0.1);
+  --shadow-glow-ring: 0 0 18px rgb(var(--rgb-volt) / 0.6);
+  --shadow-glow-cta: 0 0 40px rgb(var(--rgb-volt) / 0.25);
+  --shadow-glow-cursor: 0 0 12px rgb(var(--rgb-white) / 0.9);
+  --shadow-bank-lg:
+    0 0 40px 12px rgb(var(--rgb-bulb) / 0.45), 0 0 220px 80px rgb(var(--rgb-halo) / 0.14);
+  --shadow-bank-sm:
+    0 0 30px 10px rgb(var(--rgb-bulb) / 0.4), 0 0 160px 60px rgb(var(--rgb-halo) / 0.1);
+  --shadow-bank-mini: 0 0 22px 6px rgb(var(--rgb-bulb) / 0.4);
+  --shadow-inset-cabinet: inset 0 0 120px rgb(0 0 0 / 0.8);
+
+  --blur-glass: var(--glass-blur);
+}

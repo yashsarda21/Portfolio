@@ -1,0 +1,179 @@
+/* The Arena — design tokens. Single source of truth (spec §5.1).
+   Layer 1 = reference (raw values) · Layer 2 = semantic (roles) · Layer 3 = context overrides.
+   Exact origins of every value: docs/superpowers/specs/2026-10-03-arena-design-audit.md §2. */
+
+:root {
+  /* ---------- Layer 1: reference ---------- */
+  /* grounds */
+  --ref-ground: #05070a;
+  --ref-night: #030405;
+  --ref-void: #020304;
+  --ref-ground-warm: #07060a;
+  --ref-ground-trophy: #040508;
+  /* stands & surfaces */
+  --ref-stand: #0e141b;
+  --ref-stand-2: #0b0f14;
+  --ref-stand-3: #0a0e13;
+  --ref-stand-hi: #141b23;
+  --ref-fixture: #1a2027;
+  --ref-plinth: #13171c;
+  --ref-mast: #2a3138;
+  /* lines */
+  --ref-line: #1c232c;
+  --ref-line-strong: #2a323c;
+  --ref-line-3: #3a434c; /* borders/decoration only — 1.95:1 as text (spec A1) */
+  --ref-line-hover: #5d6670; /* borders/decoration only — 3.44:1 as text (spec A1) */
+  --ref-seg-empty: #26303a;
+  /* text */
+  --ref-white: #ffffff;
+  --ref-led-white: #f4f6f7;
+  --ref-floodlight: #f2f4f5;
+  --ref-text-1: #e6eaee;
+  --ref-text-2: #c3cbd3;
+  --ref-scout-grey: #a3adb7;
+  --ref-dim: #7d8893; /* dimmest allowed text colour (≥4.5:1 on ground) */
+  /* accent & signals */
+  --ref-volt: #d7ff3f;
+  --ref-volt-hover: #e6ff7a;
+  --ref-volt-ink: #0a0c08;
+  --ref-volt-ink-2: #2e3a0a;
+  --ref-live-red: #ff4d3d; /* 6–8px live dot only, never a fill */
+  --ref-gold: #d4b26a; /* trophy zone only */
+  /* scoreboard (canonical set = Intro, audit §10 #22) */
+  --ref-board-bg: #06080b;
+  --ref-board-line: #1a2028;
+  --ref-board-border: #2a323c;
+  --ref-board-ring: #232a33;
+  --ref-board-bezel: #0a0d11;
+  /* venues */
+  --ref-turf-tint: #0e3322;
+  --ref-turf-mid: #185634;
+  --ref-turf-deep: #0a2015;
+  --ref-court-tint: #0c2236;
+  --ref-court-mid: #1b4c76;
+  --ref-court-deep: #0a1a2b;
+  --ref-hall-tint: #24180e;
+  --ref-hall-mid: #5a3e22;
+  --ref-hall-deep: #22170d;
+  --ref-court-line: #e8eef3;
+
+  /* RGB triplets for alpha use: rgb(var(--rgb-volt) / 0.35) */
+  --rgb-sky: 150 172 200;
+  --rgb-beam: 225 236 250;
+  --rgb-bulb: 228 238 252;
+  --rgb-halo: 200 216 238;
+  --rgb-crowd: 214 224 236;
+  --rgb-warm: 255 228 184;
+  --rgb-spot: 255 236 200;
+  --rgb-volt: 215 255 63;
+  --rgb-white: 255 255 255;
+  --rgb-ground: 5 7 10;
+  --rgb-stand: 14 19 26;
+
+  /* alpha ramps (replace the audit's 142 one-off rgba values) */
+  --ref-volt-a04: rgb(var(--rgb-volt) / 0.04);
+  --ref-volt-a08: rgb(var(--rgb-volt) / 0.08);
+  --ref-volt-a12: rgb(var(--rgb-volt) / 0.12);
+  --ref-volt-a16: rgb(var(--rgb-volt) / 0.16);
+  --ref-volt-a22: rgb(var(--rgb-volt) / 0.22);
+  --ref-volt-a35: rgb(var(--rgb-volt) / 0.35);
+  --ref-volt-a45: rgb(var(--rgb-volt) / 0.45);
+  --ref-volt-a60: rgb(var(--rgb-volt) / 0.6);
+  --ref-white-a03: rgb(var(--rgb-white) / 0.03);
+  --ref-white-a04: rgb(var(--rgb-white) / 0.04);
+  --ref-white-a05: rgb(var(--rgb-white) / 0.05);
+  --ref-white-a09: rgb(var(--rgb-white) / 0.09);
+  --ref-white-a10: rgb(var(--rgb-white) / 0.1);
+
+  /* ---------- Layer 2: semantic ---------- */
+  --surface-ground: var(--ref-ground);
+  --surface-panel: var(--ref-stand);
+  --surface-inset: var(--ref-stand-2);
+  --surface-glass: rgb(var(--rgb-stand) / 0.66);
+  --surface-glass-solid: rgb(var(--rgb-stand) / 0.85);
+  --surface-bar: rgb(var(--rgb-ground) / 0.9);
+  --text-primary: var(--ref-floodlight);
+  --text-body: var(--ref-text-1);
+  --text-secondary: var(--ref-text-2);
+  --text-label: var(--ref-scout-grey);
+  --text-dim: var(--ref-dim);
+  --text-on-accent: var(--ref-volt-ink);
+  --text-on-accent-2: var(--ref-volt-ink-2);
+  --border-subtle: var(--ref-line);
+  --border-control: var(--ref-line-strong);
+  --border-strong: var(--ref-line-3);
+  --border-hover: var(--ref-line-hover);
+  --border-glass: var(--ref-white-a09);
+  --border-selected: var(--ref-volt);
+  --accent: var(--ref-volt);
+  --accent-hover: var(--ref-volt-hover);
+  --signal-live: var(--ref-live-red);
+  --focus-ring: var(--ref-volt);
+  --glass-blur: 14px;
+
+  /* layout & sizing */
+  --gutter: 36px;
+  --header-h: 76px;
+  --hit: 44px;
+  --h-sm: 44px;
+  --h-md: 52px;
+  --h-lg: 62px;
+  --h-xl: 78px;
+  --h-tap: 110px;
+  --seg-gap: 3px;
+  --bw-brand: 1.5px;
+  --skew: -12deg;
+
+  /* motion durations (easings live in theme.css) */
+  --dur-snap: 200ms;
+  --dur-hover: 300ms;
+  --dur-pop: 450ms;
+  --dur-wipe: 480ms;
+  --dur-follow: 900ms;
+  --dur-count: 900ms;
+  --dur-comm-hold: 4000ms;
+}
+
+/* ---------- Layer 3: context overrides ---------- */
+[data-venue="turf"] {
+  --venue-tint: var(--ref-turf-tint);
+  --venue-mid: var(--ref-turf-mid);
+  --venue-deep: var(--ref-turf-deep);
+  --venue-glow-rgb: 46 132 78;
+  --venue-light-rgb: var(--rgb-beam);
+  --venue-crowd-rgb: var(--rgb-crowd);
+  --venue-crowd-alpha: 0.26;
+}
+[data-venue="court"] {
+  --venue-tint: var(--ref-court-tint);
+  --venue-mid: var(--ref-court-mid);
+  --venue-deep: var(--ref-court-deep);
+  --venue-glow-rgb: 31 78 122;
+  --venue-light-rgb: var(--rgb-beam);
+  --venue-crowd-rgb: var(--rgb-crowd);
+  --venue-crowd-alpha: 0.24;
+}
+[data-venue="hall"] {
+  --venue-tint: var(--ref-hall-tint);
+  --venue-mid: var(--ref-hall-mid);
+  --venue-deep: var(--ref-hall-deep);
+  --venue-glow-rgb: 120 84 44;
+  --venue-light-rgb: var(--rgb-warm);
+  --venue-crowd-rgb: 230 214 190;
+  --venue-crowd-alpha: 0.18;
+  --surface-ground: var(--ref-ground-warm);
+}
+[data-zone="trophy"] {
+  --surface-ground: var(--ref-ground-trophy);
+  --accent-gold: var(--ref-gold);
+}
+
+/* Mobile: solid panels, no blur, 16px gutter (Responsive board) */
+@media (max-width: 47.99rem) {
+  :root {
+    --surface-glass: var(--surface-glass-solid);
+    --border-glass: var(--ref-line-strong);
+    --glass-blur: 0px;
+    --gutter: 16px;
+  }
+}
