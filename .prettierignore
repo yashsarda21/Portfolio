@@ -1,0 +1,10 @@
+build
+.react-router
+storybook-static
+coverage
+playwright-report
+test-results
+design
+temp_handoff
+docs
+pnpm-lock.yaml

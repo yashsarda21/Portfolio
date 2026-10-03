@@ -18,3 +18,8 @@ test-results/
 .env
 .env.*
 !.env.example
+
+# Generated artboard references (rendered by `pnpm references`)
+design/references/
+# Never commit the resume PDF (contains a phone number)
+design/handoff/assets/*.pdf
