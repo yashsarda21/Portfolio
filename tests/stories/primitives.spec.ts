@@ -60,3 +60,29 @@ test.describe("Button", () => {
     expect(root).toEqual({ transform: "none", backdrop: "none" });
   });
 });
+
+test.describe("RadioCard", () => {
+  test("radio card focus ring wraps the whole card", async ({ page }) => {
+    await page.goto(story("primitives-form--format-cards"));
+    await page.getByTestId("radio-sign").waitFor();
+    await page.keyboard.press("Tab");
+    const card = page.locator("label", { has: page.getByTestId("radio-sign") });
+    // The card fades its colours in (--dur-snap), so poll until the transition settles.
+    await expect
+      .poll(() =>
+        card.evaluate((el) => {
+          const s = getComputedStyle(el);
+          return { style: s.outlineStyle, color: s.outlineColor };
+        }),
+      )
+      .toEqual({ style: "solid", color: "rgb(215, 255, 63)" });
+  });
+
+  test("selected card is volt-edged", async ({ page }) => {
+    await page.goto(story("primitives-form--format-cards"));
+    const card = page.locator("label", { has: page.getByTestId("radio-sign") });
+    expect(await card.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe(
+      "rgb(215, 255, 63)",
+    );
+  });
+});
