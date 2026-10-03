@@ -1,3 +1,5 @@
 allowBuilds:
+  # the esbuild binary arrives via its per-platform optional dependency, so the install script is not needed
   esbuild: false
+  # the unrs-resolver binary arrives via its per-platform optional dependency, so the install script is not needed
   unrs-resolver: false
