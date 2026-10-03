@@ -26,3 +26,5 @@ export { SkipChip } from "./broadcast/SkipChip";
 export { PlayerTag } from "./broadcast/PlayerTag";
 export { HUD } from "./broadcast/HUD";
 export { CommentaryBar } from "./broadcast/CommentaryBar";
+export { ScoreBug } from "./broadcast/ScoreBug";
+export { Scoreboard } from "./broadcast/Scoreboard";
