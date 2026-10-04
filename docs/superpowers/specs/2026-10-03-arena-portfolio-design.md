@@ -430,6 +430,10 @@ The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges wh
 | R6 | Short labels added to content: `shortRole`, highlight `scoutTag` / `shortName` / `scoutShort`, academy `degreeShort`, `scout.craftAndTools`. Kudo Board and Power BI `scoutShort` lines are **derived copy, flagged for review**. | No hard-coded copy, exact drawn labels. |
 | Content wording | Career bullets (`ballByBall`), stack order and the 5 trophy rows come from content (§11.2 #4, #5, #10), so the real page's Career/Trophies bodies differ in wording and height from the artboard. Layout parity for those blocks is proven by the artboard-copy fixture story (≤2%). | Content wins. |
 | Visual masks | Mobile parity masks only: A2 lines (10→11px mono: eyebrow, chips, career dates, "2 INNINGS", round labels), A10 (SWIPE hint, scroller fade), and a strip at `y 734–766` where the continuing page (R3) shows through the bottom bar's fade. | Logged deviations only. |
+| A2 compensation | The mobile 11px mono recipes (`type-mono-chip/date/round/meta/kicker`) use a 13px line box, the drawn 10px line box, so nothing below them moves. Hero chips use `0.09em` tracking at 11px (the drawn 1px), or the three chips wrap. | A2 keeps 11px text without shifting the layout |
+| Fix-wave recipes | `type-mono-date` (career dates keep their drawn 0.12em) and `type-body-copy` (15px / 1.5, highlight card copy); shared `type-body-md` stays 1.45. Single-line labels copied from artboard spans with no line-height use the `leading-auto` token (`line-height: normal`). | One rule in the design system, not per-element fitting |
+| Font smoothing | App-wide `-webkit-font-smoothing: antialiased` removed: text now renders like the artboards (browser default). Fidelity is measured at browser default everywhere. | Exact match on macOS; the property has no effect elsewhere |
+| Lighthouse gate | `pnpm lighthouse`: performance = median of 3 runs; accessibility, best practices and SEO = worst run. Desktop budget: performance ≥90, accessibility 100, best practices ≥90, SEO ≥90. | Performance varies run to run; the other categories are deterministic |
 
 ---
 
