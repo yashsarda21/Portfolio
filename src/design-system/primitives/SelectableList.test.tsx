@@ -32,6 +32,64 @@ function Harness({ onChange }: { onChange?: (v: string) => void }) {
   );
 }
 
+function BareHarness() {
+  const [value, setValue] = useState("a");
+  return (
+    <SelectableList.Root value={value} onValueChange={setValue} orientation="horizontal">
+      <SelectableList.List label="Shelf">
+        <SelectableList.Item value="a" variant="bare">
+          Cup
+        </SelectableList.Item>
+        <SelectableList.Item value="b" variant="bare">
+          Medal
+        </SelectableList.Item>
+        <SelectableList.Item value="c" variant="bare" disabled aria-label="Hidden, locked">
+          Locked
+        </SelectableList.Item>
+        <SelectableList.Item value="d" variant="bare">
+          Round
+        </SelectableList.Item>
+      </SelectableList.List>
+    </SelectableList.Root>
+  );
+}
+
+describe("SelectableList bare items and disabled items", () => {
+  it("the bare look carries no row chrome but keeps group/item", () => {
+    render(<BareHarness />);
+    const tab = screen.getByRole("tab", { name: "Cup" });
+    expect(tab).toHaveClass("group/item", "border-0");
+    expect(tab).not.toHaveClass("border-l-3");
+    expect(tab.className).not.toMatch(/data-\[state=active\]:bg-volt/);
+  });
+
+  it("is a horizontal tablist: the arrows move across and skip the disabled tab", async () => {
+    const user = userEvent.setup();
+    render(<BareHarness />);
+    expect(screen.getByRole("tablist", { name: "Shelf" })).toHaveAttribute(
+      "aria-orientation",
+      "horizontal",
+    );
+    await user.tab();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Medal" })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Round" })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{End}");
+    expect(screen.getByRole("tab", { name: "Round" })).toHaveFocus();
+  });
+
+  it("announces the disabled tab by its own label and never selects it", async () => {
+    const user = userEvent.setup();
+    render(<BareHarness />);
+    const locked = screen.getByRole("tab", { name: "Hidden, locked" });
+    expect(locked).toBeDisabled();
+    await user.click(locked);
+    expect(locked).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("tab", { name: "Cup" })).toHaveAttribute("aria-selected", "true");
+  });
+});
+
 describe("SelectableList", () => {
   it("renders a tablist with an accessible name, vertical by default", () => {
     render(<Harness />);

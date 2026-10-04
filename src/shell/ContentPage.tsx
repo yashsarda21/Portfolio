@@ -47,7 +47,7 @@ export interface ContentPageProps {
   next?: { label: ReactNode; to: string };
   /** Said once on mount, interrupting any line on air. With neither `comm` nor `next` the page has no footer. */
   comm?: string;
-  /** Replaces the default sky + venue glows (trophy, card and team-up pages draw their own). */
+  /** Replaces the default sky + venue glows (trophy, card and team-up pages draw their own). `null`: none. */
   backdrop?: ReactNode;
   /** The top-of-page sky glow. Defaults to the venue's artboard values. */
   sky?: SkyGlowSpec;
@@ -112,7 +112,10 @@ export function ContentPage({
       <ContentLayout
         mainId="main"
         backdrop={
-          backdrop ?? (
+          // `null` means no backdrop at all (the trophy room is a plain ground); undefined means the venue's glows.
+          backdrop !== undefined ? (
+            backdrop
+          ) : (
             <>
               <SkyGlow {...(sky ?? preset?.sky ?? NO_VENUE_SKY)} />
               {preset ? <VenueGlow {...(glow ?? preset.glow)} /> : null}

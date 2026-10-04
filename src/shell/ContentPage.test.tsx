@@ -185,6 +185,12 @@ describe("ContentPage", () => {
     expect(screen.getByTestId("custom-backdrop")).toBeInTheDocument();
   });
 
+  it("draws no backdrop at all when it is null (a plain ground)", () => {
+    const { container } = setup({ backdrop: null });
+    expect(container.querySelector(".scene-sky")).toBeNull();
+    expect(container.querySelector(".scene-venue-glow")).toBeNull();
+  });
+
   it("sets data-zone on the page root only when given a zone", () => {
     const { container, unmount } = setup({ zone: "trophy" });
     expect(container.querySelector("[data-zone]")).toHaveAttribute("data-zone", "trophy");

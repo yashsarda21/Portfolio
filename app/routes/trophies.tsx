@@ -1,9 +1,9 @@
 import type { Route } from "./+types/trophies";
-import { PlaceholderScreen } from "@/shell/PlaceholderScreen";
+import { TrophiesScreen } from "@/features/trophies/TrophiesPage";
 import { pageMeta } from "@/shell/meta";
 
 export const meta: Route.MetaFunction = () => pageMeta("trophies");
 
 export default function Trophies() {
-  return <PlaceholderScreen route="trophies" />;
+  return <TrophiesScreen />;
 }

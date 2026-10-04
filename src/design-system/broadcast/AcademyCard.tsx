@@ -83,7 +83,7 @@ export function AcademyCard({
           <Text variant="body-sm" tone="secondary" leading="font">
             {degree}
           </Text>
-          <Text variant="mono-stack" tone="label">
+          <Text variant="mono-stack" tone="label" caps>
             {meta}
           </Text>
         </div>

@@ -142,6 +142,7 @@ export const TOKEN_CATALOG = {
     "type-score-lg",
     "type-score-num",
     "type-title-panel",
+    "type-title-shelf",
     "type-position",
     "type-monogram",
     "type-name",

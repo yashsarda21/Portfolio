@@ -36,6 +36,11 @@ describe("AcademyCard", () => {
     }
   });
 
+  it("sets the meta line in capitals, whatever case the content is stored in", () => {
+    render(<AcademyCard {...PROPS} meta="Jul 2020 – Jun 2024 · CGPA 8.94 · Distinction, SPPU" />);
+    expect(screen.getByText(/Jul 2020/)).toHaveClass("uppercase");
+  });
+
   it("hides the monogram: the school's name already says it", () => {
     render(<AcademyCard {...PROPS} />);
     expect(screen.getByText("PICT").closest("[aria-hidden='true']")).not.toBeNull();

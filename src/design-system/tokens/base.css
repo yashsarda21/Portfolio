@@ -601,6 +601,15 @@
   line-height: 0.95;
   text-transform: uppercase;
 }
+/* A trophy's name on its shelf: 20px at .04em on the font's own line box. */
+@utility type-title-shelf {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 /* The position badge on the portrait ("SE"): 52px on a 1.0 line (type-d2s is .9). */
 @utility type-position {
   font-family: var(--font-display);

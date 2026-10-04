@@ -35,12 +35,26 @@ const selectableRowVariants = cva(
   "group/item flex min-h-11 w-full cursor-pointer items-center border-b border-l-3 border-line border-l-transparent bg-transparent text-left text-floodlight transition-colors duration-(--dur-snap) hover:bg-white-a04 focus-visible:-outline-offset-2 data-[state=active]:border-l-volt data-[state=active]:bg-volt-a06 data-[state=active]:hover:bg-white-a04",
 );
 
+/** The bare look: no row chrome, only the focus ring. For a cell that draws its own selected state (a shelf of trophies). */
+const selectableBare =
+  "group/item cursor-pointer border-0 bg-transparent p-0 text-floodlight focus-visible:-outline-offset-4 disabled:cursor-default";
+
+type ItemProps = ComponentPropsWithRef<typeof Tabs.Trigger> & {
+  /** row: a hairline-divided line that turns volt when selected (default) · bare: no chrome, the cell draws its own state. */
+  variant?: "row" | "bare";
+};
+
 /**
- * One selectable row. Style its state with `data-[state=active]:`; parts inside it follow with
- * `group-data-[state=active]/item:`.
+ * One selectable item. Style its state with `data-[state=active]:`; parts inside it follow with
+ * `group-data-[state=active]/item:`. A `disabled` item is announced but cannot be selected, and the arrow keys skip it.
  */
-function Item({ className, ...rest }: ComponentPropsWithRef<typeof Tabs.Trigger>) {
-  return <Tabs.Trigger className={cn(selectableRowVariants(), className)} {...rest} />;
+function Item({ variant = "row", className, ...rest }: ItemProps) {
+  return (
+    <Tabs.Trigger
+      className={cn(variant === "bare" ? selectableBare : selectableRowVariants(), className)}
+      {...rest}
+    />
+  );
 }
 
 /** Detail pane for one item. Every panel stays in the HTML; the inactive ones are `hidden`. */
