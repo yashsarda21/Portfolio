@@ -5,9 +5,12 @@ import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
 import { expectMatchesArtboard } from "../support/visual";
 import {
+  commentaryBar,
   expectMainLandmarks,
+  expectNextButtonOneLine,
   expectNoHorizontalOverflow,
   expectTabBarClear,
+  waitForHydration,
 } from "./support/contentPage";
 
 // The e2e runner loads plain TS (no JSON imports), so read the resume content from disk.
@@ -58,6 +61,8 @@ test.describe("the draw", () => {
     page,
   }) => {
     await page.goto(ROUTES.highlights);
+    // Keys pressed before React has taken over the prerendered page do nothing.
+    await waitForHydration(page);
     const tabs = page.getByRole("tab");
     await expect(tabs).toHaveCount(3);
     await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
@@ -104,7 +109,7 @@ test.describe("the draw", () => {
 });
 
 test.describe("links", () => {
-  test("CODE ON GITHUB opens the GitHub profile and no link on the page is a bare #", async ({
+  test("CODE ON GITHUB goes to the GitHub profile in the same tab, and no link on the page is a bare #", async ({
     page,
   }) => {
     await page.goto(ROUTES.highlights);
@@ -112,8 +117,8 @@ test.describe("links", () => {
     // One per project (the unselected panels are hidden), so only the visible one is exposed.
     await expect(code).toHaveCount(1);
     await expect(code).toHaveAttribute("href", content.player.contact.github);
-    await expect(code).toHaveAttribute("target", "_blank");
-    await expect(code).toHaveAttribute("rel", /noopener/);
+    // Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one.
+    await expect(code).not.toHaveAttribute("target");
 
     // The content has no demo or case-study links, so neither row is drawn (and nothing links to "#").
     await expect(page.getByRole("link", { name: ui.pages.highlights.demo })).toHaveCount(0);
@@ -128,12 +133,12 @@ test.describe("desktop", () => {
   test("matches the Tennis-Highlights artboard", async ({ page }) => {
     await page.goto(ROUTES.highlights);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await page.locator("[data-state]").filter({ hasText: "COMM" }).first().waitFor();
+    await commentaryBar(page).waitFor();
     const ratio = await expectMatchesArtboard(page, "Tennis-Highlights", {
       maxDiffRatio: 0.02,
       mask: [
         // The COMM line animates in and out, so its box is not stable.
-        page.locator("[data-state]").filter({ hasText: "COMM" }).first(),
+        commentaryBar(page),
         // P1 (plan, spec §11): the placeholder says "REPLAY COMING SOON", the artboard "ADD A 10s SCREEN RECORDING".
         page.getByRole("tabpanel").locator("p").first(),
         // Content wording: the final's kind line reads "Published research · PICT", the artboard "Published research".
@@ -154,6 +159,11 @@ test.describe("desktop", () => {
   test("never scrolls sideways", async ({ page }) => {
     await page.goto(ROUTES.highlights);
     await expectNoHorizontalOverflow(page, [768, 1024, 1200, 1440]);
+  });
+
+  test("keeps the next-venue label on one line", async ({ page }) => {
+    await page.goto(ROUTES.highlights);
+    await expectNextButtonOneLine(page, new RegExp(ui.hud.nextVenue), [768, 1024, 1440]);
   });
 
   test("the draw keeps its place and the panels stay beside it at 1200 and up", async ({
@@ -177,6 +187,11 @@ test.describe("phone", () => {
   test("never scrolls sideways", async ({ page }) => {
     await page.goto(ROUTES.highlights);
     await expectNoHorizontalOverflow(page, [360, 390], 844);
+  });
+
+  test("keeps the next-venue label on one line", async ({ page }) => {
+    await page.goto(ROUTES.highlights);
+    await expectNextButtonOneLine(page, new RegExp(ui.hud.nextVenue), [360, 390], 844);
   });
 
   test("shows the tab bar with PROJECTS current, and the last control clears it", async ({

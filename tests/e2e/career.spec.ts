@@ -5,9 +5,12 @@ import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
 import { expectMatchesArtboard } from "../support/visual";
 import {
+  commentaryBar,
   expectMainLandmarks,
+  expectNextButtonOneLine,
   expectNoHorizontalOverflow,
   expectTabBarClear,
+  waitForHydration,
 } from "./support/contentPage";
 
 // The e2e runner loads plain TS (no JSON imports), so read the resume content from disk.
@@ -48,6 +51,8 @@ test.describe("without JavaScript", () => {
 test.describe("scorecard", () => {
   test("arrow keys move between innings and the panel follows", async ({ page }) => {
     await page.goto(ROUTES.career);
+    // Keys pressed before React has taken over the prerendered page do nothing.
+    await waitForHydration(page);
     const tabs = page.getByRole("tab");
     await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("tabpanel")).toContainText(now!.role);
@@ -92,12 +97,12 @@ test.describe("desktop", () => {
   test("matches the Cricket-Career artboard", async ({ page }) => {
     await page.goto(ROUTES.career);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await page.locator("[data-state]").filter({ hasText: "COMM" }).first().waitFor();
+    await commentaryBar(page).waitFor();
     const ratio = await expectMatchesArtboard(page, "Cricket-Career", {
       maxDiffRatio: 0.02,
       mask: [
         // The COMM line animates in and out, so its box is not stable.
-        page.locator("[data-state]").filter({ hasText: "COMM" }).first(),
+        commentaryBar(page),
         // P3 (plan, spec §11): the real page adds the "03 ACADEMY" link row the artboard does not draw.
         page.getByRole("link", { name: /ACADEMY/i }),
       ],
@@ -109,6 +114,11 @@ test.describe("desktop", () => {
     await page.goto(ROUTES.career);
     await expectNoHorizontalOverflow(page, [768, 1024, 1200, 1440]);
   });
+
+  test("keeps the next-venue label on one line", async ({ page }) => {
+    await page.goto(ROUTES.career);
+    await expectNextButtonOneLine(page, new RegExp(ui.hud.nextVenue), [768, 1024, 1440]);
+  });
 });
 
 test.describe("phone", () => {
@@ -117,6 +127,11 @@ test.describe("phone", () => {
   test("never scrolls sideways", async ({ page }) => {
     await page.goto(ROUTES.career);
     await expectNoHorizontalOverflow(page, [360, 390], 844);
+  });
+
+  test("keeps the next-venue label on one line", async ({ page }) => {
+    await page.goto(ROUTES.career);
+    await expectNextButtonOneLine(page, new RegExp(ui.hud.nextVenue), [360, 390], 844);
   });
 
   test("shows the tab bar with CAREER current, and the last control clears it", async ({

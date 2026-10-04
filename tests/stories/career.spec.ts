@@ -12,8 +12,7 @@ test("Career layout matches the Cricket-Career artboard (artboard copy)", async 
   const ratio = await expectMatchesArtboard(page, "Cricket-Career", {
     maxDiffRatio: 0.02,
     // The COMM line animates in and out (4s on air), so its box is not stable.
-    // The sr-only live region repeats the line, so match the bar by its COMM tag.
-    mask: [page.locator("[data-state]").filter({ hasText: "COMM" }).first()],
+    mask: [page.locator("[data-commentary-bar]")],
   });
   expect(ratio).toBeLessThanOrEqual(0.02);
 });
