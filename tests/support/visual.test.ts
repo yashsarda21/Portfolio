@@ -1,6 +1,6 @@
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
-import { diffImages } from "./visual";
+import { cropPng, diffImages, readReference, readRegions } from "./visual";
 
 function solid(width: number, height: number, rgb: [number, number, number]): PNG {
   const png = new PNG({ width, height });
@@ -46,5 +46,34 @@ describe("diffImages", () => {
     expect(() => diffImages(solid(10, 10, [0, 0, 0]), solid(20, 10, [0, 0, 0]), [])).toThrow(
       /Size mismatch/,
     );
+  });
+});
+
+describe("cropPng", () => {
+  it("returns the exact pixels of a window", () => {
+    const src = new PNG({ width: 4, height: 4 });
+    for (let i = 0; i < 16; i++) {
+      src.data[i * 4] = i * 10;
+      src.data[i * 4 + 3] = 255;
+    }
+    const out = cropPng(src, { x: 1, y: 1, width: 2, height: 2 });
+    expect([out.width, out.height]).toEqual([2, 2]);
+    // source pixels 5, 6, 9, 10
+    expect([0, 1, 2, 3].map((i) => out.data[i * 4])).toEqual([50, 60, 90, 100]);
+  });
+
+  it("clamps to the image bounds", () => {
+    const out = cropPng(solid(4, 4, [1, 2, 3]), { x: 3, y: 3, width: 5, height: 5 });
+    expect([out.width, out.height]).toEqual([1, 1]);
+  });
+});
+
+describe("missing references", () => {
+  it("readReference points at pnpm references", async () => {
+    await expect(readReference("Nope", 1, 1)).rejects.toThrow("Run `pnpm references`");
+  });
+
+  it("readRegions points at pnpm references", async () => {
+    await expect(readRegions("Nope", 1, 1)).rejects.toThrow("Run `pnpm references`");
   });
 });

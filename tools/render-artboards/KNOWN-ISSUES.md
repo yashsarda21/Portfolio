@@ -15,6 +15,7 @@ The references in `design/references/` (gitignored, rebuilt by `pnpm references`
 - Motion: the wipe is off-screen at frame 0, as that is where its animation rests at frame 0.
 - QuickView is 1440x3300, not 1440x900. The bottom ~300px is empty page padding by design.
 - Intro: the spotlight rigs slightly overlap the REPLAY and SKIP INTRO buttons at the top right, as authored.
+- Fonts: BSD 600 / JBM 500 are requested by the artboards' Google Fonts link but no element uses them; the renderer loads only the shipped weights.
 - Resume PDF is not served, so any resume link is inert.
 - No board renders blank or with raw `{{...}}` (all 23 scanned).
 

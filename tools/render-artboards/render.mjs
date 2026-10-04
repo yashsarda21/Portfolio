@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-/* global document -- referenced inside page.evaluate(), which runs in the browser */
+/* global document, window -- referenced inside page.evaluate(), which runs in the browser */
 // Renders every handoff artboard to a PNG reference (spec §9.3).
 // Usage: pnpm references            → all boards
 //        pnpm references Main Hub   → only these
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
@@ -31,10 +31,28 @@ const SETTLE_MS = 300;
 const SERVED_DIRS = [SOURCE, ASSETS, join(ROOT, "node_modules/@fontsource")];
 
 const FONTS = [
-  ["Big Shoulders Display", "big-shoulders-display", [600, 700, 800, 900], ["normal"]],
+  ["Big Shoulders Display", "big-shoulders-display", [700, 800, 900], ["normal"]],
   ["Archivo", "archivo", [400, 500, 600, 700], ["normal", "italic"]],
-  ["JetBrains Mono", "jetbrains-mono", [400, 500, 700], ["normal"]],
+  ["JetBrains Mono", "jetbrains-mono", [400, 700], ["normal"]],
 ];
+
+// Element boxes for fluid boards, so tests can compare one region at a time (tall pages shift when content differs).
+const REGIONS = {
+  QuickView: {
+    header: "header",
+    hero: "main > section:nth-of-type(1)",
+    heroCtas: "main > section:nth-of-type(1) > div:last-child",
+    careerHead: "#career > div:first-child",
+    highlightsHead: "#highlights > div:first-child",
+    highlights: "#highlights",
+    attributes: "#attributes",
+    trophiesHead: "#trophies > div:nth-child(1) > h2",
+    academyHead: "#trophies > div:nth-child(2) > h2",
+    teamup: "#teamup",
+    teamupResume: "#teamup a:last-child",
+    footer: "footer",
+  },
+};
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -141,6 +159,27 @@ for (const [file, board] of Object.entries(canvas.boards)) {
     await page.waitForTimeout(SETTLE_MS);
     const out = join(OUT, `${name}@${board.w}x${board.h}.png`);
     await page.screenshot({ path: out, clip: { x: 0, y: 0, width: board.w, height: board.h } });
+    const regions = REGIONS[name];
+    if (regions) {
+      const boxes = await page.evaluate((selectors) => {
+        const result = {};
+        for (const [key, selector] of Object.entries(selectors)) {
+          const el = document.querySelector(selector);
+          if (!el) return { missing: `${key} (${selector})` };
+          const r = el.getBoundingClientRect();
+          result[key] = { x: r.x, y: r.y + window.scrollY, width: r.width, height: r.height };
+        }
+        return result;
+      }, regions);
+      if (boxes.missing) throw new Error(`region selector matched nothing: ${boxes.missing}`);
+      for (const box of Object.values(boxes)) {
+        for (const k of Object.keys(box)) box[k] = Math.round(box[k] * 100) / 100;
+      }
+      await writeFile(
+        out.replace(/\.png$/, ".regions.json"),
+        JSON.stringify(boxes, null, 2) + "\n",
+      );
+    }
     console.log(`✓ ${name} → ${out}`);
   } catch (err) {
     failures += 1;

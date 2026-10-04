@@ -21,7 +21,6 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build --quiet",
     "references": "node tools/render-artboards/render.mjs",
-    "test:visual-refs": "playwright test tests/e2e/visual-harness.spec.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && VERIFY=1 pnpm test && pnpm references && pnpm build-storybook && VERIFY=1 pnpm test:stories && VERIFY=1 pnpm test:e2e"
   },
   "dependencies": {
