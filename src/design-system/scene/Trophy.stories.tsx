@@ -142,6 +142,42 @@ export const Turntable: StoryObj = {
   },
 };
 
+/** The phone's size: 80% below 768px, every trophy in a stage of one height so the plinths line up. Narrow the viewport to see it. */
+export const PhoneScale: StoryObj = {
+  render: () => (
+    <Zone className="grid grid-cols-2 gap-x-6 gap-y-8 p-6">
+      {KINDS.map((kind) => (
+        <figure key={kind} className="relative flex flex-col items-center gap-3">
+          {kind === "locked" ? null : <Spotlight size="lg" scale="phone" />}
+          <Trophy kind={kind} label={LABELS[kind]} scale="phone" />
+          <figcaption className="type-mono-tag text-scout">{kind}</figcaption>
+        </figure>
+      ))}
+    </Zone>
+  ),
+};
+
+/** The light bar as a row of a grid, between two shelves: it follows the shelf above however tall that grows. */
+export const ShelfLightRow: StoryObj = {
+  render: () => (
+    <Zone className="p-6">
+      <div className="grid w-150 grid-cols-3 border border-line bg-linear-180 from-cabinet-hi to-cabinet-lo">
+        {KINDS.slice(0, 3).map((kind) => (
+          <div key={kind} className="flex justify-center py-6">
+            <Trophy kind={kind} label={LABELS[kind]} />
+          </div>
+        ))}
+        <ShelfLight placement="row" />
+        {KINDS.slice(3).map((kind) => (
+          <div key={kind} className="flex justify-center py-6">
+            <Trophy kind={kind} label={LABELS[kind]} />
+          </div>
+        ))}
+      </div>
+    </Zone>
+  ),
+};
+
 /** The plinths alone, at both heights. */
 export const Plinths: StoryObj = {
   render: () => (

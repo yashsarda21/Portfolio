@@ -63,6 +63,14 @@ describe("SelectableList bare items and disabled items", () => {
     expect(tab.className).not.toMatch(/data-\[state=active\]:bg-volt/);
   });
 
+  it("a disabled item points at no panel (it has none); the others do", () => {
+    render(<BareHarness />);
+    expect(screen.getByRole("tab", { name: "Hidden, locked" })).not.toHaveAttribute(
+      "aria-controls",
+    );
+    expect(screen.getByRole("tab", { name: "Cup" })).toHaveAttribute("aria-controls");
+  });
+
   it("is a horizontal tablist: the arrows move across and skip the disabled tab", async () => {
     const user = userEvent.setup();
     render(<BareHarness />);

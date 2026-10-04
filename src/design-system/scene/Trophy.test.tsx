@@ -47,6 +47,26 @@ describe("Trophy", () => {
     const { container } = render(<Trophy kind="cup" className="mt-3" />);
     expect(container.firstElementChild).toHaveClass("mt-3");
   });
+
+  it("draws at the artboard's size by default; scale=phone shrinks it below 768px in a stage of one height", () => {
+    const { container, rerender } = render(<Trophy kind="plaque" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.className).not.toMatch(/scene-zoom-sm/);
+    rerender(<Trophy kind="plaque" scale="phone" />);
+    expect(root).toHaveClass("max-md:scene-zoom-sm", "max-md:h-39", "max-md:justify-end");
+    // Only below the breakpoint: nothing changes from 768px up.
+    expect(root.className.split(" ").filter((c) => c.includes("scene-zoom"))).toEqual([
+      "max-md:scene-zoom-sm",
+    ]);
+  });
+
+  it("the cup and the locked outline share one bowl shape", () => {
+    const { container: cup } = render(<Trophy kind="cup" />);
+    const { container: locked } = render(<Trophy kind="locked" />);
+    expect(cup.querySelectorAll(".trophy-cup-shape")).toHaveLength(1);
+    expect(locked.querySelectorAll(".trophy-cup-shape")).toHaveLength(1);
+    expect(locked.querySelector(".trophy-cup")).toBeNull();
+  });
 });
 
 describe("Plinth, Spotlight, ShelfLight, CabinetGlass", () => {
@@ -70,9 +90,26 @@ describe("Plinth, Spotlight, ShelfLight, CabinetGlass", () => {
     expect(el).toHaveClass("[--spot-a:0.16]", "w-50", "h-65");
   });
 
+  it("Spotlight shrinks below 768px only when asked (scale=phone)", () => {
+    const { container, rerender } = render(<Spotlight />);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.className).not.toMatch(/scene-zoom-sm/);
+    rerender(<Spotlight scale="phone" />);
+    expect(el).toHaveClass("max-md:scene-zoom-sm", "max-md:origin-top");
+  });
+
   it("Spotlight staggers by index through --i", () => {
     const { container } = render(<Spotlight intensity="support" size="lg" index={3} />);
     expect((container.firstElementChild as HTMLElement).style.getPropertyValue("--i")).toBe("3");
+  });
+
+  it("ShelfLight is placed over the cabinet by default, or is a full-width grid row", () => {
+    const { container, rerender } = render(<ShelfLight />);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el).toHaveClass("absolute", "inset-x-6");
+    rerender(<ShelfLight placement="row" />);
+    expect(el).toHaveClass("col-span-full", "mx-6");
+    expect(el).not.toHaveClass("absolute");
   });
 
   it("ShelfLight and CabinetGlass are decorative overlays that ignore the pointer", () => {

@@ -12,8 +12,7 @@ import { PlinthDetail } from "./PlinthDetail";
 import { TrophiesPage } from "./TrophiesPage";
 import { buildTrophiesView } from "./view";
 
-const view = buildTrophiesView(content, ui, ROUTES);
-const HINT = ui.pages.trophies.lockedHint;
+const view = buildTrophiesView(content, ui);
 
 /** The page's own wiring: the selected trophy lives in state, as in TrophiesPage. */
 function Harness() {
@@ -52,11 +51,14 @@ describe("Cabinet", () => {
     }
   });
 
-  it("the locked trophy is a disabled tab announced with its hint", () => {
+  it("the locked trophy is a disabled tab named by its own title and sub, with no panel to point at", () => {
     renderWith(<Harness />);
-    const locked = screen.getByRole("tab", { name: `Giant Killer, ${HINT}` });
+    const sub = content.trophyRoom.at(-1)!.sub;
+    const locked = screen.getByRole("tab", { name: new RegExp(`Giant Killer.*${sub}`) });
     expect(locked).toBeDisabled();
     expect(locked).toHaveAttribute("aria-selected", "false");
+    expect(locked).not.toHaveAttribute("aria-label");
+    expect(locked).not.toHaveAttribute("aria-controls");
   });
 
   it("starts on the cup, and the arrows skip the locked tab", async () => {
@@ -112,6 +114,26 @@ describe("Cabinet", () => {
       lead()[0] as HTMLElement,
     );
     expect(document.querySelectorAll(".scene-spot")).toHaveLength(5);
+  });
+
+  it("puts a light bar between the shelves: after 3 trophies, or after 2 on the phone, none after the last", () => {
+    renderWith(<Harness />);
+    const order = [...screen.getByRole("tablist").children].map((el) => {
+      if (el.getAttribute("role") === "tab") return "tab";
+      expect(el).toHaveAttribute("aria-hidden", "true");
+      return el.classList.contains("max-md:hidden") ? "desktop light" : "phone light";
+    });
+    expect(order).toEqual([
+      "tab",
+      "tab",
+      "phone light",
+      "tab",
+      "desktop light",
+      "tab",
+      "phone light",
+      "tab",
+      "tab",
+    ]);
   });
 
   it("draws the medal's figure and the plaque's word on the art", () => {

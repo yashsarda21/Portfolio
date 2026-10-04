@@ -1,5 +1,5 @@
 import * as Tabs from "@radix-ui/react-tabs";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { createContext, useContext } from "react";
 import type { ComponentPropsWithRef } from "react";
 import { cn } from "@/lib/cn";
@@ -30,28 +30,34 @@ function List({ label, ...rest }: ListProps) {
   return <Tabs.List aria-label={label} {...rest} />;
 }
 
-/** The look of one row: a hairline-divided line with a 3px left edge that turns volt when selected. */
-const selectableRowVariants = cva(
-  "group/item flex min-h-11 w-full cursor-pointer items-center border-b border-l-3 border-line border-l-transparent bg-transparent text-left text-floodlight transition-colors duration-(--dur-snap) hover:bg-white-a04 focus-visible:-outline-offset-2 data-[state=active]:border-l-volt data-[state=active]:bg-volt-a06 data-[state=active]:hover:bg-white-a04",
-);
+/**
+ * The look of one item. row: a hairline-divided line with a 3px left edge that turns volt when selected.
+ * bare: no row chrome, only the focus ring, for a cell that draws its own selected state (a shelf of trophies).
+ */
+const selectableItemVariants = cva("group/item cursor-pointer text-floodlight", {
+  variants: {
+    variant: {
+      row: "flex min-h-11 w-full items-center border-b border-l-3 border-line border-l-transparent bg-transparent text-left transition-colors duration-(--dur-snap) hover:bg-white-a04 focus-visible:-outline-offset-2 data-[state=active]:border-l-volt data-[state=active]:bg-volt-a06 data-[state=active]:hover:bg-white-a04",
+      bare: "border-0 bg-transparent p-0 focus-visible:-outline-offset-4 disabled:cursor-default",
+    },
+  },
+  defaultVariants: { variant: "row" },
+});
 
-/** The bare look: no row chrome, only the focus ring. For a cell that draws its own selected state (a shelf of trophies). */
-const selectableBare =
-  "group/item cursor-pointer border-0 bg-transparent p-0 text-floodlight focus-visible:-outline-offset-4 disabled:cursor-default";
-
-type ItemProps = ComponentPropsWithRef<typeof Tabs.Trigger> & {
-  /** row: a hairline-divided line that turns volt when selected (default) · bare: no chrome, the cell draws its own state. */
-  variant?: "row" | "bare";
-};
+type ItemProps = ComponentPropsWithRef<typeof Tabs.Trigger> &
+  VariantProps<typeof selectableItemVariants>;
 
 /**
  * One selectable item. Style its state with `data-[state=active]:`; parts inside it follow with
- * `group-data-[state=active]/item:`. A `disabled` item is announced but cannot be selected, and the arrow keys skip it.
+ * `group-data-[state=active]/item:`. A `disabled` item is announced but cannot be selected, and the arrow keys
+ * skip it. It has no panel, so it points at none (Radix would name one that is never drawn).
  */
-function Item({ variant = "row", className, ...rest }: ItemProps) {
+function Item({ variant, className, disabled, ...rest }: ItemProps) {
   return (
     <Tabs.Trigger
-      className={cn(variant === "bare" ? selectableBare : selectableRowVariants(), className)}
+      disabled={disabled}
+      className={cn(selectableItemVariants({ variant }), className)}
+      {...(disabled ? { "aria-controls": undefined } : {})}
       {...rest}
     />
   );

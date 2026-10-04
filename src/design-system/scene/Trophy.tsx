@@ -1,3 +1,4 @@
+import { cva } from "class-variance-authority";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Plinth } from "./Plinth";
@@ -10,9 +11,20 @@ type TrophyProps = {
   label?: string;
   /** Turn on a turntable (12s). Only the figure turns; its plinth stays. The parent can set perspective. */
   spinning?: boolean;
+  /** art: the artboard's size at every width · phone: 80% below 768px (art size from there up), in a stage of one height. */
+  scale?: "art" | "phone";
 } & Omit<ComponentPropsWithRef<"span">, "children">;
 
 const FIGURE = "relative flex flex-col items-center";
+
+// Literal classes so Tailwind generates them. The phone stage is 156px (39 x 4): the plaque on its plinth.
+const trophyRoot = cva(`${FIGURE} [perspective:800px]`, {
+  variants: {
+    scale: { art: "", phone: "max-md:h-39 max-md:justify-end max-md:scene-zoom-sm" },
+    locked: { true: "opacity-60", false: "" },
+  },
+  defaultVariants: { scale: "art", locked: false },
+});
 
 /**
  * The figures, drawn from boxes as the Trophy-Room artboard draws them. Sizes are the artboard's pixels. The
@@ -24,7 +36,7 @@ function figure(kind: TrophyKind, label: string | undefined): ReactNode {
     case "cup":
       return (
         <>
-          <span className="relative h-17.5 w-21 trophy-cup">
+          <span className="relative h-17.5 w-21 trophy-cup-shape trophy-cup">
             <span className="absolute top-2 -left-5.5 box-content h-7.5 w-4.5 rounded-tl-[18px] rounded-bl-[18px] border-5 border-r-0 border-trophy-gold-body" />
             <span className="absolute top-2 -right-5.5 box-content h-7.5 w-4.5 rounded-tr-[18px] rounded-br-[18px] border-5 border-l-0 border-trophy-gold-body" />
           </span>
@@ -37,7 +49,7 @@ function figure(kind: TrophyKind, label: string | undefined): ReactNode {
         <>
           <span className="h-11 w-10 trophy-ribbon" />
           <span className="flex size-18.5 items-center justify-center trophy-medal">
-            <span className="type-glyph-md text-trophy-silver-ink">{label}</span>
+            <span className="trophy-glyph-md text-trophy-silver-ink">{label}</span>
           </span>
         </>
       );
@@ -45,7 +57,7 @@ function figure(kind: TrophyKind, label: string | undefined): ReactNode {
       return (
         <span className="flex h-29.5 w-24 items-center justify-center border-3 border-trophy-gold-body trophy-wood">
           <span className="flex h-17.5 w-15 items-center justify-center trophy-plate">
-            <span className="type-glyph-sm text-trophy-wood-hi">{label}</span>
+            <span className="trophy-glyph-sm text-trophy-wood-hi">{label}</span>
           </span>
         </span>
       );
@@ -69,8 +81,8 @@ function figure(kind: TrophyKind, label: string | undefined): ReactNode {
       // The dashes are decoration (line-3 is for borders only). The "?" is lettering, so it takes the dim text grey (spec A1).
       return (
         <>
-          <span className="flex h-17.5 w-21 items-center justify-center rounded-[4px_4px_42px_42px] border-2 border-dashed border-line-3">
-            <span className="type-glyph-lg text-dim">{label ?? "?"}</span>
+          <span className="flex h-17.5 w-21 items-center justify-center trophy-cup-shape border-2 border-dashed border-line-3">
+            <span className="trophy-glyph-lg text-dim">{label ?? "?"}</span>
           </span>
           <span className="h-7.5 w-3 border-x-2 border-dashed border-line-3" />
           <span className="h-5.5 w-22.5 border-2 border-dashed border-line-3" />
@@ -83,7 +95,7 @@ function figure(kind: TrophyKind, label: string | undefined): ReactNode {
  * One trophy: the figure on its plinth, aria-hidden (the cell around it carries the name). `locked` is the
  * dashed outline of a trophy not yet won: dimmed, with its own dashed base instead of a plinth.
  */
-export function Trophy({ kind, label, spinning = false, className, ...rest }: TrophyProps) {
+export function Trophy({ kind, label, spinning = false, scale, className, ...rest }: TrophyProps) {
   const plinth =
     kind === "cup" ? (
       <Plinth size="lg" />
@@ -96,7 +108,7 @@ export function Trophy({ kind, label, spinning = false, className, ...rest }: Tr
     <span
       aria-hidden="true"
       data-kind={kind}
-      className={cn(FIGURE, "[perspective:800px]", kind === "locked" && "opacity-60", className)}
+      className={cn(trophyRoot({ scale, locked: kind === "locked" }), className)}
       {...rest}
     >
       <span className={cn(FIGURE, spinning && "animate-turntable")}>{figure(kind, label)}</span>
