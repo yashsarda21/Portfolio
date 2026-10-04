@@ -14,7 +14,8 @@ export function AttributesSection({ attributes }: { attributes: ScoutReport["att
             </Heading>
             <ul className="flex flex-wrap gap-2">
               {group.chips.map((chip) => (
-                <li key={chip.label}>
+                // flex: the chip stretches to the row, so filled and outlined chips share one height (as on the artboard).
+                <li key={chip.label} className="flex">
                   <Chip size="code" tone={chip.filled ? "volt" : "strong"}>
                     {chip.label}
                   </Chip>

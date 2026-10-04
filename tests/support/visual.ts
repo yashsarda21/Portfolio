@@ -169,8 +169,23 @@ export async function expectRegionMatchesArtboard(
   let expected: PNG = cropPng(await readReference(artboard, ref.width, ref.height), box);
 
   await page.evaluate(() => document.fonts.ready);
+  // Clip the page ourselves, rounding the box exactly as cropPng does for the reference. A plain
+  // element screenshot floors a fractional top edge (702.98 -> 702) while the reference crop rounds it
+  // (-> 703), which shifts every edge in the region by a pixel.
+  const live = await actual.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height };
+  });
+  const x0 = Math.max(0, Math.round(live.x));
+  const y0 = Math.max(0, Math.round(live.y));
+  const clip = {
+    x: x0,
+    y: y0,
+    width: Math.max(1, Math.round(live.x + live.width) - x0),
+    height: Math.max(1, Math.round(live.y + live.height) - y0),
+  };
   let actualPng: PNG = PNG.sync.read(
-    await actual.screenshot({ animations: "disabled", caret: "hide" }),
+    await page.screenshot({ clip, fullPage: true, animations: "disabled", caret: "hide" }),
   );
 
   // Sub-pixel rounding can leave the two a pixel or two apart: compare the shared area.

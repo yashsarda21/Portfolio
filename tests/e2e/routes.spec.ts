@@ -59,12 +59,21 @@ test("focus lands on the rendered heading of the landing page, not its hidden tw
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
 
+test("journey: Landing → Quick View", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the Landing CTAs are the desktop Scoreboard");
+  await page.goto(ROUTES.home);
+  await page.getByRole("link", { name: ui.landing.view }).click();
+  await expect(page).toHaveURL(ROUTES.scout);
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+  await expect(page).toHaveTitle(ui.routes.scout.title);
+});
+
 test("reduced motion navigates without the wipe", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(ROUTES.career);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
-    .getByRole("link", { name: ui.routes.scout.heading })
+    .getByRole("link", { name: ui.routes.scout.navLabel })
     .click();
   await expect(page).toHaveURL(ROUTES.scout);
   await expect(page.locator("[data-wipe] > div").first()).toBeHidden();

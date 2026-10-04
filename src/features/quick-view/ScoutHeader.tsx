@@ -7,7 +7,7 @@ export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
     <header className="sticky top-0 z-20 border-b border-line bar max-md:bg-ground-a92 md:backdrop-blur-glass">
       <div className="mx-auto flex min-h-17 max-w-312 flex-wrap items-center justify-between gap-5 px-6 max-md:h-15 max-md:min-h-0 max-md:px-4">
         <div className="flex items-center gap-3">
-          <BrandLockup size="sm" mark={header.mark} className="max-md:hidden" />
+          <BrandLockup size="md" mark={header.mark} className="max-md:hidden" />
           <MonoLabel variant="mono-eyebrow" className="max-md:type-mono-label">
             {header.label}
           </MonoLabel>
@@ -27,7 +27,7 @@ export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
           as={ArenaLink}
           to={header.enter.to}
           tone="volt-outline"
-          className="max-md:hidden"
+          className="h-11.5 max-md:hidden"
         >
           {header.enter.label}
         </HUDButton>
