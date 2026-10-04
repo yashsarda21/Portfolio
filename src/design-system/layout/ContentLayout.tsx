@@ -16,8 +16,6 @@ interface ContentLayoutProps {
   backdrop?: ReactNode;
   /** Id of the `<main>` landmark (the skip link targets it). */
   mainId?: string;
-  /** Sets `data-zone` on the root: the trophy zone brings its ground and its gold (spec 5.1 layer 3). */
-  zone?: "trophy";
   className?: string;
 }
 
@@ -36,11 +34,10 @@ export function ContentLayout({
   tabBar,
   backdrop,
   mainId,
-  zone,
   className,
 }: ContentLayoutProps) {
   return (
-    <div data-zone={zone} className={cn("relative isolate", className)}>
+    <div className={cn("relative isolate", className)}>
       {backdrop ? (
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
           {backdrop}

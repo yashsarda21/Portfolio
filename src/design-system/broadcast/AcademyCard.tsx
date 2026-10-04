@@ -52,7 +52,7 @@ export function AcademyCard({
       id={id}
       aria-labelledby={headingId}
       className={cn(
-        "flex scroll-mt-24 flex-col gap-3 border border-line bg-linear-160 from-panel to-stand-3 px-5.5 py-5",
+        "flex scroll-mt-header flex-col gap-3 border border-line bg-linear-160 from-panel to-stand-3 px-5.5 py-5",
         className,
       )}
       {...rest}
@@ -61,7 +61,7 @@ export function AcademyCard({
         <Text variant="mono-label" tone="volt" leading="font">
           {eyebrow}
         </Text>
-        <Text variant="mono-note" tone="label" className="text-right">
+        <Text variant="mono-note" tone="label" className="text-right text-balance">
           {aside}
         </Text>
       </div>
@@ -83,7 +83,7 @@ export function AcademyCard({
           <Text variant="body-sm" tone="secondary" leading="font">
             {degree}
           </Text>
-          <Text variant="mono-stack" tone="label" caps>
+          <Text variant="mono-stack" tone="label" caps className="text-balance">
             {meta}
           </Text>
         </div>

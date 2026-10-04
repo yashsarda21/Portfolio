@@ -273,21 +273,6 @@ describe("ContentLayout", () => {
     expect(screen.getByRole("main")).not.toHaveAttribute("id");
   });
 
-  it("sets data-zone on its root only when given a zone", () => {
-    const { container, rerender } = render(
-      <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
-        <section>panels</section>
-      </ContentLayout>,
-    );
-    expect(container.firstElementChild).not.toHaveAttribute("data-zone");
-    rerender(
-      <ContentLayout zone="trophy" header={<header>head</header>} title={<h1>title</h1>}>
-        <section>panels</section>
-      </ContentLayout>,
-    );
-    expect(container.firstElementChild).toHaveAttribute("data-zone", "trophy");
-  });
-
   it("without a footer the panels run to the 36px bottom gutter; with one the footer owns it", () => {
     const { rerender } = render(
       <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>

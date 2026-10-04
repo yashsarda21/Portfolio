@@ -134,3 +134,39 @@ describe("text contrast (WCAG AA 4.5:1)", () => {
     expect(contrast(stand, ref("floodlight"))).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+// The Trophy Room (spec 5.1): gold text, and the usual greys, on the cabinet's gradient, on glass over the
+// trophy ground, and on the academy card's gradient.
+describe("trophy zone text contrast (WCAG AA 4.5:1)", () => {
+  const trophyGround = ref("ground-trophy");
+  const zoneBackgrounds: Record<string, Rgb> = {
+    "cabinet-hi (top of the cabinet)": ref("cabinet-hi"),
+    "cabinet-lo (bottom of the cabinet)": ref("cabinet-lo"),
+    "glass over the trophy ground (plinth panel)": over(
+      stand,
+      glassAlpha("surface-glass"),
+      trophyGround,
+    ),
+    "panel (academy card, top)": stand,
+    "stand-3 (academy card, bottom)": ref("stand-3"),
+  };
+  const zoneTexts = ["gold", "scout-grey", "dim"] as const;
+
+  for (const [bgName, bg] of Object.entries(zoneBackgrounds)) {
+    for (const text of zoneTexts) {
+      it(`${text} on ${bgName}`, () => {
+        expect(contrast(ref(text), bg)).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+  }
+
+  for (const [bgName, bg] of Object.entries(zoneBackgrounds).filter(([name]) =>
+    /panel|stand-3|glass/.test(name),
+  )) {
+    for (const text of ["floodlight", "text-1", "text-2", "volt"] as const) {
+      it(`${text} on ${bgName}`, () => {
+        expect(contrast(ref(text), bg)).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+  }
+});

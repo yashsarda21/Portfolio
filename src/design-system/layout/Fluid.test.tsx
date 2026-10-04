@@ -169,7 +169,7 @@ describe("FluidSection", () => {
     );
     const section = screen.getByRole("region", { name: "Career" });
     expect(section).toHaveAttribute("id", "career");
-    expect(section).toHaveClass("scroll-mt-20", "md:max-lg:scroll-mt-32");
+    expect(section).toHaveClass("scroll-mt-header", "md:max-lg:scroll-mt-32");
     expect(section).toHaveClass("flex", "flex-col", "max-md:border-t");
   });
 
@@ -180,7 +180,7 @@ describe("FluidSection", () => {
       </FluidSection>,
     );
     const section = screen.getByRole("region", { name: "Band" });
-    expect(section).toHaveClass("scroll-mt-20", "md:max-lg:scroll-mt-32");
+    expect(section).toHaveClass("scroll-mt-header", "md:max-lg:scroll-mt-32");
     expect(section).not.toHaveClass("flex");
     expect(section).not.toHaveClass("max-md:border-t");
   });
