@@ -37,7 +37,9 @@ describe("selectors", () => {
   it("innings reveals add the academy as innings 03", () => {
     const reveals = getInningsReveals(c);
     expect(reveals.map((r) => r.status)).toEqual(["NOT OUT", "DEBUT", "ACADEMY"]);
+    expect(reveals.map((r) => r.kind)).toEqual(["career", "career", "academy"]);
     expect(reveals[2]).toEqual({
+      kind: "academy",
       n: "03",
       status: "ACADEMY",
       team: "PICT, Pune",

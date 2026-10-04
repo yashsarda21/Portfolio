@@ -118,7 +118,7 @@ describe("buildScoutReport", () => {
       href: "/yash-sarda-public.pdf",
       newTab: true,
     });
-    expect(report.hero.newTabHint).toBe(ui.scout.newTab);
+    expect(report.hero.newTabHint).toBe(ui.a11y.newTab);
     expect(report.teamUp.links.at(-1)).toMatchObject({
       label: "Resume (PDF)",
       glyph: "↓",

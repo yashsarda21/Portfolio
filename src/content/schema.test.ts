@@ -131,10 +131,49 @@ describe("content schema", () => {
       expect(() => parseContent(broken)).toThrow(/trophyRoom\.0\.links\.0\.href/);
     });
 
-    it("rejects an empty media string", () => {
-      const broken = clone();
-      broken.matchHighlights[0].media = "";
-      expect(() => parseContent(broken)).toThrow(/matchHighlights\.0\.media/);
+    describe("project media", () => {
+      const withMedia = (media: unknown) => {
+        const c = clone();
+        c.matchHighlights[0].media = media;
+        return c;
+      };
+
+      it("accepts a silent screen recording with a poster", () => {
+        expect(() =>
+          parseContent(withMedia({ src: "/media/ai.mp4", poster: "/media/ai.png", silent: true })),
+        ).not.toThrow();
+      });
+
+      it("accepts a recording with sound when it has captions", () => {
+        expect(() =>
+          parseContent(
+            withMedia({
+              src: "https://cdn.example.com/ai.mp4",
+              captions: "/media/ai.vtt",
+              silent: false,
+            }),
+          ),
+        ).not.toThrow();
+      });
+
+      it("rejects a recording with sound and no captions", () => {
+        expect(() => parseContent(withMedia({ src: "/media/ai.mp4", silent: false }))).toThrow(
+          /matchHighlights\.0\.media\.captions/,
+        );
+      });
+
+      it.each([
+        ["a bare string (the old shape)", "/media/ai.mp4"],
+        ["an empty src", { src: "", silent: true }],
+        ["an http src", { src: "http://example.com/a.mp4", silent: true }],
+        ["a protocol-relative src", { src: "//evil.example/a.mp4", silent: true }],
+        ["a relative src", { src: "media/a.mp4", silent: true }],
+        ["a javascript: poster", { src: "/a.mp4", poster: "javascript:alert(1)", silent: true }],
+        ["a missing silent flag", { src: "/a.mp4" }],
+        ["an unknown key", { src: "/a.mp4", silent: true, autoplay: true }],
+      ])("rejects %s", (_name, media) => {
+        expect(() => parseContent(withMedia(media))).toThrow(/matchHighlights\.0\.media/);
+      });
     });
 
     describe("Quick View fields", () => {

@@ -39,6 +39,8 @@ export const ui = {
       listLabel: "Projects",
       replay: "REPLAY",
       comingSoon: "REPLAY COMING SOON",
+      // The captions track of a project video: its language name and code.
+      captions: { label: "English", lang: "en" },
       serve: "THE SERVE · PROBLEM",
       rally: "THE RALLY · APPROACH",
       winner: "THE WINNER · RESULT",
@@ -227,8 +229,9 @@ export const ui = {
     },
     footer: { arena: "PREFER THE FULL EXPERIENCE? ENTER THE ARENA" },
     actions: { label: "Quick actions", card: "PLAYER CARD", teamUp: "TEAM UP" },
-    newTab: "(opens in a new tab)",
   },
+  // Shared by every screen. Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one, and says so.
+  a11y: { newTab: "(opens in a new tab)" },
   glyph: { next: "→", external: "↗", download: "↓", sep: "·" },
   record: { career: "RECORD 99 – 1", yours: "YOUR RECORD" },
 } as const;

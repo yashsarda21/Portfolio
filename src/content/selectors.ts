@@ -16,6 +16,8 @@ export interface CareerRow {
 }
 
 export interface InningsReveal {
+  /** A scorecard innings, or the education entry that follows them. Branch on this, not on `status`. */
+  kind: "career" | "academy";
   n: string;
   status: "NOT OUT" | "DEBUT" | "ACADEMY";
   team: string;
@@ -42,6 +44,9 @@ export interface AttributeGroup {
 export type Trophy = Content["trophyRoom"][number] & { locked: boolean };
 
 export type ResumeAction = { kind: "pdf"; href: string } | { kind: "request"; href: string };
+
+/** The round that carries the page's default selection (and its own commentary line). */
+export const FINAL_ROUND: Highlight["round"] = "THE FINAL";
 
 const ROUND_ORDER: Record<Highlight["round"], { order: number; short: RoundShort }> = {
   "QUARTER-FINAL": { order: 0, short: "QF" },
@@ -75,6 +80,7 @@ export function getCareerRows(c: Content): CareerRow[] {
 
 export function getInningsReveals(c: Content): InningsReveal[] {
   const careers: InningsReveal[] = c.careerStats.map((row) => ({
+    kind: "career",
     n: row.innings,
     status: row.status,
     team: row.team,
@@ -85,6 +91,7 @@ export function getInningsReveals(c: Content): InningsReveal[] {
   return [
     ...careers,
     {
+      kind: "academy",
       n: String(careers.length + 1).padStart(2, "0"),
       status: "ACADEMY",
       team: `${a.shortName}, ${a.city}`,

@@ -187,7 +187,7 @@ export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES
       ],
       primary,
       secondary: { label: s.teamUpCta, href: TEAM_UP_HREF },
-      newTabHint: s.newTab,
+      newTabHint: copy.a11y.newTab,
     },
     career: {
       title: s.career.title,

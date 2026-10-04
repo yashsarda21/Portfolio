@@ -13,6 +13,11 @@ const Link = z.strictObject({
     ),
 });
 
+// A media file: https or a single-slash root path (never "//host", "/\\host", http or a scheme such as javascript:).
+const AssetPath = z
+  .string()
+  .regex(/^(https:\/\/|\/(?![/\\]))/, "Must start with https:// or a single / (not // or /\\)");
+
 const PRIVATE_RESUME_NAME = "yash-sarda-resume.pdf"; // the original PDF contains a phone number
 const Lines = z.array(z.string().min(1)).min(1);
 
@@ -114,7 +119,20 @@ export const ContentSchema = z.strictObject({
         rally: z.string().min(1),
         winner: z.string().min(1),
         stack: z.array(z.string().min(1)).min(1),
-        media: z.string().min(1).nullable(),
+        // A screen recording. `silent` (WCAG 1.2.1, video-only) needs no captions, only the text alternative the
+        // page already shows; a recording with sound must carry captions.
+        media: z
+          .strictObject({
+            src: AssetPath,
+            poster: AssetPath.optional(),
+            captions: AssetPath.optional(),
+            silent: z.boolean(),
+          })
+          .refine((m) => m.silent || m.captions !== undefined, {
+            path: ["captions"],
+            message: "A recording with sound needs captions",
+          })
+          .nullable(),
         facts: z.array(z.strictObject({ k: z.string().min(1), v: z.string().min(1) })).min(1),
         scoutLine: z.string().min(1),
         links: z
