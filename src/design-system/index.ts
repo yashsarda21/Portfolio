@@ -41,3 +41,5 @@ export { FloodlightMast } from "./scene/FloodlightMast";
 export { Field } from "./scene/Field";
 export { PitchGlow } from "./scene/PitchGlow";
 export { ArenaBackdrop } from "./scene/ArenaBackdrop";
+export { Stage } from "./layout/Stage";
+export { STAGE_SCALE_SCRIPT } from "./layout/stageScript";

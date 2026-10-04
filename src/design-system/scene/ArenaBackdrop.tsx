@@ -10,17 +10,24 @@ import { SkyGlow } from "./SkyGlow";
 /** Main's floodlit stadium, laid out in the 1440×900 design space (0D's <Stage> scales it). */
 export function ArenaBackdrop({
   venue = "turf",
+  bleed = false,
   className,
 }: {
   /** Re-tints every layer through the data-venue token overrides. */
   venue?: "turf" | "court" | "hall";
+  /** Let the scene extend past 1440×900 into the Stage letterbox. */
+  bleed?: boolean;
   className?: string;
 }) {
   return (
     <div
       aria-hidden="true"
       data-venue={venue}
-      className={cn("pointer-events-none relative h-225 w-360 overflow-hidden bg-night", className)}
+      className={cn(
+        "pointer-events-none relative h-225 w-360 overflow-hidden bg-night",
+        bleed && "overflow-visible bg-transparent",
+        className,
+      )}
     >
       <SkyGlow />
       <CrowdTier curved className="-inset-x-30 top-95 h-90" />
