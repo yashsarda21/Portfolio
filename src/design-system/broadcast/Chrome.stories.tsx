@@ -88,3 +88,12 @@ export const Pieces: StoryObj = {
     </div>
   ),
 };
+
+export const HUDButtonTones: StoryObj = {
+  render: () => (
+    <div className="flex gap-4 bg-night p-6">
+      <HUDButton>GLASS</HUDButton>
+      <HUDButton tone="volt-outline">VOLT OUTLINE</HUDButton>
+    </div>
+  ),
+};

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AudioToggle } from "./AudioToggle";
 import { CommentaryBar } from "./CommentaryBar";
 import { HUD } from "./HUD";
+import { HUDButton } from "./HUDButton";
 
 describe("broadcast chrome", () => {
   it("AudioToggle exposes and flips its pressed state", async () => {
@@ -72,5 +73,14 @@ describe("broadcast chrome", () => {
     const banner = screen.getByRole("banner");
     expect(banner).toHaveClass("h-19", "from-ground-a85");
     expect(banner).toHaveTextContent("LCR");
+  });
+
+  it("HUDButton is glass by default and volt-outline has no glass", () => {
+    const { rerender } = render(<HUDButton>QUICK VIEW</HUDButton>);
+    expect(screen.getByRole("button")).toHaveClass("glass", "text-floodlight");
+    rerender(<HUDButton tone="volt-outline">QUICK VIEW</HUDButton>);
+    const btn = screen.getByRole("button");
+    expect(btn).not.toHaveClass("glass");
+    expect(btn).toHaveClass("border-volt", "text-volt", "bg-transparent");
   });
 });

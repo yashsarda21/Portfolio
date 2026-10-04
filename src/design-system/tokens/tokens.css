@@ -70,6 +70,7 @@
   --rgb-volt: 215 255 63;
   --rgb-white: 255 255 255;
   --rgb-ground: 5 7 10;
+  --rgb-volt-ink: 10 12 8;
   --rgb-stand: 14 19 26;
   --rgb-turf: 46 132 78;
   --rgb-turf-deep: 14 52 32;
@@ -94,6 +95,7 @@
   --ref-ground-a85: rgb(var(--rgb-ground) / 0.85);
   --ref-ground-a90: rgb(var(--rgb-ground) / 0.9);
   --ref-ground-a92: rgb(var(--rgb-ground) / 0.92);
+  --ref-ink-a25: rgb(var(--rgb-volt-ink) / 0.25); /* Team Up row dividers on the volt band */
 
   /* ---------- Layer 2: semantic ---------- */
   --surface-ground: var(--ref-ground);

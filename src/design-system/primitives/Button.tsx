@@ -17,12 +17,15 @@ export const buttonVariants = cva(
         secondary: "text-floodlight",
         outline: "text-floodlight",
         ghost: "text-floodlight hover:text-volt",
+        panel: "text-floodlight",
       },
       size: {
         s: "h-13 px-6.5 type-btn",
         m: "h-15.5 px-10 type-btn",
         l: "h-18.5 px-10 type-btn-xl",
         xl: "h-19.5 w-77.5 flex-col gap-1 type-btn-xl",
+        cta: "min-h-14 px-7 type-btn-heavy",
+        bar: "h-13.5 w-full px-4 type-btn-bar",
       },
     },
     defaultVariants: { variant: "primary", size: "m" },
@@ -34,32 +37,38 @@ export const buttonPlateVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-volt shadow-glow-cta group-hover/button:bg-volt-hover",
+        primary: "bg-volt group-hover/button:bg-volt-hover",
         secondary: "glass group-hover/button:bg-white-a10",
         outline: "border border-line-3 group-hover/button:border-volt",
         ghost: "",
+        panel: "border border-line-3 bg-inset group-hover/button:border-volt",
       },
+      glow: { true: "", false: "" },
       skew: {
         always: "-skew-x-12",
         desktop: "md:-skew-x-12",
         never: "",
       },
     },
-    defaultVariants: { variant: "primary", skew: "desktop" },
+    // The CTA glow belongs to the primary plate only; glow={false} turns it off.
+    compoundVariants: [{ variant: "primary", glow: true, className: "shadow-glow-cta" }],
+    defaultVariants: { variant: "primary", skew: "desktop", glow: true },
   },
 );
 
-type Variant = "primary" | "secondary" | "outline" | "ghost";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "panel";
 
 export type ButtonOwnProps = {
   variant?: Variant;
-  size?: "s" | "m" | "l" | "xl";
+  size?: "s" | "m" | "l" | "xl" | "cta" | "bar";
   /** true = always skewed, false = never, "desktop" = skewed from 768px up (default). */
   skew?: boolean | "desktop";
   /** Second line under the label (XL CTAs). */
   subLabel?: ReactNode;
   /** Volt glow pulse for the hero CTA. */
   pulse?: boolean;
+  /** Volt glow shadow under the primary plate (default true). */
+  glow?: boolean;
   iconRight?: IconName;
 };
 
@@ -70,6 +79,7 @@ export function Button<T extends ElementType = "button">({
   skew = "desktop",
   subLabel,
   pulse = false,
+  glow = true,
   iconRight,
   className,
   children,
@@ -95,7 +105,7 @@ export function Button<T extends ElementType = "button">({
         aria-hidden="true"
         data-plate
         className={cn(
-          buttonPlateVariants({ variant, skew: skewKey }),
+          buttonPlateVariants({ variant, skew: skewKey, glow }),
           pulse && variant === "primary" && "animate-cta-glow",
         )}
       />

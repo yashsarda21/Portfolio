@@ -19,6 +19,22 @@ describe("Chip", () => {
   });
 });
 
+describe("Chip sizes", () => {
+  it("code size uses the code recipe, not the base mono-md", () => {
+    render(<Chip size="code">Java 21</Chip>);
+    const chip = screen.getByText("Java 21");
+    expect(chip).toHaveClass("type-mono-code");
+    expect(chip).not.toHaveClass("type-mono-md");
+  });
+
+  it("meta size uses the chip recipe with a tighter mobile padding", () => {
+    render(<Chip size="meta">PUNE</Chip>);
+    const chip = screen.getByText("PUNE");
+    expect(chip).toHaveClass("type-mono-chip", "px-3", "py-2", "max-md:px-2");
+    expect(chip).not.toHaveClass("type-mono-md");
+  });
+});
+
 describe("ChipList", () => {
   it("renders a labelled list of chips", () => {
     render(<ChipList items={["React", "Spring Boot", "Oracle"]} label="Stack" size="sm" />);

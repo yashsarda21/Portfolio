@@ -87,3 +87,22 @@ export const Flat: Story = {
     </div>
   ),
 };
+
+export const FluidPageVariants: Story = {
+  render: () => (
+    <div className="flex w-90 flex-col gap-4 bg-ground p-6">
+      <Button size="cta" skew={false}>
+        Team up
+      </Button>
+      <Button size="cta" skew={false} glow={false}>
+        No glow
+      </Button>
+      <Button size="bar" variant="panel" skew={false}>
+        Panel bar
+      </Button>
+      <Button size="bar" skew={false}>
+        Primary bar
+      </Button>
+    </div>
+  ),
+};

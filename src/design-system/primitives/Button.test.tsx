@@ -108,4 +108,26 @@ describe("Button", () => {
     render(<Button>Enter</Button>);
     expect(screen.getByRole("button")).not.toHaveClass("flex-col");
   });
+
+  it("keeps the CTA glow by default and drops it with glow={false}", () => {
+    const { rerender } = render(<Button>A</Button>);
+    expect(plateOf(screen.getByRole("button"))).toHaveClass("shadow-glow-cta");
+    rerender(<Button glow={false}>A</Button>);
+    expect(plateOf(screen.getByRole("button"))).not.toHaveClass("shadow-glow-cta");
+  });
+
+  it("panel variant is an inset plate with a volt hover border", () => {
+    render(<Button variant="panel">A</Button>);
+    const btn = screen.getByRole("button");
+    expect(btn).toHaveClass("text-floodlight");
+    expect(plateOf(btn)).toHaveClass("bg-inset", "border-line-3", "group-hover/button:border-volt");
+    expect(plateOf(btn)).not.toHaveClass("shadow-glow-cta");
+  });
+
+  it("has CTA and bar sizes", () => {
+    const { rerender } = render(<Button size="cta">A</Button>);
+    expect(screen.getByRole("button")).toHaveClass("min-h-14", "type-btn-heavy");
+    rerender(<Button size="bar">A</Button>);
+    expect(screen.getByRole("button")).toHaveClass("h-13.5", "w-full", "type-btn-bar");
+  });
 });

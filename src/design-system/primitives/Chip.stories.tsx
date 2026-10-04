@@ -27,3 +27,16 @@ export const StackList: StoryObj<typeof Chip> = {
     />
   ),
 };
+
+export const FluidSizes: StoryObj<typeof Chip> = {
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      <Chip tone="meta" size="meta">
+        PUNE, INDIA
+      </Chip>
+      <Chip tone="strong" size="code">
+        Spring Boot
+      </Chip>
+    </div>
+  ),
+};
