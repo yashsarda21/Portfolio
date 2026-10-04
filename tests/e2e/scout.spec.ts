@@ -9,6 +9,19 @@ const ARTBOARD = "QuickView";
 const heroSection = (page: Page) => page.locator("section[aria-labelledby='scout-title']");
 const quickActions = (page: Page) => page.getByRole("navigation", { name: ui.scout.actions.label });
 
+/** Waits until the page has stopped scrolling. */
+async function settled(page: Page) {
+  let last = -1;
+  await expect
+    .poll(async () => {
+      const now = await page.evaluate(() => window.scrollY);
+      const done = now === last;
+      last = now;
+      return done;
+    })
+    .toBe(true);
+}
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
@@ -110,20 +123,36 @@ test.describe("desktop", () => {
     expect(failures).toEqual([]);
   });
 
-  test("the section nav scrolls the heading clear of the sticky header", async ({ page }) => {
-    await page.goto(ROUTES.scout);
-    await page
-      .getByRole("navigation", { name: ui.scout.sectionsNav })
-      .getByRole("link", { name: ui.scout.nav.career, exact: true })
-      .click();
-    const heading = page.locator("#career h2");
-    await expect
-      .poll(async () => (await heading.boundingBox())!.y, { message: "#career scrolls into view" })
-      .toBeLessThan(300);
-    const header = (await page.locator("header").boundingBox())!;
-    const box = (await heading.boundingBox())!;
-    expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
-  });
+  // 768 matters: the header row wraps onto two lines between 768px and about 910px.
+  for (const size of [
+    { width: 1440, height: 900 },
+    { width: 768, height: 1024 },
+  ]) {
+    test(`every section link scrolls its heading clear of the sticky header at ${size.width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(size);
+      await page.goto(ROUTES.scout);
+      const nav = page.getByRole("navigation", { name: ui.scout.sectionsNav });
+      for (const [id, label] of [
+        ["career", ui.scout.nav.career],
+        ["highlights", ui.scout.nav.highlights],
+        ["attributes", ui.scout.nav.attributes],
+        ["trophies", ui.scout.nav.trophies],
+        ["teamup", ui.scout.nav.teamUp],
+      ] as const) {
+        await nav.getByRole("link", { name: label, exact: true }).click();
+        await expect(page).toHaveURL(new RegExp(`#${id}$`));
+        await settled(page);
+        const header = (await page.locator("header").boundingBox())!;
+        const heading = (await page.locator(`#${id} h2`).first().boundingBox())!;
+        expect(
+          heading.y,
+          `#${id} heading (y ${heading.y}) sits under the header (bottom ${header.y + header.height})`,
+        ).toBeGreaterThanOrEqual(header.y + header.height);
+      }
+    });
+  }
 
   test("the bottom action bar is mobile-only", async ({ page }) => {
     await page.goto(ROUTES.scout);
@@ -160,6 +189,23 @@ test.describe("mobile", () => {
     await expect(list).toBeFocused();
     expect(await list.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
     await expect(page.getByText(ui.scout.highlights.swipe, { exact: false })).toBeVisible();
+  });
+
+  test("a keyboard-focused link is never hidden under the bottom bar", async ({ page }) => {
+    await page.goto(ROUTES.scout);
+    const last = page.locator("#teamup").getByRole("link").last();
+    // Park the link just inside the viewport's bottom edge, which is where the bar sits. The browser
+    // thinks it is already visible, so only the page's scroll-padding makes focus scroll it clear.
+    await last.evaluate((el) => {
+      const bottom = el.getBoundingClientRect().bottom + window.scrollY;
+      window.scrollTo(0, bottom - window.innerHeight + 8);
+    });
+    await last.focus();
+    await expect(last).toBeFocused();
+    await settled(page);
+    const link = (await last.boundingBox())!;
+    const bar = (await quickActions(page).boundingBox())!;
+    expect(link.y + link.height).toBeLessThanOrEqual(bar.y);
   });
 
   test("the last link clears the bottom bar", async ({ page }) => {

@@ -123,13 +123,16 @@ export async function expectMatchesArtboard(
 
   const { ratio, diff } = diffImages(actual, expected, rects, options.threshold);
   const max = options.maxDiffRatio ?? 0.02;
-  if (ratio > max) {
+  if (process.env.LOG_RATIOS)
+    console.log(`[ratio] ${artboard}@${viewport.width}x${viewport.height} ${ratio}`);
+  if (ratio > max || process.env.LOG_RATIOS) {
     const dir = join(process.cwd(), "test-results/visual");
     await mkdir(dir, { recursive: true });
     const base = join(dir, `${artboard}@${viewport.width}x${viewport.height}`);
     await writeFile(`${base}.actual.png`, PNG.sync.write(actual));
     await writeFile(`${base}.expected.png`, PNG.sync.write(expected));
     await writeFile(`${base}.diff.png`, PNG.sync.write(diff));
+    if (ratio <= max) return ratio; // LOG_RATIOS: keep the images of a passing run too
     throw new Error(
       `${artboard}: ${(ratio * 100).toFixed(2)}% of pixels differ (limit ${(max * 100).toFixed(2)}%). ` +
         `See ${base}.diff.png`,
@@ -215,13 +218,14 @@ export async function expectRegionMatchesArtboard(
     options.threshold,
   );
   const max = options.maxDiffRatio ?? 0.02;
-  if (ratio > max) {
+  if (ratio > max || process.env.LOG_RATIOS) {
     const dir = join(process.cwd(), "test-results/visual");
     await mkdir(dir, { recursive: true });
     const base = join(dir, `${artboard}-${region}`);
     await writeFile(`${base}.actual.png`, PNG.sync.write(actualPng));
     await writeFile(`${base}.expected.png`, PNG.sync.write(expected));
     await writeFile(`${base}.diff.png`, PNG.sync.write(diff));
+    if (ratio <= max) return ratio;
     throw new Error(
       `${artboard}/${region}: ${(ratio * 100).toFixed(2)}% of pixels differ (limit ${(max * 100).toFixed(2)}%). ` +
         `See ${base}.diff.png`,
