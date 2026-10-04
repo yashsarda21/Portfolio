@@ -240,6 +240,26 @@ describe("content schema", () => {
       });
     });
 
+    describe("Phase 2B content fields", () => {
+      it.each(["position", "playingStyle"])("requires player.%s", (key) => {
+        const broken = clone();
+        delete broken.player[key];
+        expect(() => parseContent(broken)).toThrow(new RegExp(`player\\.${key}`));
+        broken.player[key] = "";
+        expect(() => parseContent(broken)).toThrow(new RegExp(`player\\.${key}`));
+      });
+
+      it("makes trophyRoom shortSub optional but non-empty when present", () => {
+        const ok = clone();
+        delete ok.trophyRoom[0].shortSub;
+        expect(() => parseContent(ok)).not.toThrow();
+        ok.trophyRoom[0].shortSub = "Short";
+        expect(() => parseContent(ok)).not.toThrow();
+        ok.trophyRoom[0].shortSub = "";
+        expect(() => parseContent(ok)).toThrow(/trophyRoom\.0\.shortSub/);
+      });
+    });
+
     describe("Link.href", () => {
       const withHref = (href: string) => {
         const c = clone();

@@ -43,6 +43,19 @@ export interface AttributeGroup {
 
 export type Trophy = Content["trophyRoom"][number] & { locked: boolean };
 
+export interface Academy {
+  /** The school without a trailing " (SHORT)" suffix. */
+  name: string;
+  shortName: string;
+  city: string;
+  degree: string;
+  degreeShort: string;
+  span: string;
+  cgpa: string;
+  honours: string;
+  extras: string[];
+}
+
 export type ResumeAction = { kind: "pdf"; href: string } | { kind: "request"; href: string };
 
 /** The round that carries the page's default selection (and its own commentary line). */
@@ -123,6 +136,21 @@ export function getAttributeGroups(c: Content): AttributeGroup[] {
 
 export function getTrophies(c: Content): Trophy[] {
   return c.trophyRoom.map((t) => ({ ...t, locked: t.type === "locked" }));
+}
+
+export function getAcademy(c: Content): Academy {
+  const a = c.trainingAcademy;
+  return {
+    name: a.school.replace(/\s*\([^()]*\)\s*$/, ""),
+    shortName: a.shortName,
+    city: a.city,
+    degree: a.degree,
+    degreeShort: a.degreeShort,
+    span: formatSpan(a.start, a.end),
+    cgpa: a.cgpa,
+    honours: a.honours,
+    extras: a.extras,
+  };
 }
 
 export function getResumeAction(c: Content): ResumeAction {

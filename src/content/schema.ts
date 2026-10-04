@@ -47,6 +47,8 @@ export const ContentSchema = z.strictObject({
     location: z.string().min(1),
     currentClub: z.string().min(1),
     clubShort: z.string().min(1),
+    position: z.string().min(1),
+    playingStyle: z.string().min(1),
     proSince: YearMonth,
     contact: z.strictObject({
       email: z.email(),
@@ -166,6 +168,7 @@ export const ContentSchema = z.strictObject({
         type: z.enum(["cup", "medal", "plaque", "pennant", "round", "locked"]),
         title: z.string().min(1),
         sub: z.string().min(1),
+        shortSub: z.string().min(1).optional(),
         description: z.string().min(1),
         links: z.array(Link),
         draftCopy: z.boolean(),

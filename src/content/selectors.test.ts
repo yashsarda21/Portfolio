@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import raw from "./content.json";
 import { parseContent } from "./schema";
 import {
+  getAcademy,
   getAttributeGroups,
   getCareerRows,
   getHighlights,
@@ -97,5 +98,30 @@ describe("selectors", () => {
 
   it("first name is the first word of the player name", () => {
     expect(getPlayerFirstName(c)).toBe("Yash");
+  });
+
+  describe("getAcademy", () => {
+    it("drops the trailing short-name suffix and formats the span", () => {
+      const a = getAcademy(c);
+      expect(a.name).toBe("Pune Institute of Computer Technology");
+      expect(a.span).toBe("Jul 2020 – Jun 2024");
+      expect(a).toMatchObject({
+        shortName: "PICT",
+        city: "Pune",
+        degree: "B.Tech, Information Technology",
+        degreeShort: "B.Tech IT",
+        cgpa: "8.94",
+        honours: "Distinction, SPPU",
+      });
+      expect(a.extras).toEqual(c.trainingAcademy.extras);
+    });
+
+    it("returns a school without a suffix unchanged", () => {
+      const plain = {
+        ...c,
+        trainingAcademy: { ...c.trainingAcademy, school: "Some University" },
+      };
+      expect(getAcademy(plain).name).toBe("Some University");
+    });
   });
 });

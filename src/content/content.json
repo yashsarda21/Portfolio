@@ -20,6 +20,8 @@
     "location": "Pune, India",
     "currentClub": "Deutsche Bank",
     "clubShort": "Deutsche",
+    "position": "SE",
+    "playingStyle": "Full-stack",
     "proSince": "2024-07",
     "contact": {
       "email": "yashsarda2002@gmail.com",
@@ -252,6 +254,7 @@
       "type": "medal",
       "title": "99.5 Percentile",
       "sub": "MHT-CET 2020 · State Merit Rank 709",
+      "shortSub": "MHT-CET 2020 · State Rank 709",
       "description": "Top half-percent of the state engineering entrance exam — 99.5 percentile, State Merit Rank 709. Preparing properly started here.",
       "links": [],
       "draftCopy": true
@@ -260,6 +263,7 @@
       "type": "plaque",
       "title": "Published Research",
       "sub": "AI-Enhanced Interview Grooming Platform · Journal",
+      "shortSub": "AI Interview Platform · Journal",
       "description": "A conversational AI interviewer built on Google Gemini — designed, built and written up as a paper published in a journal.",
       "links": [],
       "draftCopy": true
