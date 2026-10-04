@@ -587,6 +587,36 @@
   font-size: 13px;
   line-height: normal;
 }
+/* A row name in the Highlights draw: 24px at .02em on the font's own line box (type-d4s is .03em at line-height 1). */
+@utility type-draw-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: normal;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* The Highlights replay title: 44px at .9 (type-title-detail is the 40px Career title). */
+@utility type-title-reel {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 44px;
+  line-height: 0.9;
+  text-transform: uppercase;
+  @media (width < 48rem) {
+    font-size: 34px;
+  }
+}
+/* The one-line deck under a title: 17px on the font's own line box (type-body-line is 16px). */
+@utility type-body-deck {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: normal;
+  @media (width < 48rem) {
+    font-size: 16px;
+  }
+}
 /* Placeholder for a missing screen recording: two stand tones in 14px 135-degree stripes (Tennis-Highlights). */
 @utility media-stripes {
   background-image: repeating-linear-gradient(

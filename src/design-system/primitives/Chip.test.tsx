@@ -34,6 +34,13 @@ describe("Chip sizes", () => {
     expect(chip).not.toHaveClass("type-mono-md");
   });
 
+  it("stack-sm size is the stack chip a size down: 30px plus borders, 10px padding", () => {
+    render(<Chip size="stack-sm">Node.js</Chip>);
+    const chip = screen.getByText("Node.js");
+    expect(chip).toHaveClass("type-mono-stack", "box-content", "h-7.5", "px-2.5");
+    expect(chip).not.toHaveClass("type-mono-md");
+  });
+
   it("meta size uses the chip recipe with a tighter mobile padding", () => {
     render(<Chip size="meta">PUNE</Chip>);
     const chip = screen.getByText("PUNE");

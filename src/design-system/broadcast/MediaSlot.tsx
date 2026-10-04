@@ -51,7 +51,10 @@ export function MediaSlot({ label, badge, round, media = null, className }: Medi
             <LiveDot size={6} />
             {badge}
           </span>
-          <span aria-hidden="true" className={cn(CHIP, "right-3.5 type-mono-round text-volt")}>
+          <span
+            aria-hidden="true"
+            className={cn(CHIP, "right-3.5 type-mono-tag leading-auto text-volt")}
+          >
             {round}
           </span>
           <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-line">

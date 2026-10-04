@@ -26,7 +26,7 @@ describe("KeyValueList", () => {
 
   it("stacked variant puts mono labels over values", () => {
     render(<KeyValueList variant="stacked" items={[{ k: "TYPE", v: "Analytics web platform" }]} />);
-    expect(screen.getByText("TYPE")).toHaveClass("type-mono-label");
+    expect(screen.getByText("TYPE")).toHaveClass("type-mono-xs");
   });
 });
 
