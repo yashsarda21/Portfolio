@@ -28,7 +28,8 @@ for (const story of entries) {
   test(`a11y: ${story.title} / ${story.name}`, async ({ page }) => {
     // a11y.manual: the addon's own auto-run would race our axe run ("Axe is already running").
     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=a11y.manual:!true`);
-    await page.locator("#storybook-root > *").first().waitFor();
+    // "attached", not visible: desktop-only stories (Stage) are display:none on the mobile project.
+    await page.locator("#storybook-root > *").first().waitFor({ state: "attached" });
     await page.evaluate(() => document.fonts.ready);
     await expectNoA11yViolations(page);
   });
