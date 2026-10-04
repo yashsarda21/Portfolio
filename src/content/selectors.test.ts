@@ -112,6 +112,7 @@ describe("selectors", () => {
         degreeShort: "B.Tech IT",
         cgpa: "8.94",
         honours: "Distinction, SPPU",
+        honoursShort: "Distinction",
       });
       expect(a.extras).toEqual(c.trainingAcademy.extras);
     });
@@ -122,6 +123,21 @@ describe("selectors", () => {
         trainingAcademy: { ...c.trainingAcademy, school: "Some University" },
       };
       expect(getAcademy(plain).name).toBe("Some University");
+    });
+
+    it("a school ending in a different parenthetical is unchanged", () => {
+      const other = {
+        ...c,
+        trainingAcademy: { ...c.trainingAcademy, school: "University of Mumbai (Autonomous)" },
+      };
+      expect(getAcademy(other).name).toBe("University of Mumbai (Autonomous)");
+    });
+
+    it("honoursShort falls back to the full honours when content has none", () => {
+      const rest: Partial<typeof c.trainingAcademy> = { ...c.trainingAcademy };
+      delete rest.honoursShort;
+      const plain = { ...c, trainingAcademy: rest } as typeof c;
+      expect(getAcademy(plain).honoursShort).toBe("Distinction, SPPU");
     });
   });
 });

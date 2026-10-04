@@ -207,6 +207,20 @@ describe("content schema", () => {
       });
     });
 
+    describe("trainingAcademy.honoursShort", () => {
+      it("is optional", () => {
+        const c = clone();
+        delete c.trainingAcademy.honoursShort;
+        expect(() => parseContent(c)).not.toThrow();
+      });
+
+      it("rejects an empty string", () => {
+        const broken = clone();
+        broken.trainingAcademy.honoursShort = "";
+        expect(() => parseContent(broken)).toThrow(/trainingAcademy\.honoursShort/);
+      });
+    });
+
     describe("Phase 2A content fields", () => {
       it("requires player.clubShort", () => {
         const broken = clone();

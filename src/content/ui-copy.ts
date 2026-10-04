@@ -71,7 +71,6 @@ export const ui = {
       listLabel: "Trophies",
       plinth: "ON THE PLINTH",
       plaqueLabel: "PAPER",
-      lockedHint: "hidden, beat Yash to unlock",
       academy: {
         eyebrow: "EDUCATION",
         aside: "WHERE THE FUNDAMENTALS CAME FROM",

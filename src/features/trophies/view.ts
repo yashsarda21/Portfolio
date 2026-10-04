@@ -1,6 +1,5 @@
 import { getAcademy, getTrophies, type Content, type UiCopy } from "@/content";
 import type { TrophyKind } from "@/design-system";
-import type { ROUTES } from "@/shell/routes";
 
 export interface TrophyDetail {
   /** "2 / 5": the position among the trophies won. The locked one is not counted. */
@@ -51,7 +50,7 @@ export interface TrophiesView {
 const figureOf = (title: string) => /\d+(?:\.\d+)?/.exec(title)?.[0];
 
 /** The Trophy Room, as plain strings. Pure: no React, no DOM. */
-export function buildTrophiesView(c: Content, copy: UiCopy, _routes: typeof ROUTES): TrophiesView {
+export function buildTrophiesView(c: Content, copy: UiCopy): TrophiesView {
   const t = copy.pages.trophies;
   const sep = copy.glyph.sep;
   const all = getTrophies(c);
@@ -95,7 +94,9 @@ export function buildTrophiesView(c: Content, copy: UiCopy, _routes: typeof ROUT
       monogram: school.shortName,
       name: school.name,
       degree: school.degree,
-      meta: [school.span, `${copy.scout.cgpa} ${school.cgpa}`, school.honours].join(` ${sep} `),
+      meta: [school.span, `${copy.scout.cgpa} ${school.cgpa}`, school.honoursShort].join(
+        ` ${sep} `,
+      ),
       extrasLabel: t.academy.extras,
       extras: school.extras.join(` ${sep} `),
       extraItems: [...school.extras],

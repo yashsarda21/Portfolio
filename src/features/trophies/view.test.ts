@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { content, ui, type Content } from "@/content";
-import { ROUTES } from "@/shell/routes";
 import { buildTrophiesView } from "./view";
 
-const build = (c: Content = content) => buildTrophiesView(c, ui, ROUTES);
+const build = (c: Content = content) => buildTrophiesView(c, ui);
 
 /** The same content with a second cup unlocked before the locked one: nothing may assume a fixed count. */
 const extended = (): Content => {
@@ -106,7 +105,7 @@ describe("buildTrophiesView", () => {
     expect(academy.monogram).toBe("PICT");
     expect(academy.name).toBe("Pune Institute of Computer Technology");
     expect(academy.degree).toBe("B.Tech, Information Technology");
-    expect(academy.meta).toBe("Jul 2020 – Jun 2024 · CGPA 8.94 · Distinction, SPPU");
+    expect(academy.meta).toBe("Jul 2020 – Jun 2024 · CGPA 8.94 · Distinction");
     expect(academy.extrasLabel).toBe("EXTRA DRILLS");
     expect(academy.extras).toBe(content.trainingAcademy.extras.join(" · "));
     expect(academy.extraItems).toEqual(content.trainingAcademy.extras);

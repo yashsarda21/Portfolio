@@ -187,6 +187,8 @@ export const ContentSchema = z.strictObject({
       end: YearMonth,
       cgpa: z.string().min(1),
       honours: z.string().min(1),
+      /** The honours on one short line (Trophy Room card); falls back to `honours`. */
+      honoursShort: z.string().min(1).optional(),
       extras: z.array(z.string().min(1)),
     })
     .refine((a) => a.start <= a.end, { path: ["end"], message: "end must not be before start" }),

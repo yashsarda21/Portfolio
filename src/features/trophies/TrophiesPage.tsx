@@ -61,7 +61,7 @@ export function TrophiesPage({
 }
 
 // Content is static, so the view is built once.
-const view = buildTrophiesView(content, ui, ROUTES);
+const view = buildTrophiesView(content, ui);
 
 export function TrophiesScreen() {
   return <TrophiesPage view={view} />;

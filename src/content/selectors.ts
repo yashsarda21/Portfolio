@@ -44,7 +44,7 @@ export interface AttributeGroup {
 export type Trophy = Content["trophyRoom"][number] & { locked: boolean };
 
 export interface Academy {
-  /** The school without a trailing " (SHORT)" suffix. */
+  /** The school without its trailing " (SHORT)" suffix (only that exact suffix). */
   name: string;
   shortName: string;
   city: string;
@@ -53,6 +53,8 @@ export interface Academy {
   span: string;
   cgpa: string;
   honours: string;
+  /** The honours for one short line; the full honours when content has no short form. */
+  honoursShort: string;
   extras: string[];
 }
 
@@ -140,8 +142,9 @@ export function getTrophies(c: Content): Trophy[] {
 
 export function getAcademy(c: Content): Academy {
   const a = c.trainingAcademy;
+  const suffix = ` (${a.shortName})`;
   return {
-    name: a.school.replace(/\s*\([^()]*\)\s*$/, ""),
+    name: a.school.endsWith(suffix) ? a.school.slice(0, -suffix.length) : a.school,
     shortName: a.shortName,
     city: a.city,
     degree: a.degree,
@@ -149,6 +152,7 @@ export function getAcademy(c: Content): Academy {
     span: formatSpan(a.start, a.end),
     cgpa: a.cgpa,
     honours: a.honours,
+    honoursShort: a.honoursShort ?? a.honours,
     extras: a.extras,
   };
 }
