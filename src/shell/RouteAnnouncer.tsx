@@ -8,9 +8,36 @@ function firstRenderedHeading(): HTMLElement | undefined {
   );
 }
 
-/** After client navigation: focus the new <h1> and announce the page title (spec §4.6, §11.1). */
+const HEADING = "h1, h2, h3, h4, h5, h6";
+
+/** The element a URL hash points at, if the page has one. */
+function hashTarget(hash: string): HTMLElement | null {
+  if (hash.length < 2) return null;
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return null; // a malformed escape: no target
+  }
+}
+
+/** Where focus goes after a navigation: the hash target's heading when there is one, else the page <h1>. */
+function landingElement(hash: string): HTMLElement | undefined {
+  const target = hashTarget(hash);
+  if (target) {
+    const heading = target.matches(HEADING) ? target : target.querySelector<HTMLElement>(HEADING);
+    // The section's own heading reads its name; a target with no heading takes focus itself.
+    return heading ?? target;
+  }
+  return firstRenderedHeading();
+}
+
+/**
+ * After client navigation: focus where the visitor landed and announce the page title (spec §4.6, §11.1).
+ * That is the new <h1>, or, for a link to `/page#section`, the section's heading: the page has scrolled
+ * there, so the reading cursor and the next Tab must start there too.
+ */
 export function RouteAnnouncer() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   // Compared with the current path (not a "first run" flag) so strict mode's double effect stays a no-op.
   const prev = useRef(pathname);
   const [message, setMessage] = useState("");
@@ -22,10 +49,10 @@ export function RouteAnnouncer() {
     const later = (fn: () => void) => frames.push(requestAnimationFrame(fn));
     later(() =>
       later(() => {
-        const h1 = firstRenderedHeading();
-        if (h1) {
-          h1.setAttribute("tabindex", "-1");
-          h1.focus({ preventScroll: true });
+        const landing = landingElement(hash);
+        if (landing) {
+          landing.setAttribute("tabindex", "-1");
+          landing.focus({ preventScroll: true });
         }
         // Clear first so two pages with the same title still re-announce.
         setMessage("");
@@ -33,7 +60,7 @@ export function RouteAnnouncer() {
       }),
     );
     return () => frames.forEach(cancelAnimationFrame);
-  }, [pathname]);
+  }, [pathname, hash]);
 
   return (
     <div aria-live="polite" className="sr-only">

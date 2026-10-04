@@ -14,6 +14,18 @@ function Page({ title, withHiddenTitle }: { title: string; withHiddenTitle?: boo
   );
 }
 
+function Sectioned() {
+  return (
+    <main>
+      <h1>Sectioned</h1>
+      <section id="academy" aria-labelledby="academy-title">
+        <h2 id="academy-title">Training Academy</h2>
+      </section>
+      <div id="bare" />
+    </main>
+  );
+}
+
 function setup() {
   const router = createMemoryRouter([
     {
@@ -26,6 +38,7 @@ function setup() {
       children: [
         { path: "/", element: <Page title="Home" /> },
         { path: "/next", element: <Page title="Next" withHiddenTitle /> },
+        { path: "/sectioned", element: <Sectioned /> },
       ],
     },
   ]);
@@ -77,5 +90,52 @@ describe("RouteAnnouncer (strict mode)", () => {
     await act(() => router.navigate("/next"));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Next" })).toHaveFocus());
     expect(document.querySelector("[data-hidden]")).not.toHaveFocus();
+  });
+
+  describe("with a hash", () => {
+    it("focuses the target section's heading, not the page h1", async () => {
+      const router = setup();
+      await frames(6);
+      await act(() => router.navigate("/sectioned#academy"));
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Training Academy" })).toHaveFocus(),
+      );
+      expect(screen.getByRole("heading", { name: "Sectioned" })).not.toHaveFocus();
+      await waitFor(() =>
+        expect(document.querySelector("[aria-live]")).toHaveTextContent("Next page title"),
+      );
+    });
+
+    it("focuses a target with no heading itself", async () => {
+      const router = setup();
+      await frames(6);
+      await act(() => router.navigate("/sectioned#bare"));
+      await waitFor(() => expect(document.getElementById("bare")).toHaveFocus());
+    });
+
+    it("falls back to the page h1 when the hash matches nothing", async () => {
+      const router = setup();
+      await frames(6);
+      await act(() => router.navigate("/sectioned#nothing-here"));
+      await waitFor(() => expect(screen.getByRole("heading", { name: "Sectioned" })).toHaveFocus());
+    });
+
+    it("falls back to the page h1 for a malformed escape in the hash", async () => {
+      const router = setup();
+      await frames(6);
+      await act(() => router.navigate("/sectioned#%E0%A4%A"));
+      await waitFor(() => expect(screen.getByRole("heading", { name: "Sectioned" })).toHaveFocus());
+    });
+
+    it("does nothing when only the hash changes on the same page", async () => {
+      const router = setup();
+      await frames(6);
+      await act(() => router.navigate("/sectioned"));
+      await waitFor(() => expect(screen.getByRole("heading", { name: "Sectioned" })).toHaveFocus());
+      screen.getByRole("heading", { name: "Sectioned" }).blur();
+      await act(() => router.navigate("/sectioned#academy"));
+      await frames(6);
+      expect(document.activeElement).toBe(document.body);
+    });
   });
 });
