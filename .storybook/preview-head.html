@@ -1,11 +1,4 @@
 <!-- Same script as STAGE_SCALE_SCRIPT in src/design-system/layout/stageScript.ts, so stories scale like the app. -->
-<script>
-  (function () {
-    var d = document.documentElement;
-    function s() {
-      d.style.setProperty("--stage-scale", String(Math.min(innerWidth / 1440, innerHeight / 900)));
-    }
-    s();
-    addEventListener("resize", s);
-  })();
-</script>
+<!-- It must stay byte-identical (stageScript.test.ts checks), so Prettier leaves it alone. -->
+<!-- prettier-ignore -->
+<script>(function(){var d=document.documentElement;function s(){d.style.setProperty('--stage-scale',String(Math.min(d.clientWidth/1440,d.clientHeight/900)))}s();addEventListener('resize',s)})();</script>

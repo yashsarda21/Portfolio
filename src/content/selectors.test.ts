@@ -6,6 +6,7 @@ import {
   getCareerRows,
   getHighlights,
   getInningsReveals,
+  getPlayerFirstName,
   getResumeAction,
   getTrophies,
 } from "./selectors";
@@ -87,5 +88,9 @@ describe("selectors", () => {
       kind: "pdf",
       href: "/Yash-Sarda-Resume-public.pdf",
     });
+  });
+
+  it("first name is the first word of the player name", () => {
+    expect(getPlayerFirstName(c)).toBe("Yash");
   });
 });

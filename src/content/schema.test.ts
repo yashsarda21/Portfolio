@@ -7,6 +7,10 @@ describe("content schema", () => {
     expect(() => parseContent(raw)).not.toThrow();
   });
 
+  it("parses to exactly the raw data (guards the `as unknown as Content` cast in index.ts)", () => {
+    expect(parseContent(raw)).toEqual(raw);
+  });
+
   it("reports the path of a missing field", () => {
     const broken = structuredClone(raw) as Record<string, unknown>;
     const highlights = broken.matchHighlights as Array<Record<string, unknown>>;

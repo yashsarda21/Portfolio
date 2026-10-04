@@ -121,3 +121,7 @@ export function getResumeAction(c: Content): ResumeAction {
   const subject = encodeURIComponent(`Resume request — ${c.player.name}`);
   return { kind: "request", href: `mailto:${c.player.contact.email}?subject=${subject}` };
 }
+
+export function getPlayerFirstName(c: Content): string {
+  return c.player.name.split(" ")[0]!;
+}

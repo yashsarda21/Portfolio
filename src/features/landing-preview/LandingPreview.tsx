@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { content, ui } from "@/content";
+import { content, getPlayerFirstName, ui } from "@/content";
 import {
   ArenaBackdrop,
   AudioToggle,
@@ -61,10 +61,7 @@ export function LandingPreview() {
               <Scoreboard.Subtitle>{content.player.title}</Scoreboard.Subtitle>
             </Scoreboard.Body>
             <Scoreboard.Footer>
-              <Scoreboard.FooterCell
-                label={ui.landing.home}
-                value={content.player.name.split(" ")[0]!}
-              />
+              <Scoreboard.FooterCell label={ui.landing.home} value={getPlayerFirstName(content)} />
               <Scoreboard.FooterCell
                 label={ui.landing.status}
                 value={ui.landing.undefeated}

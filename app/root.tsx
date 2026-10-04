@@ -2,8 +2,9 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
 import displayFont from "@fontsource/big-shoulders-display/files/big-shoulders-display-latin-900-normal.woff2?url";
 import { ui } from "@/content";
-import { STAGE_SCALE_SCRIPT } from "@/design-system";
+import { Glass, Heading, STAGE_SCALE_SCRIPT, Text } from "@/design-system";
 import { ArenaShell } from "@/shell/ArenaShell";
+import { ROUTES } from "@/shell/routes";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -40,5 +41,34 @@ export default function App() {
     <ArenaShell>
       <Outlet />
     </ArenaShell>
+  );
+}
+
+/** Last-resort page for render errors: no shell providers, so plain links and nothing that can throw again. */
+export function ErrorBoundary() {
+  const linkClass =
+    "inline-flex h-11 items-center border border-line-strong px-3.5 type-mono-tag text-floodlight transition-colors hover:border-volt hover:text-volt";
+  return (
+    <main
+      id="main"
+      className="flex min-h-dvh items-center justify-center bg-ground px-(--gutter) py-10"
+    >
+      <Glass pad="lg" className="flex w-full max-w-180 flex-col gap-5">
+        <Heading level={1} variant="d2">
+          {ui.routes.notFound.heading}
+        </Heading>
+        <Text as="p" variant="body" tone="secondary">
+          {ui.routes.notFound.description}
+        </Text>
+        <div className="flex flex-wrap gap-2">
+          <a href={ROUTES.home} className={linkClass}>
+            {ui.brand.wordmark}
+          </a>
+          <a href={ROUTES.scout} className={linkClass}>
+            {ui.hud.quickView}
+          </a>
+        </div>
+      </Glass>
+    </main>
   );
 }

@@ -17,7 +17,7 @@ const SCHEMA_PATTERN = {
 };
 
 // Flat config replaces a rule per key, so every client-code block must carry the zod/schema ban itself.
-// src/content and src/lib are exempt (content owns the schema and its tests).
+// Only src/content is exempt (content owns the schema and its tests).
 const restrictImports = (groups, message, { clientCode = true } = {}) => ({
   "no-restricted-imports": [
     "error",
@@ -150,11 +150,19 @@ export default defineConfig(
     ),
   },
   {
-    files: ["src/content/**/*.{ts,tsx}", "src/lib/**/*.{ts,tsx}"],
+    files: ["src/content/**/*.{ts,tsx}"],
     rules: restrictImports(
       ["@/design-system", "@/design-system/*", "@/features/*", "@/shell", "@/shell/*", "~/*"],
       "content/ and lib/ are leaf layers (spec §4.2).",
       { clientCode: false },
+    ),
+  },
+  {
+    // lib ships to the client, so it carries the zod/schema ban like every other client folder.
+    files: ["src/lib/**/*.{ts,tsx}"],
+    rules: restrictImports(
+      ["@/design-system", "@/design-system/*", "@/features/*", "@/shell", "@/shell/*", "~/*"],
+      "content/ and lib/ are leaf layers (spec §4.2).",
     ),
   },
   {
