@@ -3,9 +3,15 @@ import { ui } from "@/content";
 import { ArenaLink } from "./ArenaLink";
 import { ROUTES } from "./routes";
 
-export function QuickViewChip({ className }: { className?: string }) {
+interface QuickViewChipProps {
+  className?: string;
+  /** "glass-line" is the content pages' chip: glass on desktop, a bordered chip on the phone. */
+  tone?: "glass" | "glass-line";
+}
+
+export function QuickViewChip({ className, tone }: QuickViewChipProps) {
   return (
-    <HUDButton as={ArenaLink} to={ROUTES.scout} className={className}>
+    <HUDButton as={ArenaLink} to={ROUTES.scout} tone={tone} className={className}>
       {ui.hud.quickView}
     </HUDButton>
   );
