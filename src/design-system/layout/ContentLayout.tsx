@@ -16,6 +16,8 @@ interface ContentLayoutProps {
   backdrop?: ReactNode;
   /** Id of the `<main>` landmark (the skip link targets it). */
   mainId?: string;
+  /** Sets `data-zone` on the root: the trophy zone brings its ground and its gold (spec 5.1 layer 3). */
+  zone?: "trophy";
   className?: string;
 }
 
@@ -23,6 +25,7 @@ interface ContentLayoutProps {
  * The shared frame of a content page, on the artboards' 1440×900 grid: header 76 · title from y 100 ·
  * panels from y 236 (at least 554 tall) · footer 110 (22 above the 52px button, 36 below).
  * 768–1199 keeps the frame and lets the page scroll; below 768 it is a single column with 16px gutters.
+ * Without a footer the panels run to the 36px bottom gutter themselves (the Trophy Room artboard).
  * Landmarks: the header is the banner; the title, panels and footer are the `<main>`; the tab bar follows it.
  */
 export function ContentLayout({
@@ -33,10 +36,11 @@ export function ContentLayout({
   tabBar,
   backdrop,
   mainId,
+  zone,
   className,
 }: ContentLayoutProps) {
   return (
-    <div className={cn("relative isolate", className)}>
+    <div data-zone={zone} className={cn("relative isolate", className)}>
       {backdrop ? (
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
           {backdrop}
@@ -54,7 +58,15 @@ export function ContentLayout({
           <div className="px-9 pt-6 pb-6 max-md:px-4 max-md:pt-5 max-md:pb-11 md:min-h-40">
             {title}
           </div>
-          <div className="flex flex-1 flex-col px-9 max-md:px-4 lg:min-h-138.5">{children}</div>
+          <div
+            className={cn(
+              "flex flex-1 flex-col px-9 max-md:px-4 lg:min-h-138.5",
+              // No footer to own the bottom gutter: the panels end 36px above the page edge (16px on the phone).
+              !footer && "pb-9 max-md:pb-4",
+            )}
+          >
+            {children}
+          </div>
           {footer ? (
             <div className="flex items-end justify-between gap-4 px-9 pt-5.5 pb-9 max-md:flex-col max-md:items-stretch max-md:px-4 max-md:pt-4 max-md:pb-4">
               {footer}

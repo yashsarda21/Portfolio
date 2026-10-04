@@ -97,6 +97,112 @@
   clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
 }
 
+/* ---------- trophy scene (Trophy-Room artboard) ---------- */
+/* Every colour is a --trophy-* token, defined only inside [data-zone="trophy"]: outside it these draw nothing. */
+@utility trophy-cup {
+  border-radius: 4px 4px 42px 42px;
+  background: linear-gradient(
+    90deg,
+    var(--trophy-gold-edge),
+    var(--trophy-gold-shine) 38%,
+    var(--trophy-gold-body) 62%,
+    var(--trophy-gold-deep)
+  );
+}
+@utility trophy-stem {
+  background: linear-gradient(
+    90deg,
+    var(--trophy-gold-edge),
+    var(--trophy-gold-stem),
+    var(--trophy-gold-edge)
+  );
+}
+@utility trophy-base {
+  background: linear-gradient(
+    90deg,
+    var(--trophy-gold-deep),
+    var(--trophy-gold-base),
+    var(--trophy-gold-deep)
+  );
+}
+@utility trophy-sphere {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--trophy-gold-shine),
+    var(--trophy-gold-body) 50%,
+    var(--trophy-gold-deep)
+  );
+}
+@utility trophy-plate {
+  background: linear-gradient(135deg, var(--trophy-gold-shine), var(--trophy-gold-plate));
+}
+@utility trophy-wood {
+  background: linear-gradient(160deg, var(--trophy-wood-hi), var(--trophy-wood-lo));
+}
+@utility trophy-pennant {
+  background: var(--trophy-gold-flat);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+@utility trophy-medal {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--trophy-silver-hi),
+    var(--trophy-silver-mid) 45%,
+    var(--trophy-silver-lo)
+  );
+  box-shadow: inset 0 0 0 6px rgb(0 0 0 / 0.18);
+}
+@utility trophy-ribbon {
+  background: linear-gradient(
+    90deg,
+    var(--trophy-ribbon) 0 45%,
+    var(--ref-volt) 45% 55%,
+    var(--trophy-ribbon) 55%
+  );
+  clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+}
+
+/* The spotlight: a warm cone dropping on the lit trophy. Alpha through --spot-a (.30 lead, .18/.16 support).
+   Pair with scene-cone-down for the clip. */
+@utility scene-spot {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--rgb-spot) / var(--spot-a, 0.3)),
+    rgb(var(--rgb-spot) / 0)
+  );
+}
+
+/* The 6px light under each shelf (the beam colour at .35 fading to .05, with a soft glow). */
+@utility scene-shelf-light {
+  background: linear-gradient(180deg, rgb(var(--rgb-beam) / 0.35), rgb(var(--rgb-beam) / 0.05));
+  box-shadow: 0 8px 30px rgb(var(--rgb-beam) / 0.08);
+}
+
+/* The glass in front of the cabinet: a 115-degree reflection, two soft bands. */
+@utility scene-glass-reflection {
+  background: linear-gradient(
+    115deg,
+    rgb(var(--rgb-white) / 0.05) 0%,
+    rgb(var(--rgb-white) / 0) 30%,
+    rgb(var(--rgb-white) / 0) 60%,
+    rgb(var(--rgb-white) / 0.03) 70%,
+    rgb(var(--rgb-white) / 0) 80%
+  );
+}
+
+/* The Player Card portrait's ground: a volt glow rising from the foot. */
+@utility portrait-card-glow {
+  background: radial-gradient(ellipse at 50% 100%, rgb(var(--rgb-volt) / 0.14), transparent 70%);
+}
+
+/* The head shot's lower edge fades to nothing (Attributes and Player Card portraits). */
+@utility portrait-fade {
+  -webkit-mask-image: linear-gradient(180deg, #000 75%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 75%, transparent 100%);
+}
+
 /* ---------- keyframes ---------- */
 @keyframes bank-flicker {
   0%,

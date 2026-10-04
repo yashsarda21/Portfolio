@@ -113,6 +113,59 @@ test.describe("design tokens", () => {
     expect(colours.inside).toBe("rgb(212, 178, 106)");
   });
 
+  test("no trophy-ramp token resolves outside the trophy zone, and every one resolves inside", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const classes = TOKEN_CATALOG.colors
+      .filter((c) => c.name === "gold" || c.name.startsWith("trophy-"))
+      .map((c) => c.className);
+    expect(classes.length).toBeGreaterThan(15);
+    const resolved = await page.evaluate((names) => {
+      const paint = (host: HTMLElement) =>
+        Object.fromEntries(
+          names.map((name) => {
+            const el = document.createElement("span");
+            el.className = name;
+            host.append(el);
+            return [name, getComputedStyle(el).backgroundColor];
+          }),
+        );
+      const zone = document.createElement("div");
+      zone.dataset.zone = "trophy";
+      document.body.append(zone);
+      return { outside: paint(document.body), inside: paint(zone) };
+    }, classes);
+    const clear = "rgba(0, 0, 0, 0)";
+    for (const name of classes) {
+      expect(resolved.outside[name], `${name} must not resolve outside the zone`).toBe(clear);
+      expect(resolved.inside[name], `${name} must resolve inside the zone`).not.toBe(clear);
+    }
+  });
+
+  test("the trophy scene draws nothing in gold or silver outside the zone", async ({ page }) => {
+    await page.goto("/");
+    const backgrounds = await page.evaluate(() => {
+      const make = (zone: boolean) => {
+        const host = document.createElement("div");
+        if (zone) host.dataset.zone = "trophy";
+        const parts = [
+          "trophy-cup",
+          "trophy-sphere",
+          "trophy-medal",
+          "trophy-wood",
+          "trophy-plate",
+        ];
+        host.innerHTML = parts.map((p) => `<span class="${p}"></span>`).join("");
+        document.body.append(host);
+        return [...host.children].map((el) => getComputedStyle(el).backgroundImage);
+      };
+      return { outside: make(false), inside: make(true) };
+    });
+    for (const image of backgrounds.outside) expect(image).toBe("none");
+    for (const image of backgrounds.inside) expect(image).toContain("gradient");
+  });
+
   test("built CSS keeps the unprefixed backdrop-filter", () => {
     expect(builtCss()).toMatch(/[{;]backdrop-filter:blur\(var\(--glass-blur\)\)/);
   });

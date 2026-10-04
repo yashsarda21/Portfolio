@@ -9,11 +9,11 @@ export const Colours: StoryObj = {
   render: () => (
     <div className="grid grid-cols-6 gap-4">
       {TOKEN_CATALOG.colors.map((c) => (
-        // Gold only resolves inside the trophy zone (spec §5.1), so its swatch lives in one.
+        // Gold and silver only resolve inside the trophy zone (spec §5.1), so their swatches live in one.
         <figure
           key={c.name}
           className="flex flex-col gap-2"
-          data-zone={c.name === "gold" ? "trophy" : undefined}
+          data-zone={c.name === "gold" || c.name.startsWith("trophy-") ? "trophy" : undefined}
         >
           <div className={cn("h-16 border border-line", c.className)} aria-hidden="true" />
           <figcaption className="type-mono-tag text-scout">{c.name}</figcaption>

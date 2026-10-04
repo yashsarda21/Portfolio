@@ -50,6 +50,8 @@
   --color-stand-hi: var(--ref-stand-hi);
   --color-fixture: var(--ref-fixture);
   --color-plinth: var(--ref-plinth);
+  --color-cabinet-hi: var(--ref-cabinet-hi);
+  --color-cabinet-lo: var(--ref-cabinet-lo);
   --color-mast: var(--ref-mast);
   --color-board: var(--ref-board-bg);
   --color-glass: var(--surface-glass);
@@ -82,6 +84,22 @@
   --color-live: var(--signal-live);
   --color-gold: var(--accent-gold); /* defined only inside [data-zone="trophy"] (spec §5.1) */
   --color-court-line: var(--ref-court-line);
+  /* the trophy ramp: defined only inside [data-zone="trophy"], like gold */
+  --color-trophy-gold-edge: var(--trophy-gold-edge);
+  --color-trophy-gold-shine: var(--trophy-gold-shine);
+  --color-trophy-gold-body: var(--trophy-gold-body);
+  --color-trophy-gold-deep: var(--trophy-gold-deep);
+  --color-trophy-gold-stem: var(--trophy-gold-stem);
+  --color-trophy-gold-base: var(--trophy-gold-base);
+  --color-trophy-gold-flat: var(--trophy-gold-flat);
+  --color-trophy-gold-plate: var(--trophy-gold-plate);
+  --color-trophy-wood-hi: var(--trophy-wood-hi);
+  --color-trophy-wood-lo: var(--trophy-wood-lo);
+  --color-trophy-silver-hi: var(--trophy-silver-hi);
+  --color-trophy-silver-mid: var(--trophy-silver-mid);
+  --color-trophy-silver-lo: var(--trophy-silver-lo);
+  --color-trophy-silver-ink: var(--trophy-silver-ink);
+  --color-trophy-ribbon: var(--trophy-ribbon);
   /* alpha ramps */
   --color-volt-a04: var(--ref-volt-a04);
   --color-volt-a06: var(--ref-volt-a06);

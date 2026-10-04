@@ -1,0 +1,87 @@
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { CabinetGlass } from "./CabinetGlass";
+import { Plinth } from "./Plinth";
+import { ShelfLight } from "./ShelfLight";
+import { Spotlight } from "./Spotlight";
+import { Trophy } from "./Trophy";
+
+const KINDS = ["cup", "medal", "plaque", "pennant", "round", "locked"] as const;
+
+describe("Trophy", () => {
+  it.each(KINDS)("draws the %s as aria-hidden art", (kind) => {
+    const { container } = render(<Trophy kind={kind} />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveAttribute("aria-hidden", "true");
+    expect(root.textContent).toBe(kind === "locked" ? "?" : "");
+    expect(root).toHaveAttribute("data-kind", kind);
+  });
+
+  it("prints the label on the medal and the plaque, never on the others", () => {
+    const { container: medal } = render(<Trophy kind="medal" label="99.5" />);
+    expect(medal).toHaveTextContent("99.5");
+    const { container: plaque } = render(<Trophy kind="plaque" label="PAPER" />);
+    expect(plaque).toHaveTextContent("PAPER");
+    const { container: cup } = render(<Trophy kind="cup" label="IGNORED" />);
+    expect(cup).not.toHaveTextContent("IGNORED");
+  });
+
+  it("stands every kind on a plinth, except the locked outline which draws its own dashed base", () => {
+    for (const kind of KINDS) {
+      const { container, unmount } = render(<Trophy kind={kind} />);
+      expect(container.querySelector("[data-plinth]") !== null).toBe(kind !== "locked");
+      unmount();
+    }
+  });
+
+  it("turns only when asked, and only the figure (the plinth stays put)", () => {
+    const { container, rerender } = render(<Trophy kind="cup" />);
+    expect(container.querySelector(".animate-turntable")).toBeNull();
+    rerender(<Trophy kind="cup" spinning />);
+    const turning = container.querySelector(".animate-turntable")!;
+    expect(turning).not.toBeNull();
+    expect(turning.querySelector("[data-plinth]")).toBeNull();
+  });
+
+  it("merges className onto the root", () => {
+    const { container } = render(<Trophy kind="cup" className="mt-3" />);
+    expect(container.firstElementChild).toHaveClass("mt-3");
+  });
+});
+
+describe("Plinth, Spotlight, ShelfLight, CabinetGlass", () => {
+  it("Plinth is decorative and comes in two heights", () => {
+    const { container, rerender } = render(<Plinth size="lg" />);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el).toHaveAttribute("aria-hidden", "true");
+    expect(el).toHaveClass("h-6.5");
+    rerender(<Plinth size="md" />);
+    expect(el).toHaveClass("h-5.5");
+  });
+
+  it("Spotlight is decorative; lead is brighter than support and md is smaller than lg", () => {
+    const { container, rerender } = render(<Spotlight intensity="lead" size="lg" />);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el).toHaveAttribute("aria-hidden", "true");
+    expect(el).toHaveClass("[--spot-a:0.3]", "w-55", "h-75", "animate-spot-drop");
+    rerender(<Spotlight intensity="support" size="lg" />);
+    expect(el).toHaveClass("[--spot-a:0.18]");
+    rerender(<Spotlight intensity="support" size="md" />);
+    expect(el).toHaveClass("[--spot-a:0.16]", "w-50", "h-65");
+  });
+
+  it("Spotlight staggers by index through --i", () => {
+    const { container } = render(<Spotlight intensity="support" size="lg" index={3} />);
+    expect((container.firstElementChild as HTMLElement).style.getPropertyValue("--i")).toBe("3");
+  });
+
+  it("ShelfLight and CabinetGlass are decorative overlays that ignore the pointer", () => {
+    for (const ui of [<ShelfLight key="s" />, <CabinetGlass key="c" />]) {
+      const { container, unmount } = render(ui);
+      const el = container.firstElementChild as HTMLElement;
+      expect(el).toHaveAttribute("aria-hidden", "true");
+      expect(el).toHaveClass("pointer-events-none");
+      unmount();
+    }
+  });
+});

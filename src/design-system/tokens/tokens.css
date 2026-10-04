@@ -17,6 +17,8 @@
   --ref-stand-hi: #141b23;
   --ref-fixture: #1a2027;
   --ref-plinth: #13171c;
+  --ref-cabinet-hi: #0a0c10; /* the Trophy Room cabinet: top and bottom of its 180deg ground */
+  --ref-cabinet-lo: #07080b;
   --ref-mast: #2a3138;
   /* lines */
   --ref-line: #1c232c;
@@ -178,9 +180,29 @@
   --venue-crowd-alpha: 0.18;
   --surface-ground: var(--ref-ground-warm);
 }
+/* The trophy zone: the only place gold and silver exist (spec 5.1). Outside it these vars are undefined,
+   so a `bg-trophy-*` class resolves to nothing (tests/e2e/tokens.spec.ts guards the leak). Exact Trophy-Room values. */
 [data-zone="trophy"] {
   --surface-ground: var(--ref-ground-trophy);
   --accent-gold: var(--ref-gold);
+  /* gold metal: the cup, stem, base, pennant, round and plaque frame */
+  --trophy-gold-edge: #7a5e2a; /* cup left edge and the stem's edges */
+  --trophy-gold-shine: #f0d998; /* the cup's highlight and the round's highlight */
+  --trophy-gold-body: #b8934a; /* cup mid-tone, handles, plaque frame */
+  --trophy-gold-deep: #6a5023; /* cup right edge and the base's edges */
+  --trophy-gold-stem: #e8cf8e; /* the stem's highlight */
+  --trophy-gold-base: #d9be7c; /* the base's highlight */
+  --trophy-gold-flat: #c9a55a; /* the pennant's flat fill */
+  --trophy-gold-plate: #8c6e33; /* the plaque's plate, dark corner */
+  /* the plaque's dark wood face (top to bottom), also the ink on gold */
+  --trophy-wood-hi: #2b1e12;
+  --trophy-wood-lo: #140e08;
+  /* silver: the medal. hi and ink are the existing LED white and mast grey, the rest are new. */
+  --trophy-silver-hi: var(--ref-led-white);
+  --trophy-silver-mid: #a9b2ba;
+  --trophy-silver-lo: #5e6770;
+  --trophy-silver-ink: var(--ref-mast);
+  --trophy-ribbon: #1e2a3a;
 }
 
 /* Mobile: solid panels, no blur, 16px gutter (Responsive board) */

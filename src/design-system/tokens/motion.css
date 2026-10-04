@@ -84,3 +84,37 @@
   animation: pop-in var(--dur-pop) var(--ease-follow) both;
   animation-delay: var(--d, 0s);
 }
+
+/* Trophy Room presets. The spotlight drops onto its trophy (stagger with --i: 0, 1, 2 ... = 300ms apart);
+   reduced motion removes the animation, so the cone is simply there. The turntable turns the lit trophy
+   once every 12s; the parent sets perspective. Reduced motion: it stands still. */
+@keyframes spot-drop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes turntable {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+@utility animate-spot-drop {
+  animation: spot-drop 400ms var(--ease-follow) both;
+  animation-delay: calc(var(--i, 0) * 300ms);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@utility animate-turntable {
+  animation: turntable 12s linear infinite;
+  transform-style: preserve-3d;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

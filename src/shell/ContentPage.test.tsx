@@ -176,4 +176,26 @@ describe("ContentPage", () => {
     setup({ backdrop: <div data-testid="custom-backdrop" /> });
     expect(screen.getByTestId("custom-backdrop")).toBeInTheDocument();
   });
+
+  it("sets data-zone on the page root only when given a zone", () => {
+    const { container, unmount } = setup({ zone: "trophy" });
+    expect(container.querySelector("[data-zone]")).toHaveAttribute("data-zone", "trophy");
+    expect(screen.getByRole("main")).not.toHaveAttribute("data-zone");
+    unmount();
+    const second = setup();
+    expect(second.container.querySelector("[data-zone]")).toBeNull();
+  });
+
+  it("has no footer without next or comm, so the panels run to the bottom gutter", () => {
+    setup();
+    expect(screen.getByRole("main").children).toHaveLength(2);
+  });
+
+  it("has the commentary + next footer when either is given", () => {
+    const { unmount } = setup({ comm: "A line." });
+    expect(screen.getByRole("main").children).toHaveLength(3);
+    unmount();
+    setup({ next: { label: ui.hud.nextVenue, to: ROUTES.highlights } });
+    expect(screen.getByRole("main").children).toHaveLength(3);
+  });
 });

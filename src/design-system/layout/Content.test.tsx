@@ -272,4 +272,41 @@ describe("ContentLayout", () => {
     );
     expect(screen.getByRole("main")).not.toHaveAttribute("id");
   });
+
+  it("sets data-zone on its root only when given a zone", () => {
+    const { container, rerender } = render(
+      <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    expect(container.firstElementChild).not.toHaveAttribute("data-zone");
+    rerender(
+      <ContentLayout zone="trophy" header={<header>head</header>} title={<h1>title</h1>}>
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    expect(container.firstElementChild).toHaveAttribute("data-zone", "trophy");
+  });
+
+  it("without a footer the panels run to the 36px bottom gutter; with one the footer owns it", () => {
+    const { rerender } = render(
+      <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    const panels = () => screen.getByText("panels").parentElement!;
+    expect(panels()).toHaveClass("pb-9");
+    expect(screen.getByRole("main").children).toHaveLength(2);
+    rerender(
+      <ContentLayout
+        header={<header>head</header>}
+        title={<h1>title</h1>}
+        footer={<span>foot</span>}
+      >
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    expect(panels()).not.toHaveClass("pb-9");
+    expect(screen.getByRole("main").children).toHaveLength(3);
+  });
 });

@@ -30,6 +30,8 @@ export interface ContentPageProps {
   route: RouteKey;
   /** Sets `data-venue` on the page root (tints the venue glow). Undefined: no venue glow. */
   venue?: "turf" | "court" | "hall";
+  /** Sets `data-zone` on the page root. "trophy" brings the trophy ground and the gold ramp (and only there). */
+  zone?: "trophy";
   /** Middle crumbs between the hub and the page, e.g. `[ui.venues.cricket]`. */
   trail: string[];
   eyebrow: ReactNode;
@@ -40,7 +42,7 @@ export interface ContentPageProps {
   rematch?: string;
   /** The skewed button at the bottom right (full width, square on the phone). The arrow is added here. */
   next?: { label: ReactNode; to: string };
-  /** Said once on mount, interrupting any line on air. */
+  /** Said once on mount, interrupting any line on air. With neither `comm` nor `next` the page has no footer. */
   comm?: string;
   /** Replaces the default sky + venue glows (trophy, card and team-up pages draw their own). */
   backdrop?: ReactNode;
@@ -74,12 +76,13 @@ const NO_VENUE_SKY: GlowSpec = VENUE_GLOWS.turf.sky;
 
 /**
  * The frame every content page shares: backdrop, HUD (breadcrumb, REMATCH, QUICK VIEW), title block,
- * the panels, the commentary + next-venue footer, and the phone's tab bar. The title, panels and footer are
+ * the panels, the commentary + next-venue footer (only when there is a line or a next page), and the phone's tab bar. The title, panels and footer are
  * the `main#main` landmark; the HUD is the banner and the tab bar follows the main.
  */
 export function ContentPage({
   route,
   venue,
+  zone,
   trail,
   eyebrow,
   eyebrowTone,
@@ -101,7 +104,7 @@ export function ContentPage({
   const heading = ui.routes[route].heading;
 
   return (
-    <div data-venue={venue} className="relative bg-ground">
+    <div data-venue={venue} data-zone={zone} className="relative bg-ground">
       <ContentLayout
         mainId="main"
         backdrop={
@@ -142,24 +145,26 @@ export function ContentPage({
           <PageTitle eyebrow={eyebrow} eyebrowTone={eyebrowTone} title={heading} aside={aside} />
         }
         footer={
-          <>
-            {/* min-w-0: the line wraps or shrinks before the button does (the button never shrinks). */}
-            <CommentarySlot tag={ui.comm.tag} className="min-w-0" />
-            {next ? (
-              <Button
-                as={ArenaLink}
-                to={next.to}
-                size="s"
-                skew="desktop"
-                className="ml-auto max-md:ml-0"
-              >
-                {/* One run of text, so the arrow follows the label with a plain space as the artboard sets it. */}
-                <span>
-                  {next.label} <span aria-hidden="true">{ui.glyph.next}</span>
-                </span>
-              </Button>
-            ) : null}
-          </>
+          comm || next ? (
+            <>
+              {/* min-w-0: the line wraps or shrinks before the button does (the button never shrinks). */}
+              <CommentarySlot tag={ui.comm.tag} className="min-w-0" />
+              {next ? (
+                <Button
+                  as={ArenaLink}
+                  to={next.to}
+                  size="s"
+                  skew="desktop"
+                  className="ml-auto max-md:ml-0"
+                >
+                  {/* One run of text, so the arrow follows the label with a plain space as the artboard sets it. */}
+                  <span>
+                    {next.label} <span aria-hidden="true">{ui.glyph.next}</span>
+                  </span>
+                </Button>
+              ) : null}
+            </>
+          ) : undefined
         }
         tabBar={<ArenaTabBar />}
       >
