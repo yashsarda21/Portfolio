@@ -1,4 +1,16 @@
 {
+  "scout": {
+    "summary": "Software Engineer at Deutsche Bank. Full-stack — Java, Spring Boot, React and Oracle — building practical software that delivers measurable, real-world impact.",
+    "summaryShort": "Software Engineer at Deutsche Bank. Full-stack: Java, Spring Boot, React, Oracle.",
+    "craftAndTools": [
+      "DSA · OOP",
+      "System Design",
+      "Python",
+      "Git · CI/CD",
+      "Google Cloud",
+      "Gen AI"
+    ]
+  },
   "player": {
     "name": "Yash Sarda",
     "title": "Software Engineer",
@@ -50,6 +62,7 @@
       "status": "NOT OUT",
       "team": "Deutsche Bank",
       "role": "Software Engineer 1",
+      "shortRole": "SE1",
       "location": "Pune, MH",
       "start": "2024-07",
       "end": null,
@@ -60,13 +73,14 @@
         "Shipped dashboard features end-to-end; 75+ JUnit tests raised coverage and cut production defects."
       ],
       "stack": ["Java", "Spring Boot", "React", "Redux", "Oracle", "JUnit", "TeamCity", "uDeploy"],
-      "scoutLine": "Bulk upload cut manual data entry by 60%."
+      "scoutLine": "bulk upload cut manual entry 60%"
     },
     {
       "innings": "02",
       "status": "DEBUT",
       "team": "Deutsche Bank",
       "role": "Graduate Analyst Intern",
+      "shortRole": "Intern",
       "location": "Pune, MH",
       "start": "2023-06",
       "end": "2023-07",
@@ -83,6 +97,9 @@
     {
       "round": "THE FINAL",
       "name": "AI Interview Grooming Platform",
+      "shortName": "AI Interview Platform",
+      "scoutTag": "Published research",
+      "scoutShort": "Gemini-powered mock interviews · published paper",
       "kind": "Published research · PICT",
       "line": "A conversational AI interviewer that asks real follow-ups and scores you at the end.",
       "serve": "Interview practice rarely feels real — no follow-up questions, no honest score.",
@@ -105,6 +122,9 @@
     {
       "round": "SEMI-FINAL",
       "name": "Kudo Board",
+      "shortName": "Kudo Board",
+      "scoutTag": "Deutsche Bank",
+      "scoutShort": "Recognition platform for 10,000+ employees",
       "kind": "Deutsche Bank · built from scratch",
       "line": "A recognition platform celebrating individual and team wins for 10,000+ employees.",
       "serve": "Recognition across a 10,000+ person organisation was scattered and generic.",
@@ -127,6 +147,9 @@
     {
       "round": "QUARTER-FINAL",
       "name": "Power BI Dashboard",
+      "shortName": "Power BI Dashboard",
+      "scoutTag": "Analytics",
+      "scoutShort": "Embedded Power BI with secure token auth",
       "kind": "Embedded analytics platform",
       "line": "An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
       "serve": "Teams needed live, interactive Power BI reports inside their own web platform — not in a separate tool.",
@@ -275,6 +298,7 @@
     "shortName": "PICT",
     "city": "Pune",
     "degree": "B.Tech, Information Technology",
+    "degreeShort": "B.Tech IT",
     "start": "2020-07",
     "end": "2024-06",
     "cgpa": "8.94",

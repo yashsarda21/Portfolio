@@ -22,6 +22,12 @@ const MAP: RouteKey[] = [
   "scout",
 ];
 
+/** Short nav label when a route has one, else its heading. */
+function routeLabel(key: RouteKey): string {
+  const copy = ui.routes[key];
+  return "navLabel" in copy ? copy.navLabel : copy.heading;
+}
+
 interface PlaceholderScreenProps {
   route: RouteKey;
   /** "div" when nested inside another page's <main> (e.g. the mobile half of the Landing preview). */
@@ -79,7 +85,7 @@ export function PlaceholderScreen({
                     aria-current={key === route ? "page" : undefined}
                     className="inline-flex h-11 items-center border border-line-strong px-3.5 type-mono-tag text-floodlight transition-colors hover:border-volt hover:text-volt aria-[current=page]:border-volt aria-[current=page]:text-volt"
                   >
-                    {ui.routes[key].heading}
+                    {routeLabel(key)}
                   </ArenaLink>
                 </li>
               ))}

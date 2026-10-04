@@ -2,12 +2,15 @@ import { z } from "zod";
 
 const YearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Expected YYYY-MM");
 const Url = z.url({ protocol: /^https$/ });
-// https, mailto, or a single-slash root path ("//host" is protocol-relative, so it is rejected).
+// https, mailto, or a single-slash root path ("//host" and "/\host" are treated as other hosts by browsers, so both are rejected).
 const Link = z.strictObject({
   label: z.string().min(1),
   href: z
     .string()
-    .regex(/^(https:\/\/|mailto:|\/(?!\/))/, "Must start with https://, mailto: or a single /"),
+    .regex(
+      /^(https:\/\/|mailto:|\/(?![/\\]))/,
+      "Must start with https://, mailto: or a single / (not // or /\\)",
+    ),
 });
 
 const PRIVATE_RESUME_NAME = "yash-sarda-resume.pdf"; // the original PDF contains a phone number
@@ -22,6 +25,14 @@ const Skill = z.union([
 ]);
 
 export const ContentSchema = z.strictObject({
+  scout: z.strictObject({
+    summary: z.string().min(1),
+    summaryShort: z.string().min(1),
+    craftAndTools: z
+      .array(z.string().min(1))
+      .min(1)
+      .refine(isUnique, "craftAndTools entries must be unique"),
+  }),
   player: z.strictObject({
     name: z.string().min(1),
     title: z.string().min(1),
@@ -62,6 +73,7 @@ export const ContentSchema = z.strictObject({
           status: z.enum(["NOT OUT", "DEBUT"]),
           team: z.string().min(1),
           role: z.string().min(1),
+          shortRole: z.string().min(1),
           location: z.string().min(1),
           start: YearMonth,
           end: YearMonth.nullable(),
@@ -92,6 +104,9 @@ export const ContentSchema = z.strictObject({
       z.strictObject({
         round: z.enum(["THE FINAL", "SEMI-FINAL", "QUARTER-FINAL"]),
         name: z.string().min(1),
+        shortName: z.string().min(1),
+        scoutTag: z.string().min(1),
+        scoutShort: z.string().min(1),
         kind: z.string().min(1),
         line: z.string().min(1),
         serve: z.string().min(1),
@@ -142,6 +157,7 @@ export const ContentSchema = z.strictObject({
       shortName: z.string().min(1),
       city: z.string().min(1),
       degree: z.string().min(1),
+      degreeShort: z.string().min(1),
       start: YearMonth,
       end: YearMonth,
       cgpa: z.string().min(1),

@@ -136,5 +136,52 @@ describe("content schema", () => {
       broken.matchHighlights[0].media = "";
       expect(() => parseContent(broken)).toThrow(/matchHighlights\.0\.media/);
     });
+
+    describe("Quick View fields", () => {
+      const required: Array<[string, (c: Loose) => Loose]> = [
+        ["scout.summary", (c) => c.scout],
+        ["scout.summaryShort", (c) => c.scout],
+        ["scout.craftAndTools", (c) => c.scout],
+        ["careerStats.0.shortRole", (c) => c.careerStats[0]],
+        ["matchHighlights.0.scoutTag", (c) => c.matchHighlights[0]],
+        ["matchHighlights.0.shortName", (c) => c.matchHighlights[0]],
+        ["matchHighlights.0.scoutShort", (c) => c.matchHighlights[0]],
+        ["trainingAcademy.degreeShort", (c) => c.trainingAcademy],
+      ];
+
+      it.each(required)("requires %s", (path, parent) => {
+        const broken = clone();
+        delete parent(broken)[path.split(".").pop()!];
+        expect(() => parseContent(broken)).toThrow(new RegExp(path.replaceAll(".", "\\.")));
+      });
+
+      it("requires scout.craftAndTools to be non-empty", () => {
+        const broken = clone();
+        broken.scout.craftAndTools = [];
+        expect(() => parseContent(broken)).toThrow(/scout\.craftAndTools/);
+      });
+
+      it("requires scout.craftAndTools to be unique", () => {
+        const broken = clone();
+        broken.scout.craftAndTools = ["Python", "Python"];
+        expect(() => parseContent(broken)).toThrow(/scout\.craftAndTools/);
+      });
+    });
+
+    describe("Link.href", () => {
+      const withHref = (href: string) => {
+        const c = clone();
+        c.trophyRoom[0].links[0].href = href;
+        return c;
+      };
+
+      it.each(["/\\evil.com", "//evil.com"])("rejects %s", (href) => {
+        expect(() => parseContent(withHref(href))).toThrow(/trophyRoom\.0\.links\.0\.href/);
+      });
+
+      it.each(["/trophies#academy", "https://x.y", "mailto:a@b.c"])("accepts %s", (href) => {
+        expect(() => parseContent(withHref(href))).not.toThrow();
+      });
+    });
   });
 });

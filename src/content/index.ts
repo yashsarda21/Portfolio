@@ -10,5 +10,6 @@ export const content = raw as unknown as Content;
 export type { Content, SkillLevel } from "./schema";
 export * from "./format";
 export * from "./selectors";
+export * from "./seo";
 export { ui } from "./ui-copy";
 export type { RouteKey, UiCopy } from "./ui-copy";

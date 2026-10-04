@@ -1,6 +1,6 @@
 /** Interface copy that is not resume data (spec §6). Screens never hard-code strings. */
 export const ui = {
-  brand: { mark: "YS", wordmark: "THE ARENA" },
+  brand: { mark: "YS", wordmark: "THE ARENA", siteName: "The Arena" },
   hud: {
     quickView: "QUICK VIEW",
     skipIntro: "SKIP INTRO",
@@ -124,7 +124,8 @@ export const ui = {
       title: "Scouting Report — Yash Sarda",
       description:
         "The 90-second read: who Yash is, what he builds, his stack, his projects and how to reach him.",
-      heading: "SCOUTING REPORT",
+      heading: "YASH SARDA",
+      navLabel: "SCOUTING REPORT",
       phase: 1,
     },
     notFound: {
@@ -134,6 +135,57 @@ export const ui = {
       phase: 7,
     },
   },
+  scout: {
+    label: "SCOUTING REPORT",
+    sectionsNav: "Sections",
+    nav: {
+      career: "CAREER",
+      highlights: "HIGHLIGHTS",
+      attributes: "ATTRIBUTES",
+      trophies: "TROPHIES",
+      teamUp: "TEAM UP",
+    },
+    enter: "ENTER THE ARENA",
+    enterShort: "ARENA",
+    eyebrow: "90-SECOND READ",
+    eyebrowMore: "EVERYTHING, NO GAMES",
+    problemsSolved: "PROBLEMS SOLVED",
+    solved: "SOLVED",
+    cgpa: "CGPA",
+    resume: {
+      view: "VIEW PLAYER CARD (PDF)",
+      request: "REQUEST RESUME",
+      row: "Resume (PDF)",
+      rowRequest: "Request resume",
+    },
+    teamUpCta: "TEAM UP",
+    career: { title: "CAREER STATS", meta: "EXPERIENCE · MOST RECENT FIRST", innings: "INNINGS" },
+    highlights: {
+      title: "MATCH HIGHLIGHTS",
+      meta: "PROJECTS · STRONGEST FIRST",
+      swipe: "SWIPE",
+      list: "Projects",
+      more: "MORE ON GITHUB",
+    },
+    attributes: {
+      title: "PLAYER ATTRIBUTES",
+      meta: "SKILLS",
+      craft: "CRAFT & TOOLS",
+      legend: "FILLED = SHIPPED IN PRODUCTION AT DEUTSCHE BANK",
+    },
+    trophies: { title: "TROPHY ROOM" },
+    academy: { title: "TRAINING ACADEMY" },
+    teamUp: {
+      eyebrow: "TEAM UP",
+      headline: "THINK YOU CAN BEAT ME? LET'S FIND OUT ON A REAL PROBLEM.",
+      linkedin: "LinkedIn",
+      github: "GitHub",
+    },
+    footer: { arena: "PREFER THE FULL EXPERIENCE? ENTER THE ARENA" },
+    actions: { label: "Quick actions", card: "PLAYER CARD", teamUp: "TEAM UP" },
+    newTab: "(opens in a new tab)",
+  },
+  glyph: { next: "→", external: "↗", download: "↓", sep: "·" },
   record: { career: "RECORD 99 – 1", yours: "YOUR RECORD" },
 } as const;
 
