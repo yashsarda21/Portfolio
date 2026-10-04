@@ -15,7 +15,8 @@ export type ScoutSectionId = "career" | "highlights" | "attributes" | "trophies"
 export interface ScoutLinkView {
   label: string;
   href: string;
-  glyph: string;
+  /** Trailing decorative mark, when the link has one. */
+  glyph?: string;
   download?: string;
   newTab?: boolean;
 }
@@ -39,6 +40,8 @@ export interface ScoutReport {
     chips: { label: string; short?: string; highlight?: boolean; desktopOnly?: boolean }[];
     primary: ScoutLinkView;
     secondary: { label: string; href: string };
+    /** Screen-reader note appended to a link that opens in a new tab. */
+    newTabHint: string;
   };
   career: {
     title: string;
@@ -94,7 +97,6 @@ export interface ScoutReport {
 
 /** Content group that the report replaces with the curated "craft and tools" list. */
 const CRAFT_GROUP = "Craft";
-const RESUME_DOWNLOAD_NAME = "Yash-Sarda-Resume.pdf";
 const TEAM_UP_HREF = "#teamup";
 
 /** Last non-empty path segment of a URL (a profile handle). */
@@ -123,11 +125,16 @@ export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES
   const current = c.careerStats.find((row) => row.end === null) ?? c.careerStats[0]!;
   const since = experienceSince(c.player.proSince);
   const academy = c.trainingAcademy;
+  const attributeGroups = getAttributeGroups(c);
+  // The page swaps this group for the curated list; fail loudly if content renames it.
+  if (!attributeGroups.some((g) => g.name === CRAFT_GROUP)) {
+    throw new Error(`content.skills needs a "${CRAFT_GROUP}" group`);
+  }
 
   const primary: ScoutLinkView =
     resume.kind === "pdf"
-      ? { label: s.resume.view, href: resume.href, glyph: "", newTab: true }
-      : { label: s.resume.request, href: resume.href, glyph: "" };
+      ? { label: s.resume.view, href: resume.href, newTab: true }
+      : { label: s.resume.request, href: resume.href };
 
   const resumeRow: ScoutLinkView =
     resume.kind === "pdf"
@@ -135,7 +142,7 @@ export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES
           label: s.resume.row,
           href: resume.href,
           glyph: copy.glyph.download,
-          download: RESUME_DOWNLOAD_NAME,
+          download: s.resume.fileName,
         }
       : { label: s.resume.rowRequest, href: resume.href, glyph: copy.glyph.external };
 
@@ -180,25 +187,23 @@ export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES
       ],
       primary,
       secondary: { label: s.teamUpCta, href: TEAM_UP_HREF },
+      newTabHint: s.newTab,
     },
     career: {
       title: s.career.title,
       meta: s.career.meta,
       metaShort: `${careerRows.length} ${s.career.innings}`,
-      rows: careerRows.map((row, i) => {
-        const shortRole = c.careerStats[i]!.shortRole;
-        return {
-          span: row.span,
-          status: row.status,
-          isCurrent: row.isCurrent,
-          team: row.team,
-          roleLine: `${row.role} ${sep} ${city(row.location)}`,
-          stackLine: row.stack.join(` ${sep} `),
-          bullets: row.ballByBall,
-          compactTitle: row.isCurrent ? row.team : `${row.team} ${sep} ${shortRole}`,
-          ...(row.isCurrent ? { compactLine: `${row.role} ${sep} ${row.scoutLine}` } : {}),
-        };
-      }),
+      rows: careerRows.map((row) => ({
+        span: row.span,
+        status: row.status,
+        isCurrent: row.isCurrent,
+        team: row.team,
+        roleLine: `${row.role} ${sep} ${city(row.location)}`,
+        stackLine: row.stack.join(` ${sep} `),
+        bullets: row.ballByBall,
+        compactTitle: row.isCurrent ? row.team : `${row.team} ${sep} ${row.shortRole}`,
+        ...(row.isCurrent ? { compactLine: `${row.role} ${sep} ${row.scoutLine}` } : {}),
+      })),
     },
     highlights: {
       title: s.highlights.title,
@@ -228,7 +233,7 @@ export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES
       meta: s.attributes.meta,
       legend: s.attributes.legend,
       groups: [
-        ...getAttributeGroups(c)
+        ...attributeGroups
           .filter((g) => g.name !== CRAFT_GROUP)
           .map((g) => ({
             name: g.name,

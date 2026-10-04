@@ -22,13 +22,16 @@ describe("selectors", () => {
       status: "NOT OUT",
       span: "Jul 2024 – now",
       isCurrent: true,
+      shortRole: c.careerStats[0]!.shortRole,
     });
     expect(rows[1]).toMatchObject({
       innings: "02",
       status: "DEBUT",
       span: "Jun – Jul 2023",
       isCurrent: false,
+      shortRole: c.careerStats[1]!.shortRole,
     });
+    expect(rows[1]!.shortRole).toBe("Intern");
   });
 
   it("innings reveals add the academy as innings 03", () => {

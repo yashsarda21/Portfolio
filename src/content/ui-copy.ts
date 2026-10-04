@@ -157,6 +157,7 @@ export const ui = {
       request: "REQUEST RESUME",
       row: "Resume (PDF)",
       rowRequest: "Request resume",
+      fileName: "Yash-Sarda-Resume.pdf",
     },
     teamUpCta: "TEAM UP",
     career: { title: "CAREER STATS", meta: "EXPERIENCE · MOST RECENT FIRST", innings: "INNINGS" },

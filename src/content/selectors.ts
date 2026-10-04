@@ -6,6 +6,7 @@ export interface CareerRow {
   status: "NOT OUT" | "DEBUT";
   team: string;
   role: string;
+  shortRole: string;
   location: string;
   span: string;
   isCurrent: boolean;
@@ -62,6 +63,7 @@ export function getCareerRows(c: Content): CareerRow[] {
     status: row.status,
     team: row.team,
     role: row.role,
+    shortRole: row.shortRole,
     location: row.location,
     span: formatSpan(row.start, row.end),
     isCurrent: row.end === null,

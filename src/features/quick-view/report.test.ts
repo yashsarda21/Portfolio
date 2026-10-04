@@ -118,11 +118,39 @@ describe("buildScoutReport", () => {
       href: "/yash-sarda-public.pdf",
       newTab: true,
     });
+    expect(report.hero.newTabHint).toBe(ui.scout.newTab);
     expect(report.teamUp.links.at(-1)).toMatchObject({
       label: "Resume (PDF)",
       glyph: "↓",
-      download: "Yash-Sarda-Resume.pdf",
+      download: ui.scout.resume.fileName,
     });
+    expect(ui.scout.resume.fileName).toBe("Yash-Sarda-Resume.pdf");
+  });
+
+  it("links with no trailing mark have no glyph key at all", () => {
+    const { hero } = build();
+    expect("glyph" in hero.primary).toBe(false);
+    expect(build(withPdf()).hero.primary).not.toHaveProperty("glyph");
+  });
+
+  it("career compact titles read the short role from the row, not by index", () => {
+    const { career } = build();
+    expect(career.rows[1]!.compactTitle).toBe(
+      `Deutsche Bank · ${content.careerStats[1]!.shortRole}`,
+    );
+  });
+
+  it("throws if content has no Craft attribute group", () => {
+    const renamed: Content = {
+      ...content,
+      playerAttributes: {
+        ...content.playerAttributes,
+        groups: content.playerAttributes.groups.map((g) =>
+          g.name === "Craft" ? { ...g, name: "Skills" } : g,
+        ),
+      },
+    };
+    expect(() => build(renamed)).toThrow(/Craft/);
   });
 
   it("routes and anchors", () => {

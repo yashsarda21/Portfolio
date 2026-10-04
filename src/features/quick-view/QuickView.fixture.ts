@@ -34,8 +34,9 @@ export const artboardReport: ScoutReport = {
       { label: "B.TECH IT · PICT · CGPA 8.94", desktopOnly: true },
       { label: "750+ PROBLEMS SOLVED", short: "750+ SOLVED", highlight: true },
     ],
-    primary: { label: "VIEW PLAYER CARD (PDF)", href: "#", glyph: "", newTab: true },
+    primary: { label: "VIEW PLAYER CARD (PDF)", href: "#", newTab: true },
     secondary: { label: "TEAM UP", href: "#teamup" },
+    newTabHint: "(opens in a new tab)",
   },
   career: {
     title: "CAREER STATS",
@@ -188,7 +189,8 @@ export const artboardReport: ScoutReport = {
         glyph: external,
       },
       { label: "GitHub · yashsarda21", href: "https://github.com/yashsarda21", glyph: external },
-      { label: "Resume (PDF)", href: "#", glyph: "↓", download: "Yash-Sarda-Resume.pdf" },
+      // Story-only link: a real href that stays on the page, so clicking it downloads nothing.
+      { label: "Resume (PDF)", href: "#teamup", glyph: "↓" },
     ],
   },
   footer: {
