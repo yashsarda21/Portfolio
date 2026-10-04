@@ -35,7 +35,8 @@ test("unknown paths show Out of Bounds", async ({ page }) => {
 });
 
 test("focus moves to the new heading after a wipe navigation", async ({ page }) => {
-  await page.goto(ROUTES.career);
+  // A page that is still a placeholder (they carry the site map).
+  await page.goto(ROUTES.lockerRoom);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
     .getByRole("link", { name: ui.routes.highlights.heading })
@@ -50,7 +51,8 @@ test("focus lands on the rendered heading of the landing page, not its hidden tw
   page,
 }) => {
   // "/" holds two <h1>s (desktop Scoreboard, mobile placeholder); only one is rendered per breakpoint.
-  await page.goto(ROUTES.career);
+  // A page that is still a placeholder (they carry the site map).
+  await page.goto(ROUTES.lockerRoom);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
     .getByRole("link", { name: ui.routes.home.heading })
@@ -70,7 +72,8 @@ test("journey: Landing → Quick View", async ({ page }, testInfo) => {
 
 test("reduced motion navigates without the wipe", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(ROUTES.career);
+  // A page that is still a placeholder (they carry the site map).
+  await page.goto(ROUTES.lockerRoom);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
     .getByRole("link", { name: ui.routes.scout.navLabel })
