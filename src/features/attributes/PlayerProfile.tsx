@@ -14,7 +14,7 @@ export function PlayerProfile({ profile }: { profile: AttributesView["profile"] 
       as="section"
       aria-labelledby={nameId}
       pad="md"
-      className="grid min-w-0 content-start gap-4 md:max-[1199px]:grid-cols-[260px_minmax(0,1fr)] md:max-[1199px]:gap-x-6"
+      className="grid min-w-0 content-start gap-4 md:max-[1199px]:grid-cols-[260px_minmax(0,1fr)] md:max-[1199px]:grid-rows-[auto_1fr] md:max-[1199px]:gap-x-6"
     >
       <PortraitFrame
         src={portrait.src}
@@ -23,7 +23,7 @@ export function PlayerProfile({ profile }: { profile: AttributesView["profile"] 
         className="md:max-[1199px]:row-span-2"
       />
       <div className="flex flex-col gap-0.5">
-        <Heading level={2} id={nameId} variant="player-name">
+        <Heading level={2} id={nameId} variant="d3">
           {profile.name}
         </Heading>
         <Text variant="body-sm" tone="secondary" leading="font">

@@ -29,7 +29,7 @@ type PortraitFrameProps = {
   /** The position badge top left: a big value over a small label ("SE" / "POSITION"). */
   badge?: { value: string; label: string };
   size?: "attr" | "card";
-  /** "lazy" for a frame below the fold (the phone). */
+  /** "lazy" only for a frame that starts below the fold; the Attributes portrait is above it, even on the phone. */
   loading?: "lazy" | "eager";
 } & Omit<ComponentPropsWithRef<"div">, "children">;
 
@@ -64,7 +64,8 @@ export function PortraitFrame({
       />
       {badge ? (
         <>
-          <Text variant="position" tone="volt" className="absolute top-2.5 left-3.5">
+          {/* The artboard sets the badge on a 1.0 line; d2s is .9, so the top edge drops 2.6px to put the glyphs where they were. */}
+          <Text variant="d2s" tone="volt" className="absolute top-[12.6px] left-3.5">
             {badge.value}
           </Text>
           <Text

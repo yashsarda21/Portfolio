@@ -16,6 +16,12 @@ type SkillGroupProps = {
   animate?: boolean;
   /** The heading's level in the page's outline. Default 2. */
   headingLevel?: 2 | 3 | 4;
+  /**
+   * For a parent grid of two columns (768 to 1199px): the group spans three of its rows (heading, note, list)
+   * so a note that wraps to two lines moves the bars of the group beside it too, and they stay level.
+   * Below and above that range it is the plain stack. The parent supplies the rows (implicit, auto).
+   */
+  alignRows?: boolean;
 } & Omit<ComponentPropsWithRef<"section">, "children" | "title" | "aria-labelledby">;
 
 /**
@@ -30,6 +36,7 @@ export function SkillGroup({
   skills,
   animate,
   headingLevel = 2,
+  alignRows = false,
   className,
   ...rest
 }: SkillGroupProps) {
@@ -39,14 +46,19 @@ export function SkillGroup({
       as="section"
       aria-labelledby={headingId}
       pad="lg"
-      className={cn("flex min-w-0 flex-col gap-3.5 max-md:px-4 max-md:py-4", className)}
+      className={cn(
+        "flex min-w-0 flex-col gap-3.5 max-md:px-4 max-md:py-4",
+        alignRows &&
+          "md:max-[1199px]:row-span-3 md:max-[1199px]:grid md:max-[1199px]:grid-rows-subgrid",
+        className,
+      )}
       {...rest}
     >
       <div className="flex items-baseline justify-between gap-x-4">
         <Heading level={headingLevel} id={headingId} variant="title-group">
           {name}
         </Heading>
-        <Text variant="mono-shot" tone="label" className="text-right">
+        <Text variant="mono-round" tone="label" className="text-right">
           {shotLine}
         </Text>
       </div>

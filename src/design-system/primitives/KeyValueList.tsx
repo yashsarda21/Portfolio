@@ -5,7 +5,7 @@ interface KeyValueItem {
   k: ReactNode;
   v: ReactNode;
   accent?: boolean;
-  /** "profile" variant only: the label sits over a mono value (a run of tools) instead of beside a plain one. */
+  /** "profile" variant only (the other variants ignore it): the label sits over a mono value (a run of tools) instead of beside a plain one. */
   stacked?: boolean;
 }
 

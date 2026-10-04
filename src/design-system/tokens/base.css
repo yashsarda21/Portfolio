@@ -68,6 +68,10 @@
 @utility bar {
   background-color: var(--surface-bar);
 }
+/* An anchor target stops this far under the page top: clear of the sticky header, with a little air. */
+@utility scroll-mt-header {
+  scroll-margin-top: calc(var(--header-h) + 20px);
+}
 
 /* ---------- type recipes (audit §2.4 consolidated scale) ---------- */
 /* display: the competitor */
@@ -610,14 +614,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-/* The position badge on the portrait ("SE"): 52px on a 1.0 line (type-d2s is .9). */
-@utility type-position {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 52px;
-  line-height: 1;
-  text-transform: uppercase;
-}
 /* A school's monogram in its box. */
 @utility type-monogram {
   font-family: var(--font-display);
@@ -634,29 +630,6 @@
   font-size: 18px;
   line-height: normal;
 }
-/* Lettering drawn on a trophy (the medal's figure, the plaque's word, the locked trophy's mark). */
-@utility type-glyph-lg {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 28px;
-  line-height: normal;
-  text-transform: uppercase;
-}
-@utility type-glyph-md {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 20px;
-  line-height: normal;
-  text-transform: uppercase;
-}
-@utility type-glyph-sm {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 13px;
-  line-height: normal;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 /* A quiet counter or aside: 11px mono, untracked, on the font's own line box ("1 / 5"). */
 @utility type-mono-note {
   font-family: var(--font-mono);
@@ -671,23 +644,6 @@
   font-size: 32px;
   line-height: normal;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-/* The player's name on the profile: 34px on a 1.0 line (type-d3 is .95 and drops to 30px on the phone). */
-@utility type-player-name {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 34px;
-  line-height: 1;
-  text-transform: uppercase;
-}
-/* The shot a group is named for ("SHOT · SMASH"): 11px at .18em on the font's own line box. */
-@utility type-mono-shot {
-  font-family: var(--font-mono);
-  font-weight: 400;
-  font-size: 11px;
-  line-height: normal;
-  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 /* A run of tools set in mono (the kit bag): 12px on a 1.6 line, sentence case. */

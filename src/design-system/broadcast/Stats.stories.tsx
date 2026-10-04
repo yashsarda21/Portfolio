@@ -75,3 +75,28 @@ export const Group: StoryObj = {
     </div>
   ),
 };
+
+/**
+ * Two groups side by side whose notes wrap differently. From 768 to 1199px (narrow the viewport) `alignRows`
+ * keeps their skill bars level; at other widths it is the plain stack.
+ */
+export const GroupsAligned: StoryObj = {
+  render: () => (
+    <div className="grid grid-cols-2 gap-4">
+      <SkillGroup
+        name="BACKEND"
+        shotLine="SHOT · SMASH"
+        note="Power and pace."
+        skills={GROUP_SKILLS}
+        alignRows
+      />
+      <SkillGroup
+        name="DATA"
+        shotLine="SHOT · DROP"
+        note="A much longer note that wraps onto a second line at a tablet width, to show the bars still line up."
+        skills={GROUP_SKILLS}
+        alignRows
+      />
+    </div>
+  ),
+};

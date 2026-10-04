@@ -98,9 +98,12 @@ describe("SkillGroup", () => {
     ]);
   });
 
-  it("pulls the note up under the heading (the -8px the artboard draws)", () => {
-    setup();
-    expect(screen.getByText("Power and pace.")).toHaveClass("-mt-2");
+  it("spans three rows of a tablet grid (heading, note, list) only when asked, so neighbours stay level", () => {
+    const { rerender } = setup();
+    const group = screen.getByRole("region", { name: "Backend" });
+    expect(group.className).not.toMatch(/subgrid/);
+    rerender(<SkillGroup name="Backend" shotLine="x" note="n" skills={skills} alignRows />);
+    expect(group).toHaveClass("md:max-[1199px]:grid-rows-subgrid", "md:max-[1199px]:row-span-3");
   });
 
   it("takes the heading level and animates the bars on request", () => {
