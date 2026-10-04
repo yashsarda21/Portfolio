@@ -6,7 +6,7 @@ import { Icon } from "../primitives/Icon";
 import type { IconName } from "../primitives/icons";
 
 export const hudButtonVariants = cva(
-  "inline-flex h-11 cursor-pointer items-center gap-2.5 px-4 type-mono-md transition-colors duration-(--dur-snap) ease-snap",
+  "inline-flex h-11 cursor-pointer items-center gap-2.5 px-4 type-mono-md leading-auto transition-colors duration-(--dur-snap) ease-snap",
   {
     variants: {
       tone: {

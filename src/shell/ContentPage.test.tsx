@@ -97,12 +97,21 @@ describe("ContentPage", () => {
     );
   });
 
-  it("sets data-venue on the page root only when given", () => {
-    const { unmount } = setup({ venue: "turf" });
-    expect(screen.getByRole("main")).toHaveAttribute("data-venue", "turf");
-    unmount();
+  it("keeps the header and the tab bar outside the main landmark", () => {
     setup();
+    const main = screen.getByRole("main");
+    expect(main).not.toContainElement(screen.getByRole("banner"));
+    expect(main).not.toContainElement(screen.getByRole("navigation", { name: ui.tabs.label }));
+    expect(main).toContainElement(screen.getByText("PANELS"));
+  });
+
+  it("sets data-venue on the page root only when given", () => {
+    const { container, unmount } = setup({ venue: "turf" });
+    expect(container.querySelector("[data-venue]")).toHaveAttribute("data-venue", "turf");
     expect(screen.getByRole("main")).not.toHaveAttribute("data-venue");
+    unmount();
+    const second = setup();
+    expect(second.container.querySelector("[data-venue]")).toBeNull();
   });
 
   it("marks the current route in the mobile tab bar", () => {

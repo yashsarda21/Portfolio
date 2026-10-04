@@ -57,7 +57,8 @@ const DEFAULT_GLOW: GlowSpec = { x: "50%", y: "115%", w: "80%", h: "50%", alpha:
 
 /**
  * The frame every content page shares: backdrop, HUD (breadcrumb, REMATCH, QUICK VIEW), title block,
- * the panels, the commentary + next-venue footer, and the phone's tab bar.
+ * the panels, the commentary + next-venue footer, and the phone's tab bar. The title, panels and footer are
+ * the `main#main` landmark; the HUD is the banner and the tab bar follows the main.
  */
 export function ContentPage({
   route,
@@ -82,8 +83,9 @@ export function ContentPage({
   const heading = ui.routes[route].heading;
 
   return (
-    <main id="main" data-venue={venue} className="relative bg-ground">
+    <div data-venue={venue} className="relative bg-ground">
       <ContentLayout
+        mainId="main"
         backdrop={
           backdrop ?? (
             <>
@@ -132,8 +134,10 @@ export function ContentPage({
                 skew="desktop"
                 className="ml-auto max-md:ml-0 max-md:w-full"
               >
-                {next.label}
-                <span aria-hidden="true">{ui.glyph.next}</span>
+                {/* One run of text, so the arrow follows the label with a plain space as the artboard sets it. */}
+                <span>
+                  {next.label} <span aria-hidden="true">{ui.glyph.next}</span>
+                </span>
               </Button>
             ) : null}
           </>
@@ -142,6 +146,6 @@ export function ContentPage({
       >
         {children}
       </ContentLayout>
-    </main>
+    </div>
   );
 }

@@ -14,6 +14,8 @@ interface ContentLayoutProps {
   tabBar?: ReactNode;
   /** Decorative full-bleed layer behind the page (venue glows). */
   backdrop?: ReactNode;
+  /** Id of the `<main>` landmark (the skip link targets it). */
+  mainId?: string;
   className?: string;
 }
 
@@ -21,6 +23,7 @@ interface ContentLayoutProps {
  * The shared frame of a content page, on the artboards' 1440×900 grid: header 76 · title from y 100 ·
  * panels from y 236 (at least 554 tall) · footer 110 (22 above the 52px button, 36 below).
  * 768–1199 keeps the frame and lets the page scroll; below 768 it is a single column with 16px gutters.
+ * Landmarks: the header is the banner; the title, panels and footer are the `<main>`; the tab bar follows it.
  */
 export function ContentLayout({
   header,
@@ -29,6 +32,7 @@ export function ContentLayout({
   footer,
   tabBar,
   backdrop,
+  mainId,
   className,
 }: ContentLayoutProps) {
   return (
@@ -46,13 +50,17 @@ export function ContentLayout({
         )}
       >
         <div className="max-md:pt-4">{header}</div>
-        <div className="px-9 pt-6 max-md:px-4 max-md:pt-5 max-md:pb-11 md:min-h-40">{title}</div>
-        <div className="flex flex-1 flex-col px-9 max-md:px-4 lg:min-h-138.5">{children}</div>
-        {footer ? (
-          <div className="flex items-end justify-between gap-4 px-9 pt-5.5 pb-9 max-md:flex-col max-md:items-stretch max-md:px-4 max-md:pt-4 max-md:pb-4">
-            {footer}
+        <main id={mainId} className="flex flex-1 flex-col">
+          <div className="px-9 pt-6 pb-6 max-md:px-4 max-md:pt-5 max-md:pb-11 md:min-h-40">
+            {title}
           </div>
-        ) : null}
+          <div className="flex flex-1 flex-col px-9 max-md:px-4 lg:min-h-138.5">{children}</div>
+          {footer ? (
+            <div className="flex items-end justify-between gap-4 px-9 pt-5.5 pb-9 max-md:flex-col max-md:items-stretch max-md:px-4 max-md:pt-4 max-md:pb-4">
+              {footer}
+            </div>
+          ) : null}
+        </main>
       </div>
       {tabBar}
     </div>

@@ -27,6 +27,13 @@ describe("Chip sizes", () => {
     expect(chip).not.toHaveClass("type-mono-md");
   });
 
+  it("stack size writes the name as given: untracked mono, 32px plus borders", () => {
+    render(<Chip size="stack">Spring Boot</Chip>);
+    const chip = screen.getByText("Spring Boot");
+    expect(chip).toHaveClass("type-mono-stack", "box-content", "h-8", "px-3");
+    expect(chip).not.toHaveClass("type-mono-md");
+  });
+
   it("meta size uses the chip recipe with a tighter mobile padding", () => {
     render(<Chip size="meta">PUNE</Chip>);
     const chip = screen.getByText("PUNE");

@@ -36,6 +36,12 @@ describe("Breadcrumb", () => {
     seps.forEach((s) => expect(s).toHaveTextContent("/"));
   });
 
+  it("draws the mark at 40px, a size down (36px) on the phone", () => {
+    render(<Breadcrumb mark="YS" trail={trail} href="/arena" />);
+    const mark = screen.getByText("YS");
+    expect(mark).toHaveClass("size-10", "max-md:size-9", "type-d5-fluid");
+  });
+
   it("renders as a custom link element when asked", () => {
     render(<Breadcrumb mark="YS" trail={["X"]} as="button" type="button" hubLabel="HOME" />);
     expect(screen.getByRole("button", { name: /HOME/ })).toBeInTheDocument();
@@ -174,5 +180,34 @@ describe("ContentLayout", () => {
       expect(screen.getByText(text)).toBeInTheDocument();
     }
     expect(screen.getByTestId("bd").parentElement).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("makes the title, panels and footer the main landmark, with the header and tab bar outside it", () => {
+    render(
+      <ContentLayout
+        mainId="main"
+        header={<header>head</header>}
+        title={<h1>title</h1>}
+        footer={<span>foot</span>}
+        tabBar={<nav aria-label="Main">tabs</nav>}
+      >
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    const main = screen.getByRole("main");
+    expect(main).toHaveAttribute("id", "main");
+    for (const text of ["title", "panels", "foot"])
+      expect(main).toContainElement(screen.getByText(text));
+    for (const text of ["head", "tabs"]) expect(main).not.toContainElement(screen.getByText(text));
+    expect(screen.getByRole("banner")).toHaveTextContent("head");
+  });
+
+  it("leaves the main landmark without an id unless asked", () => {
+    render(
+      <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    expect(screen.getByRole("main")).not.toHaveAttribute("id");
   });
 });

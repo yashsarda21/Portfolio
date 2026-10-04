@@ -1,28 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState, type ReactNode } from "react";
-import { createMemoryRouter, RouterProvider } from "react-router";
-import { ArenaShell } from "@/shell/ArenaShell";
+import { withShell } from "@/shell/storyDecorators";
 import { artboardReport } from "./QuickView.fixture";
 import { QuickView, QuickViewScreen } from "./QuickView";
-
-/** Storybook has no router; ArenaLink and the shell services need one. Local to this feature. */
-function WithShell({ children }: { children: ReactNode }) {
-  const [router] = useState(() =>
-    createMemoryRouter([{ path: "*", element: <ArenaShell>{children}</ArenaShell> }]),
-  );
-  return <RouterProvider router={router} />;
-}
 
 const meta: Meta = {
   title: "Features/Quick View",
   parameters: { layout: "fullscreen" },
-  decorators: [
-    (Story) => (
-      <WithShell>
-        <Story />
-      </WithShell>
-    ),
-  ],
+  decorators: [withShell],
 };
 export default meta;
 

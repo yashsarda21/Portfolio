@@ -32,7 +32,7 @@ export function PageTitle({
           {title}
         </Heading>
       </div>
-      {aside ? <div className="flex items-end gap-0.5">{aside}</div> : null}
+      {aside ? <div className="flex items-stretch gap-0.5 max-md:w-full">{aside}</div> : null}
     </div>
   );
 }

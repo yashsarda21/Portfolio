@@ -19,21 +19,22 @@ export function parseStat(value: string) {
 const tile = cva("flex flex-col gap-0.5", {
   variants: {
     tone: {
-      glass: "glass w-52 px-4.5 py-3.5",
-      volt: "w-51.5 bg-volt px-4.5 py-3.5",
+      // On the phone, tiles share a full-width row (the page title's aside) and the values step down a size.
+      glass: "glass w-52 px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
+      volt: "w-51.5 bg-volt px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
       cell: "bg-inset p-2.5",
     },
   },
   defaultVariants: { tone: "glass" },
 });
 const LABEL = {
-  glass: "type-mono-label text-scout",
-  volt: "type-mono-label text-volt-ink-2",
+  glass: "type-mono-round text-scout",
+  volt: "type-mono-round text-volt-ink-2",
   cell: "type-mono-xs text-scout",
 } as const;
 const VALUE = {
-  glass: "type-stat text-floodlight",
-  volt: "type-stat text-volt-ink",
+  glass: "type-stat text-floodlight max-md:type-d4s",
+  volt: "type-stat text-volt-ink max-md:type-d4s",
   cell: "type-d4s text-floodlight",
 } as const;
 

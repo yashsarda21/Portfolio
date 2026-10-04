@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import type { PolymorphicProps } from "../lib/polymorphic";
 
 export type ChipTone = "outline" | "strong" | "meta" | "volt" | "volt-outline";
-type ChipSize = "sm" | "md" | "lg" | "meta" | "code";
+type ChipSize = "sm" | "md" | "lg" | "meta" | "code" | "stack";
 
 export const chipVariants = cva("inline-flex items-center gap-2 whitespace-nowrap type-mono-md", {
   variants: {
@@ -21,6 +21,8 @@ export const chipVariants = cva("inline-flex items-center gap-2 whitespace-nowra
       lg: "px-3 py-2",
       meta: "px-3 py-2 type-mono-chip max-md:px-2 max-md:py-1.5",
       code: "px-2.5 py-1.5 type-mono-code",
+      // A tool name as written (mixed case, untracked): 32px plus the 1px borders, as drawn.
+      stack: "box-content h-8 px-3 type-mono-stack",
     },
   },
   defaultVariants: { tone: "outline", size: "md" },

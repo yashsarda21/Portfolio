@@ -184,6 +184,17 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+/* The YS mark in a content-page header: 18px untracked (16px on the phone, Mobile-Hub). */
+@utility type-d5-fluid {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: normal;
+  text-transform: uppercase;
+  @media (width < 48rem) {
+    font-size: 16px;
+  }
+}
 @utility type-sub {
   font-family: var(--font-display);
   font-weight: 700;
@@ -546,6 +557,21 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 1.42;
+}
+/* Detail-panel title (Career innings, Highlights reel): 40px at a .95 line (type-stat is 1.0 with tabular figures). */
+@utility type-title-detail {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 40px;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+/* A 16px line under a title (role line, deck): the font's own line box, as a span with no line-height is drawn. */
+@utility type-body-line {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: normal;
 }
 /* Problem / approach / result cell copy: 14px at 1.5. */
 @utility type-body-cell {

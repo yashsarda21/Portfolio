@@ -16,7 +16,7 @@ type Own = {
 
 /**
  * "YS HUB / CRICKET GROUND / CAREER STATS". Only the first crumb (mark + hub label) is a link; pass `as` and
- * `to`/`href` for it. Below 768px only the mark shows; the trail stays readable to assistive tech.
+ * `to`/`href` for it. Below 768px only the mark shows (36px, a size down); the trail stays readable to assistive tech.
  */
 export function Breadcrumb<T extends ElementType = "a">({
   as,
@@ -30,11 +30,12 @@ export function Breadcrumb<T extends ElementType = "a">({
   const hubCurrent = trail.length === 0;
   return (
     <nav aria-label={label} className={className}>
-      <ol className="flex items-center text-scout">
+      <ol className="flex items-center whitespace-nowrap text-scout">
         <li>
           <BrandLockup
             as={(as ?? "a") as ElementType}
             mark={mark}
+            size="fluid"
             label={hubLabel}
             labelClassName="max-md:sr-only"
             aria-current={hubCurrent ? "page" : undefined}
