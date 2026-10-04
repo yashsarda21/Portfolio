@@ -18,7 +18,16 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [x] Replace the placeholder home (and its `#top` link) with route placeholders.
 - [x] ArenaBackdrop full-bleed: outer full-bleed layer (bg-night + sky) + inner 1440×900 layer scaled by --stage-scale, overflow visible.
 - [ ] Pick the venue per route via `<ArenaBackdrop venue>` (turf / court / hall); the default is turf.
-- [ ] CommentaryBar: the commentary service owns the live region (pass `aria-hidden` through rest props) and flips `state="out"` before unmounting a line.
+- [x] CommentaryBar: the commentary service owns the live region (pass `aria-hidden` through rest props) and flips `state="out"` before unmounting a line.
+
+- [ ] Phase 2: same-page hash links (e.g. `/trophies#academy`) are now left to the router by the ArenaLink bail-out (no wipe); verify on the real page.
+- [ ] Phase 3: tablet (768–1199) Stage shrinks 11px mono to ~6px; decide the tablet treatment.
+- [ ] Phase 3: commentary live region on the mobile placeholders (speak or stay silent?).
+- [ ] Phase 3 / 7: lazy-load GSAP (dynamic import in `go()` plus idle prefetch) and check Lighthouse.
+- [ ] Phase 4 / 5: match record shape guard/merge, and migrate on a version bump (`arena:v1`).
+- [ ] Phase 7: the host must serve a real Out-of-Bounds HTML page with HTTP 404 (not the SPA fallback's 200); verify it.
+- [ ] Phase 7: CSP needs build-time hashes for React Router's inline scripts and the stage-scale script.
+- [ ] Optional: bidirectional check between `ROUTES` (src/shell/routes.ts) and `app/routes.ts`.
 
 ## Before Phase 1's first pixel diff
 - [ ] Log token merges that moved values >~2% in spec §11 (mobile glass .7/.8→.85, QV sticky bar .86→.9, Main/Intro glass .62/.10→.66/.09, Scoreboard border canonical #2A323C vs Main #232A33).

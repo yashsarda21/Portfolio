@@ -402,6 +402,14 @@ Every intentional difference from the artboards is listed here, so "exact" stays
 |---|---|---|---|
 | D-1 | Main/Intro light cones | Beam top edge starts exactly under its floodlight lamp (artboard draws it offset) | Owner request 2026-10-04 |
 
+The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges where this differs from Main: left `x 106–184, y 120–262`, right `x 1255–1335, y 120–271` (never the scoreboard or the CTAs).
+
+### 11.5 Behaviour decisions
+
+| Where | Decision | Why |
+|---|---|---|
+| Reduced-motion navigation (§4.6) | Navigation is instant: no cover, no reveal, no crossfade. §4.6 said a 150ms crossfade; §7's "jump to end state" rule was chosen instead. | Fewer moving parts, nothing to get stuck; focus and the announcement still run. |
+
 ---
 
 ## 12. Derived designs (not in the artboards; built from existing components, flagged for Yash's review)
