@@ -25,6 +25,12 @@ const BUDGET = {
   mobile: { accessibility: 1 },
 };
 const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"];
+const RUNS = 3;
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
 
 async function answers(url) {
   try {
@@ -88,38 +94,50 @@ async function main() {
       chromeFlags: ["--headless=new", "--no-sandbox"],
     });
 
-    // Lighthouse is noisy (the very first run after a build has scored Speed Index 0.02 once), so a
-    // miss is measured again before it counts. Only a repeated miss fails.
-    let failures = [];
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      if (attempt > 1) console.log("\nBudget missed; measuring again to rule out a noisy run.\n");
-      failures = [];
-      for (const [name, config] of [
-        ["desktop", desktopConfig],
-        ["mobile", undefined],
-      ]) {
+    // Lighthouse performance is noisy (the very first run after a build has scored Speed Index 0.02 once),
+    // so it is gated on the median of RUNS runs. Accessibility, best practices and SEO are deterministic:
+    // they are gated on the worst of the same runs, with no retry. Every run is printed.
+    const failures = [];
+    for (const [name, config] of [
+      ["desktop", desktopConfig],
+      ["mobile", undefined],
+    ]) {
+      const runs = [];
+      let lastLhr;
+      for (let run = 1; run <= RUNS; run++) {
         const result = await lighthouse(
           PAGE,
           { port: chrome.port, output: "json", logLevel: "error", onlyCategories: CATEGORIES },
           config,
         );
         if (!result) throw new Error(`Lighthouse returned nothing for ${name}.`);
-        const { lhr } = result;
-        const scores = scoresOf(lhr);
+        lastLhr = result.lhr;
+        const scores = scoresOf(result.lhr);
+        runs.push(scores);
         console.log(
-          `${name.padEnd(8)}` +
+          `${name.padEnd(8)}run ${run}  ` +
             CATEGORIES.map((id) => `${id} ${Math.round(scores[id] * 100)}`).join("  "),
         );
-        for (const [id, min] of Object.entries(BUDGET[name])) {
-          if (scores[id] + 1e-9 < min) {
-            failures.push(
-              `${name} ${id}: ${Math.round(scores[id] * 100)} < ${Math.round(min * 100)}. ` +
-                `Audits below full marks: ${weakAudits(lhr, id).join(", ") || "none listed"}`,
-            );
-          }
+      }
+      const gated = Object.fromEntries(
+        CATEGORIES.map((id) => {
+          const values = runs.map((r) => r[id]);
+          return [id, id === "performance" ? median(values) : Math.min(...values)];
+        }),
+      );
+      console.log(
+        `${name.padEnd(8)}gate   ` +
+          CATEGORIES.map((id) => `${id} ${Math.round(gated[id] * 100)}`).join("  ") +
+          "  (performance = median, others = worst run)",
+      );
+      for (const [id, min] of Object.entries(BUDGET[name])) {
+        if (gated[id] + 1e-9 < min) {
+          failures.push(
+            `${name} ${id}: ${Math.round(gated[id] * 100)} < ${Math.round(min * 100)}. ` +
+              `Audits below full marks (last run): ${weakAudits(lastLhr, id).join(", ") || "none listed"}`,
+          );
         }
       }
-      if (failures.length === 0) break;
     }
     if (failures.length > 0) {
       console.error(`\nLighthouse budget missed:\n- ${failures.join("\n- ")}`);
