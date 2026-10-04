@@ -50,4 +50,14 @@ describe("cn", () => {
   it("keeps a type recipe alongside font-mono (CSS order makes font-mono win)", () => {
     expect(cn("type-d1", "font-mono")).toBe("type-d1 font-mono");
   });
+
+  it("treats leading-auto as a line-height, so a later one replaces an earlier one", () => {
+    expect(cn("leading-3", "leading-auto")).toBe("leading-auto");
+    expect(cn("leading-auto", "leading-3")).toBe("leading-3");
+  });
+
+  it("keeps leading-auto after a type recipe, but a later recipe replaces it", () => {
+    expect(cn("type-body", "leading-auto")).toBe("type-body leading-auto");
+    expect(cn("leading-auto", "type-body")).toBe("type-body");
+  });
 });

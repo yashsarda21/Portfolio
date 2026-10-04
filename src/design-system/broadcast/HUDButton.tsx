@@ -11,15 +11,16 @@ export const hudButtonVariants = cva(
     variants: {
       tone: {
         glass: "glass text-floodlight hover:bg-white-a10",
+        // The artboard's border is content-box (+2px): 46px with the border, vs the glass 44px.
         "volt-outline":
-          "border border-volt bg-transparent text-volt hover:border-volt-hover hover:text-volt-hover",
+          "h-11.5 border border-volt bg-transparent text-volt hover:border-volt-hover hover:text-volt-hover",
       },
     },
     defaultVariants: { tone: "glass" },
   },
 );
 
-/** HUD control (QUICK VIEW, SKIP INTRO, REMATCH…). 44px tall; glass by default, volt outline on request. */
+/** HUD control (QUICK VIEW, SKIP INTRO, REMATCH…). 44px tall (46px outlined); glass by default, volt outline on request. */
 export function HUDButton<T extends ElementType = "button">({
   as,
   icon,

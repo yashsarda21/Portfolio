@@ -31,7 +31,7 @@ export function SectionHeader({
       <Heading level={level} variant={size === "lg" ? "section" : "section-sm"} id={id}>
         {title}
       </Heading>
-      {meta ? <MonoLabel variant="mono-md">{meta}</MonoLabel> : null}
+      {meta ? <MonoLabel variant="mono-meta">{meta}</MonoLabel> : null}
     </div>
   );
 }

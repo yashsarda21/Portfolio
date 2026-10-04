@@ -106,3 +106,27 @@ export const FluidPageVariants: Story = {
     </div>
   ),
 };
+
+/** Fluid-page sizes: `cta` (page hero) and `bar` (mobile bottom bar), filled and outlined. */
+export const PageSizes: Story = {
+  render: () => (
+    <div className="flex flex-col items-start gap-6 p-6">
+      <div className="flex gap-3.5">
+        <Button size="cta" skew={false} glow={false}>
+          Primary CTA
+        </Button>
+        <Button size="cta" variant="outline" skew={false}>
+          Outline CTA
+        </Button>
+      </div>
+      <div className="grid w-97.5 grid-cols-2 gap-2.5">
+        <Button size="bar" variant="panel" skew={false}>
+          Player card
+        </Button>
+        <Button size="bar" skew={false} glow={false}>
+          Team up
+        </Button>
+      </div>
+    </div>
+  ),
+};

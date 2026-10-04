@@ -23,8 +23,12 @@ export function HorizontalScroller({
 }: HorizontalScrollerProps) {
   return (
     <div className={cn("relative", className)}>
-      {/* A scroll container must take focus so keyboard users can scroll it (axe: scrollable-region-focusable). */}
+      {/* A scroll container must take focus so keyboard users can scroll it (axe: scrollable-region-focusable).
+          On wide screens a consumer may turn it into a grid that doesn't scroll; it stays one harmless tab stop. */}
+      {/* Tailwind's `list-style: none` makes Safari/VoiceOver drop the list role, which names this region. */}
+      {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
       <ul
+        role="list"
         aria-label={label}
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}

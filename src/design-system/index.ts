@@ -47,3 +47,8 @@ export { STAGE_SCALE_SCRIPT } from "./layout/stageScript";
 export { SectionHeader } from "./layout/SectionHeader";
 export { HorizontalScroller } from "./layout/HorizontalScroller";
 export { StickyBottomActions } from "./layout/StickyBottomActions";
+export { AutoGrid, autoGridVariants } from "./layout/AutoGrid";
+export type { AutoGridOwnProps } from "./layout/AutoGrid";
+export { FluidContainer } from "./layout/FluidContainer";
+export { FluidSection, fluidSectionVariants } from "./layout/FluidSection";
+export type { FluidSectionOwnProps } from "./layout/FluidSection";

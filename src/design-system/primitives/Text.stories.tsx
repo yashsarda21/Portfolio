@@ -55,6 +55,16 @@ export const MonoLabels: Story = {
       <MonoLabel variant="mono-md" tone="primary">
         QUICK VIEW
       </MonoLabel>
+      <MonoLabel variant="mono-kicker" tone="volt">
+        90-SECOND READ
+      </MonoLabel>
+      <MonoLabel variant="mono-meta">EXPERIENCE · MOST RECENT FIRST</MonoLabel>
+      <MonoLabel variant="mono-date">JUL 2024 – NOW · NOT OUT</MonoLabel>
+      <MonoLabel variant="mono-chip">PUNE, INDIA</MonoLabel>
+      <MonoLabel variant="mono-round">THE FINAL</MonoLabel>
+      <Text variant="mono-stack" tone="label">
+        React · Spring Boot · Java
+      </Text>
     </div>
   ),
 };

@@ -59,6 +59,13 @@ describe("Heading", () => {
   });
 });
 
+describe("Text body-copy", () => {
+  it("maps to the 15px / 1.5 card-copy recipe", () => {
+    render(<Text variant="body-copy">Card copy</Text>);
+    expect(screen.getByText("Card copy")).toHaveClass("type-body-copy");
+  });
+});
+
 describe("MonoLabel", () => {
   it("defaults to the scout-grey panel label", () => {
     render(<MonoLabel>BOWL AT ME</MonoLabel>);
@@ -72,5 +79,14 @@ describe("MonoLabel", () => {
       </MonoLabel>,
     );
     expect(screen.getByText("CONTACT")).toHaveClass("type-mono-eyebrow", "text-volt");
+  });
+
+  it.each([
+    ["mono-kicker", "type-mono-kicker"],
+    ["mono-meta", "type-mono-meta"],
+    ["mono-date", "type-mono-date"],
+  ] as const)("%s maps to its recipe", (variant, recipe) => {
+    render(<MonoLabel variant={variant}>LABEL</MonoLabel>);
+    expect(screen.getByText("LABEL")).toHaveClass(recipe);
   });
 });

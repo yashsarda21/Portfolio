@@ -28,6 +28,11 @@ export const buttonVariants = cva(
         bar: "h-13.5 w-full px-4 type-btn-bar",
       },
     },
+    compoundVariants: [
+      // The artboards' borders are content-box: an outlined control is 2px taller than a filled one.
+      { variant: ["outline", "panel"], size: "cta", className: "min-h-14.5" },
+      { variant: ["outline", "panel"], size: "bar", className: "h-14" },
+    ],
     defaultVariants: { variant: "primary", size: "m" },
   },
 );

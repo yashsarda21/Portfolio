@@ -81,6 +81,7 @@ describe("broadcast chrome", () => {
     rerender(<HUDButton tone="volt-outline">QUICK VIEW</HUDButton>);
     const btn = screen.getByRole("button");
     expect(btn).not.toHaveClass("glass");
-    expect(btn).toHaveClass("border-volt", "text-volt", "bg-transparent");
+    expect(btn).toHaveClass("border-volt", "text-volt", "bg-transparent", "h-11.5");
+    expect(btn).not.toHaveClass("h-11");
   });
 });

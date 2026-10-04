@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../primitives/Button";
 import { LinkRow } from "../primitives/LinkRow";
+import { AutoGrid } from "./AutoGrid";
+import { FluidContainer } from "./FluidContainer";
+import { FluidSection } from "./FluidSection";
 import { HorizontalScroller } from "./HorizontalScroller";
 import { SectionHeader } from "./SectionHeader";
 import { StickyBottomActions } from "./StickyBottomActions";
@@ -62,5 +65,64 @@ export const StickyActions: StoryObj = {
         </Button>
       </StickyBottomActions>
     </div>
+  ),
+};
+
+const Cell = ({ children }: { children: string }) => (
+  <div className="flex h-24 items-center justify-center border border-line-3 bg-panel type-title-sm">
+    {children}
+  </div>
+);
+
+/** One story per column width; each reflows by itself as the container narrows. */
+export const AutoGrids: StoryObj = {
+  render: () => (
+    <div className="flex flex-col gap-10 p-6">
+      {([250, 300, 360, 380] as const).map((min) => (
+        <AutoGrid key={min} min={min} className="gap-4">
+          <Cell>{`${min}+`}</Cell>
+          <Cell>Two</Cell>
+          <Cell>Three</Cell>
+        </AutoGrid>
+      ))}
+      <AutoGrid as="ul" min={300} from="md" className="gap-4" aria-label="Block on mobile">
+        <li>
+          <Cell>From md: one</Cell>
+        </li>
+        <li>
+          <Cell>From md: two</Cell>
+        </li>
+      </AutoGrid>
+    </div>
+  ),
+};
+
+export const Container: StoryObj = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <FluidContainer className="bg-panel py-6">
+      <Cell>FluidContainer: 1248px column, 24px gutters (16px on mobile)</Cell>
+    </FluidContainer>
+  ),
+};
+
+export const Sections: StoryObj = {
+  render: () => (
+    <FluidContainer className="py-6">
+      <FluidSection id="stacked-demo" aria-labelledby="stacked-demo-title">
+        <SectionHeader id="stacked-demo-title" title="Stacked" meta="DEFAULT" />
+        <Cell>Stacked, hairline-separated on mobile</Cell>
+      </FluidSection>
+      <FluidSection
+        id="plain-demo"
+        aria-labelledby="plain-demo-title"
+        stack={false}
+        divided={false}
+        className="mt-10"
+      >
+        <SectionHeader id="plain-demo-title" title="Plain" size="md" />
+        <Cell>No stack, no divider</Cell>
+      </FluidSection>
+    </FluidContainer>
   ),
 };

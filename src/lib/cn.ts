@@ -5,6 +5,8 @@ import { extendTailwindMerge } from "tailwind-merge";
 const twMerge = extendTailwindMerge<"type-recipe" | "surface">({
   extend: {
     theme: {
+      // `leading-auto` is the Arena token for the font's own line box (theme.css).
+      leading: ["auto"],
       shadow: [
         "board",
         "card-3d",

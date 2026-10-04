@@ -130,4 +130,23 @@ describe("Button", () => {
     rerender(<Button size="bar">A</Button>);
     expect(screen.getByRole("button")).toHaveClass("h-13.5", "w-full", "type-btn-bar");
   });
+
+  it("adds the content-box border height to outlined and panel CTA and bar buttons", () => {
+    const { rerender } = render(
+      <Button size="cta" variant="outline">
+        A
+      </Button>,
+    );
+    expect(screen.getByRole("button")).toHaveClass("min-h-14.5");
+    expect(screen.getByRole("button")).not.toHaveClass("min-h-14");
+    rerender(
+      <Button size="bar" variant="panel">
+        A
+      </Button>,
+    );
+    expect(screen.getByRole("button")).toHaveClass("h-14");
+    expect(screen.getByRole("button")).not.toHaveClass("h-13.5");
+    rerender(<Button size="bar">A</Button>);
+    expect(screen.getByRole("button")).toHaveClass("h-13.5");
+  });
 });
