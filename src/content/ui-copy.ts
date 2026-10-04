@@ -9,7 +9,111 @@ export const ui = {
     crowdOn: "CROWD ON",
     soundOff: "SOUND OFF",
   },
+  routes: {
+    home: {
+      title: "Yash Sarda — The Arena",
+      description:
+        "Software Engineer Yash Sarda's portfolio, built as a night-time sports arena. Play against him, or read the 90-second scouting report.",
+      heading: "YASH SARDA",
+      phase: 3,
+    },
+    intro: {
+      title: "Player Introduction — The Arena",
+      description: "Yash Sarda walks out under the floodlights.",
+      heading: "PLAYER INTRODUCTION",
+      phase: 3,
+    },
+    arena: {
+      title: "Arena Hub — The Arena",
+      description:
+        "Choose your venue: cricket, tennis or badminton. Every game reveals real portfolio content.",
+      heading: "CHOOSE YOUR VENUE",
+      phase: 4,
+    },
+    cricket: {
+      title: "Bowl at Me — Cricket Ground",
+      description: "Bowl a three-ball over at Yash. Every ball unlocks an innings of his career.",
+      heading: "BOWL AT ME",
+      phase: 5,
+    },
+    tennis: {
+      title: "Return of Serve — Centre Court",
+      description: "Return Yash's serve. Every return puts a project on the big screen.",
+      heading: "RETURN OF SERVE",
+      phase: 5,
+    },
+    badminton: {
+      title: "Smash or Clear — Badminton Hall",
+      description: "Play four rallies. Each one charges a group of Yash's skills.",
+      heading: "SMASH OR CLEAR",
+      phase: 5,
+    },
+    giantKiller: {
+      title: "Giant Killer — The Arena",
+      description: "The rare result: you beat Yash.",
+      heading: "GIANT KILLER",
+      phase: 6,
+    },
+    career: {
+      title: "Career Stats — Yash Sarda",
+      description:
+        "Yash Sarda's career scorecard: Software Engineer at Deutsche Bank since Jul 2024.",
+      heading: "CAREER STATS",
+      phase: 2,
+    },
+    highlights: {
+      title: "Match Highlights — Yash Sarda",
+      description: "Yash Sarda's best projects, played as a tournament run.",
+      heading: "MATCH HIGHLIGHTS",
+      phase: 2,
+    },
+    attributes: {
+      title: "Player Attributes — Yash Sarda",
+      description: "Yash Sarda's skills, shown by evidence: shipped, built or in the kit bag.",
+      heading: "PLAYER ATTRIBUTES",
+      phase: 2,
+    },
+    trophies: {
+      title: "Trophy Room — Yash Sarda",
+      description:
+        "Achievements and education: 750+ problems solved, 99.5 percentile, published research.",
+      heading: "TROPHY ROOM",
+      phase: 2,
+    },
+    card: {
+      title: "Player Card — Yash Sarda",
+      description: "Yash Sarda's resume as a player card.",
+      heading: "PLAYER CARD",
+      phase: 2,
+    },
+    teamUp: {
+      title: "Team Up — Contact Yash Sarda",
+      description: "Challenge Yash: hire him, collaborate, or just say hello.",
+      heading: "TEAM UP",
+      phase: 2,
+    },
+    lockerRoom: {
+      title: "Locker Room — The Arena",
+      description: "The hidden room for giant killers only.",
+      heading: "THE LOCKER ROOM",
+      phase: 6,
+    },
+    scout: {
+      title: "Scouting Report — Yash Sarda",
+      description:
+        "The 90-second read: who Yash is, what he builds, his stack, his projects and how to reach him.",
+      heading: "SCOUTING REPORT",
+      phase: 1,
+    },
+    notFound: {
+      title: "Out of Bounds — The Arena",
+      description: "This page is out of bounds.",
+      heading: "OUT OF BOUNDS",
+      phase: 7,
+    },
+  },
   record: { career: "RECORD 99 – 1", yours: "YOUR RECORD" },
 } as const;
 
 export type UiCopy = typeof ui;
+export type RouteKey = keyof typeof ui.routes;

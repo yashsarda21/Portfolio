@@ -11,4 +11,4 @@ export type { Content, SkillLevel } from "./schema";
 export * from "./format";
 export * from "./selectors";
 export { ui } from "./ui-copy";
-export type { UiCopy } from "./ui-copy";
+export type { RouteKey, UiCopy } from "./ui-copy";
