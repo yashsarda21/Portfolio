@@ -44,6 +44,36 @@ describe("LinkRow", () => {
   });
 });
 
+describe("LinkRow tones", () => {
+  it("outline has no ink classes and a hover volt border", () => {
+    render(
+      <LinkRow tone="outline" href="/x" glyph="↗">
+        Code on GitHub
+      </LinkRow>,
+    );
+    const link = screen.getByRole("link", { name: "Code on GitHub" });
+    expect(link.className).not.toMatch(/ink/);
+    expect(link).toHaveClass("border-line-strong", "type-mono-nav", "hover:border-volt");
+  });
+
+  it("primary is a volt fill with ink text", () => {
+    render(
+      <LinkRow tone="primary" href="/x" glyph="→">
+        Full case study
+      </LinkRow>,
+    );
+    expect(screen.getByRole("link", { name: "Full case study" })).toHaveClass(
+      "bg-volt",
+      "text-volt-ink",
+    );
+  });
+
+  it("band stays the default", () => {
+    render(<LinkRow href="/x">Plain</LinkRow>);
+    expect(screen.getByRole("link", { name: "Plain" })).toHaveClass("border-ink-a25");
+  });
+});
+
 describe("HorizontalScroller", () => {
   it("is a focusable, named list with an aria-hidden fade, and merges class overrides", () => {
     const { container } = render(

@@ -418,6 +418,10 @@ The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges wh
 | QV sticky header `rgba(5,7,10,.86)` | `--surface-bar` `.9` | `/scout` header (desktop); mobile bar keeps `.92` (`ground-a92`) as drawn |
 | Main/Intro glass `rgba(14,19,26,.62)` + border `.10` | one glass recipe `.66` + `.09` | All glass panels |
 | Main scoreboard border `#232A33` | canonical `#2A323C` (Intro, the newer board) | Scoreboard |
+| Mobile tab bar `rgba(10,13,17,.94)` | new `--surface-tabbar` (the board bezel `#0A0D11` at `.94`, exact) | `MobileTabBar` |
+| Selected-row `rgba(215,255,63,.06)` | new `--ref-volt-a06` (exact) | `SelectableList` item |
+| Replay placeholder stripes `#0B1118` / `#0F1720` | `--surface-inset` `#0B0F14` / `--surface-panel` `#0E141B` (each channel ≤5/255 off) | `MediaSlot` (`media-stripes`) |
+| Replay round chip tracking `.16em` | `type-mono-round` `.18em` | `MediaSlot` |
 
 ### 11.7 Quick View `/scout` (Phase 1)
 

@@ -519,6 +519,56 @@
     letter-spacing: 0.2em;
   }
 }
+/* Bold link label (primary LinkRow, e.g. FULL CASE STUDY). */
+@utility type-mono-nav-bold {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* Content-page h1 (Career, Highlights): 84 desktop, 48 mobile as the Mobile-Hub title is drawn. */
+@utility type-title-page {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 84px;
+  line-height: 0.85;
+  text-transform: uppercase;
+  @media (width < 48rem) {
+    font-size: 48px;
+    line-height: 0.9;
+  }
+}
+/* Ball-by-ball line: 14px at the 1.42 rhythm the Career artboard draws. */
+@utility type-body-ball {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.42;
+}
+/* Problem / approach / result cell copy: 14px at 1.5. */
+@utility type-body-cell {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* The draw's one-line description under a name: 13px on the font's own line box (a span with no line-height). */
+@utility type-body-kind {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: normal;
+}
+/* Placeholder for a missing screen recording: two stand tones in 14px 135-degree stripes (Tennis-Highlights). */
+@utility media-stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--surface-inset) 0 14px,
+    var(--surface-panel) 14px 28px
+  );
+}
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {

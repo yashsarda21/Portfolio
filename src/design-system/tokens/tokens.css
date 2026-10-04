@@ -71,6 +71,7 @@
   --rgb-white: 255 255 255;
   --rgb-ground: 5 7 10;
   --rgb-volt-ink: 10 12 8;
+  --rgb-bezel: 10 13 17;
   --rgb-stand: 14 19 26;
   --rgb-turf: 46 132 78;
   --rgb-turf-deep: 14 52 32;
@@ -78,6 +79,7 @@
 
   /* alpha ramps (replace the audit's 142 one-off rgba values) */
   --ref-volt-a04: rgb(var(--rgb-volt) / 0.04);
+  --ref-volt-a06: rgb(var(--rgb-volt) / 0.06); /* selected row on the scorecard and the draw */
   --ref-volt-a08: rgb(var(--rgb-volt) / 0.08);
   --ref-volt-a12: rgb(var(--rgb-volt) / 0.12);
   --ref-volt-a16: rgb(var(--rgb-volt) / 0.16);
@@ -104,6 +106,7 @@
   --surface-glass: rgb(var(--rgb-stand) / 0.66);
   --surface-glass-solid: rgb(var(--rgb-stand) / 0.85);
   --surface-bar: rgb(var(--rgb-ground) / 0.9);
+  --surface-tabbar: rgb(var(--rgb-bezel) / 0.94); /* mobile tab bar (Mobile-Hub) */
   --text-primary: var(--ref-floodlight);
   --text-body: var(--ref-text-1);
   --text-secondary: var(--ref-text-2);

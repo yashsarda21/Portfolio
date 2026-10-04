@@ -55,6 +55,7 @@
   --color-glass: var(--surface-glass);
   --color-glass-solid: var(--surface-glass-solid);
   --color-bar: var(--surface-bar);
+  --color-tabbar: var(--surface-tabbar);
   /* lines */
   --color-line: var(--border-subtle);
   --color-line-strong: var(--border-control);
@@ -83,6 +84,7 @@
   --color-court-line: var(--ref-court-line);
   /* alpha ramps */
   --color-volt-a04: var(--ref-volt-a04);
+  --color-volt-a06: var(--ref-volt-a06);
   --color-volt-a08: var(--ref-volt-a08);
   --color-volt-a12: var(--ref-volt-a12);
   --color-volt-a16: var(--ref-volt-a16);
