@@ -18,9 +18,12 @@ const content = JSON.parse(
   readFileSync(join(process.cwd(), "src/content/content.json"), "utf8"),
 ) as {
   careerStats: { team: string; role: string; ballByBall: string[] }[];
+  trainingAcademy: { school: string; cgpa: string; extras: string[] };
 };
 const [now, intern] = content.careerStats;
 const BALLS = [...now!.ballByBall, ...intern!.ballByBall];
+const { school, cgpa, extras } = content.trainingAcademy;
+const ACADEMY_TAB = /ACADEMY/i;
 
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
@@ -31,7 +34,7 @@ test.describe("without JavaScript", () => {
       ignoreCase: true,
     });
     const rows = page.getByRole("tab");
-    await expect(rows).toHaveCount(2);
+    await expect(rows).toHaveCount(3);
     for (const row of content.careerStats) {
       await expect(rows.filter({ hasText: row.role })).toContainText(row.team);
     }
@@ -39,12 +42,27 @@ test.describe("without JavaScript", () => {
     for (const line of BALLS) await expect(page.getByText(line, { exact: true })).toBeAttached();
   });
 
-  test("the academy row is a link to the trophy room", async ({ page }) => {
+  test("the academy is a third tab whose panel text is in the HTML, with the trophy room link inside it", async ({
+    page,
+  }) => {
     await page.goto(ROUTES.career);
-    await expect(page.getByRole("link", { name: /ACADEMY/i })).toHaveAttribute(
-      "href",
-      "/trophies#academy",
-    );
+    await expect(page.getByRole("tab", { name: ACADEMY_TAB })).toBeAttached();
+    await expect(page.getByText(school, { exact: true })).toBeAttached();
+    await expect(page.getByText(`${ui.scout.cgpa} ${cgpa}`, { exact: true })).toBeAttached();
+    for (const line of extras) await expect(page.getByText(line, { exact: true })).toBeAttached();
+    // The panels are all in the HTML (the unselected ones hidden); the link lives only in the academy's.
+    const panel = page.locator('[role="tabpanel"]', { hasText: school });
+    const link = panel.getByRole("link", {
+      name: new RegExp(ui.pages.career.academyLink),
+      includeHidden: true,
+    });
+    await expect(link).toHaveAttribute("href", "/trophies#academy");
+    await expect(
+      page.getByRole("link", {
+        name: new RegExp(ui.pages.career.academyLink),
+        includeHidden: true,
+      }),
+    ).toHaveCount(1);
   });
 });
 
@@ -65,6 +83,36 @@ test.describe("scorecard", () => {
     await expect(page.getByRole("tabpanel")).toContainText("Graduate Analyst Intern");
     await expect(page.getByText(intern!.ballByBall[0]!, { exact: true })).toBeVisible();
     await expect(page.getByText(now!.ballByBall[0]!, { exact: true })).toBeHidden();
+  });
+
+  test("the academy row selects like the others and its panel shows the school", async ({
+    page,
+  }) => {
+    await page.goto(ROUTES.career);
+    await waitForHydration(page);
+    const tabs = page.getByRole("tab");
+    await tabs.first().focus();
+    await page.keyboard.press("ArrowDown");
+    // Each press moves focus with the selection; wait for it before the next one.
+    await expect(tabs.nth(1)).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
+    const panel = page.getByRole("tabpanel");
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText(school);
+    await expect(panel).toContainText(`${ui.scout.cgpa} ${cgpa}`);
+    for (const line of extras) await expect(panel.getByText(line, { exact: true })).toBeVisible();
+    await expect(
+      panel.getByRole("link", { name: new RegExp(ui.pages.career.academyLink) }),
+    ).toHaveAttribute("href", "/trophies#academy");
+  });
+
+  test("clicking the academy row selects it instead of leaving the page", async ({ page }) => {
+    await page.goto(ROUTES.career);
+    await waitForHydration(page);
+    await page.getByRole("tab", { name: ACADEMY_TAB }).click();
+    await expect(page).toHaveURL(new RegExp(`${ROUTES.career}$`));
+    await expect(page.getByRole("tabpanel")).toContainText(school);
   });
 
   test("keeps one main landmark with the one h1", async ({ page }) => {
@@ -103,8 +151,8 @@ test.describe("desktop", () => {
       mask: [
         // The COMM line animates in and out, so its box is not stable.
         commentaryBar(page),
-        // P3 (plan, spec §11): the real page adds the "03 ACADEMY" link row the artboard does not draw.
-        page.getByRole("link", { name: /ACADEMY/i }),
+        // P3 (plan, spec §11): the real page adds the "03 ACADEMY" row the artboard does not draw.
+        page.getByRole("tab", { name: ACADEMY_TAB }),
       ],
     });
     expect(ratio).toBeLessThanOrEqual(0.02);

@@ -30,9 +30,9 @@ describe("buildCareerView", () => {
     expect(view.viewCard).toEqual({ label: ui.pages.career.viewCard, to: "/card" });
   });
 
-  it("rows: one per innings, with the artboard's columns", () => {
+  it("rows: the innings, then the academy as the next selectable row", () => {
     const { rows, defaultId } = build();
-    expect(rows.map((r) => r.id)).toEqual(["01", "02"]);
+    expect(rows.map((r) => r.id)).toEqual(["01", "02", "03"]);
     expect(defaultId).toBe("01");
     expect(rows[0]).toMatchObject({
       n: "01",
@@ -51,44 +51,64 @@ describe("buildCareerView", () => {
     });
   });
 
-  it("rows: detail has the heading, role line, every ball and the stack", () => {
+  it("rows: detail has the heading, title, role line, every ball and the stack", () => {
     const [now, intern] = build().rows;
     expect(now!.detail).toEqual({
       heading: "INNINGS 01 · BALL BY BALL",
       span: "Jul 2024 – now",
+      title: "Deutsche Bank",
       roleLine: "Software Engineer 1 · Pune, MH",
       balls: first.ballByBall,
-      shotsLabel: "SHOTS PLAYED",
-      stack: first.stack,
+      footer: { kind: "shots", label: "SHOTS PLAYED", stack: first.stack },
     });
     expect(now!.detail.balls).toHaveLength(4);
     expect(intern!.detail.heading).toBe("INNINGS 02 · BALL BY BALL");
     expect(intern!.detail.balls).toHaveLength(3);
   });
 
-  it("academy: the next innings, linking to the trophy room's academy", () => {
-    expect(build().academy).toEqual({
+  it("academy: row 03, drawn like the innings rows", () => {
+    expect(build().rows[2]).toMatchObject({
+      id: "03",
       n: "03",
       team: "PICT, Pune",
+      // The short degree keeps the row to one line; the panel shows the full one.
       role: "B.Tech IT",
       span: "2020 – 2024",
       status: "ACADEMY",
-      to: "/trophies#academy",
+      current: false,
     });
+    expect(build().rows[2]!.role).not.toBe(content.trainingAcademy.degree);
   });
 
-  it("academy: the role is the short degree, so the row stays on one line", () => {
-    const { academy } = build();
-    expect(academy!.role).toBe(content.trainingAcademy.degreeShort);
-    expect(academy!.role).not.toBe(content.trainingAcademy.degree);
+  it("academy: the panel names the school and links to the trophy room", () => {
+    const { detail } = build().rows[2]!;
+    expect(detail).toEqual({
+      heading: "INNINGS 03 · ACADEMY",
+      span: "Jul 2020 – Jun 2024",
+      title: "Pune Institute of Computer Technology (PICT)",
+      roleLine: "B.Tech, Information Technology · Distinction, SPPU",
+      balls: [
+        "CGPA 8.94",
+        "Published paper: AI-Enhanced Interview Grooming Platform",
+        "MHT-CET 99.5 percentile, State Merit Rank 709",
+      ],
+      footer: { kind: "link", label: "SEE IT IN THE TROPHY ROOM", to: "/trophies#academy" },
+    });
+    expect(detail.balls).toEqual(expect.arrayContaining([...content.trainingAcademy.extras]));
   });
 
-  it("academy: the status label comes from the interface copy", () => {
+  it("academy: the status and link labels come from the interface copy", () => {
     const renamed = {
       ...ui,
-      pages: { ...ui.pages, career: { ...ui.pages.career, academy: "SCHOOL" } },
+      pages: {
+        ...ui.pages,
+        career: { ...ui.pages.career, academy: "SCHOOL", academyLink: "GO THERE" },
+      },
     } as unknown as UiCopy;
-    expect(buildCareerView(content, renamed, ROUTES).academy!.status).toBe("SCHOOL");
+    const row = buildCareerView(content, renamed, ROUTES).rows[2]!;
+    expect(row.status).toBe("SCHOOL");
+    expect(row.detail.heading).toBe("INNINGS 03 · SCHOOL");
+    expect(row.detail.footer).toMatchObject({ kind: "link", label: "GO THERE" });
   });
 
   it("academy: numbered after the last career row", () => {
@@ -99,9 +119,10 @@ describe("buildCareerView", () => {
         { ...first, innings: "03", status: "DEBUT", start: "2022-01", end: "2022-02" },
       ],
     };
-    const view = build(extra);
-    expect(view.rows).toHaveLength(3);
-    expect(view.academy!.n).toBe("04");
+    const { rows } = build(extra);
+    expect(rows.map((r) => r.id)).toEqual(["01", "02", "03", "04"]);
+    expect(rows[3]!.n).toBe("04");
+    expect(rows[3]!.detail.heading).toBe("INNINGS 04 · ACADEMY");
   });
 
   it("current tile: follows the row with no end date", () => {

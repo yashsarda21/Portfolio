@@ -18,7 +18,7 @@
   - the COMM line and a skewed "NEXT VENUE" button
   
   This plan builds that frame once, so 2B and 2C reuse it.
-- **Career:** the cricket scorecard. Pick an innings on the left and its ball-by-ball detail shows on the right. A third row links to the Training Academy.
+- **Career:** the cricket scorecard. Pick an innings on the left and its ball-by-ball detail shows on the right. A third row is the Training Academy; its panel links on to the Trophy Room.
 - **Highlights:** the tennis "tournament draw". Pick a project and its replay, problem → approach → result and shot data show. THE FINAL is picked by default.
 - **Small screens:**
   - Tablets get a two-column version.
@@ -75,7 +75,7 @@ Measuring tape:
 |---|---|---|---|
 | P1 | The replay placeholder text reads **"AI INTERVIEW GROOMING PLATFORM · REPLAY COMING SOON"** instead of the artboard's "· ADD A 10s SCREEN RECORDING". The stripes, REPLAY chip, round chip and progress bar stay exactly as drawn. When `media` is set, a muted captioned video replaces it (spec §12). | The artboard text is a note to you, the owner. Recruiters shouldn't read it. | Yes: one `ui` string |
 | P2 | **LIVE DEMO** and **FULL CASE STUDY** rows only appear when a project has those links in content (new optional `links.demo` / `links.caseStudy`). Today none do, so only **CODE ON GITHUB ↗** shows. It goes to the project's `links.code` if set, else your GitHub profile. | The artboard links are `#` (dead links). A dead button looks broken and fails accessibility. | Yes: add URLs to `content.json` and they appear |
-| P3 | Career shows the 2 scorecard rows plus a third **"03 · ACADEMY"** link row → `/trophies#academy` (spec §11.2 #13), drawn in the idle-row style. | The cricket game's ball 3 reveals the academy innings, so the scorecard shouldn't hide it. | Yes |
+| P3 | Career shows the 2 scorecard rows plus a third **"03 · ACADEMY"** row (spec §11.2 #13). It is a normal selectable row: its panel shows the school, degree, CGPA and extras, and holds the link `SEE IT IN THE TROPHY ROOM →` to `/trophies#academy`. (Revised after the owner found a link row did not select.) | The cricket game's ball 3 reveals the academy innings, so the scorecard shouldn't hide it. | Yes |
 | P4 | The "CLUB" stat tile shows **DEUTSCHE**, from a new `player.clubShort` content field. | The tile is 170px wide, too narrow for the full club name. | Yes |
 | P5 | **Tablet (768–1199):** Career = title, stat tiles, then scorecard and detail stacked full width. Highlights = draw │ replay in 2 columns, shot data full width below. **Phone (<768):** single column, solid panels, 16px gutter. The header is the YS mark + QUICK VIEW (like Mobile-Hub), the title is 48px, the next-venue button is full width and unskewed, and the bottom tab bar is **ARENA / CAREER / PROJECTS / SKILLS / TEAM UP** with the current page in volt. Tab labels are 11px (A2). COMM is hidden on mobile, as designed. | Spec §12 derived designs. | Medium |
 | P6 | On screens wider than 1440, content stays at most 1440 wide and centred, and the stadium backdrop fills the edges. On short screens (e.g. 1440×800) the page scrolls instead of squashing panels. | Fluid pages must not stretch or clip. | Yes |
@@ -346,8 +346,9 @@ export interface CareerView {
   cols: { inn: string; team: string; role: string; span: string; status: string };
   listLabel: string;
   rows: { id: string; n: string; team: string; role: string; span: string; status: string; current: boolean;
-          detail: { heading: string; span: string; roleLine: string; balls: string[]; shotsLabel: string; stack: string[] } }[];
-  academy: { n: string; team: string; role: string; span: string; status: string; to: string } | null;   // 03 · PICT, Pune · B.Tech… · 2020 – 2024 · ACADEMY → /trophies#academy (null only in the artboard fixture)
+          detail: { heading: string; span: string; title: string; roleLine: string; balls: string[];
+                    footer: { kind: "shots"; label: string; stack: string[] } | { kind: "link"; label: string; to: string } } }[];
+  // rows 01, 02 are innings (footer "shots"); row 03 is the academy: PICT, Pune · B.Tech IT · 2020 – 2024 · ACADEMY (footer "link" → /trophies#academy)
   legend: string;
   viewCard: { label: string; to: string };
   defaultId: string;                                                            // first row
@@ -357,9 +358,9 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
 
 - [ ] **Step 1: Failing `view.test.ts`** (real content):
   - **stats:** `stats[0]` = `{ label: "PRO SINCE", value: "Jul 2024" }` (case by CSS); `stats[1].value` = `"Deutsche"`; `stats[2]` = `{ label: "CURRENT", value: "NOT OUT", tone: "volt" }`
-  - **rows:** two rows, ids `"01"`, `"02"`. Row 0: span "Jul 2024 – now"; `detail.heading` = "INNINGS 01 · BALL BY BALL"; `roleLine` = "Software Engineer 1 · Pune, MH"; `balls` = `ballByBall`.
-  - **academy:** `academy.n` "03"; `academy.to` "/trophies#academy"; `academy.status` "ACADEMY"
-  - **extra content:** with a third career row added to a cloned content, rows has 3 and `academy.n` becomes "04"
+  - **rows:** three rows, ids `"01"`, `"02"`, `"03"`. Row 0: span "Jul 2024 – now"; `detail.heading` = "INNINGS 01 · BALL BY BALL"; `roleLine` = "Software Engineer 1 · Pune, MH"; `balls` = `ballByBall`.
+  - **academy (row 03):** status "ACADEMY"; heading "INNINGS 03 · ACADEMY"; title = school full name; `balls` = the CGPA line + both extras; `footer` = link to "/trophies#academy"
+  - **extra content:** with a third career row added to a cloned content, rows has 4 and the academy row becomes "04"
   - **current tile:** the CURRENT stat follows the row with `end === null`
 
 - [ ] **Step 2: Implement** `view.ts` (pure). Reuse `getCareerRows`, `getInningsReveals` and `formatMonth`.
@@ -376,18 +377,17 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
   - **Scorecard (glass, 800 wide at ≥1200):**
     - a decorative column header (`aria-hidden`, type-mono-label scout)
     - `SelectableList.List` of rows. Grid `56px | 1.4fr | 1.2fr | 1.3fr | 110px`, gap 16, min-h 84, px 22. Number type-d3 (34) dim → volt when active; team type-d4s; role type-body-md text-2; span type-mono-stack text-2; status mono 11/.16em, volt for NOT OUT.
-    - then the academy link row (same grid, idle colours, `ArenaLink`)
     - then the footer: legend `type-mono-xs text-dim` + "VIEW PLAYER CARD →" volt `ArenaLink` → `/card`
   - **Detail (glass, rest of the width, padding 22/24):** one `SelectableList.Panel` per row:
     - header row: volt "INNINGS 01 · BALL BY BALL" + span
     - `h2` team (40/900/.95, new recipe if none fits) + role line
     - `BallByBall`
-    - "SHOTS PLAYED" + `ChipList` (Chip `size="md"` outline, h 32)
+    - innings: "SHOTS PLAYED" + `ChipList` (Chip `size="md"` outline, h 32); academy: the "SEE IT IN THE TROPHY ROOM →" volt link in the same spot
   - **Tablet:** scorecard and detail full width, stacked. **Mobile:** scorecard rows collapse to a 3-line card per row (number + status / team / role · span); the column header is hidden; the detail follows; the tab bar is fixed.
 
 - [ ] **Step 4: Fixture + stories.**
   - `CareerPage.fixture.ts` holds the exact artboard strings: header, rows and selected row 0.
-  - The academy row and the "DEUTSCHE" tile are present in real content but not drawn. In the fixture, set the academy row `null`; the view type allows `academy: … | null` for this reason, and the screen renders nothing when it's null.
+  - The academy row and the "DEUTSCHE" tile are present in real content but not drawn. The fixture simply has two rows (no academy).
   - Stories: `RealContent` (`CareerScreen`), `ArtboardParity` (`CareerPage` with the fixture). Use a memory router + `ArenaShell` decorator, as in `QuickView.stories.tsx`. Extract that decorator to `src/shell/storyDecorators.tsx` once both features need it.
 
 - [ ] **Step 5: Parity tests** `tests/stories/career.spec.ts`:
@@ -398,9 +398,9 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
 - [ ] **Step 6: Route + e2e.** `app/routes/career.tsx` = `meta = pageMeta("career")` + `<CareerScreen />`.
 
   `tests/e2e/career.spec.ts`:
-  - **No JS:** `h1` "CAREER STATS"; both rows' team names and **all 7 ball-by-ball lines** are in the HTML (`toBeAttached`); the academy link `href="/trophies#academy"`.
+  - **No JS:** `h1` "CAREER STATS"; both rows' team names and **all 7 ball-by-ball lines** are in the HTML (`toBeAttached`); the academy row is a third tab, its panel text is in the HTML and its link `href="/trophies#academy"` sits inside the panel.
   - **Keyboard:** focus the first tab, press ArrowDown; the second row is `aria-selected` and the visible panel shows "Graduate Analyst Intern".
-  - **Fidelity (desktop, real route):** full board vs `Cricket-Career` ≤2%. Mask only logged deviations: COMM line; the academy row (P3); the CLUB tile value if it differs. The rest of the real content equals the artboard; confirm by eye.
+  - **Fidelity (desktop, real route):** full board vs `Cricket-Career` ≤2%. Mask only logged deviations: COMM line; the academy row (P3) and its panel text; the CLUB tile value if it differs. The rest of the real content equals the artboard; confirm by eye.
   - **Overflow** at 390/768/1024/1200/1440 (helper).
   - **Mobile:** tab bar visible, CAREER `aria-current`; `expectTabBarClear`.
   - **Links:** REMATCH → `/arena/cricket`; NEXT VENUE → `/arena/tennis`; VIEW PLAYER CARD → `/card`.

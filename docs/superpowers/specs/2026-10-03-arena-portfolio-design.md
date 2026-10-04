@@ -376,7 +376,7 @@ Every intentional difference from the artboards is listed here, so "exact" stays
 | 10 Trophy subs | Content wording; Quick View shows all 5 trophies |
 | 11 Record | Two different things. **"Career record 99–1"** is a brand line on Intro and Player Card (constant in ui-copy). **"Your record"** on the Hub is the visitor's real saved tally. The Hub chip label becomes "YOUR RECORD". |
 | 12 Experience label | "SINCE JUL 2024" everywhere (mobile included). Player Card "SEASON" = current year, computed. |
-| 13 Academy innings | Cricket ball 3 reveals the academy entry from `trainingAcademy`. The Career scorecard keeps 2 rows plus a link to `/trophies#academy`. |
+| 13 Academy innings | Cricket ball 3 reveals the academy entry from `trainingAcademy`. The Career scorecard shows the academy as a third, selectable row (see P3). |
 | 14 Location | Per-entry `location` |
 | 15 Type scale | Consolidated scale (§5.2) replaces `--fs-h1`/`--fs-h2` |
 | 16–18 Timings | Newest source wins (§7) |
@@ -446,7 +446,7 @@ Rulings, as built:
 |---|---|---|
 | P1 | The replay placeholder reads "<name> · REPLAY COMING SOON" (one `ui` string), not the artboard's "ADD A 10s SCREEN RECORDING". Stripes, REPLAY chip, round chip and progress bar as drawn. A real recording replaces it; its name is "<name> · REPLAY". | The artboard text is a note to the owner. |
 | P2 | LIVE DEMO and FULL CASE STUDY rows appear only when content has `links.demo` / `links.caseStudy`. CODE ON GITHUB goes to `links.code`, else the GitHub profile. | The artboard links are dead `#` links. |
-| P3 | Career adds a third row "03 · ACADEMY", a link to `/trophies#academy` drawn in the row style of the list (`SelectableList.LinkRow`). Its role is `trainingAcademy.degreeShort` ("B.Tech IT") so the row stays on one line; the Trophy Room shows the full degree. | §11.2 #13: the cricket game reveals the academy innings. |
+| P3 | Career adds a third row "03 · ACADEMY", a normal selectable row (a tab like the other two) whose detail panel shows the school, degree and honours, the CGPA and extra lines, and a "SEE IT IN THE TROPHY ROOM →" link to `/trophies#academy` where the stack chips sit on the innings panels. Its role is `trainingAcademy.degreeShort` ("B.Tech IT") so the row stays on one line; the panel and the Trophy Room show the full degree. (Revised 2026-10-04: first built as a link row, which owners expected to select.) | §11.2 #13: the cricket game reveals the academy innings. |
 | P4 | The CLUB tile shows "DEUTSCHE" (`player.clubShort`). | The tile is too narrow for the full club name. |
 | P5 | Tablet (768-1199): Career = title, tiles, then scorecard and detail stacked; below 1024 the scorecard rows are the three-line card. Highlights = draw and replay in two columns, shot data below. Phone: single column, solid panels, 16px gutters, 48px title, full-width unskewed next-venue bar, bottom tab bar (ARENA / CAREER / PROJECTS / SKILLS / TEAM UP). COMM is hidden on the phone. Below 1024 the breadcrumb keeps only the hub and the current page; the middle crumbs stay in the page for assistive tech. | §12 derived designs. |
 | P6 | Content stays at most 1440 wide and centred; the backdrop fills the edges. On short screens the page scrolls. | Fluid pages must not stretch or clip. |
@@ -468,7 +468,7 @@ Design-system changes:
 | Recipes extended | `type-d1` has its drawn phone step (48/.9; it replaces a separate page-title recipe); `type-d3` steps to 30px on the phone (the scorecard number). |
 | Recipes removed (duplicates) | `type-title-page` (= `d1`), `type-mono-nav-bold` (= `mono-nav` + `font-bold`, in `LinkRow`), `type-body-line` (= `body` + `leading="font"`), `type-body-kind` (= `caption` + `leading="font"`), `type-body-ball` (14/1.42 replaced by `type-body-sm` 14/1.45: 0.42px per line). |
 | Chip | `size` is `sm` / `md` / `lg` / `meta` / `code`; `sm` and `md` are content-box (30px / 32px plus borders, as drawn). A new `text` axis: `label` (uppercase mono) or `name` (a tool name as written). The `stack` and `stack-sm` sizes are gone. `ChipList` takes a visible `heading` that names the list. |
-| New components | `PanelHeader` (the 44px / 48px header bar), `SelectableList.LinkRow` and `selectableRowVariants` (one row look for tab rows and link rows). `Text` gains `leading` and `caps`. |
+| New components | `PanelHeader` (the 44px / 48px header bar), `SelectableList.LinkRow` and `selectableRowVariants` (added, then removed 2026-10-04 when the academy row became a normal tab, so nothing uses a link row). `Text` gains `leading` and `caps`. |
 | Tokens | `--ref-volt-a06` (selected row, exact) and `--surface-tabbar` (exact), see §11.6. |
 | StatTile | Glass and volt labels use `type-mono-round` (.18em, the artboard's), not `.2em`. |
 | HUDButton | Base line box is the font's own (`leading-auto`): the artboard's text sits on it; REMATCH and QUICK VIEW were 1px high. |
@@ -480,7 +480,7 @@ Deviations from the artboards (visual tests mask or accept exactly these):
 | Where | Deviation | Check |
 |---|---|---|
 | Real routes: COMM line | Animates in and out. Masked by its own hook, `[data-commentary-bar]`. | `/career`, `/highlights` fidelity |
-| Real `/career`: academy row | P3. Masked. | `/career` fidelity |
+| Real `/career`: academy row (and its panel, when selected) | P3. Masked. | `/career` fidelity |
 | Real `/highlights`: placeholder label | P1. Masked (`tabpanel p`). | `/highlights` fidelity |
 | Real `/highlights`: draw row of the final, kind line | "Published research · PICT" in content, "Published research" on the artboard. Masked. | `/highlights` fidelity |
 | Real `/highlights`: shot-data links area | P2. Masked rect `x 1120, y 605, 268 x 170`. | `/highlights` fidelity |

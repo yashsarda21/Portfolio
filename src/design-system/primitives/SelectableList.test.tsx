@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { SelectableList, selectableRowVariants } from "./SelectableList";
+import { SelectableList } from "./SelectableList";
 
 const ROWS = ["01", "02", "03"];
 
@@ -96,34 +96,5 @@ describe("SelectableList", () => {
     await user.click(screen.getByRole("tab", { name: "Row 02" }));
     expect(screen.getByText("Detail 02")).toBeVisible();
     expect(screen.getByText("Detail 01")).not.toBeVisible();
-  });
-
-  it("draws a link as a row of the list, outside the tablist and out of the tab roles", () => {
-    render(
-      <SelectableList.Root value="01" onValueChange={() => {}}>
-        <SelectableList.List label="Innings">
-          <SelectableList.Item value="01">Row 01</SelectableList.Item>
-        </SelectableList.List>
-        <SelectableList.LinkRow href="/trophies#academy">Academy</SelectableList.LinkRow>
-      </SelectableList.Root>,
-    );
-    const link = screen.getByRole("link", { name: "Academy" });
-    expect(link).toHaveAttribute("href", "/trophies#academy");
-    expect(screen.getByRole("tablist")).not.toContainElement(link);
-    expect(screen.getAllByRole("tab")).toHaveLength(1);
-  });
-
-  it("LinkRow renders as another element and takes the row look from one shared definition", () => {
-    render(
-      <SelectableList.LinkRow as="button" type="button" className="min-h-21">
-        Custom
-      </SelectableList.LinkRow>,
-    );
-    const row = screen.getByRole("button", { name: "Custom" });
-    // The same classes the tab rows use, so changing one changes both.
-    for (const cls of selectableRowVariants().split(" ")) {
-      if (cls !== "min-h-11") expect(row).toHaveClass(cls);
-    }
-    expect(row).toHaveClass("min-h-21");
   });
 });

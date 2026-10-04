@@ -14,7 +14,7 @@ export { Chip, ChipList, chipVariants } from "./primitives/Chip";
 export type { ChipTone } from "./primitives/Chip";
 export { LinkRow } from "./primitives/LinkRow";
 export type { LinkRowTone } from "./primitives/LinkRow";
-export { SelectableList, selectableRowVariants } from "./primitives/SelectableList";
+export { SelectableList } from "./primitives/SelectableList";
 export { PanelHeader, panelHeaderVariants } from "./primitives/PanelHeader";
 export { KeyValueList } from "./primitives/KeyValueList";
 export { Legend } from "./primitives/Legend";

@@ -42,10 +42,14 @@ test("a long draw scrolls inside its panel and keeps keyboard focus in view", as
   await page.getByRole("tab", { selected: true }).focus();
   await page.keyboard.press("Home");
   await page.keyboard.press("End");
-  const [box, area] = await Promise.all([
-    page.getByRole("tab", { selected: true }).boundingBox(),
-    scroller.boundingBox(),
-  ]);
-  expect(box!.y).toBeGreaterThanOrEqual(area!.y - 1);
-  expect(box!.y + box!.height).toBeLessThanOrEqual(area!.y + area!.height + 1);
+  // The panel scrolls the tab into view after the key press, so poll until it settles.
+  await expect
+    .poll(async () => {
+      const [box, area] = await Promise.all([
+        page.getByRole("tab", { selected: true }).boundingBox(),
+        scroller.boundingBox(),
+      ]);
+      return box!.y >= area!.y - 1 && box!.y + box!.height <= area!.y + area!.height + 1;
+    })
+    .toBe(true);
 });

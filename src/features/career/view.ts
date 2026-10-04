@@ -1,11 +1,26 @@
 import {
   formatMonth,
+  formatSpan,
   getCareerRows,
   getInningsReveals,
   type Content,
   type UiCopy,
 } from "@/content";
 import type { ROUTES } from "@/shell/routes";
+
+/** What closes a panel: the stack of an innings, or the way on to the Trophy Room for the academy. */
+export type DetailFooter =
+  { kind: "shots"; label: string; stack: string[] } | { kind: "link"; label: string; to: string };
+
+export interface CareerRowDetail {
+  heading: string;
+  span: string;
+  /** The panel's h2: the team, or the school's full name. */
+  title: string;
+  roleLine: string;
+  balls: string[];
+  footer: DetailFooter;
+}
 
 export interface CareerRowView {
   /** The innings number ("01"); also the row's id in the list. */
@@ -16,30 +31,15 @@ export interface CareerRowView {
   span: string;
   status: string;
   current: boolean;
-  detail: {
-    heading: string;
-    span: string;
-    roleLine: string;
-    balls: string[];
-    shotsLabel: string;
-    stack: string[];
-  };
+  detail: CareerRowDetail;
 }
 
 export interface CareerView {
   stats: { label: string; value: string; tone: "glass" | "volt" }[];
   cols: { inn: string; team: string; role: string; span: string; status: string };
   listLabel: string;
+  /** The career innings, then the academy as the last (selectable) row. */
   rows: CareerRowView[];
-  /** The education innings, drawn as a link row after the scorecard rows. Null draws nothing. */
-  academy: {
-    n: string;
-    team: string;
-    role: string;
-    span: string;
-    status: string;
-    to: string;
-  } | null;
   legend: string;
   viewCard: { label: string; to: string };
   /** The row selected first. */
@@ -54,7 +54,7 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
   const current = careerRows.find((row) => row.isCurrent);
   const academy = getInningsReveals(c).find((reveal) => reveal.kind === "academy");
 
-  const rows = careerRows.map((row) => ({
+  const innings: CareerRowView[] = careerRows.map((row) => ({
     id: row.innings,
     n: row.innings,
     team: row.team,
@@ -65,12 +65,37 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
     detail: {
       heading: `${t.innings} ${row.innings} ${sep} ${t.ballByBall}`,
       span: row.span,
+      title: row.team,
       roleLine: `${row.role} ${sep} ${row.location}`,
       balls: row.ballByBall,
-      shotsLabel: t.shots,
-      stack: row.stack,
+      footer: { kind: "shots", label: t.shots, stack: row.stack },
     },
   }));
+
+  const school = c.trainingAcademy;
+  const rows: CareerRowView[] = academy
+    ? [
+        ...innings,
+        {
+          id: academy.n,
+          n: academy.n,
+          team: academy.team,
+          // The short degree keeps the row to one line; the panel shows the full one.
+          role: school.degreeShort,
+          span: academy.span,
+          status: t.academy,
+          current: false,
+          detail: {
+            heading: `${t.innings} ${academy.n} ${sep} ${t.academy}`,
+            span: formatSpan(school.start, school.end),
+            title: school.school,
+            roleLine: `${school.degree} ${sep} ${school.honours}`,
+            balls: [`${copy.scout.cgpa} ${school.cgpa}`, ...school.extras],
+            footer: { kind: "link", label: t.academyLink, to: `${routes.trophies}#academy` },
+          },
+        },
+      ]
+    : innings;
 
   return {
     stats: [
@@ -84,17 +109,6 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
     cols: t.cols,
     listLabel: t.listLabel,
     rows,
-    academy: academy
-      ? {
-          n: academy.n,
-          team: academy.team,
-          // The short degree keeps the row to one line; the Trophy Room shows the full one.
-          role: c.trainingAcademy.degreeShort,
-          span: academy.span,
-          status: t.academy,
-          to: `${routes.trophies}#academy`,
-        }
-      : null,
     legend: t.legend,
     viewCard: { label: t.viewCard, to: routes.card },
     defaultId: rows[0]!.id,

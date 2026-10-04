@@ -107,22 +107,6 @@ export const SelectableScorecard: StoryObj = {
               </SelectableList.Item>
             ))}
           </SelectableList.List>
-          {/* A link drawn as a row of the list: same look, but not a tab. */}
-          <SelectableList.LinkRow href="#academy" className={cn("min-h-21", ROW_COLUMNS)}>
-            <Text variant="d3" tone="dim">
-              03
-            </Text>
-            <Text variant="d4s">PICT, PUNE</Text>
-            <Text variant="body-md" tone="secondary">
-              B.Tech IT
-            </Text>
-            <Text variant="mono-stack" tone="secondary" caps>
-              2020 – 2024
-            </Text>
-            <Text variant="mono-tag" className="text-right">
-              ACADEMY
-            </Text>
-          </SelectableList.LinkRow>
         </div>
         {INNINGS.map((r) => (
           <SelectableList.Panel key={r.id} value={r.id} className="flex-1 glass p-6">

@@ -25,6 +25,7 @@ export const ui = {
       cols: { inn: "INN", team: "TEAM", role: "ROLE", span: "SPAN", status: "STATUS" },
       listLabel: "Innings",
       academy: "ACADEMY",
+      academyLink: "SEE IT IN THE TROPHY ROOM",
       legend: "NOT OUT = CURRENT ROLE · DEBUT = FIRST INNINGS",
       viewCard: "VIEW PLAYER CARD",
       innings: "INNINGS",

@@ -15,11 +15,9 @@ const ROLE_SPAN =
   "contents max-lg:col-span-2 max-lg:row-start-3 max-lg:flex max-lg:flex-wrap max-lg:items-baseline max-lg:gap-x-2";
 
 type Row = CareerView["rows"][number];
-/** What every row shows: the innings rows, and the academy link after them. */
-type Cells = Pick<Row, "n" | "team" | "role" | "span" | "status"> & { current?: boolean };
 
-/** The five cells of a row. The row itself is a tab (InningsRow) or a link (the academy). */
-function RowCells({ cells, sep }: { cells: Cells; sep: string }) {
+/** The five cells of a row; the row itself is a tab. */
+function RowCells({ cells, sep }: { cells: Row; sep: string }) {
   return (
     <>
       <Text
@@ -56,9 +54,9 @@ function RowCells({ cells, sep }: { cells: Cells; sep: string }) {
   );
 }
 
-/** The scorecard: column header, one selectable row per innings, the academy link, and the legend. */
+/** The scorecard: column header, one selectable row per innings (the academy is the last), and the legend. */
 export function Scorecard({ view }: { view: CareerView }) {
-  const { cols, academy } = view;
+  const { cols } = view;
   const sep = ui.glyph.sep;
   return (
     <Glass className="flex flex-col">
@@ -77,11 +75,6 @@ export function Scorecard({ view }: { view: CareerView }) {
           </SelectableList.Item>
         ))}
       </SelectableList.List>
-      {academy ? (
-        <SelectableList.LinkRow as={ArenaLink} to={academy.to} className={ROW}>
-          <RowCells cells={academy} sep={sep} />
-        </SelectableList.LinkRow>
-      ) : null}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-line px-5.5 py-4">
         <Text variant="mono-tag" tone="dim" leading="font">
           {view.legend}
