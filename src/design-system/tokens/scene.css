@@ -41,11 +41,19 @@
   );
   filter: blur(var(--blur-beam));
 }
+/*
+ * Cone apex aligned to the lamp span (D-1, spec §11.4). The beam's top edge covers exactly the
+ * large floodlight bank's width, so the light comes from the lamp. This is an owner-requested
+ * deviation from the Main artboard, which draws the beam offset. The cone box is 520px wide:
+ *   left  (box x 60-580):    bank 96-208   -> (96-60)/520 = 6.9231%,  (208-60)/520 = 28.4615%
+ *   right (box x 860-1380):  bank 1232-1344 -> (1232-860)/520 = 71.5385%, (1344-860)/520 = 93.0769%
+ * Bottom edges are unchanged. Banks render after cones, so the beam's start sits behind the housing.
+ */
 @utility scene-cone-left {
-  clip-path: polygon(18% 0, 32% 0, 100% 100%, 40% 100%);
+  clip-path: polygon(6.9231% 0, 28.4615% 0, 100% 100%, 40% 100%);
 }
 @utility scene-cone-right {
-  clip-path: polygon(68% 0, 82% 0, 60% 100%, 0 100%);
+  clip-path: polygon(71.5385% 0, 93.0769% 0, 60% 100%, 0 100%);
 }
 @utility scene-cone-down {
   clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);

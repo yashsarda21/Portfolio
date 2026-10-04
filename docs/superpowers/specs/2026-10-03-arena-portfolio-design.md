@@ -396,6 +396,12 @@ Every intentional difference from the artboards is listed here, so "exact" stays
 - Tennis and Badminton wins route to Giant Killer. Its rematch goes to the venue just played.
 - The Hub index adds Quick View, plus Locker Room once unlocked.
 
+### 11.4 Owner-requested design corrections
+
+| ID | Where | Change | Source |
+|---|---|---|---|
+| D-1 | Main/Intro light cones | Beam top edge starts exactly under its floodlight lamp (artboard draws it offset) | Owner request 2026-10-04 |
+
 ---
 
 ## 12. Derived designs (not in the artboards; built from existing components, flagged for Yash's review)

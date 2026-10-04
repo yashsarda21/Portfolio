@@ -41,6 +41,7 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 ## Phase 3
 - [ ] Count-up has no controlled trigger for tiles already in view at mount (they show the final value); the intro sequence needs a way to start it.
 - [ ] Main reference shows "SOFTWARE ENGINEER" with collapsed tracking (the `boot` keyframe end state, audit risk #11) — decide .42em design intent vs frozen end state; mask/log as deviation.
+- [ ] Intro light cones: apply D-1 (beam apex aligned to each lamp's span; spec §11.4). Phase 0 already applies it to the Landing stadium cones.
 
 ## When a git remote is added (Phase 7 at latest)
 - [ ] CI: add `permissions: contents: read`, a concurrency cancel group, and `if-no-files-found` on artifact upload; confirm the workflow passes on Ubuntu.
