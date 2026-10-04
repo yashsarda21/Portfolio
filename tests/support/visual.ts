@@ -141,6 +141,61 @@ export async function expectMatchesArtboard(
   return ratio;
 }
 
+/**
+ * Compare named boxes (CSS px on the board) of two same-size images, each with its own ratio.
+ * Pure: the diff images are not written. Used where a page differs from its board on purpose (a logged
+ * deviation, spec §11) and the rest of it must still match: the boxes are the parts that must.
+ */
+export function diffBoxes(
+  actual: PNG,
+  expected: PNG,
+  boxes: Record<string, Rect>,
+  threshold = 0.1,
+): Record<string, number> {
+  const ratios: Record<string, number> = {};
+  for (const [name, box] of Object.entries(boxes)) {
+    ratios[name] = diffImages(cropPng(actual, box), cropPng(expected, box), [], threshold).ratio;
+  }
+  return ratios;
+}
+
+export interface BoxMatchOptions {
+  /** Largest allowed share of differing pixels in each box (default 0.02, spec §9.1). */
+  maxDiffRatio?: number;
+  threshold?: number;
+}
+
+/** Screenshot the page and compare only the named boxes with the same boxes of the artboard reference. */
+export async function expectBoxesMatchArtboard(
+  page: Page,
+  artboard: string,
+  boxes: Record<string, Rect>,
+  options: BoxMatchOptions = {},
+): Promise<Record<string, number>> {
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error("expectBoxesMatchArtboard needs a fixed viewport");
+  const expected = await readReference(artboard, viewport.width, viewport.height);
+  await page.evaluate(() => document.fonts.ready);
+  const actual = PNG.sync.read(await page.screenshot({ animations: "disabled", caret: "hide" }));
+  const ratios = diffBoxes(actual, expected, boxes, options.threshold);
+  const max = options.maxDiffRatio ?? 0.02;
+  if (process.env.LOG_RATIOS) console.log(`[ratio] ${artboard} boxes`, JSON.stringify(ratios));
+  const over = Object.entries(ratios).filter(([, ratio]) => ratio > max);
+  if (over.length > 0) {
+    const dir = join(process.cwd(), "test-results/visual");
+    await mkdir(dir, { recursive: true });
+    const base = join(dir, `${artboard}@${viewport.width}x${viewport.height}-boxes`);
+    await writeFile(`${base}.actual.png`, PNG.sync.write(actual));
+    await writeFile(`${base}.expected.png`, PNG.sync.write(expected));
+    throw new Error(
+      `${artboard}: ` +
+        over.map(([name, r]) => `${name} ${(r * 100).toFixed(2)}%`).join(", ") +
+        ` of pixels differ (limit ${(max * 100).toFixed(2)}%). See ${base}.actual.png`,
+    );
+  }
+  return ratios;
+}
+
 export interface RegionMatchOptions {
   /** Size of the reference board, e.g. { width: 1440, height: 3300 } (default: page viewport). */
   reference?: { width: number; height: number };

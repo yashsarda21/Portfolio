@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
-import { expectMatchesArtboard } from "../support/visual";
+import { expectBoxesMatchArtboard } from "../support/visual";
 import {
   expectMainLandmarks,
   expectNextButtonOneLine,
@@ -17,11 +17,12 @@ const content = JSON.parse(
   readFileSync(join(process.cwd(), "src/content/content.json"), "utf8"),
 ) as {
   trophyRoom: { type: string; title: string; description: string }[];
-  trainingAcademy: { school: string };
+  trainingAcademy: { school: string; shortName: string };
 };
 const WON = content.trophyRoom.filter((t) => t.type !== "locked");
 const NEXT = new RegExp(ui.pages.trophies.next);
-const HINT = ui.pages.trophies.lockedHint;
+/** The locked trophy's tab: its title, then the shelf line (named from its own text, like every tab). */
+const LOCKED = /Giant Killer/;
 const ACADEMY = { level: 2, name: ui.scout.academy.title } as const;
 /** The heading the `#academy` link must bring into view. */
 const academyHeading = (page: Page) => page.getByRole("heading", ACADEMY);
@@ -66,14 +67,14 @@ test.describe("without JavaScript", () => {
     expect(WON).toHaveLength(5);
     for (const t of WON)
       await expect(page.getByText(t.description, { exact: true })).toBeAttached();
-    // The locked trophy is on the shelf (disabled, announced with its hint) and has no description.
-    await expect(tab(page, `Giant Killer, ${HINT}`)).toBeDisabled();
+    // The locked trophy is on the shelf (disabled, no panel) and has no description.
+    await expect(tab(page, LOCKED)).toBeDisabled();
+    await expect(tab(page, LOCKED)).not.toHaveAttribute("aria-controls");
     await expect(page.getByRole("tab")).toHaveCount(6);
     await expect(academyHeading(page)).toBeVisible();
     await expect(page.locator("#academy")).toHaveCount(1);
-    await expect(
-      page.getByText(content.trainingAcademy.school.replace(/ \(PICT\)$/, "")),
-    ).toBeVisible();
+    const { school, shortName } = content.trainingAcademy;
+    await expect(page.getByText(school.replace(` (${shortName})`, ""))).toBeVisible();
   });
 });
 
@@ -101,13 +102,13 @@ test.describe("trophy cabinet", () => {
     await expect(tab(page, /System Design Blogs/i)).toHaveAttribute("aria-selected", "true");
     await expect(tab(page, /System Design Blogs/i)).toBeFocused();
     await expect(page.getByRole("tabpanel")).toContainText("5 / 5");
-    await expect(tab(page, `Giant Killer, ${HINT}`)).toHaveAttribute("aria-selected", "false");
+    await expect(tab(page, LOCKED)).toHaveAttribute("aria-selected", "false");
   });
 
   test("the locked trophy cannot be selected by click", async ({ page }) => {
     await page.goto(ROUTES.trophies);
     await waitForHydration(page);
-    const locked = tab(page, `Giant Killer, ${HINT}`);
+    const locked = tab(page, LOCKED);
     await locked.click({ force: true });
     await expect(locked).toHaveAttribute("aria-selected", "false");
     await expect(page.getByRole("tab").first()).toHaveAttribute("aria-selected", "true");
@@ -147,6 +148,10 @@ test.describe("the academy hash", () => {
     await page.goto(`${ROUTES.trophies}#academy`);
     await waitForHydration(page);
     await expectAcademyLanded(page);
+    // The browser starts keyboard navigation at the fragment's target: Tab goes on to the control after the
+    // academy (the way on to the player card), not back to the cabinet at the top of the page.
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("link", { name: NEXT })).toBeFocused();
   });
 
   for (const reducedMotion of ["no-preference", "reduce"] as const) {
@@ -164,6 +169,8 @@ test.describe("the academy hash", () => {
         ignoreCase: true,
       });
       await expectAcademyLanded(page);
+      // Focus lands where the page scrolled to: the academy's heading, not the page's h1.
+      await expect(academyHeading(page)).toBeFocused();
     });
   }
 });
@@ -182,9 +189,9 @@ test.describe("motion", () => {
           ),
         ),
       );
-    expect(await turning()).toEqual([true, false, false, false, false, false]);
+    await expect.poll(turning).toEqual([true, false, false, false, false, false]);
     await tab(page, /99\.5 Percentile/i).click();
-    expect(await turning()).toEqual([false, true, false, false, false, false]);
+    await expect.poll(turning).toEqual([false, true, false, false, false, false]);
   });
 
   test("with reduced motion nothing turns and the spotlight is simply lit", async ({ page }) => {
@@ -249,23 +256,21 @@ test.describe("gold", () => {
 test.describe("desktop", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 768, "desktop layout");
 
-  test("matches the Trophy-Room artboard", async ({ page }) => {
+  test("matches the Trophy-Room artboard, region by region", async ({ page }) => {
     await page.goto(ROUTES.trophies);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    const ratio = await expectMatchesArtboard(page, "Trophy-Room", {
-      maxDiffRatio: 0.02,
-      // T1 (plan, spec 11): the real page adds the PLAYER CARD button, so the footer takes 110px and the cabinet
-      // and academy end 74px higher than drawn; the academy's meta line also carries ", SPPU" and wraps.
-      // Compared in full: the header, the title, the first shelf and the plinth panel. Masked (in artboard
-      // pixels, painted onto both images): shelf 2, the academy below its title, and the footer strip. The
-      // artboard-copy story compares the whole board.
-      maskRects: [
-        { x: 36, y: 558, width: 872, height: 306 },
-        { x: 930, y: 600, width: 474, height: 264 },
-        { x: 0, y: 790, width: 1440, height: 110 },
-      ],
+    // T1 (plan, spec 11): the real page adds the PLAYER CARD button, so the footer takes 110px and the cabinet
+    // and the academy end 74px higher than drawn (shelf 2 moves up with them). So only the parts that still
+    // sit where they are drawn are compared, each with its own 2%, in artboard pixels: the header and title,
+    // shelf 1, the plinth panel and the academy card down to where the real card ends (its contents are
+    // top-anchored, so they do not move). The artboard-copy story compares the whole board, shelf 2 included.
+    const ratios = await expectBoxesMatchArtboard(page, "Trophy-Room", {
+      "header and title": { x: 0, y: 0, width: 1440, height: 236 },
+      "shelf 1": { x: 36, y: 236, width: 872, height: 322 },
+      "plinth panel": { x: 930, y: 236, width: 474, height: 262 },
+      academy: { x: 930, y: 514, width: 474, height: 276 },
     });
-    expect(ratio).toBeLessThanOrEqual(0.02);
+    expect(Object.keys(ratios)).toHaveLength(4);
   });
 
   test("never scrolls sideways", async ({ page }) => {

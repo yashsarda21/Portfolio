@@ -1,6 +1,6 @@
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
-import { cropPng, diffImages, readReference, readRegions } from "./visual";
+import { cropPng, diffBoxes, diffImages, readReference, readRegions } from "./visual";
 
 function solid(width: number, height: number, rgb: [number, number, number]): PNG {
   const png = new PNG({ width, height });
@@ -46,6 +46,20 @@ describe("diffImages", () => {
     expect(() => diffImages(solid(10, 10, [0, 0, 0]), solid(20, 10, [0, 0, 0]), [])).toThrow(
       /Size mismatch/,
     );
+  });
+});
+
+describe("diffBoxes", () => {
+  it("gives each box its own ratio and ignores what lies outside the boxes", () => {
+    const actual = solid(100, 100, [5, 7, 10]);
+    paintBlock(actual, 0, 0, 10, [215, 255, 63]); // inside "a": 10x10 of 20x20 box = 25%
+    paintBlock(actual, 60, 60, 10, [215, 255, 63]); // outside every box
+    const ratios = diffBoxes(actual, solid(100, 100, [5, 7, 10]), {
+      a: { x: 0, y: 0, width: 20, height: 20 },
+      b: { x: 30, y: 30, width: 20, height: 20 },
+    });
+    expect(ratios.a).toBeCloseTo(0.25, 5);
+    expect(ratios.b).toBe(0);
   });
 });
 

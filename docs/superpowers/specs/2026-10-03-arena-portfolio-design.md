@@ -487,6 +487,42 @@ Deviations from the artboards (visual tests mask or accept exactly these):
 | Highlights, 1200 and up | The gap before the shot data is 22px like the other gap; the artboard's is 24px (its draw is content-box, so the 2px border is added to one side only). | Accepted if fidelity stays ≤ 2% (it was 0.02-0.08% with the margin) |
 | Career detail balls | 14px at 1.45 (`type-body-sm`); the artboard draws 1.42. | Accepted if fidelity stays ≤ 2% (about 3px over the whole detail panel) |
 
+### 11.9 Content pages: Attributes and Trophy Room (Phase 2B)
+
+Rulings, as built:
+
+| ID | Decision | Why |
+|---|---|---|
+| T1 | Trophy Room gets the "PLAYER CARD →" next button (§11.3). The cabinet and academy end 74px higher than drawn to make room. The artboard-copy story keeps the drawn layout and compares the whole board. | Every room has a way forward. |
+| T2 | Shelf lines use the short artboard wording (`shortSub`); the ON THE PLINTH panel shows the full content wording. | The 290px shelf column fits one line only with the short form. |
+| T3 | GIANT KILLER stays the dashed locked outline: a native `disabled` tab, named by its own title and shelf line ("Giant Killer, Hidden · beat Yash to unlock") and announced "unavailable". It carries no `aria-controls` (it has no panel) and no copy of its own in `ui`. The gold trophy comes in Phase 6. | One wording, from content (no `lockedHint` to drift). |
+| T4 | New content fields `player.position`, `player.playingStyle`; languages and kit bag from content. | No hard-coded copy. |
+| T5 (amended) | The portrait is copied once into `src/assets/` (hashed name). **It loads eagerly on the phone too**: it is above the fold there (about y 250-490 at 390x844), and lazy loading would delay the image a visitor sees first. Lazy only where a frame starts below the fold (`PortraitFrame.loading`; the Player Card chooses). Width and height are set, so there is no layout shift. | Amended after the Phase 2B review. |
+| T6 | Phone: Attributes = profile, then the groups stacked; Trophy Room = trophies in a 2-column grid (80% art), a light bar between the rows, then the plinth panel and the academy. Tablet: Attributes profile above a 2x2 grid whose skill rows stay level when notes wrap (`SkillGroup alignRows`, subgrid, 768-1199 only); Trophy Room cabinet full width, detail and academy side by side below. | §12 derived designs. |
+| R7 | `trainingAcademy.honoursShort` ("Distinction", optional; the selector falls back to `honours`) is the Trophy Room's meta line, which the 474px card shows on one line as drawn. `/career` and `/scout` keep the full honours; the pennant on the shelf already says "SPPU · B.TECH 2024". | Same pattern as R6 (`degreeShort`). |
+| R8 | `getAcademy().name` drops only the exact suffix " (shortName)". | A different trailing parenthetical is real information. |
+| H1 | After a client navigation to `/page#section`, focus goes to the section's heading (or the target itself when it has none); without a hash it goes to the page h1 as before (`RouteAnnouncer`). | The page has scrolled to the section, so the reading cursor and the next Tab start there. A cold load is handled by the browser. |
+
+Design-system changes:
+
+| Change | Detail |
+|---|---|
+| New recipes (kept) | `type-title-panel` (36/.95), `type-title-shelf` (20/.04em), `type-title-group` (32/.02em), `type-monogram`, `type-name` (Archivo 18/600), `type-mono-note` (11, untracked), `type-mono-run` (12/1.6). Each has no near-equivalent. |
+| Recipes removed (duplicates) | `type-mono-shot` (= `type-mono-round`, identical on desktop; the phone step's .14em also helps the shot line fit), `type-position` (= `type-d2s`; the badge's top edge absorbs the 2.6px half-leading), `type-player-name` (= `type-d3`; the name is 30px on the phone like the scorecard number, not 34). |
+| Moved out of the type scale | `type-glyph-lg/md/sm` are art lettering used only inside `Trophy`: now `trophy-glyph-lg/md/sm` scene utilities in `scene.css`, no longer `Text` variants or catalogued as typography. |
+| New utilities | `scroll-mt-header` (`calc(var(--header-h) + 20px)`, shared by `FluidSection` and `AcademyCard`; the 128px wrapped-header offset stays in `FluidSection`), `scene-zoom-sm` (the phone's 80% scene pieces), `trophy-cup-shape` (the bowl radius, shared by the cup and the locked outline). |
+| Scene | `Trophy` and `Spotlight` take `scale="art" \| "phone"` (phone: 80% below 768px, real layout size, trophies in a stage of one height). `ShelfLight` takes `placement="absolute" \| "row"`; as a row it is a grid item that follows the shelf above it. |
+| Components | `SelectableList.Item` is one `cva` (`variant: row \| bare`); a `disabled` item has no `aria-controls`. `SkillGroup alignRows`. `KeyValueList variant="profile"`, `SkyGlow tone="venue"`, `SelectableList.Item variant="bare"` and `SkillGroup` stay (no near-equivalent). `AcademyCard` balances its aside and meta. |
+| Gold | Defined only in `[data-zone="trophy"]`; `contrast.test.ts` covers gold, scout-grey, dim, text and volt on the cabinet gradient, on glass over the trophy ground and on the academy gradient. |
+
+Deviations from the artboards (visual tests accept exactly these):
+
+| Where | Deviation | Check |
+|---|---|---|
+| Real `/trophies` | T1 and the footer: shelf 2 and the academy's lower part move up 74px, and the bottom strip holds the button. The route compares four regions of the board, each at its own 2%: header and title (0,0,1440,236), shelf 1 (36,236,872,322), plinth panel (930,236,474,262) and the academy down to the real card's end (930,514,474,276). Nothing is masked; shelf 2 is proven by the artboard-copy story. | `/trophies` fidelity (`expectBoxesMatchArtboard`) |
+| Real `/attributes` | The COMM line (masked by its hook). Content wording in the profile and skill notes. | `/attributes` fidelity |
+| Attributes profile name | 34px at .95, drawn at 1.0 (`type-d3`). | Accepted: the story and route stay under 2% |
+
 ---
 
 ## 12. Derived designs (not in the artboards; built from existing components, flagged for Yash's review)

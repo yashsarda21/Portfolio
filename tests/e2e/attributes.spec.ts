@@ -102,6 +102,27 @@ test.describe("desktop", () => {
     await page.goto(ROUTES.attributes);
     await expectNextButtonOneLine(page, NEXT, [768, 1024, 1440]);
   });
+
+  test("on a tablet, groups side by side start their skill bars at the same height", async ({
+    page,
+  }) => {
+    await page.goto(ROUTES.attributes);
+    const listTop = async (name: string) =>
+      (await page.getByRole("region", { name }).getByRole("list").boundingBox())!.y;
+    for (const width of [768, 1024]) {
+      await page.setViewportSize({ width, height: 1024 });
+      // Two columns: groups 0 and 1 share a row, 2 and 3 the next. Their notes wrap differently.
+      for (const [a, b] of [
+        [0, 1],
+        [2, 3],
+      ] as const) {
+        expect(
+          await listTop(groups[a]!.name),
+          `${width}px: ${groups[a]!.name} / ${groups[b]!.name}`,
+        ).toBeCloseTo(await listTop(groups[b]!.name), 0);
+      }
+    }
+  });
 });
 
 test.describe("phone", () => {

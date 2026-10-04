@@ -61,9 +61,9 @@
 |---|---|---|---|
 | T1 | Trophy Room gets the **"PLAYER CARD →"** next button bottom-right, like every other content page (spec §11.3). The cabinet and academy panels end 74px higher than drawn to make room. The artboard-copy story keeps the drawn layout, so the pixel check stays exact. | Every room has a way forward. | Yes |
 | T2 | Shelf labels use the **short** artboard wording ("MHT-CET 2020 · STATE RANK 709", "AI INTERVIEW PLATFORM · JOURNAL"), stored in content as a new optional `shortSub`. The ON THE PLINTH panel shows the full content wording. | The 290px shelf column can't fit the long sub on one line. Both wordings come from your data. | Yes |
-| T3 | **GIANT KILLER** stays the dashed locked outline, a disabled tab announced as "hidden, beat Yash to unlock". The gold unlocked trophy comes in Phase 6, once a visitor actually wins. | Spec §12. | — |
+| T3 | **GIANT KILLER** stays the dashed locked outline, a disabled tab named by its own title and shelf line ("Giant Killer, Hidden · beat Yash to unlock"; amended after review: no separate `lockedHint` string, no `aria-controls`). The gold unlocked trophy comes in Phase 6, once a visitor actually wins. | Spec §12. | — |
 | T4 | Attributes profile: new content fields `player.position: "SE"` and `player.playingStyle: "Full-stack"`. Languages and kit bag come from content (the kit bag in content order). | No hard-coded copy. | Yes |
-| T5 | The portrait (`rest.webp`, 66KB) is copied once into `src/assets/` and served with a hashed name. It's lazy-loaded below the fold on phones. | App code never imports `design/handoff`. Player Card reuses it. | — |
+| T5 | The portrait (`rest.webp`, 66KB) is copied once into `src/assets/` and served with a hashed name. It loads eagerly on the phone too: the portrait is above the fold there (about y 250-490 at 390x844), so lazy loading would delay the first thing a visitor sees. Lazy only where a frame starts below the fold (`PortraitFrame.loading`). *(Amended after the final review.)* | App code never imports `design/handoff`. Player Card reuses it. | — |
 | T6 | **Phone (<768):** Attributes = profile card, then the 4 groups stacked; tab bar SKILLS current. Trophy Room = trophies in a 2-column grid (smaller art), then ON THE PLINTH, then the Academy; no tab is current. **Tablet:** Attributes profile full width above a 2×2 grid; Trophy Room cabinet full width, with detail and academy side by side below. | Spec §12 derived designs. | Medium |
 
 ---
@@ -108,7 +108,7 @@ All Phase 0–2A constraints apply. Key ones:
 5. **Images:**
    - the portrait has meaningful alt text ("Yash Sarda") only where it's the one portrait on the page; decorative duplicates are `alt=""`
    - it never causes horizontal overflow
-   - it doesn't block first paint (`loading="lazy"` on phones, explicit width/height)
+   - it doesn't shift the layout (explicit width/height); it is eager on the phone, where it is above the fold (T5, amended)
    - Tests: Task 2 component; Task 3 e2e overflow
 
 ---
