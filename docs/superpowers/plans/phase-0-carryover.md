@@ -26,15 +26,16 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] Phase 3 / 7: lazy-load GSAP (dynamic import in `go()` plus idle prefetch) and check Lighthouse.
 - [ ] Phase 4 / 5: match record shape guard/merge, and migrate on a version bump (`arena:v1`).
 - [ ] Phase 7: the host must serve a real Out-of-Bounds HTML page with HTTP 404 (not the SPA fallback's 200); verify it.
+- [ ] Phase 7: `og:image`, `og:url` and `<link rel="canonical">` from the production domain (env); Phase 1 ships og:title/description/type/site_name + twitter:card only.
 - [ ] Phase 7: CSP needs build-time hashes for React Router's inline scripts and the stage-scale script.
 - [ ] Optional: bidirectional check between `ROUTES` (src/shell/routes.ts) and `app/routes.ts`.
 
 ## Before Phase 1's first pixel diff
-- [ ] Log token merges that moved values >~2% in spec §11 (mobile glass .7/.8→.85, QV sticky bar .86→.9, Main/Intro glass .62/.10→.66/.09, Scoreboard border canonical #2A323C vs Main #232A33).
-- [ ] Tall boards (QuickView 1440×3300): add viewport-sized crops or full-page comparison to `expectMatchesArtboard`; add a friendly "run `pnpm references`" missing-reference error; document that `diffImages` mutates its inputs.
-- [ ] Font parity: references load Big Shoulders 600 and JetBrains Mono 500 but the app doesn't ship them — add the faces or log as deviation (affects Main, Mobile-Landing, QuickView, Trophy-Room).
-- [ ] `Link.href` regex accepts `/\evil.com` — tighten to `^\/(?![\/\\])`.
-- [ ] `test:visual-refs` overlaps `test:e2e` and starts the full webServer — drop or narrow it.
+- [x] Log token merges that moved values >~2% in spec §11 (mobile glass .7/.8→.85, QV sticky bar .86→.9, Main/Intro glass .62/.10→.66/.09, Scoreboard border canonical #2A323C vs Main #232A33). → spec §11.6
+- [x] Tall boards (QuickView 1440×3300): add viewport-sized crops or full-page comparison to `expectMatchesArtboard`; add a friendly "run `pnpm references`" missing-reference error; document that `diffImages` mutates its inputs. → `expectRegionMatchesArtboard` + renderer `*.regions.json` (Phase 1 Task 1)
+- [x] Font parity: references load Big Shoulders 600 and JetBrains Mono 500 but the app doesn't ship them — add the faces or log as deviation (affects Main, Mobile-Landing, QuickView, Trophy-Room). → no artboard element uses them; renderer now loads only shipped weights
+- [x] `Link.href` regex accepts `/\evil.com` — tighten to `^\/(?![\/\\])`.
+- [x] `test:visual-refs` overlaps `test:e2e` and starts the full webServer — drop or narrow it.
 
 ## Phase 1 / 2
 - [ ] StatTile label tracking is .18em in the tile vs .20em on the artboard (Phase 1/2, first pixel diff of a stats board).

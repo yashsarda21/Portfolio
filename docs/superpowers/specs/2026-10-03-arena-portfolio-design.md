@@ -410,6 +410,27 @@ The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges wh
 |---|---|---|
 | Reduced-motion navigation (§4.6) | Navigation is instant: no cover, no reveal, no crossfade. §4.6 said a 150ms crossfade; §7's "jump to end state" rule was chosen instead. | Fewer moving parts, nothing to get stuck; focus and the announcement still run. |
 
+### 11.6 Token merges that moved a value by more than ~2% (§5.1)
+
+| Artboard value | Token used | Where |
+|---|---|---|
+| Mobile glass `rgba(14,19,26,.7)` / `.8` | `--surface-glass-solid` `.85` | Mobile HUD buttons, mobile panels |
+| QV sticky header `rgba(5,7,10,.86)` | `--surface-bar` `.9` | `/scout` header (desktop); mobile bar keeps `.92` (`ground-a92`) as drawn |
+| Main/Intro glass `rgba(14,19,26,.62)` + border `.10` | one glass recipe `.66` + `.09` | All glass panels |
+| Main scoreboard border `#232A33` | canonical `#2A323C` (Intro, the newer board) | Scoreboard |
+
+### 11.7 Quick View `/scout` (Phase 1)
+
+| ID | Decision | Why |
+|---|---|---|
+| R1 | Hero sentence = the artboard's wording, stored as `content.scout.summary` / `summaryShort` (not `player.summary`). Amends §11.2 #6 for `/scout` only. | Names employer and stack, which recruiters scan for. Still content, not code. |
+| R2 | Projects list strongest first (FINAL → SF → QF), as drawn and labelled. §11.2 #3 applies to the Highlights reel. | The section is labelled "STRONGEST FIRST". |
+| R3 | Below 768px `/scout` is the Mobile-QuickView layout; the sections the artboard doesn't draw continue in the same mobile style. The long career bullets and "MORE ON GITHUB" are mobile-hidden (GitHub stays reachable in the Team Up band). | D2: every screen has its mobile layout. |
+| R4 | With `player.resumePdf: null`: hero CTA "REQUEST RESUME", band row "Request resume ↗" (mailto). Switches to "VIEW PLAYER CARD (PDF)" / "Resume (PDF) ↓" when a public PDF is set. | §12 security rule. Real-route region tests mask the CTA and resume row only. |
+| R6 | Short labels added to content: `shortRole`, highlight `scoutTag` / `shortName` / `scoutShort`, academy `degreeShort`, `scout.craftAndTools`. Kudo Board and Power BI `scoutShort` lines are **derived copy, flagged for review**. | No hard-coded copy, exact drawn labels. |
+| Content wording | Career bullets (`ballByBall`), stack order and the 5 trophy rows come from content (§11.2 #4, #5, #10), so the real page's Career/Trophies bodies differ in wording and height from the artboard. Layout parity for those blocks is proven by the artboard-copy fixture story (≤2%). | Content wins. |
+| Visual masks | Mobile parity masks only: A2 lines (10→11px mono: eyebrow, chips, career dates, "2 INNINGS", round labels), A10 (SWIPE hint, scroller fade), and a strip at `y 734–766` where the continuing page (R3) shows through the bottom bar's fade. | Logged deviations only. |
+
 ---
 
 ## 12. Derived designs (not in the artboards; built from existing components, flagged for Yash's review)
