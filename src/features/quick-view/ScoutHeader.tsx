@@ -1,5 +1,4 @@
-import { BrandLockup, FluidContainer, HUDButton, MonoLabel } from "@/design-system";
-import { cn } from "@/lib/cn";
+import { BrandLockup, FluidContainer, HUDButton, MonoLabel, Text } from "@/design-system";
 import { ArenaLink } from "@/shell/ArenaLink";
 import type { ScoutReport } from "./report";
 
@@ -10,7 +9,7 @@ export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
       <FluidContainer className="flex min-h-17 flex-wrap items-center justify-between gap-5 max-md:h-15 max-md:min-h-0">
         <div className="flex items-center gap-3">
           <BrandLockup size="md" mark={header.mark} className="max-md:hidden" />
-          <MonoLabel variant="mono-kicker" className="leading-auto">
+          <MonoLabel variant="mono-kicker" leading="font">
             {header.label}
           </MonoLabel>
         </div>
@@ -33,17 +32,18 @@ export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
         >
           {header.enter.label}
         </HUDButton>
-        <ArenaLink
+        <Text
+          as={ArenaLink}
           to={header.enter.to}
-          className={cn(
-            "inline-flex h-11 items-center type-mono-xs text-volt hover:text-volt-hover md:hidden",
-            "leading-auto",
-          )}
+          variant="mono-xs"
+          tone="volt"
+          leading="font"
+          className="inline-flex h-11 items-center hover:text-volt-hover md:hidden"
         >
           <span>
             {header.enterShort} <span aria-hidden="true">{header.next}</span>
           </span>
-        </ArenaLink>
+        </Text>
       </FluidContainer>
     </header>
   );

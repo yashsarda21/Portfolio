@@ -8,10 +8,10 @@ export function InningsDetail({ rows }: { rows: CareerView["rows"] }) {
       {rows.map(({ id, team, detail }) => (
         <SelectableList.Panel key={id} value={id} className="flex flex-1 flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <Text variant="mono-label" tone="volt" className="leading-auto">
+            <Text variant="mono-label" tone="volt" leading="font">
               {detail.heading}
             </Text>
-            <Text variant="mono-xs" tone="label" className="leading-auto">
+            <Text variant="mono-xs" tone="label" leading="font">
               {detail.span}
             </Text>
           </div>
@@ -19,17 +19,18 @@ export function InningsDetail({ rows }: { rows: CareerView["rows"] }) {
             <Heading level={2} variant="title-detail">
               {team}
             </Heading>
-            <Text variant="body-line" tone="secondary">
+            <Text variant="body" tone="secondary" leading="font">
               {detail.roleLine}
             </Text>
           </div>
           <BallByBall items={detail.balls} />
-          <div className="mt-auto flex flex-col gap-2.5">
-            <Text variant="mono-label" tone="label" aria-hidden="true" className="leading-auto">
-              {detail.shotsLabel}
-            </Text>
-            <ChipList items={detail.stack} size="stack" label={detail.shotsLabel} />
-          </div>
+          <ChipList
+            items={detail.stack}
+            size="md"
+            text="name"
+            heading={detail.shotsLabel}
+            className="mt-auto"
+          />
         </SelectableList.Panel>
       ))}
     </Glass>

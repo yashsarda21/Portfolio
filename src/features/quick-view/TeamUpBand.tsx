@@ -14,7 +14,7 @@ export function TeamUpBand({ teamUp }: { teamUp: ScoutReport["teamUp"] }) {
         className="items-end gap-9 bg-volt px-[clamp(20px,4vw,56px)] py-12 text-volt-ink max-md:py-8"
       >
         <div className="flex flex-col gap-3">
-          <MonoLabel variant="mono-eyebrow" tone="ink-2" className="leading-auto">
+          <MonoLabel variant="mono-eyebrow" tone="ink-2" leading="font">
             {teamUp.eyebrow}
           </MonoLabel>
           <Heading level={2} variant="band" tone="ink" id="teamup-title">

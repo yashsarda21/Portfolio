@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { content, ui, type Content } from "@/content";
+import { content, ui, type Content, type UiCopy } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { buildCareerView } from "./view";
 
@@ -70,11 +70,25 @@ describe("buildCareerView", () => {
     expect(build().academy).toEqual({
       n: "03",
       team: "PICT, Pune",
-      role: content.trainingAcademy.degree,
+      role: "B.Tech IT",
       span: "2020 – 2024",
       status: "ACADEMY",
       to: "/trophies#academy",
     });
+  });
+
+  it("academy: the role is the short degree, so the row stays on one line", () => {
+    const { academy } = build();
+    expect(academy!.role).toBe(content.trainingAcademy.degreeShort);
+    expect(academy!.role).not.toBe(content.trainingAcademy.degree);
+  });
+
+  it("academy: the status label comes from the interface copy", () => {
+    const renamed = {
+      ...ui,
+      pages: { ...ui.pages, career: { ...ui.pages.career, academy: "SCHOOL" } },
+    } as unknown as UiCopy;
+    expect(buildCareerView(content, renamed, ROUTES).academy!.status).toBe("SCHOOL");
   });
 
   it("academy: numbered after the last career row", () => {

@@ -19,13 +19,14 @@ export function TrophiesSection({
                 key={row.title}
                 className="flex justify-between gap-4 border-b border-line py-2.5 max-md:flex-col max-md:gap-1"
               >
-                <Text variant="body" tone="primary" className="shrink-0 leading-auto">
+                <Text variant="body" tone="primary" leading="font" className="shrink-0">
                   {row.title}
                 </Text>
                 <Text
                   variant="mono-stack"
                   tone="label"
-                  className="text-right uppercase max-md:text-left"
+                  caps
+                  className="text-right max-md:text-left"
                 >
                   {row.sub}
                 </Text>
@@ -36,13 +37,13 @@ export function TrophiesSection({
         <div className="flex flex-col gap-4">
           <SectionHeader id="academy-title" size="md" title={academy.title} />
           <div className="flex flex-col gap-1 border-b border-line py-2.5">
-            <Text variant="body-lg" className="font-semibold leading-auto">
+            <Text variant="body-lg" leading="font" className="font-semibold">
               {academy.school}
             </Text>
-            <Text variant="body-md" tone="secondary" className="leading-auto">
+            <Text variant="body-md" tone="secondary" leading="font">
               {academy.degreeLine}
             </Text>
-            <Text variant="mono-stack" tone="label" className="uppercase">
+            <Text variant="mono-stack" tone="label" caps>
               {academy.datesLine}
             </Text>
           </div>

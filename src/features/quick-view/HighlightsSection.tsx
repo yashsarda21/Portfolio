@@ -57,7 +57,13 @@ export function HighlightsSection({ highlights }: { highlights: ScoutReport["hig
                 {item.body}
               </Text>
               {item.short ? (
-                <Text as="p" variant="caption" tone="secondary" className="leading-auto md:hidden">
+                <Text
+                  as="p"
+                  variant="caption"
+                  tone="secondary"
+                  leading="font"
+                  className="md:hidden"
+                >
                   {item.short}
                 </Text>
               ) : null}

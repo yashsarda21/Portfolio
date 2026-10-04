@@ -34,11 +34,11 @@ export function CareerSection({ career, sep }: { career: ScoutReport["career"]; 
                 <span className="max-md:hidden">{row.team}</span>
                 <span className="md:hidden">{row.compactTitle}</span>
               </Heading>
-              <Text variant="body" tone="secondary" className="leading-auto max-md:hidden">
+              <Text variant="body" tone="secondary" leading="font" className="max-md:hidden">
                 {row.roleLine}
               </Text>
               {row.compactLine ? (
-                <Text variant="body-sm" tone="secondary" className="leading-auto md:hidden">
+                <Text variant="body-sm" tone="secondary" leading="font" className="md:hidden">
                   {row.compactLine}
                 </Text>
               ) : null}

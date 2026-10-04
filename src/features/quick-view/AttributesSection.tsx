@@ -24,7 +24,7 @@ export function AttributesSection({ attributes }: { attributes: ScoutReport["att
           </li>
         ))}
       </AutoGrid>
-      <MonoLabel variant="mono-xs" tone="dim" className="leading-auto">
+      <MonoLabel variant="mono-xs" tone="dim" leading="font">
         {attributes.legend}
       </MonoLabel>
     </FluidSection>

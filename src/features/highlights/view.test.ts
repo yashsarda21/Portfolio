@@ -104,14 +104,50 @@ describe("buildHighlightsView", () => {
     });
   });
 
-  it("media: a recording in the content becomes the video source", () => {
+  it("media: a recording in the content becomes the video, with the poster and the silent flag", () => {
     const withVideo: Content = {
       ...content,
       matchHighlights: content.matchHighlights.map((h) =>
-        h.round === "THE FINAL" ? { ...h, media: "/media/ai.mp4" } : h,
+        h.round === "THE FINAL"
+          ? { ...h, media: { src: "/media/ai.mp4", poster: "/media/ai.png", silent: true } }
+          : h,
       ),
     };
-    expect(build(withVideo).items[2]!.media.video).toEqual({ src: "/media/ai.mp4" });
+    expect(build(withVideo).items[2]!.media.video).toEqual({
+      src: "/media/ai.mp4",
+      poster: "/media/ai.png",
+      silent: true,
+    });
+  });
+
+  it("media: a recording is named by the project and REPLAY, never 'coming soon'", () => {
+    const withVideo: Content = {
+      ...content,
+      matchHighlights: content.matchHighlights.map((h) =>
+        h.round === "THE FINAL" ? { ...h, media: { src: "/media/ai.mp4", silent: true } } : h,
+      ),
+    };
+    const { media } = build(withVideo).items[2]!;
+    expect(media.label).toBe("AI Interview Grooming Platform · REPLAY");
+    expect(media.label).not.toMatch(/coming soon/i);
+    // The placeholder keeps its own label for the projects with no recording yet.
+    expect(build(withVideo).items[0]!.media.label).toMatch(/REPLAY COMING SOON$/);
+  });
+
+  it("media: captions get their label and language from the interface copy", () => {
+    const withCaptions: Content = {
+      ...content,
+      matchHighlights: content.matchHighlights.map((h) =>
+        h.round === "THE FINAL"
+          ? { ...h, media: { src: "/media/ai.mp4", captions: "/media/ai.vtt", silent: false } }
+          : h,
+      ),
+    };
+    expect(build(withCaptions).items[2]!.media.video).toEqual({
+      src: "/media/ai.mp4",
+      captions: { src: "/media/ai.vtt", label: "English", srcLang: "en" },
+      silent: false,
+    });
   });
 
   it("comm: the final says its own line, the others the first reveal line", () => {

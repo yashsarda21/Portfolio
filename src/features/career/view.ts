@@ -52,7 +52,7 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
   const sep = copy.glyph.sep;
   const careerRows = getCareerRows(c);
   const current = careerRows.find((row) => row.isCurrent);
-  const academy = getInningsReveals(c).find((reveal) => reveal.status === "ACADEMY");
+  const academy = getInningsReveals(c).find((reveal) => reveal.kind === "academy");
 
   const rows = careerRows.map((row) => ({
     id: row.innings,
@@ -88,9 +88,10 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
       ? {
           n: academy.n,
           team: academy.team,
-          role: academy.role,
+          // The short degree keeps the row to one line; the Trophy Room shows the full one.
+          role: c.trainingAcademy.degreeShort,
           span: academy.span,
-          status: academy.status,
+          status: t.academy,
           to: `${routes.trophies}#academy`,
         }
       : null,

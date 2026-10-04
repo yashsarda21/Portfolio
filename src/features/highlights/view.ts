@@ -1,4 +1,4 @@
-import { getHighlights, type Content, type UiCopy } from "@/content";
+import { FINAL_ROUND, getHighlights, type Content, type UiCopy } from "@/content";
 
 export interface HighlightLinkView {
   label: string;
@@ -20,7 +20,12 @@ export interface HighlightItemView {
     label: string;
     badge: string;
     round: string;
-    video: { src: string; poster?: string; captions?: string } | null;
+    video: {
+      src: string;
+      poster?: string;
+      captions?: { src: string; label: string; srcLang: string };
+      silent: boolean;
+    } | null;
   };
   par: {
     serve: { label: string; text: string };
@@ -45,8 +50,6 @@ export interface HighlightsView {
   defaultId: string;
   shotDataLabel: string;
 }
-
-const FINAL = "THE FINAL";
 
 const slug = (name: string) =>
   name
@@ -93,10 +96,20 @@ export function buildHighlightsView(c: Content, copy: UiCopy): HighlightsView {
       kind: h.kind,
       line: h.line,
       media: {
-        label: `${h.name} ${sep} ${t.comingSoon}`,
+        // A recording is named by its project; the placeholder says the replay is not there yet.
+        label: `${h.name} ${sep} ${h.media ? t.replay : t.comingSoon}`,
         badge: t.replay,
         round: h.round,
-        video: h.media ? { src: h.media } : null,
+        video: h.media
+          ? {
+              src: h.media.src,
+              poster: h.media.poster,
+              captions: h.media.captions
+                ? { src: h.media.captions, label: t.captions.label, srcLang: t.captions.lang }
+                : undefined,
+              silent: h.media.silent,
+            }
+          : null,
       },
       par: {
         serve: { label: t.serve, text: h.serve },
@@ -107,7 +120,7 @@ export function buildHighlightsView(c: Content, copy: UiCopy): HighlightsView {
       stackLabel: t.stack,
       stack: h.stack,
       links,
-      comm: h.round === FINAL ? t.commFinal : c.commentary.reveal[0]!,
+      comm: h.round === FINAL_ROUND ? t.commFinal : c.commentary.reveal[0]!,
     };
   });
 
@@ -116,7 +129,7 @@ export function buildHighlightsView(c: Content, copy: UiCopy): HighlightsView {
     drawLabel: t.draw,
     listLabel: t.listLabel,
     items,
-    defaultId: (items.find((i) => i.round === FINAL) ?? items.at(-1)!).id,
+    defaultId: (items.find((i) => i.round === FINAL_ROUND) ?? items.at(-1)!).id,
     shotDataLabel: t.shotData,
   };
 }
