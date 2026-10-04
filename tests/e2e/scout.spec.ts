@@ -76,11 +76,7 @@ test.describe("desktop", () => {
     await page.goto(ROUTES.scout);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     // Static keeps the same space in the flow, so nothing moves; it stops the sticky header painting over regions.
-    // The artboards are drawn with the browser's default text smoothing; the app opts into grayscale
-    // smoothing (base.css), which thins big display type by a pixel. Compare like with like.
-    await page.addStyleTag({
-      content: "header{position:static!important}*{-webkit-font-smoothing:auto!important}",
-    });
+    await page.addStyleTag({ content: "header{position:static!important}" });
 
     const regions = await readRegions(ARTBOARD, REFERENCE.width, REFERENCE.height);
     // Mask rects are relative to the region's top-left.
