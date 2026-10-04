@@ -421,7 +421,6 @@ The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges wh
 | Mobile tab bar `rgba(10,13,17,.94)` | new `--surface-tabbar` (the board bezel `#0A0D11` at `.94`, exact) | `MobileTabBar` |
 | Selected-row `rgba(215,255,63,.06)` | new `--ref-volt-a06` (exact) | `SelectableList` item |
 | Replay placeholder stripes `#0B1118` / `#0F1720` | `--surface-inset` `#0B0F14` / `--surface-panel` `#0E141B` (each channel ≤5/255 off) | `MediaSlot` (`media-stripes`) |
-| Replay round chip tracking `.16em` | `type-mono-round` `.18em` | `MediaSlot` |
 
 ### 11.7 Quick View `/scout` (Phase 1)
 
@@ -435,9 +434,58 @@ The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges wh
 | Content wording | Career bullets (`ballByBall`), stack order and the 5 trophy rows come from content (§11.2 #4, #5, #10), so the real page's Career/Trophies bodies differ in wording and height from the artboard. Layout parity for those blocks is proven by the artboard-copy fixture story (≤2%). | Content wins. |
 | Visual masks | Mobile parity masks only: A2 lines (10→11px mono: eyebrow, chips, career dates, "2 INNINGS", round labels), A10 (SWIPE hint, scroller fade), and a strip at `y 734–766` where the continuing page (R3) shows through the bottom bar's fade. | Logged deviations only. |
 | A2 compensation | The mobile 11px mono recipes (`type-mono-chip/date/round/meta/kicker`) use a 13px line box, the drawn 10px line box, so nothing below them moves. Hero chips use `0.09em` tracking at 11px (the drawn 1px), or the three chips wrap. | A2 keeps 11px text without shifting the layout |
-| Fix-wave recipes | `type-mono-date` (career dates keep their drawn 0.12em) and `type-body-copy` (15px / 1.5, highlight card copy); shared `type-body-md` stays 1.45. Single-line labels copied from artboard spans with no line-height use the `leading-auto` token (`line-height: normal`). | One rule in the design system, not per-element fitting |
+| Fix-wave recipes | `type-mono-date` (career dates keep their drawn 0.12em) and `type-body-copy` (15px / 1.5, highlight card copy); shared `type-body-md` stays 1.45. Single-line labels copied from artboard spans with no line-height use the typed `leading="font"` prop on `Text` / `Heading` / `MonoLabel` (the `leading-auto` token, `line-height: normal`); a raw `leading-*` class is not allowed in a feature. | One rule in the design system, not per-element fitting |
 | Font smoothing | App-wide `-webkit-font-smoothing: antialiased` removed: text now renders like the artboards (browser default). Fidelity is measured at browser default everywhere. | Exact match on macOS; the property has no effect elsewhere |
 | Lighthouse gate | `pnpm lighthouse`: performance = median of 3 runs; accessibility, best practices and SEO = worst run. Desktop budget: performance ≥90, accessibility 100, best practices ≥90, SEO ≥90. | Performance varies run to run; the other categories are deterministic |
+
+### 11.8 Content pages: Career and Highlights (Phase 2A)
+
+Rulings, as built:
+
+| ID | Decision | Why |
+|---|---|---|
+| P1 | The replay placeholder reads "<name> · REPLAY COMING SOON" (one `ui` string), not the artboard's "ADD A 10s SCREEN RECORDING". Stripes, REPLAY chip, round chip and progress bar as drawn. A real recording replaces it; its name is "<name> · REPLAY". | The artboard text is a note to the owner. |
+| P2 | LIVE DEMO and FULL CASE STUDY rows appear only when content has `links.demo` / `links.caseStudy`. CODE ON GITHUB goes to `links.code`, else the GitHub profile. | The artboard links are dead `#` links. |
+| P3 | Career adds a third row "03 · ACADEMY", a link to `/trophies#academy` drawn in the row style of the list (`SelectableList.LinkRow`). Its role is `trainingAcademy.degreeShort` ("B.Tech IT") so the row stays on one line; the Trophy Room shows the full degree. | §11.2 #13: the cricket game reveals the academy innings. |
+| P4 | The CLUB tile shows "DEUTSCHE" (`player.clubShort`). | The tile is too narrow for the full club name. |
+| P5 | Tablet (768-1199): Career = title, tiles, then scorecard and detail stacked; below 1024 the scorecard rows are the three-line card. Highlights = draw and replay in two columns, shot data below. Phone: single column, solid panels, 16px gutters, 48px title, full-width unskewed next-venue bar, bottom tab bar (ARENA / CAREER / PROJECTS / SKILLS / TEAM UP). COMM is hidden on the phone. Below 1024 the breadcrumb keeps only the hub and the current page; the middle crumbs stay in the page for assistive tech. | §12 derived designs. |
+| P6 | Content stays at most 1440 wide and centred; the backdrop fills the edges. On short screens the page scrolls. | Fluid pages must not stretch or clip. |
+
+Rules added in this phase:
+
+| ID | Rule | Why |
+|---|---|---|
+| L1 | **Links open in the same tab, as drawn.** Only a document (the resume PDF) opens a new tab, and says so (`ui.a11y.newTab`, read by screen readers). | WCAG G201; one rule for the whole site. |
+| L2 | The next-venue button never wraps or shrinks (`Button size="s"`): on the phone it is the full-width 54px bar (`type-btn-bar`); the commentary beside it shrinks first. | Longest label ("NEXT VENUE · BADMINTON HALL →", 270px at 17px) fits at 360px. |
+| L3 | A feature never fits pixels by hand. The font's own line box is `leading="font"`, uppercase is `caps`, content-box header bars are `PanelHeader`, chip boxes are `Chip size`, a size that changes on the phone is a recipe with its own `@media`. `src/features/styleRules.test.ts` fails the build on `leading-*`, `tracking-[`, `box-content`, `uppercase` or a `type-*` behind a breakpoint prefix. | One mechanism per concern. |
+| L4 | Each venue's glows come from its artboard (`ContentPage` presets for turf, court and hall); a page only names its venue. | The artboards draw different glows. |
+
+Design-system changes:
+
+| Change | Detail |
+|---|---|
+| New recipes | `type-title-detail` (40/.95), `type-title-reel` (44/.9, 34 on the phone), `type-draw-name` (24/800/.02em), `type-body-deck` (17, 16 on the phone), `type-body-cell` (14/1.5, the drawn problem / approach / result rhythm), `type-d5-fluid` (the content-page YS mark: 18px, 16 on the phone). |
+| Recipes extended | `type-d1` has its drawn phone step (48/.9; it replaces a separate page-title recipe); `type-d3` steps to 30px on the phone (the scorecard number). |
+| Recipes removed (duplicates) | `type-title-page` (= `d1`), `type-mono-nav-bold` (= `mono-nav` + `font-bold`, in `LinkRow`), `type-body-line` (= `body` + `leading="font"`), `type-body-kind` (= `caption` + `leading="font"`), `type-body-ball` (14/1.42 replaced by `type-body-sm` 14/1.45: 0.42px per line). |
+| Chip | `size` is `sm` / `md` / `lg` / `meta` / `code`; `sm` and `md` are content-box (30px / 32px plus borders, as drawn). A new `text` axis: `label` (uppercase mono) or `name` (a tool name as written). The `stack` and `stack-sm` sizes are gone. `ChipList` takes a visible `heading` that names the list. |
+| New components | `PanelHeader` (the 44px / 48px header bar), `SelectableList.LinkRow` and `selectableRowVariants` (one row look for tab rows and link rows). `Text` gains `leading` and `caps`. |
+| Tokens | `--ref-volt-a06` (selected row, exact) and `--surface-tabbar` (exact), see §11.6. |
+| StatTile | Glass and volt labels use `type-mono-round` (.18em, the artboard's), not `.2em`. |
+| HUDButton | Base line box is the font's own (`leading-auto`): the artboard's text sits on it; REMATCH and QUICK VIEW were 1px high. |
+| KeyValueList stacked | Label `type-mono-xs` (11/.14em), value `type-body-sm`, 12px between items. |
+| Breadcrumb / MediaSlot | `hubLabel` and `label` are required (no English in the component). The captions track label and language come from `ui.pages.highlights.captions`. |
+
+Deviations from the artboards (visual tests mask or accept exactly these):
+
+| Where | Deviation | Check |
+|---|---|---|
+| Real routes: COMM line | Animates in and out. Masked by its own hook, `[data-commentary-bar]`. | `/career`, `/highlights` fidelity |
+| Real `/career`: academy row | P3. Masked. | `/career` fidelity |
+| Real `/highlights`: placeholder label | P1. Masked (`tabpanel p`). | `/highlights` fidelity |
+| Real `/highlights`: draw row of the final, kind line | "Published research · PICT" in content, "Published research" on the artboard. Masked. | `/highlights` fidelity |
+| Real `/highlights`: shot-data links area | P2. Masked rect `x 1120, y 605, 268 x 170`. | `/highlights` fidelity |
+| Highlights, 1200 and up | The gap before the shot data is 22px like the other gap; the artboard's is 24px (its draw is content-box, so the 2px border is added to one side only). | Accepted if fidelity stays ≤ 2% (it was 0.02-0.08% with the margin) |
+| Career detail balls | 14px at 1.45 (`type-body-sm`); the artboard draws 1.42. | Accepted if fidelity stays ≤ 2% (about 3px over the whole detail panel) |
 
 ---
 
@@ -453,7 +501,7 @@ The `/` fidelity test (§9.1, 2% limit) masks exactly the two cone-top wedges wh
 | Copy-link feedback | Button label swaps to "LINK COPIED ✓" for 2s, announced politely |
 | Team Up submit | Form validates locally. If `VITE_FORM_ENDPOINT` is set (Formspree/Web3Forms-style), it POSTs there. Otherwise it opens the visitor's email app with subject and body prefilled from the chosen format. Success: COMM "Challenge received. I'll serve first.", floodlight pulse, scoreboard "NEW FIXTURE · VISITOR vs YASH". Error state shows "OR EMAIL" fallback. |
 | Resume buttons | The phone-number PDF is **never shipped**. If `content.player.resumePdf` is `null`, buttons read "REQUEST RESUME" (mailto). When a public PDF is added to `public/`, the buttons automatically switch to View/Download. |
-| Project media | `MediaSlot` shows the designed striped placeholder while `media` is `null`, and a video (muted, captioned, with controls) when set |
+| Project media | `MediaSlot` shows the designed striped placeholder while `media` is `null`, and a muted video with controls when set. `media` is `{ src, poster?, captions?, silent }`: every URL is https or a root path; a silent screen recording needs no captions but is described by the project line and problem / approach / result (`aria-describedby`); a recording with sound must have `captions` (the schema rejects it otherwise). The captions track exists only when there are captions. |
 | Locker Room `/locker-room` | "The making of the arena": thank-you headline, the visitor's record, how the site was built (stack, design system, the 1% maths), and a direct-line contact band. Locked state for visitors who haven't won. |
 | Giant Killer trophy (unlocked) | Gold trophy replaces the dashed outline in the cabinet, with the "GIANT KILLER" plaque |
 | 404 | "OUT OF BOUNDS": scoreboard panel with links to Hub and Quick View |
