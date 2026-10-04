@@ -16,14 +16,12 @@ export const textVariants = cva("", {
       "title-lg": "type-title-lg",
       title: "type-title",
       "title-sm": "type-title-sm",
-      "title-page": "type-title-page",
       "title-detail": "type-title-detail",
       "title-reel": "type-title-reel",
       "draw-name": "type-draw-name",
       "btn-heavy": "type-btn-heavy",
       "btn-bar": "type-btn-bar",
       "mono-nav": "type-mono-nav",
-      "mono-nav-bold": "type-mono-nav-bold",
       "mono-chip": "type-mono-chip",
       "mono-round": "type-mono-round",
       "mono-date": "type-mono-date",
@@ -56,10 +54,7 @@ export const textVariants = cva("", {
       "body-md": "type-body-md",
       "body-copy": "type-body-copy",
       "body-sm": "type-body-sm",
-      "body-ball": "type-body-ball",
       "body-cell": "type-body-cell",
-      "body-line": "type-body-line",
-      "body-kind": "type-body-kind",
       "body-deck": "type-body-deck",
       caption: "type-caption",
       comm: "type-comm",
@@ -77,26 +72,44 @@ export const textVariants = cva("", {
       ink: "text-volt-ink",
       "ink-2": "text-volt-ink-2",
     },
+    // The line box. `recipe` keeps the recipe's own line-height. `font` is the font's own line box
+    // (`line-height: normal`): what an artboard span with no line-height draws. This is the only way
+    // to say it, so screens never write `leading-*` themselves.
+    leading: { recipe: "", font: "leading-auto" },
+    // Uppercase, for recipes that are mixed-case by default (the mono "stack" face) and content stored in sentence case.
+    caps: { true: "uppercase", false: "" },
   },
-  defaultVariants: { variant: "body" },
+  defaultVariants: { variant: "body", leading: "recipe", caps: false },
 });
 
 export type TypeVariant = NonNullable<Parameters<typeof textVariants>[0]>["variant"] & string;
 export type TextTone = NonNullable<NonNullable<Parameters<typeof textVariants>[0]>["tone"]>;
+export type TextLeading = NonNullable<NonNullable<Parameters<typeof textVariants>[0]>["leading"]>;
 export type MonoVariant = Extract<TypeVariant, `mono-${string}`>;
 
-type TextOwnProps = { variant?: TypeVariant; tone?: TextTone };
+type TextOwnProps = {
+  variant?: TypeVariant;
+  tone?: TextTone;
+  /** "font" = the font's own line box (an artboard span with no line-height). Default: the recipe's. */
+  leading?: TextLeading;
+  /** Force uppercase (for the mixed-case mono face). */
+  caps?: boolean;
+};
 
 /** Any run of text, styled by an Arena type recipe. */
 export function Text<T extends ElementType = "span">({
   as,
   variant,
   tone,
+  leading,
+  caps,
   className,
   ...rest
 }: PolymorphicProps<T, TextOwnProps>) {
   const Comp: ElementType = as ?? "span";
-  return <Comp className={cn(textVariants({ variant, tone }), className)} {...rest} />;
+  return (
+    <Comp className={cn(textVariants({ variant, tone, leading, caps }), className)} {...rest} />
+  );
 }
 
 const HEADING_DEFAULT: Record<1 | 2 | 3 | 4 | 5 | 6, TypeVariant> = {
@@ -112,14 +125,25 @@ type HeadingProps = {
   level: 1 | 2 | 3 | 4 | 5 | 6;
   variant?: TypeVariant;
   tone?: TextTone;
+  leading?: TextLeading;
 } & ComponentPropsWithRef<"h1">;
 
 /** A real <h1>–<h6>; the look defaults by level and can be overridden. */
-export function Heading({ level, variant, tone = "primary", className, ...rest }: HeadingProps) {
+export function Heading({
+  level,
+  variant,
+  tone = "primary",
+  leading,
+  className,
+  ...rest
+}: HeadingProps) {
   const Tag = `h${level}` as const;
   return (
     <Tag
-      className={cn(textVariants({ variant: variant ?? HEADING_DEFAULT[level], tone }), className)}
+      className={cn(
+        textVariants({ variant: variant ?? HEADING_DEFAULT[level], tone, leading }),
+        className,
+      )}
       {...rest}
     />
   );
@@ -130,6 +154,6 @@ export function MonoLabel<T extends ElementType = "span">({
   variant = "mono-label",
   tone = "label",
   ...rest
-}: PolymorphicProps<T, { variant?: MonoVariant; tone?: TextTone }>) {
+}: PolymorphicProps<T, { variant?: MonoVariant; tone?: TextTone; leading?: TextLeading }>) {
   return <Text variant={variant} tone={tone} {...(rest as PolymorphicProps<T, TextOwnProps>)} />;
 }

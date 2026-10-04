@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { cn } from "@/lib/cn";
 import { BallByBall } from "../broadcast/BallByBall";
 import { Breadcrumb } from "../broadcast/Breadcrumb";
 import { HUD } from "../broadcast/HUD";
@@ -12,7 +13,8 @@ import { Button } from "../primitives/Button";
 import { Legend } from "../primitives/Legend";
 import { LinkRow } from "../primitives/LinkRow";
 import { SelectableList } from "../primitives/SelectableList";
-import { MonoLabel } from "../primitives/Text";
+import { PanelHeader } from "../primitives/PanelHeader";
+import { MonoLabel, Text } from "../primitives/Text";
 import { ContentLayout } from "./ContentLayout";
 import { PageTitle } from "./PageTitle";
 
@@ -22,6 +24,8 @@ export default meta;
 // A 16x9 dark PNG as a data URI: no network, nothing external.
 const POSTER =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAJCAIAAAC0SDtlAAAAE0lEQVR4nGPgE5EmCTGMahgUGgCKBCJR/fhs/AAAAABJRU5ErkJggg==";
+
+const CRUMB = { hubLabel: "HUB", label: "Breadcrumb" } as const;
 
 const TAB_ITEMS = [
   { key: "arena", label: "ARENA", icon: "arena", href: "#arena" },
@@ -64,36 +68,62 @@ const REEL = [
   },
 ];
 
+const ROW_COLUMNS =
+  "grid grid-cols-[56px_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1.3fr)_110px] gap-4 px-5.5";
+
 export const SelectableScorecard: StoryObj = {
   render: function Render() {
     const [value, setValue] = useState("01");
     return (
       <SelectableList.Root value={value} onValueChange={setValue} className="flex gap-6">
-        <SelectableList.List label="Innings" className="w-200 glass">
-          {INNINGS.map((r) => (
-            <SelectableList.Item
-              key={r.id}
-              value={r.id}
-              className="grid min-h-21 grid-cols-[56px_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1.3fr)_110px] gap-4 px-5.5"
-            >
-              <span className="type-d3 text-dim group-data-[state=active]/item:text-volt">
-                {r.id}
-              </span>
-              <span className="type-d4s">{r.team}</span>
-              <span className="type-body-md text-text-2">{r.role}</span>
-              <span className="type-mono-stack text-text-2">{r.span}</span>
-              <span
-                className={
-                  r.status === "NOT OUT"
-                    ? "text-right type-mono-tag text-volt"
-                    : "text-right type-mono-tag text-floodlight"
-                }
-              >
-                {r.status}
-              </span>
-            </SelectableList.Item>
-          ))}
-        </SelectableList.List>
+        <div className="w-200 glass">
+          <PanelHeader size="lg" variant="mono-round" className={ROW_COLUMNS}>
+            <span>INN</span>
+            <span>TEAM</span>
+            <span>ROLE</span>
+            <span>SPAN</span>
+            <span className="text-right">STATUS</span>
+          </PanelHeader>
+          <SelectableList.List label="Innings">
+            {INNINGS.map((r) => (
+              <SelectableList.Item key={r.id} value={r.id} className={cn("min-h-21", ROW_COLUMNS)}>
+                <Text variant="d3" tone="dim" className="group-data-[state=active]/item:text-volt">
+                  {r.id}
+                </Text>
+                <Text variant="d4s">{r.team}</Text>
+                <Text variant="body-md" tone="secondary">
+                  {r.role}
+                </Text>
+                <Text variant="mono-stack" tone="secondary" caps>
+                  {r.span}
+                </Text>
+                <Text
+                  variant="mono-tag"
+                  tone={r.status === "NOT OUT" ? "volt" : undefined}
+                  className="text-right"
+                >
+                  {r.status}
+                </Text>
+              </SelectableList.Item>
+            ))}
+          </SelectableList.List>
+          {/* A link drawn as a row of the list: same look, but not a tab. */}
+          <SelectableList.LinkRow href="#academy" className={cn("min-h-21", ROW_COLUMNS)}>
+            <Text variant="d3" tone="dim">
+              03
+            </Text>
+            <Text variant="d4s">PICT, PUNE</Text>
+            <Text variant="body-md" tone="secondary">
+              B.Tech IT
+            </Text>
+            <Text variant="mono-stack" tone="secondary" caps>
+              2020 – 2024
+            </Text>
+            <Text variant="mono-tag" className="text-right">
+              ACADEMY
+            </Text>
+          </SelectableList.LinkRow>
+        </div>
         {INNINGS.map((r) => (
           <SelectableList.Panel key={r.id} value={r.id} className="flex-1 glass p-6">
             <MonoLabel
@@ -112,21 +142,30 @@ export const SelectableReel: StoryObj = {
     const [value, setValue] = useState("final");
     return (
       <SelectableList.Root value={value} onValueChange={setValue} className="flex gap-6">
-        <SelectableList.List label="Projects" className="w-75 glass">
-          {REEL.map((p) => (
-            <SelectableList.Item
-              key={p.id}
-              value={p.id}
-              className="min-h-24 flex-col items-start gap-1 px-4.5 py-3.5"
-            >
-              <span className="type-mono-round text-dim group-data-[state=active]/item:text-volt">
-                {p.round}
-              </span>
-              <span className="type-d4s">{p.name}</span>
-              <span className="type-body-kind text-scout">{p.kind}</span>
-            </SelectableList.Item>
-          ))}
-        </SelectableList.List>
+        <div className="w-75 glass">
+          <PanelHeader>THE DRAW</PanelHeader>
+          <SelectableList.List label="Projects">
+            {REEL.map((p) => (
+              <SelectableList.Item
+                key={p.id}
+                value={p.id}
+                className="min-h-24 flex-col items-start gap-1 px-4.5 py-3.5"
+              >
+                <Text
+                  variant="mono-round"
+                  tone="dim"
+                  className="group-data-[state=active]/item:text-volt"
+                >
+                  {p.round}
+                </Text>
+                <Text variant="draw-name">{p.name}</Text>
+                <Text variant="caption" tone="label" leading="font">
+                  {p.kind}
+                </Text>
+              </SelectableList.Item>
+            ))}
+          </SelectableList.List>
+        </div>
         {REEL.map((p) => (
           <SelectableList.Panel key={p.id} value={p.id} className="flex-1 glass p-6">
             {p.name}
@@ -140,11 +179,12 @@ export const SelectableReel: StoryObj = {
 export const Breadcrumbs: StoryObj = {
   render: () => (
     <div className="flex flex-col gap-6">
-      <Breadcrumb mark="YS" trail={["ARENA HUB"]} href="#hub" />
-      <Breadcrumb mark="YS" trail={["CRICKET GROUND", "CAREER STATS"]} href="#hub" />
+      <Breadcrumb mark="YS" trail={["ARENA HUB"]} {...CRUMB} href="#hub" />
+      <Breadcrumb mark="YS" trail={["CRICKET GROUND", "CAREER STATS"]} {...CRUMB} href="#hub" />
       <Breadcrumb
         mark="YS"
         trail={["CENTRE COURT", "MATCH HIGHLIGHTS", "KUDO BOARD"]}
+        {...CRUMB}
         href="#hub"
       />
     </div>
@@ -225,7 +265,14 @@ export const LayoutSkeleton: StoryObj = {
       header={
         <HUD
           className="max-md:h-11"
-          left={<Breadcrumb mark="YS" trail={["CRICKET GROUND", "CAREER STATS"]} href="#hub" />}
+          left={
+            <Breadcrumb
+              mark="YS"
+              trail={["CRICKET GROUND", "CAREER STATS"]}
+              {...CRUMB}
+              href="#hub"
+            />
+          }
           right={
             <HUDButton as="a" href="#scout">
               QUICK VIEW
@@ -307,17 +354,34 @@ export const ProblemApproachResults: StoryObj = {
 export const MediaSlots: StoryObj = {
   render: () => (
     <div className="flex w-180 flex-col gap-6">
+      {/* No recording yet: the striped placeholder. */}
       <MediaSlot
-        label="[AI INTERVIEW GROOMING PLATFORM · ADD A 10s SCREEN RECORDING]"
+        label="AI INTERVIEW GROOMING PLATFORM · REPLAY COMING SOON"
         badge="REPLAY"
         round="THE FINAL"
         media={null}
       />
+      {/* A silent screen recording: no captions track; the text beside it is its text alternative. */}
       <MediaSlot
-        label="Kudo Board replay"
+        label="Kudo Board · REPLAY"
         badge="REPLAY"
         round="SEMI-FINAL"
-        media={{ src: "replay-demo.mp4", captions: "replay-demo.vtt", poster: POSTER }}
+        describedBy="kudo-line"
+        media={{ src: "replay-demo.mp4", poster: POSTER, silent: true }}
+      />
+      <p id="kudo-line" className="type-body-sm text-text-2">
+        A recognition platform built from scratch for 10,000+ employees.
+      </p>
+      {/* A recording with sound carries a named captions track. */}
+      <MediaSlot
+        label="Power BI Dashboard · REPLAY"
+        badge="REPLAY"
+        round="QUARTER-FINAL"
+        media={{
+          src: "replay-demo.mp4",
+          poster: POSTER,
+          captions: { src: "replay-demo.vtt", label: "English", srcLang: "en" },
+        }}
       />
     </div>
   ),

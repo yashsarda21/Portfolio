@@ -1,7 +1,7 @@
 // Public API of the Arena design system. Screens import from "@/design-system" only.
 export type { PolymorphicProps } from "./lib/polymorphic";
 export { Heading, MonoLabel, Text, textVariants } from "./primitives/Text";
-export type { MonoVariant, TextTone, TypeVariant } from "./primitives/Text";
+export type { MonoVariant, TextLeading, TextTone, TypeVariant } from "./primitives/Text";
 export { Icon } from "./primitives/Icon";
 export { ICONS } from "./primitives/icons";
 export type { IconName } from "./primitives/icons";
@@ -14,7 +14,8 @@ export { Chip, ChipList, chipVariants } from "./primitives/Chip";
 export type { ChipTone } from "./primitives/Chip";
 export { LinkRow } from "./primitives/LinkRow";
 export type { LinkRowTone } from "./primitives/LinkRow";
-export { SelectableList } from "./primitives/SelectableList";
+export { SelectableList, selectableRowVariants } from "./primitives/SelectableList";
+export { PanelHeader, panelHeaderVariants } from "./primitives/PanelHeader";
 export { KeyValueList } from "./primitives/KeyValueList";
 export { Legend } from "./primitives/Legend";
 export { ProgressSteps } from "./primitives/ProgressSteps";

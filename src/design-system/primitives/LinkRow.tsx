@@ -13,7 +13,7 @@ const linkRowVariants = cva("flex items-center justify-between gap-4", {
       outline:
         "box-content h-11.5 border border-line-strong px-3.5 type-mono-nav text-floodlight hover:border-volt",
       // Volt fill, same size as outline; the default volt ring sits outside it.
-      primary: "box-content h-11.5 bg-volt px-3.5 type-mono-nav-bold text-volt-ink",
+      primary: "box-content h-11.5 bg-volt px-3.5 type-mono-nav font-bold text-volt-ink",
     },
   },
   defaultVariants: { tone: "band" },

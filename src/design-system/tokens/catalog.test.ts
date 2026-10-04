@@ -15,6 +15,12 @@ describe("token catalogue", () => {
   it.each(TOKEN_CATALOG.type)("type recipe %s exists in base.css", (name) => {
     expect(base).toContain(`@utility ${name} {`);
   });
+  it("every type recipe in base.css is in the catalogue (no unlisted near-duplicates)", () => {
+    const defined = [...base.matchAll(/@utility (type-[\w-]+) \{/g)].map((m) => m[1]);
+    expect(
+      defined.filter((name) => !(TOKEN_CATALOG.type as readonly string[]).includes(name!)),
+    ).toEqual([]);
+  });
   it.each(TOKEN_CATALOG.shadows)("shadow $name exists in theme.css", ({ name, className }) => {
     expect(theme).toContain(`--shadow-${name}:`);
     expect(className).toBe(`shadow-${name}`);

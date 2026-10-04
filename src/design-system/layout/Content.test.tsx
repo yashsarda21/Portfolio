@@ -10,16 +10,17 @@ import { PageTitle } from "./PageTitle";
 
 describe("Breadcrumb", () => {
   const trail = ["CRICKET GROUND", "CAREER STATS"];
+  const CRUMB = { hubLabel: "HUB", label: "Breadcrumb" } as const;
 
   it("is a nav named by its label, with an ordered list", () => {
-    render(<Breadcrumb mark="YS" trail={trail} label="Breadcrumb" href="/arena" />);
+    render(<Breadcrumb mark="YS" trail={trail} {...CRUMB} href="/arena" />);
     const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(within(nav).getByRole("list")).toBeInTheDocument();
     expect(nav.querySelector("ol")).not.toBeNull();
   });
 
   it("makes the first crumb (mark + HUB) the only link", () => {
-    render(<Breadcrumb mark="YS" trail={trail} href="/arena" />);
+    render(<Breadcrumb mark="YS" trail={trail} {...CRUMB} href="/arena" />);
     const links = screen.getAllByRole("link");
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAccessibleName(/HUB/);
@@ -27,7 +28,7 @@ describe("Breadcrumb", () => {
   });
 
   it("marks the last crumb as the current page and hides the separators", () => {
-    const { container } = render(<Breadcrumb mark="YS" trail={trail} href="/arena" />);
+    const { container } = render(<Breadcrumb mark="YS" trail={trail} {...CRUMB} href="/arena" />);
     const current = container.querySelectorAll('[aria-current="page"]');
     expect(current).toHaveLength(1);
     expect(current[0]).toHaveTextContent("CAREER STATS");
@@ -36,14 +37,28 @@ describe("Breadcrumb", () => {
     seps.forEach((s) => expect(s).toHaveTextContent("/"));
   });
 
-  it("draws the mark at 40px, a size down (36px) on the phone", () => {
-    render(<Breadcrumb mark="YS" trail={trail} href="/arena" />);
-    const mark = screen.getByText("YS");
-    expect(mark).toHaveClass("size-10", "max-md:size-9", "type-d5-fluid");
+  it("keeps every crumb in the page for assistive tech, even the ones that step aside on narrow screens", () => {
+    render(<Breadcrumb mark="YS" trail={["A", "B", "C"]} {...CRUMB} href="/arena" />);
+    for (const name of ["A", "B", "C"]) expect(screen.getByText(name)).toBeInTheDocument();
+    expect(screen.getByText("C")).toHaveAttribute("aria-current", "page");
+  });
+
+  it("two crumbs with the same text still render both", () => {
+    render(<Breadcrumb mark="YS" trail={["SAME", "SAME"]} {...CRUMB} href="/arena" />);
+    expect(screen.getAllByText("SAME")).toHaveLength(2);
   });
 
   it("renders as a custom link element when asked", () => {
-    render(<Breadcrumb mark="YS" trail={["X"]} as="button" type="button" hubLabel="HOME" />);
+    render(
+      <Breadcrumb
+        mark="YS"
+        trail={["X"]}
+        as="button"
+        type="button"
+        label="Breadcrumb"
+        hubLabel="HOME"
+      />,
+    );
     expect(screen.getByRole("button", { name: /HOME/ })).toBeInTheDocument();
   });
 });
@@ -97,13 +112,18 @@ describe("MediaSlot", () => {
     expect(container.querySelector("video")).toBeNull();
   });
 
-  it("renders a muted video with controls and a captions track when media is set", () => {
+  it("renders a muted video with controls, a named captions track and its text alternative", () => {
     const { container } = render(
       <MediaSlot
         label="Kudo board replay"
         badge="REPLAY"
         round="THE FINAL"
-        media={{ src: "/kudo.mp4", captions: "/kudo.vtt", poster: "/kudo.png" }}
+        describedBy="kudo-line kudo-par"
+        media={{
+          src: "/kudo.mp4",
+          poster: "/kudo.png",
+          captions: { src: "/kudo.vtt", label: "English", srcLang: "en" },
+        }}
       />,
     );
     const video = container.querySelector("video")!;
@@ -113,9 +133,39 @@ describe("MediaSlot", () => {
     expect(video).toHaveAttribute("src", "/kudo.mp4");
     expect(video).toHaveAttribute("poster", "/kudo.png");
     expect(video).toHaveAttribute("preload", "metadata");
+    expect(video).toHaveAttribute("aria-label", "Kudo board replay");
+    expect(video).toHaveAttribute("aria-describedby", "kudo-line kudo-par");
+    expect(video).not.toHaveAttribute("data-silent");
     const track = video.querySelector("track")!;
     expect(track).toHaveAttribute("kind", "captions");
     expect(track).toHaveAttribute("src", "/kudo.vtt");
+    expect(track).toHaveAttribute("label", "English");
+    expect(track).toHaveAttribute("srclang", "en");
+  });
+
+  it("renders no captions track when there are no captions (an empty track is invalid HTML)", () => {
+    const { container } = render(
+      <MediaSlot
+        label="Kudo board replay"
+        badge="REPLAY"
+        round="THE FINAL"
+        media={{ src: "/kudo.mp4", silent: true }}
+      />,
+    );
+    expect(container.querySelector("video")).not.toBeNull();
+    expect(container.querySelector("track")).toBeNull();
+  });
+
+  it("marks a silent recording so the one scoped axe exception can find it", () => {
+    const { container } = render(
+      <MediaSlot
+        label="Kudo board replay"
+        badge="REPLAY"
+        round="THE FINAL"
+        media={{ src: "/kudo.mp4", silent: true }}
+      />,
+    );
+    expect(container.querySelector("video")).toHaveAttribute("data-silent");
   });
 });
 
@@ -147,12 +197,24 @@ describe("ProblemApproachResult", () => {
   });
 });
 
+describe("ProblemApproachResult id", () => {
+  it("puts the id on the list so a video can be described by it", () => {
+    const { container } = render(
+      <ProblemApproachResult
+        id="par-1"
+        serve={{ label: "S", text: "p" }}
+        rally={{ label: "R", text: "a" }}
+        winner={{ label: "W", text: "r" }}
+      />,
+    );
+    expect(container.querySelector("dl")).toHaveAttribute("id", "par-1");
+  });
+});
+
 describe("PageTitle", () => {
   it("renders one h1 with the eyebrow and the aside", () => {
     render(<PageTitle eyebrow="THE SCORECARD" title="CAREER STATS" aside={<span>aside</span>} />);
-    expect(screen.getByRole("heading", { level: 1, name: "CAREER STATS" })).toHaveClass(
-      "type-title-page",
-    );
+    expect(screen.getByRole("heading", { level: 1, name: "CAREER STATS" })).toHaveClass("type-d1");
     expect(screen.getByText("THE SCORECARD")).toHaveClass("text-volt");
     expect(screen.getByText("aside")).toBeInTheDocument();
   });

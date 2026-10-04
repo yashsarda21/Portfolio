@@ -131,6 +131,18 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveClass("h-13.5", "w-full", "type-btn-bar");
   });
 
+  it("size s never wraps or shrinks, and is the full-width bar on the phone", () => {
+    render(<Button size="s">NEXT VENUE · BADMINTON HALL →</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "whitespace-nowrap",
+      "shrink-0",
+      "type-btn",
+      "max-md:w-full",
+      "max-md:type-btn-bar",
+      "max-md:h-13.5",
+    );
+  });
+
   it("adds the content-box border height to outlined and panel CTA and bar buttons", () => {
     const { rerender } = render(
       <Button size="cta" variant="outline">

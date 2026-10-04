@@ -28,6 +28,41 @@ export const StackList: StoryObj<typeof Chip> = {
   ),
 };
 
+/** `text="name"`: a tool name as written (mixed case, untracked), in the two content-box sizes the artboards draw. */
+export const ToolNames: StoryObj<typeof Chip> = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <ChipList
+        label="Stack, medium"
+        size="md"
+        text="name"
+        items={["Spring Boot", "Node.js", "uDeploy"]}
+      />
+      <ChipList
+        label="Stack, small"
+        size="sm"
+        text="name"
+        items={["Spring Boot", "Node.js", "uDeploy"]}
+      />
+    </div>
+  ),
+};
+
+/** A visible `heading` names the list; assistive tech hears it once. */
+export const HeadedList: StoryObj<typeof Chip> = {
+  render: () => (
+    <div className="flex w-90 flex-col gap-6">
+      <ChipList
+        heading="SHOTS PLAYED"
+        size="md"
+        text="name"
+        items={["Java", "Spring Boot", "React", "Oracle"]}
+      />
+      <ChipList heading="STACK" size="sm" text="name" items={["React", "Node.js", "Firebase"]} />
+    </div>
+  ),
+};
+
 export const FluidSizes: StoryObj<typeof Chip> = {
   render: () => (
     <div className="flex flex-wrap gap-3">

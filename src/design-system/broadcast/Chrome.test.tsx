@@ -62,6 +62,12 @@ describe("broadcast chrome", () => {
     expect(screen.getByText("Bye.")).toHaveAttribute("data-state", "out");
   });
 
+  it("CommentaryBar carries a stable hook for tests that find or mask it", () => {
+    const { container } = render(<CommentaryBar tag="COMM" line="Hello." />);
+    expect(container.querySelectorAll("[data-commentary-bar]")).toHaveLength(1);
+    expect(container.firstElementChild).toHaveAttribute("data-commentary-bar");
+  });
+
   it("CommentaryBar shows the tag and the current line", () => {
     render(<CommentaryBar tag="COMM" line="Still not out." />);
     expect(screen.getByText("COMM")).toHaveClass("bg-volt", "text-volt-ink");

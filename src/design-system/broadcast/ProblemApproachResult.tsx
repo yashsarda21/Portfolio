@@ -9,6 +9,8 @@ interface ProblemApproachResultProps {
   serve: Cell;
   rally: Cell;
   winner: Cell;
+  /** Id of the list, so a video can point at it as its text alternative. */
+  id?: string;
   className?: string;
 }
 
@@ -22,11 +24,12 @@ export function ProblemApproachResult({
   serve,
   rally,
   winner,
+  id,
   className,
 }: ProblemApproachResultProps) {
   return (
     <div className={cn("@container", className)}>
-      <dl className="grid grid-cols-1 gap-0.5 @min-[34rem]:grid-cols-3">
+      <dl id={id} className="grid grid-cols-1 gap-0.5 @min-[34rem]:grid-cols-3">
         {[serve, rally].map((cell) => (
           <div key={cell.label} className={cn(CELL, "glass")}>
             <dt className="type-mono-label text-scout">{cell.label}</dt>

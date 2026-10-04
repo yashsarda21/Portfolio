@@ -94,6 +94,18 @@ export const HUDButtonTones: StoryObj = {
     <div className="flex gap-4 bg-night p-6">
       <HUDButton>GLASS</HUDButton>
       <HUDButton tone="volt-outline">VOLT OUTLINE</HUDButton>
+      {/* Glass from 768 up; a bordered chip on the phone (the stories run at both widths). */}
+      <HUDButton tone="glass-line">GLASS LINE</HUDButton>
+    </div>
+  ),
+};
+
+/** The content-page header mark: 40px (18px type), 36px (16px type) below 768. */
+export const FluidBrandLockup: StoryObj = {
+  render: () => (
+    <div className="flex flex-col items-start gap-4">
+      <BrandLockup mark="YS" size="fluid" label="HUB" />
+      <BrandLockup as="a" href="#hub" mark="YS" size="fluid" label="HUB" />
     </div>
   ),
 };

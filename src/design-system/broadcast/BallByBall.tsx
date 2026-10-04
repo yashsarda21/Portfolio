@@ -8,11 +8,11 @@ export function BallByBall({ items, className }: { items: string[]; className?: 
     <ol role="list" className={cn("flex flex-col", className)}>
       {items.map((text, i) => (
         <li
-          key={text}
+          key={i}
           className="grid grid-cols-[44px_minmax(0,1fr)] gap-2.5 border-t border-line py-2.25"
         >
           <span className="pt-0.5 type-mono-stack text-volt">{`0.${i + 1}`}</span>
-          <span className="type-body-ball text-text-1">{text}</span>
+          <span className="type-body-sm text-text-1">{text}</span>
         </li>
       ))}
     </ol>

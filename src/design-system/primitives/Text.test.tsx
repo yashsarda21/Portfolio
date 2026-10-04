@@ -34,6 +34,44 @@ describe("Text", () => {
   });
 });
 
+describe("Text leading and caps", () => {
+  it("keeps the recipe's own line height by default", () => {
+    render(<Text variant="caption">plain</Text>);
+    expect(screen.getByText("plain").className).not.toMatch(/leading-/);
+  });
+
+  it('leading="font" is the font\'s own line box, and stays after a later recipe merge', () => {
+    render(
+      <Text variant="mono-label" leading="font" tone="label">
+        bare span
+      </Text>,
+    );
+    expect(screen.getByText("bare span")).toHaveClass("type-mono-label", "leading-auto");
+  });
+
+  it("caps forces uppercase on a mixed-case recipe", () => {
+    render(
+      <Text variant="mono-stack" caps>
+        Jul 2024
+      </Text>,
+    );
+    expect(screen.getByText("Jul 2024")).toHaveClass("type-mono-stack", "uppercase");
+  });
+
+  it("reaches Heading and MonoLabel", () => {
+    render(
+      <>
+        <Heading level={3} variant="mono-label" leading="font">
+          H
+        </Heading>
+        <MonoLabel leading="font">M</MonoLabel>
+      </>,
+    );
+    expect(screen.getByRole("heading", { level: 3 })).toHaveClass("leading-auto");
+    expect(screen.getByText("M")).toHaveClass("leading-auto");
+  });
+});
+
 describe("Heading", () => {
   it.each([
     [1, "type-d1"],

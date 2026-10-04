@@ -27,18 +27,20 @@ describe("Chip sizes", () => {
     expect(chip).not.toHaveClass("type-mono-md");
   });
 
-  it("stack size writes the name as given: untracked mono, 32px plus borders", () => {
-    render(<Chip size="stack">Spring Boot</Chip>);
+  it("text=name writes the name as given: the untracked mono face, not the uppercase label", () => {
+    render(
+      <Chip size="md" text="name">
+        Spring Boot
+      </Chip>,
+    );
     const chip = screen.getByText("Spring Boot");
-    expect(chip).toHaveClass("type-mono-stack", "box-content", "h-8", "px-3");
+    expect(chip).toHaveClass("type-mono-stack");
     expect(chip).not.toHaveClass("type-mono-md");
   });
 
-  it("stack-sm size is the stack chip a size down: 30px plus borders, 10px padding", () => {
-    render(<Chip size="stack-sm">Node.js</Chip>);
-    const chip = screen.getByText("Node.js");
-    expect(chip).toHaveClass("type-mono-stack", "box-content", "h-7.5", "px-2.5");
-    expect(chip).not.toHaveClass("type-mono-md");
+  it("text=label (the default) keeps the uppercase mono label", () => {
+    render(<Chip size="sm">Node.js</Chip>);
+    expect(screen.getByText("Node.js")).toHaveClass("type-mono-md");
   });
 
   it("meta size uses the chip recipe with a tighter mobile padding", () => {
@@ -56,5 +58,24 @@ describe("ChipList", () => {
     const items = within(list).getAllByRole("listitem");
     expect(items.map((i) => i.textContent)).toEqual(["React", "Spring Boot", "Oracle"]);
     expect(within(list).getByText("React")).toHaveClass("h-7.5");
+  });
+
+  it("names the list by its visible heading, and hides the heading from assistive tech", () => {
+    render(<ChipList items={["Java", "Oracle"]} heading="SHOTS PLAYED" />);
+    const list = screen.getByRole("list", { name: "SHOTS PLAYED" });
+    expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+    const heading = screen.getByText("SHOTS PLAYED");
+    expect(heading).toHaveAttribute("aria-hidden", "true");
+    expect(list).not.toContainElement(heading);
+  });
+
+  it("an explicit label wins over the heading as the accessible name", () => {
+    render(<ChipList items={["Java"]} heading="STACK" label="Tools used" />);
+    expect(screen.getByRole("list", { name: "Tools used" })).toBeInTheDocument();
+  });
+
+  it("without a heading it renders only the list", () => {
+    const { container } = render(<ChipList items={["Java"]} label="Stack" />);
+    expect(container.firstElementChild?.tagName).toBe("UL");
   });
 });

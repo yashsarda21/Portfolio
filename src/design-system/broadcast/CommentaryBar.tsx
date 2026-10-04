@@ -22,7 +22,13 @@ export function CommentaryBar({
   ...rest
 }: CommentaryBarProps) {
   return (
-    <div data-state={state} className={cn("flex items-stretch", className)} {...rest}>
+    // data-commentary-bar: the one hook tests use to find (and mask) the bar; `data-state` is shared with Radix.
+    <div
+      data-commentary-bar=""
+      data-state={state}
+      className={cn("flex items-stretch", className)}
+      {...rest}
+    >
       <span
         className={cn(
           "flex items-center bg-volt type-mono-comm text-volt-ink",

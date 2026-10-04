@@ -20,7 +20,8 @@ export const buttonVariants = cva(
         panel: "text-floodlight",
       },
       size: {
-        s: "h-13 px-6.5 type-btn",
+        // One line, never squeezed. On the phone it is the full-width bar (type-btn-bar, 54px), the look of `bar`.
+        s: "h-13 shrink-0 px-6.5 type-btn whitespace-nowrap max-md:h-13.5 max-md:w-full max-md:px-4 max-md:type-btn-bar",
         m: "h-15.5 px-10 type-btn",
         l: "h-18.5 px-10 type-btn-xl",
         xl: "h-19.5 w-77.5 flex-col gap-1 type-btn-xl",

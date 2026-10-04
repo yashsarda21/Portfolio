@@ -23,6 +23,17 @@ export const Tiles: StoryObj = {
   ),
 };
 
+/** The tiles in a page title's right slot: side by side at any width, filling the row on the phone. */
+export const TileRow: StoryObj = {
+  render: () => (
+    <div className="flex items-stretch gap-0.5 max-md:w-full">
+      <StatTile label="PRO SINCE" value="JUL 2024" />
+      <StatTile label="CLUB" value="DEUTSCHE" />
+      <StatTile label="CURRENT" value="NOT OUT" tone="volt" />
+    </div>
+  ),
+};
+
 export const Skills: StoryObj = {
   render: () => (
     <Glass pad="md" className="flex w-128.5 flex-col gap-3 px-5.5">

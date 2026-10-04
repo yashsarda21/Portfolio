@@ -10,14 +10,33 @@ interface MediaSlotProps {
   /** Top-right volt chip (e.g. THE FINAL). Decorative. */
   round: string;
   /** A screen recording. `null` (or omitted) shows the striped placeholder. */
-  media?: { src: string; captions?: string; poster?: string } | null;
+  media?: {
+    src: string;
+    poster?: string;
+    /** Captions, as a track. Leave out when there are none: an empty track is invalid and tells nobody anything. */
+    captions?: { src: string; label: string; srcLang: string };
+    /** A recording with no sound: it needs a text alternative (see `describedBy`), not captions. */
+    silent?: boolean;
+  } | null;
+  /** Id(s) of the text that describes the recording (e.g. the project line and its problem / approach / result). */
+  describedBy?: string;
   className?: string;
 }
 
 const CHIP = "absolute top-3.5 bg-ground px-2.5 py-1.5";
 
-/** The replay window: a striped placeholder until a recording exists, then a muted video with captions. */
-export function MediaSlot({ label, badge, round, media = null, className }: MediaSlotProps) {
+/**
+ * The replay window: a striped placeholder until a recording exists, then a muted video with controls.
+ * A silent recording is marked `data-silent` (the Storybook/e2e axe run skips only the captions rule for it).
+ */
+export function MediaSlot({
+  label,
+  badge,
+  round,
+  media = null,
+  describedBy,
+  className,
+}: MediaSlotProps) {
   return (
     // box-content: the artboard's 230px height excludes its 1px border.
     <div
@@ -36,10 +55,18 @@ export function MediaSlot({ label, badge, round, media = null, className }: Medi
           poster={media.poster}
           src={media.src}
           aria-label={label}
+          aria-describedby={describedBy}
+          data-silent={media.silent ? "" : undefined}
           className="size-full object-cover"
         >
-          {/* Always present so assistive tech and axe see a captions track; the replays are silent. */}
-          <track kind="captions" src={media.captions} srcLang="en" label="English" />
+          {media.captions ? (
+            <track
+              kind="captions"
+              src={media.captions.src}
+              srcLang={media.captions.srcLang}
+              label={media.captions.label}
+            />
+          ) : null}
         </video>
       ) : (
         <>

@@ -68,3 +68,31 @@ export const MonoLabels: Story = {
     </div>
   ),
 };
+
+/** `leading="font"`: the font's own line box, what an artboard span with no line-height draws. */
+export const LineBox: Story = {
+  render: () => (
+    <div className="flex flex-col gap-3">
+      <Text as="p" variant="body" tone="secondary">
+        leading="recipe" (default): the recipe&apos;s own line height
+      </Text>
+      <Text as="p" variant="body" tone="secondary" leading="font">
+        leading=&quot;font&quot;: the font&apos;s own line box
+      </Text>
+    </div>
+  ),
+};
+
+/** `caps`: uppercase for the mixed-case mono face and for content stored in sentence case. */
+export const Caps: Story = {
+  render: () => (
+    <div className="flex flex-col gap-2">
+      <Text variant="mono-stack" tone="label">
+        Jul 2024 – now
+      </Text>
+      <Text variant="mono-stack" tone="label" caps>
+        Jul 2024 – now
+      </Text>
+    </div>
+  ),
+};

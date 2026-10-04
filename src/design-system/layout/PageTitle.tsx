@@ -28,7 +28,7 @@ export function PageTitle({
         <MonoLabel variant="mono-kicker" tone={eyebrowTone}>
           {eyebrow}
         </MonoLabel>
-        <Heading level={level} variant="title-page">
+        <Heading level={level} variant="d1">
           {title}
         </Heading>
       </div>
