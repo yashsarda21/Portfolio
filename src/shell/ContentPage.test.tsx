@@ -140,6 +140,38 @@ describe("ContentPage", () => {
     expect(within(tabs).queryAllByRole("link", { current: "page" })).toHaveLength(1);
   });
 
+  it.each([
+    ["turf", { glow: ["80%", "115%", "0.4"], sky: "0.14" }],
+    ["court", { glow: ["70%", "110%", "0.45"], sky: "0.12" }],
+  ] as const)("draws the glows the %s artboard draws, with no per-page values", (venue, want) => {
+    const { container } = setup({ venue });
+    const glow = container.querySelector<HTMLElement>(".scene-venue-glow")!;
+    expect([
+      glow.style.getPropertyValue("--glow-w"),
+      glow.style.getPropertyValue("--glow-y"),
+      glow.style.getPropertyValue("--glow-a"),
+    ]).toEqual(want.glow);
+    expect(
+      container.querySelector<HTMLElement>(".scene-sky")!.style.getPropertyValue("--sky-a"),
+    ).toBe(want.sky);
+  });
+
+  it("lets a page override the venue's glows", () => {
+    const { container } = setup({
+      venue: "turf",
+      glow: { x: "10%", y: "100%", w: "30%", h: "20%", alpha: 0.9 },
+    });
+    expect(
+      container.querySelector<HTMLElement>(".scene-venue-glow")!.style.getPropertyValue("--glow-a"),
+    ).toBe("0.9");
+  });
+
+  it("has no venue glow without a venue, only the sky", () => {
+    const { container } = setup();
+    expect(container.querySelector(".scene-venue-glow")).toBeNull();
+    expect(container.querySelector(".scene-sky")).not.toBeNull();
+  });
+
   it("uses a custom backdrop in place of the default glows", () => {
     setup({ backdrop: <div data-testid="custom-backdrop" /> });
     expect(screen.getByTestId("custom-backdrop")).toBeInTheDocument();

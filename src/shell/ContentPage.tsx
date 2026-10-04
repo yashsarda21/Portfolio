@@ -44,16 +44,33 @@ export interface ContentPageProps {
   comm?: string;
   /** Replaces the default sky + venue glows (trophy, card and team-up pages draw their own). */
   backdrop?: ReactNode;
-  /** The top-of-page sky glow. Defaults to the Career artboard. */
+  /** The top-of-page sky glow. Defaults to the venue's artboard values. */
   sky?: GlowSpec;
-  /** The venue glow at the bottom edge. Defaults to the Career artboard. */
+  /** The venue glow at the bottom edge. Defaults to the venue's artboard values. */
   glow?: GlowSpec;
   /** The panels. */
   children: ReactNode;
 }
 
-const DEFAULT_SKY: GlowSpec = { x: "50%", y: "-10%", w: "60%", h: "40%", alpha: 0.13 };
-const DEFAULT_GLOW: GlowSpec = { x: "50%", y: "115%", w: "80%", h: "50%", alpha: 0.4 };
+type Venue = NonNullable<ContentPageProps["venue"]>;
+
+/** The glows each venue's artboard draws (Cricket-Career, Tennis-Highlights, Badminton-Attributes). */
+const VENUE_GLOWS: Record<Venue, { sky: GlowSpec; glow: GlowSpec }> = {
+  turf: {
+    sky: { x: "50%", y: "-10%", w: "60%", h: "40%", alpha: 0.14 },
+    glow: { x: "50%", y: "115%", w: "80%", h: "50%", alpha: 0.4 },
+  },
+  court: {
+    sky: { x: "50%", y: "-10%", w: "60%", h: "40%", alpha: 0.12 },
+    glow: { x: "50%", y: "110%", w: "70%", h: "50%", alpha: 0.45 },
+  },
+  hall: {
+    sky: { x: "50%", y: "-10%", w: "50%", h: "40%", alpha: 0.1 },
+    glow: { x: "30%", y: "110%", w: "60%", h: "50%", alpha: 0.4 },
+  },
+};
+/** A page with no venue still gets a sky. */
+const NO_VENUE_SKY: GlowSpec = VENUE_GLOWS.turf.sky;
 
 /**
  * The frame every content page shares: backdrop, HUD (breadcrumb, REMATCH, QUICK VIEW), title block,
@@ -71,10 +88,11 @@ export function ContentPage({
   next,
   comm,
   backdrop,
-  sky = DEFAULT_SKY,
-  glow = DEFAULT_GLOW,
+  sky,
+  glow,
   children,
 }: ContentPageProps) {
+  const preset = venue ? VENUE_GLOWS[venue] : undefined;
   const { say } = useCommentary();
   useEffect(() => {
     if (comm) say(comm, { interrupt: true });
@@ -89,8 +107,8 @@ export function ContentPage({
         backdrop={
           backdrop ?? (
             <>
-              <SkyGlow {...sky} />
-              {venue ? <VenueGlow {...glow} /> : null}
+              <SkyGlow {...(sky ?? preset?.sky ?? NO_VENUE_SKY)} />
+              {preset ? <VenueGlow {...(glow ?? preset.glow)} /> : null}
             </>
           )
         }
@@ -125,14 +143,15 @@ export function ContentPage({
         }
         footer={
           <>
-            <CommentarySlot tag={ui.comm.tag} />
+            {/* min-w-0: the line wraps or shrinks before the button does (the button never shrinks). */}
+            <CommentarySlot tag={ui.comm.tag} className="min-w-0" />
             {next ? (
               <Button
                 as={ArenaLink}
                 to={next.to}
                 size="s"
                 skew="desktop"
-                className="ml-auto max-md:ml-0 max-md:w-full"
+                className="ml-auto max-md:ml-0"
               >
                 {/* One run of text, so the arrow follows the label with a plain space as the artboard sets it. */}
                 <span>
