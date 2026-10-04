@@ -1,10 +1,12 @@
 import raw from "./content.json";
-import { parseContent } from "./schema";
+import type { Content } from "./schema";
 
-/** Validated content. Importing this module throws (and fails the build) if content.json is invalid. */
-export const content = parseContent(raw);
+/**
+ * Resume content. Validated at build time by the `arena-content-check` Vite plugin
+ * and by schema.test.ts, so no runtime parsing (and no Zod) ships to visitors.
+ */
+export const content = raw as unknown as Content;
 
-export { ContentError, parseContent } from "./schema";
 export type { Content, SkillLevel } from "./schema";
 export * from "./format";
 export * from "./selectors";

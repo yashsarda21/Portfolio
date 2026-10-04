@@ -14,7 +14,7 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [x] Add the ground alpha ramp (×4) and white ramp to ×6 (spec §5.1) when HUD/bars are built.
 
 ## 0D — Stage, shell, routes
-- [ ] Validate content at build time (prerender/Vite plugin) and ship plain typed JSON to the client, instead of parsing with Zod in the browser on every load.
+- [x] Validate content at build time (prerender/Vite plugin) and ship plain typed JSON to the client, instead of parsing with Zod in the browser on every load.
 - [ ] Replace the placeholder home (and its `#top` link) with route placeholders.
 - [ ] ArenaBackdrop full-bleed: outer full-bleed layer (bg-night + sky) + inner 1440×900 layer scaled by --stage-scale, overflow visible.
 - [ ] Pick the venue per route via `<ArenaBackdrop venue>` (turf / court / hall); the default is turf.

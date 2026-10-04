@@ -9,8 +9,22 @@ import { importX, createNodeResolver } from "eslint-plugin-import-x";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import globals from "globals";
 
-const restrictImports = (groups, message) => ({
-  "no-restricted-imports": ["error", { patterns: [{ group: groups, message }] }],
+// Zod and the content schema are build/test-only: never import them from client code (spec §6).
+const ZOD_PATH = { name: "zod", message: "Zod is build-time only (content schema)." };
+const SCHEMA_PATTERN = {
+  group: ["@/content/schema", "**/content/schema"],
+  message: "Import from @/content; the schema is build/test-only.",
+};
+
+// Flat config replaces a rule per key, so every client-code block must carry the zod/schema ban itself.
+// src/content and src/lib are exempt (content owns the schema and its tests).
+const restrictImports = (groups, message, { clientCode = true } = {}) => ({
+  "no-restricted-imports": [
+    "error",
+    clientCode
+      ? { paths: [ZOD_PATH], patterns: [{ group: groups, message }, SCHEMA_PATTERN] }
+      : { patterns: [{ group: groups, message }] },
+  ],
 });
 
 // Filesystem-based zones: these catch relative imports as well as the @/ and ~/ aliases.
@@ -140,6 +154,7 @@ export default defineConfig(
     rules: restrictImports(
       ["@/design-system", "@/design-system/*", "@/features/*", "@/shell", "@/shell/*", "~/*"],
       "content/ and lib/ are leaf layers (spec §4.2).",
+      { clientCode: false },
     ),
   },
   {
@@ -148,6 +163,13 @@ export default defineConfig(
       ["@/features/*"],
       "Features never import each other; move shared code down (spec §4.2).",
     ),
+  },
+  {
+    // Folders with no layer rule of their own still get the zod/schema ban.
+    files: ["app/**/*.{ts,tsx}", "src/shell/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", { paths: [ZOD_PATH], patterns: [SCHEMA_PATTERN] }],
+    },
   },
   {
     files: [
