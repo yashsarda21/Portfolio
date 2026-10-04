@@ -15,7 +15,7 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 
 ## 0D — Stage, shell, routes
 - [x] Validate content at build time (prerender/Vite plugin) and ship plain typed JSON to the client, instead of parsing with Zod in the browser on every load.
-- [ ] Replace the placeholder home (and its `#top` link) with route placeholders.
+- [x] Replace the placeholder home (and its `#top` link) with route placeholders.
 - [x] ArenaBackdrop full-bleed: outer full-bleed layer (bg-night + sky) + inner 1440×900 layer scaled by --stage-scale, overflow visible.
 - [ ] Pick the venue per route via `<ArenaBackdrop venue>` (turf / court / hall); the default is turf.
 - [ ] CommentaryBar: the commentary service owns the live region (pass `aria-hidden` through rest props) and flips `state="out"` before unmounting a line.

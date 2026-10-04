@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { ui } from "../../src/content/ui-copy";
 import { TOKEN_CATALOG } from "../../src/design-system/tokens/catalog";
 
 function builtCss(): string {
@@ -37,7 +38,8 @@ test.describe("design tokens", () => {
 
   test("keyboard focus shows the volt ring", async ({ page }) => {
     await page.goto("/");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab"); // first stop is the skip link
+    await expect(page.getByRole("link", { name: ui.skipToContent })).toBeFocused();
     const ring = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement;
       const s = getComputedStyle(el);
