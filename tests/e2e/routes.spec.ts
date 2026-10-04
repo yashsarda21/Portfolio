@@ -46,6 +46,19 @@ test("focus moves to the new heading after a wipe navigation", async ({ page }) 
   await expect(page.locator("[data-wipe] > div").first()).toBeHidden();
 });
 
+test("focus lands on the rendered heading of the landing page, not its hidden twin", async ({
+  page,
+}) => {
+  // "/" holds two <h1>s (desktop Scoreboard, mobile placeholder); only one is rendered per breakpoint.
+  await page.goto(ROUTES.career);
+  await page
+    .getByRole("navigation", { name: ui.placeholder.siteMap })
+    .getByRole("link", { name: ui.routes.home.heading })
+    .click();
+  await expect(page).toHaveURL(ROUTES.home);
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+});
+
 test("reduced motion navigates without the wipe", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(ROUTES.career);
@@ -78,11 +91,15 @@ test("home matches the Main artboard", async ({ page }, testInfo) => {
   await page.goto("/");
   await page.waitForTimeout(3800); // floodlight flicker settles
   const ratio = await expectMatchesArtboard(page, "Main", {
-    maxDiffRatio: 0.03,
+    maxDiffRatio: 0.02,
     maskRects: [
       { x: 560, y: 368, width: 320, height: 52 }, // subtitle tracking (carry-over, Phase 3)
       { x: 30, y: 815, width: 400, height: 60 }, // commentary line animates in
+      // D-1 (spec §11.4): our cone tops start under each lamp, Main's are drawn offset. Sized to the
+      // differing wedge only (not the whole cone box, never the scoreboard or CTAs).
+      { x: 106, y: 120, width: 78, height: 142 }, // left cone
+      { x: 1255, y: 120, width: 80, height: 151 }, // right cone
     ],
   });
-  expect(ratio).toBeLessThanOrEqual(0.03);
+  expect(ratio).toBeLessThanOrEqual(0.02);
 });

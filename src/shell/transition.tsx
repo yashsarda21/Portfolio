@@ -2,19 +2,20 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate, type NavigateOptions } from "react-router";
 import { BrandLockup } from "@/design-system";
 import { ui } from "@/content";
 import { gsap, prefersReducedMotion } from "@/lib/motion";
 
 type Kind = "wipe" | "tunnel";
 interface TransitionApi {
-  go(to: string, kind?: Kind): Promise<void>;
+  go(to: string, kind?: Kind, options?: NavigateOptions): Promise<void>;
   busy: boolean;
 }
 
@@ -23,20 +24,28 @@ const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()
 
 export function TransitionProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const { key: locationKey } = useLocation();
+  // Latest location key, readable from inside go() after awaits (back/forward can land mid-cover).
+  const locationKeyRef = useRef(locationKey);
+  useEffect(() => {
+    locationKeyRef.current = locationKey;
+  }, [locationKey]);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const bar = useRef<HTMLDivElement>(null);
   const mark = useRef<HTMLDivElement>(null);
 
   const go = useCallback(
-    async (to: string, kind: Kind = "wipe") => {
+    async (to: string, kind: Kind = "wipe", options?: NavigateOptions) => {
       if (busyRef.current) return;
+      // Reduced motion: navigate instantly, no crossfade (spec §11.5).
       if (prefersReducedMotion() || !bar.current || !mark.current) {
-        await navigate(to);
+        await navigate(to, options);
         return;
       }
       busyRef.current = true;
       setBusy(true);
+      const startKey = locationKeyRef.current;
       try {
         const scene = document.querySelector<HTMLElement>("[data-transition-scene]");
         if (kind === "tunnel" && scene) {
@@ -53,7 +62,8 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
           .set(bar.current, { xPercent: -130, autoAlpha: 1 })
           .to(bar.current, { xPercent: 0, duration: 0.24, ease: "power2.in" })
           .to(mark.current, { autoAlpha: 1, duration: 0.08 }, "-=0.06");
-        await navigate(to);
+        // Back/forward during the cover already moved the visitor: don't push the old target on top.
+        if (locationKeyRef.current === startKey) await navigate(to, options);
         await nextFrame();
         await nextFrame();
         // Reveal.
@@ -63,6 +73,10 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
           .to(bar.current, { xPercent: 130, duration: 0.24, ease: "power2.out" }, "<")
           .set(bar.current, { autoAlpha: 0 });
       } finally {
+        // Whatever happened above (interrupted, rejected), leave nothing covering or transformed.
+        gsap.set([bar.current, mark.current].filter(Boolean), { autoAlpha: 0 });
+        const scenes = document.querySelectorAll<HTMLElement>("[data-transition-scene]");
+        if (scenes.length > 0) gsap.set(scenes, { clearProps: "transform,filter" });
         busyRef.current = false;
         setBusy(false);
       }

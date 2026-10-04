@@ -28,19 +28,27 @@ function createEngine(onChange: (next: Current) => void) {
     showing = next;
     onChange(next);
   };
-  const schedule = (fn: () => void, ms: number) => {
+  const stop = () => {
     if (timer) clearTimeout(timer);
-    timer = setTimeout(fn, ms);
+    timer = null;
   };
+  const schedule = (fn: () => void, ms: number) => {
+    stop();
+    timer = setTimeout(() => {
+      timer = null;
+      fn();
+    }, ms);
+  };
+  function afterExit() {
+    const next = pending;
+    pending = null;
+    if (next) show(next);
+    else commit(null);
+  }
   function exit() {
     if (!showing) return;
     commit({ ...showing, state: "out" });
-    schedule(() => {
-      const next = pending;
-      pending = null;
-      if (next) show(next);
-      else commit(null);
-    }, EXIT_MS);
+    schedule(afterExit, EXIT_MS);
   }
   function show(line: string) {
     commit({ line, state: "in" });
@@ -56,12 +64,16 @@ function createEngine(onChange: (next: Current) => void) {
     },
     clear() {
       pending = null;
-      if (timer) clearTimeout(timer);
+      stop();
       commit(null);
     },
-    dispose() {
-      if (timer) clearTimeout(timer);
+    /** Re-arm the timer that dispose() stopped (strict mode runs effect cleanup, then setup again). */
+    resume() {
+      if (!showing || timer) return;
+      if (showing.state === "in") schedule(exit, HOLD_MS);
+      else schedule(afterExit, EXIT_MS);
     },
+    dispose: stop,
   };
 }
 
@@ -69,7 +81,10 @@ export function CommentaryProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<Current>(null);
   const [engine] = useState(() => createEngine(setCurrent));
 
-  useEffect(() => () => engine.dispose(), [engine]);
+  useEffect(() => {
+    engine.resume();
+    return engine.dispose;
+  }, [engine]);
 
   const api = useMemo(() => ({ current, say: engine.say, clear: engine.clear }), [current, engine]);
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
