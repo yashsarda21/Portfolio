@@ -168,6 +168,39 @@ describe("content schema", () => {
       });
     });
 
+    describe("Phase 2A content fields", () => {
+      it("requires player.clubShort", () => {
+        const broken = clone();
+        delete broken.player.clubShort;
+        expect(() => parseContent(broken)).toThrow(/player\.clubShort/);
+      });
+
+      it("accepts a highlight with https links, and without links", () => {
+        const ok = clone();
+        ok.matchHighlights[0].links = {
+          code: "https://github.com/x/y",
+          demo: "https://x.example",
+          caseStudy: "https://x.example/case",
+        };
+        expect(() => parseContent(ok)).not.toThrow();
+        ok.matchHighlights[0].links = {};
+        expect(() => parseContent(ok)).not.toThrow();
+      });
+
+      it.each(["http://x.example", "#"])("rejects links.demo %s", (demo) => {
+        const broken = clone();
+        broken.matchHighlights[0].links = { demo };
+        expect(() => parseContent(broken)).toThrow(/matchHighlights\.0\.links\.demo/);
+      });
+
+      it("rejects an unknown key inside links", () => {
+        const broken = clone();
+        broken.matchHighlights[0].links = { demo: "https://x.example", blog: "https://x.example" };
+        expect(() => parseContent(broken)).toThrow(/matchHighlights\.0\.links/);
+        expect(() => parseContent(broken)).toThrow(/blog/);
+      });
+    });
+
     describe("Link.href", () => {
       const withHref = (href: string) => {
         const c = clone();

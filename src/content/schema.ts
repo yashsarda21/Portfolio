@@ -41,6 +41,7 @@ export const ContentSchema = z.strictObject({
     cardBio: z.string().min(1),
     location: z.string().min(1),
     currentClub: z.string().min(1),
+    clubShort: z.string().min(1),
     proSince: YearMonth,
     contact: z.strictObject({
       email: z.email(),
@@ -116,6 +117,9 @@ export const ContentSchema = z.strictObject({
         media: z.string().min(1).nullable(),
         facts: z.array(z.strictObject({ k: z.string().min(1), v: z.string().min(1) })).min(1),
         scoutLine: z.string().min(1),
+        links: z
+          .strictObject({ code: Url.optional(), demo: Url.optional(), caseStudy: Url.optional() })
+          .optional(),
       }),
     )
     .length(3)
