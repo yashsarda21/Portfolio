@@ -1,5 +1,5 @@
 import { content, ui } from "@/content";
-import { Button, SkyGlow, StickyBottomActions } from "@/design-system";
+import { Button, FluidContainer, SkyGlow, StickyBottomActions } from "@/design-system";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { ROUTES } from "@/shell/routes";
 import { AttributesSection } from "./AttributesSection";
@@ -18,27 +18,17 @@ export function QuickView({ report }: { report: ScoutReport }) {
     <div className="relative min-h-dvh bg-ground text-floodlight">
       <SkyGlow w="80%" h="500px" alpha={0.12} className="max-md:hidden" />
       <ScoutHeader header={report.header} />
-      <main
-        id="main"
-        className="relative mx-auto flex max-w-312 flex-col gap-24 px-6 max-md:gap-4 max-md:px-4 max-md:pb-32"
-      >
+      <FluidContainer as="main" id="main" className="relative flex flex-col gap-24 max-md:gap-4">
         <ScoutHero hero={report.hero} />
         <CareerSection career={report.career} sep={report.hero.sep} />
         <HighlightsSection highlights={report.highlights} />
         <AttributesSection attributes={report.attributes} />
         <TrophiesSection trophies={report.trophies} academy={report.academy} />
         <TeamUpBand teamUp={report.teamUp} />
-      </main>
+      </FluidContainer>
       <ScoutFooter footer={report.footer} />
       <StickyBottomActions label={report.actions.label}>
-        <Button
-          as={ArenaLink}
-          to={report.actions.card.to}
-          size="bar"
-          variant="panel"
-          skew={false}
-          className="h-14"
-        >
+        <Button as={ArenaLink} to={report.actions.card.to} size="bar" variant="panel" skew={false}>
           {report.actions.card.label}
         </Button>
         <Button as="a" href={report.actions.teamUp.href} size="bar" skew={false} glow={false}>

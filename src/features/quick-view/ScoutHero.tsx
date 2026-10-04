@@ -1,32 +1,22 @@
 import { Fragment } from "react";
-import { ui } from "@/content";
 import { Button, Chip, Heading, MonoLabel } from "@/design-system";
 import type { ScoutReport } from "./report";
-
-/** Screen-reader note for a link that leaves the page in a new tab. */
-export function NewTabHint() {
-  return <span className="sr-only"> {ui.scout.newTab}</span>;
-}
 
 export function ScoutHero({ hero }: { hero: ScoutReport["hero"] }) {
   const { primary, secondary } = hero;
   return (
     <section
       aria-labelledby="scout-title"
-      className="flex flex-col gap-6.5 pt-20 max-md:gap-4 max-md:pt-5.75"
+      className="flex flex-col gap-6.5 pt-20 max-md:gap-4 max-md:pt-6"
     >
-      <MonoLabel
-        variant="mono-eyebrow"
-        tone="volt"
-        className="leading-[normal] max-md:type-mono-label max-md:leading-3.25"
-      >
+      <MonoLabel variant="mono-kicker" tone="volt">
         {hero.eyebrow}
         <span className="max-md:hidden">
           {" "}
           {hero.sep} {hero.eyebrowMore}
         </span>
       </MonoLabel>
-      <Heading level={1} variant="hero-fluid" id="scout-title" className="max-md:tracking-[normal]">
+      <Heading level={1} variant="hero-fluid" id="scout-title">
         {hero.nameParts.map((part, i) => (
           <Fragment key={part}>
             {i > 0 ? " " : null}
@@ -38,14 +28,10 @@ export function ScoutHero({ hero }: { hero: ScoutReport["hero"] }) {
         <span className="max-md:hidden">{hero.summary}</span>
         <span className="md:hidden">{hero.summaryShort}</span>
       </p>
-      <ul className="flex flex-wrap gap-2.5 max-md:gap-1.25">
+      <ul className="flex flex-wrap gap-2.5 max-md:gap-1.5">
         {hero.chips.map((chip) => (
           <li key={chip.label} className={chip.desktopOnly ? "max-md:hidden" : undefined}>
-            <Chip
-              size="meta"
-              tone={chip.highlight ? "volt-outline" : "meta"}
-              className="leading-[normal] max-md:py-[5.5px]"
-            >
+            <Chip size="meta" tone={chip.highlight ? "volt-outline" : "meta"}>
               {chip.short ? (
                 <>
                   <span className="max-md:hidden">{chip.label}</span>
@@ -68,16 +54,9 @@ export function ScoutHero({ hero }: { hero: ScoutReport["hero"] }) {
           {...(primary.newTab ? { target: "_blank", rel: "noopener" } : {})}
         >
           {primary.label}
-          {primary.newTab ? <NewTabHint /> : null}
+          {primary.newTab ? <span className="sr-only"> {hero.newTabHint}</span> : null}
         </Button>
-        <Button
-          as="a"
-          href={secondary.href}
-          variant="outline"
-          size="cta"
-          skew={false}
-          className="min-h-14.5"
-        >
+        <Button as="a" href={secondary.href} variant="outline" size="cta" skew={false}>
           {secondary.label}
         </Button>
       </div>

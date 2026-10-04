@@ -31,7 +31,7 @@ test("Quick View mobile matches Mobile-QuickView (artboard copy)", async ({ page
     // A2 (spec §11): the artboard's 10px mono lines are 11px on mobile, so their glyph boxes differ.
     ...(await boxes("section[aria-labelledby=scout-title] > span:first-child")), // eyebrow
     ...(await boxes("section[aria-labelledby=scout-title] > ul")), // chips
-    ...(await boxes("#career article span.type-mono-chip")), // dates
+    ...(await boxes("#career article span.type-mono-date")), // dates
     ...(await boxes("#career > div:first-child > span")), // "2 INNINGS"
     ...(await boxes("#highlights article > span:first-child")), // round labels
     // A10 (spec §11): the scroller's "SWIPE →" hint and right-edge fade are not on the artboard.

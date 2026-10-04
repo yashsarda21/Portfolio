@@ -1,14 +1,16 @@
-import { BrandLockup, HUDButton, MonoLabel } from "@/design-system";
+import { BrandLockup, FluidContainer, HUDButton, MonoLabel } from "@/design-system";
+import { cn } from "@/lib/cn";
 import { ArenaLink } from "@/shell/ArenaLink";
 import type { ScoutReport } from "./report";
 
 export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-line bar max-md:bg-ground-a92 md:backdrop-blur-glass">
-      <div className="mx-auto flex min-h-17 max-w-312 flex-wrap items-center justify-between gap-5 px-6 max-md:h-15 max-md:min-h-0 max-md:px-4">
+    // max-md:-mb-px: the artboard puts the hero 24px below the 60px header row, not below its 1px border.
+    <header className="sticky top-0 z-20 border-b border-line bar max-md:-mb-px max-md:bg-ground-a92 md:backdrop-blur-glass">
+      <FluidContainer className="flex min-h-17 flex-wrap items-center justify-between gap-5 max-md:h-15 max-md:min-h-0">
         <div className="flex items-center gap-3">
           <BrandLockup size="md" mark={header.mark} className="max-md:hidden" />
-          <MonoLabel variant="mono-eyebrow" className="max-md:type-mono-label">
+          <MonoLabel variant="mono-kicker" className="leading-auto">
             {header.label}
           </MonoLabel>
         </div>
@@ -27,19 +29,22 @@ export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
           as={ArenaLink}
           to={header.enter.to}
           tone="volt-outline"
-          className="h-11.5 max-md:hidden"
+          className="max-md:hidden"
         >
           {header.enter.label}
         </HUDButton>
         <ArenaLink
           to={header.enter.to}
-          className="inline-flex h-11 items-center type-mono-xs text-volt hover:text-volt-hover md:hidden"
+          className={cn(
+            "inline-flex h-11 items-center type-mono-xs text-volt hover:text-volt-hover md:hidden",
+            "leading-auto",
+          )}
         >
           <span>
             {header.enterShort} <span aria-hidden="true">{header.next}</span>
           </span>
         </ArenaLink>
-      </div>
+      </FluidContainer>
     </header>
   );
 }
