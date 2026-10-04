@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Glass } from "../primitives/Glass";
+import { SkillGroup } from "./SkillGroup";
 import { SkillRow } from "./SkillRow";
 import { StatTile } from "./StatTile";
 
@@ -42,5 +43,35 @@ export const Skills: StoryObj = {
       <SkillRow name="JavaScript" level="built" tierLabel="BUILT" animate />
       <SkillRow name="Apache Kafka" level="kit" tierLabel="KIT BAG" animate />
     </Glass>
+  ),
+};
+
+const GROUP_SKILLS = [
+  { name: "Java", level: "shipped", tierLabel: "SHIPPED" },
+  { name: "JUnit", level: "shipped", tierLabel: "75+ TESTS" },
+  { name: "JavaScript", level: "built", tierLabel: "BUILT" },
+  { name: "Apache Kafka", level: "kit", tierLabel: "KIT BAG" },
+] as const;
+
+/** A skill group at the desktop column width (three columns per row) and at a phone's (the bar drops under the name). */
+export const Group: StoryObj = {
+  render: () => (
+    <div className="flex flex-wrap items-start gap-6">
+      <SkillGroup
+        className="w-128.5"
+        name="BACKEND"
+        shotLine="SHOT · SMASH"
+        note="Power and pace — where most of my points are won."
+        skills={GROUP_SKILLS}
+        animate
+      />
+      <SkillGroup
+        className="w-82"
+        name="BACKEND"
+        shotLine="SHOT · SMASH"
+        note="Power and pace — where most of my points are won."
+        skills={GROUP_SKILLS}
+      />
+    </div>
   ),
 };

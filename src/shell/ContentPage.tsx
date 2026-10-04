@@ -25,6 +25,9 @@ export interface GlowSpec {
   alpha: number;
 }
 
+/** The sky glow's spec: the shared shape, plus whose light it takes (the venue's own, or the sky blue). */
+export type SkyGlowSpec = GlowSpec & { tone?: "sky" | "venue" };
+
 export interface ContentPageProps {
   /** The h1 is `ui.routes[route].heading`; the breadcrumb trail ends with it. */
   route: RouteKey;
@@ -47,7 +50,7 @@ export interface ContentPageProps {
   /** Replaces the default sky + venue glows (trophy, card and team-up pages draw their own). */
   backdrop?: ReactNode;
   /** The top-of-page sky glow. Defaults to the venue's artboard values. */
-  sky?: GlowSpec;
+  sky?: SkyGlowSpec;
   /** The venue glow at the bottom edge. Defaults to the venue's artboard values. */
   glow?: GlowSpec;
   /** The panels. */
@@ -57,7 +60,7 @@ export interface ContentPageProps {
 type Venue = NonNullable<ContentPageProps["venue"]>;
 
 /** The glows each venue's artboard draws (Cricket-Career, Tennis-Highlights, Badminton-Attributes). */
-const VENUE_GLOWS: Record<Venue, { sky: GlowSpec; glow: GlowSpec }> = {
+const VENUE_GLOWS: Record<Venue, { sky: SkyGlowSpec; glow: GlowSpec }> = {
   turf: {
     sky: { x: "50%", y: "-10%", w: "60%", h: "40%", alpha: 0.14 },
     glow: { x: "50%", y: "115%", w: "80%", h: "50%", alpha: 0.4 },
@@ -67,12 +70,13 @@ const VENUE_GLOWS: Record<Venue, { sky: GlowSpec; glow: GlowSpec }> = {
     glow: { x: "50%", y: "110%", w: "70%", h: "50%", alpha: 0.45 },
   },
   hall: {
-    sky: { x: "50%", y: "-10%", w: "50%", h: "40%", alpha: 0.1 },
+    // The hall's sky is warm: rgb(255 228 184), the venue's light, not the cool sky blue.
+    sky: { x: "50%", y: "-10%", w: "50%", h: "40%", alpha: 0.1, tone: "venue" },
     glow: { x: "30%", y: "110%", w: "60%", h: "50%", alpha: 0.4 },
   },
 };
 /** A page with no venue still gets a sky. */
-const NO_VENUE_SKY: GlowSpec = VENUE_GLOWS.turf.sky;
+const NO_VENUE_SKY: SkyGlowSpec = VENUE_GLOWS.turf.sky;
 
 /**
  * The frame every content page shares: backdrop, HUD (breadcrumb, REMATCH, QUICK VIEW), title block,

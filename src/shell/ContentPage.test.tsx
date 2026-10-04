@@ -156,6 +156,14 @@ describe("ContentPage", () => {
     ).toBe(want.sky);
   });
 
+  it("the hall's sky takes the venue's warm light; the other venues keep the sky blue", () => {
+    const hall = setup({ venue: "hall" });
+    expect(hall.container.querySelector(".scene-sky")).toHaveClass("scene-sky-venue");
+    hall.unmount();
+    const turf = setup({ venue: "turf" });
+    expect(turf.container.querySelector(".scene-sky")).not.toHaveClass("scene-sky-venue");
+  });
+
   it("lets a page override the venue's glows", () => {
     const { container } = setup({
       venue: "turf",

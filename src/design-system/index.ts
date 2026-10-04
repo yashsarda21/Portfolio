@@ -34,6 +34,7 @@ export { ScoreBug } from "./broadcast/ScoreBug";
 export { Scoreboard } from "./broadcast/Scoreboard";
 export { SegmentBar } from "./broadcast/SegmentBar";
 export { SkillRow } from "./broadcast/SkillRow";
+export { SkillGroup } from "./broadcast/SkillGroup";
 export { StatTile, parseStat } from "./broadcast/StatTile";
 export { Breadcrumb } from "./broadcast/Breadcrumb";
 export { MobileTabBar } from "./broadcast/MobileTabBar";

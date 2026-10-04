@@ -28,6 +28,22 @@ export const KeyValues: StoryObj = {
   ),
 };
 
+/** The profile spec sheet: compact rows under one rule; a stacked item puts its mono value under the label. */
+export const ProfileKeyValues: StoryObj = {
+  render: () => (
+    <Glass pad="md" className="w-75">
+      <KeyValueList
+        variant="profile"
+        items={[
+          { k: "Playing style", v: "Full-stack" },
+          { k: "Languages", v: "Java · JavaScript · Python" },
+          { k: "Kit bag", v: "Git · Google Cloud · CI/CD · Postman · Cursor", stacked: true },
+        ]}
+      />
+    </Glass>
+  ),
+};
+
 export const LegendRow: StoryObj = {
   render: () => (
     <Legend

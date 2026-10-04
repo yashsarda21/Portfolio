@@ -30,6 +30,34 @@ describe("KeyValueList", () => {
   });
 });
 
+describe("KeyValueList profile variant", () => {
+  const items = [
+    { k: "Playing style", v: "Full-stack" },
+    { k: "Kit bag", v: "Git · Google Cloud", stacked: true },
+  ];
+
+  it("is one definition list under a single rule, with compact rows", () => {
+    const { container } = render(<KeyValueList variant="profile" items={items} />);
+    const dl = container.querySelector("dl")!;
+    expect(dl).toHaveClass("border-t", "pt-3.5");
+    expect(
+      within(dl)
+        .getAllByRole("term")
+        .map((t) => t.textContent),
+    ).toEqual(["Playing style", "Kit bag"]);
+    expect(screen.getByText("Full-stack")).toHaveClass("type-body-sm", "text-right");
+    // No per-row rules: the one rule is the list's.
+    expect(container.querySelectorAll(".border-b").length).toBe(0);
+  });
+
+  it("a stacked item puts a mono value under its label", () => {
+    render(<KeyValueList variant="profile" items={items} />);
+    expect(screen.getByText("Git · Google Cloud")).toHaveClass("type-mono-run");
+    expect(screen.getByText("Kit bag").parentElement).toHaveClass("flex-col");
+    expect(screen.getByText("Playing style").parentElement).not.toHaveClass("flex-col");
+  });
+});
+
 describe("Legend", () => {
   it("lists swatches with labels", () => {
     render(

@@ -149,6 +149,10 @@ export const TOKEN_CATALOG = {
     "type-glyph-md",
     "type-glyph-sm",
     "type-mono-note",
+    "type-title-group",
+    "type-player-name",
+    "type-mono-shot",
+    "type-mono-run",
   ],
   shadows: [
     { name: "board", className: "shadow-board" },

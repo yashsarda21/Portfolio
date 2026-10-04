@@ -19,7 +19,7 @@ export function Legend({ items, className }: LegendProps) {
       {items.map((item) => (
         <li key={item.label} className="inline-flex items-center gap-2">
           <span aria-hidden="true" className={cn("h-2 w-4.5", SWATCH[item.swatch])} />
-          <span className="type-mono-tag text-scout">{item.label}</span>
+          <span className="type-mono-tag leading-auto text-scout">{item.label}</span>
         </li>
       ))}
     </ul>

@@ -2,6 +2,17 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ArenaBackdrop } from "./ArenaBackdrop";
 import { CrowdTier } from "./CrowdTier";
+import { SkyGlow } from "./SkyGlow";
+
+describe("SkyGlow", () => {
+  it("is the cool sky blue unless the tone is the venue's", () => {
+    const { container, rerender } = render(<SkyGlow />);
+    expect(container.firstElementChild).toHaveClass("scene-sky");
+    expect(container.firstElementChild).not.toHaveClass("scene-sky-venue");
+    rerender(<SkyGlow tone="venue" />);
+    expect(container.firstElementChild).toHaveClass("scene-sky", "scene-sky-venue");
+  });
+});
 
 describe("scene", () => {
   it("CrowdTier leaves density to the venue unless alpha is passed", () => {

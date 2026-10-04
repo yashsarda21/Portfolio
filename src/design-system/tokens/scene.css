@@ -9,9 +9,15 @@
 @utility scene-sky {
   background: radial-gradient(
     ellipse var(--sky-w, 75%) var(--sky-h, 50%) at var(--sky-x, 50%) var(--sky-y, 0%),
-    rgb(var(--rgb-sky) / var(--sky-a, 0.2)),
+    rgb(var(--sky-rgb, var(--rgb-sky)) / var(--sky-a, 0.2)),
     transparent 70%
   );
+}
+
+/* The sky takes the venue's own light (the hall's warm white) instead of the cool sky blue. Undefined
+   outside a venue: the var() then falls back to the sky blue. */
+@utility scene-sky-venue {
+  --sky-rgb: var(--venue-light-rgb);
 }
 
 @utility scene-venue-glow {
@@ -256,9 +262,11 @@
 @keyframes seg-fill {
   from {
     opacity: 0;
+    transform: scaleY(0.2);
   }
   to {
     opacity: 1;
+    transform: none;
   }
 }
 @utility animate-seg-fill {

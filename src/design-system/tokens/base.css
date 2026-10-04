@@ -655,6 +655,39 @@
   font-size: 11px;
   line-height: normal;
 }
+/* A skill group's name (Badminton-Attributes "BACKEND"): 32px at .02em on the font's own line box. */
+@utility type-title-group {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 32px;
+  line-height: normal;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* The player's name on the profile: 34px on a 1.0 line (type-d3 is .95 and drops to 30px on the phone). */
+@utility type-player-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 34px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+/* The shot a group is named for ("SHOT · SMASH"): 11px at .18em on the font's own line box. */
+@utility type-mono-shot {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  line-height: normal;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+/* A run of tools set in mono (the kit bag): 12px on a 1.6 line, sentence case. */
+@utility type-mono-run {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.6;
+}
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {
