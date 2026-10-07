@@ -222,10 +222,12 @@ Resolved token drift (audit §2.10):
 | Layer | Job | How |
 |---|---|---|
 | **CSS presets** | Micro-interactions and single-element entrances: fade, rise, pop, live pulse, segment fill (350ms, 40ms stagger), hover floodlight sweep (300ms), press scale 0.97, card lift 8px | Tailwind utilities and keyframes from motion tokens. Stagger uses a `--i` custom property. |
-| **GSAP timelines** | Choreography: landing boot, Player Intro, broadcast wipe, tunnel push, count-ups (900ms, tabular digits), ball/shuttle arcs, card tilt (`quickTo`), Hub idle sway | Each timeline is a **factory function**, e.g. `createIntroTimeline(refs, { tier })`, built from **labels and relative positions, not absolute seconds**. Desktop, tablet and mobile variants are the same timeline at different speeds or with tracks removed (fixes audit §10 #12). |
+| **GSAP timelines** | Choreography: Player Intro, broadcast wipe, tunnel push, count-ups (900ms, tabular digits), ball/shuttle arcs, card tilt (`quickTo`), Hub idle sway | Each timeline is a **factory function**, e.g. `createIntroTimeline(refs, { tier })`, built from **labels and relative positions, not absolute seconds**. Desktop, tablet and mobile variants are the same timeline at different speeds or with tracks removed (fixes audit §10 #12). |
 | **Sprite rig** | Intro head turn: 3 strips × 16 frames, plus `rest.webp` poster | Stepped ease, chained by timeline labels. Strips (~2.2MB) preload **only after landing text paints**. |
 
-**Timing sources:** landing follows the Main artboard. The intro follows the Intro artboard and README §6 table (the newer source wins on conflicts; audit §7.2 #16–18). Intro lengths: desktop ~6s, tablet 4s, mobile 2s (lights + name), reduced motion instant.
+**Timing sources:** landing follows the Main artboard. The intro follows the Intro artboard and README §6 table (the newer source wins on conflicts; audit §7.2 #16–18). Intro lengths: desktop and tablet 6.5s (the tablet plays the desktop show on the scaled stage), mobile 2s (lights + name), reduced motion instant (§11.11).
+
+**The landing boot is CSS, not GSAP** (§11.11 L3): `animate-boot-*` presets on the first paint, with `--d` per part and `--pace` for the return visit. It runs with JS off, costs no JavaScript and keeps nothing invisible focusable. GSAP is loaded lazily (`loadGsap`) and only the Intro, the wipe and the card tilt use it.
 
 **Reduced motion:** every GSAP timeline has a reduced branch via `gsap.matchMedia()` (jump to end state, or 150ms crossfade). CSS animations are globally disabled. Games become the 3s auto-rally, then the reveal.
 
@@ -565,6 +567,97 @@ Deviations from the artboards (visual tests accept exactly these):
 | Real `/card` | COMM; the actions column from the first row down (`{984,262,420,404}`; C1: the real page has the request row and the copy row only, so the note below rises); SEASON only when the visitor's year is not 2026. | `/card` fidelity |
 | Real `/team-up` | None: the real content equals the board's words and the page has no commentary on arrival. | `/team-up` fidelity |
 | Team Up's `mailto` state | New (P2); not on the artboard. | `MailtoOpened` story, e2e |
+
+### 11.11 Landing and Player Intro (Phase 3)
+
+Rulings, as built (L1 to L14 of the Phase 3 plan; owner rulings of 2026-10-07 are marked):
+
+| ID | Decision | Why |
+|---|---|---|
+| L1 | **Tablet (768 to 1199px).** The **Landing** uses the phone column, centred and wider (`max-w-160`, one size step up; from `md` the board and the CTAs are one block centred under the top row, and the two banks hang over the column's edges). The Stage of the Landing starts at `lg` (1200px). The **Intro plays the full desktop show** on the scaled stage from `md` (768px, owner ruling): same timeline tier as desktop, rig included, L2 floors on, the tagline wraps inside the name column (`max-w-140`) so it never meets the portrait. Below 768px the Intro is the 2s phone column (L6). | A scaled landing at 1024px draws the 11px labels at about 7.8px; the owner wants the full intro on tablets. |
+| L2 | **Laptop and tablet Stage scales.** `[data-stage]` sets `--stage-mono-min` (11px / scale) and `--stage-body-min` (14px / scale). All 22 mono recipes of 13px or less and `type-mono-lg` (14px) read `max(Npx, var(--stage-mono-min))`; `type-comm` (16px, the only body recipe of 16px or less drawn in a stage) reads `max(16px, var(--stage-body-min))`. At 1440x900 nothing changes (12px and 11px mono stay, COMM stays 16px). Measured: COMM is 16px at 1440x900 and at least 14px rendered at 1280x720, 1024x768 and 768x1024. | A2 holds on every desktop and tablet, not only at 1440x900. |
+| L3 | **The Landing boot is CSS** (see §7). | First paint, JS off, no JavaScript cost. |
+| L4 | **Return visit.** `arena:landing-seen` is saved when the Landing mounts; a head script (`HEAD_FLAGS_SCRIPT`) puts `data-return-visit` on `<html>` before paint, and `--pace` drops from 1 to .25 (CTA entrance ends in 1.35s, at most 1.6s). Coming back to `/` in the same session also takes the short boot (a module flag set when the entrance line fires). No ticket gate: ENTER THE ARENA unlocks sound. | Opening board: "RETURN VISIT, 1.5s cut-down". |
+| L5 | **Phone Landing as drawn:** static, SOUND toggle, no COMM, no keyboard hint, no SKIP INTRO. **Phones start with sound on** (owner): the toggle is `aria-pressed`, reads SOUND ON where the board draws SOUND OFF; the state word is masked. | Owner ruling over the README matrix; the audio provider is unchanged. |
+| L6 | **Phone Intro (derived; no artboard):** the compact board with the header `LIVE · PLAYER INTRODUCTION` and `01 / 01`, the rest-pose portrait, the name locking in letter by letter (same 10 letters as the stage), SOFTWARE ENGINEER, the tagline, a two-cell footer (RECORD, STATUS), WELCOME TO MY ARENA, a full-width ENTER THE ARENA. REPLAY and SKIP INTRO in the top row (44px). Same timeline factory, tier `mobile`, tempo .7. **Measured 2.0s** from `playing` to `done` (2.000, 2.005, 2.000 at 390x844). | README matrix; §12 "Mobile intro (2s)". |
+| L7 | **Slow connection.** The desktop tier loads the three strips (`loadRig`, 3.35s cap) and the timeline holds at the performance beat for at most 1.5s, then plays the rest pose and never goes back to the head turn. Measured: show 6.5s; with a slow or aborted rig `done` comes at about 8.0s from `playing` (the test allows 8.5s). The Landing warms the strips after load and an idle callback, only at 768px and up, never under reduced motion or `saveData`; the strips and ghosts are `SpriteStrip deferred`, so with JS off, reduced motion or a phone no `turn_*.webp` is ever requested. | Spec §7 / §13 / §14. |
+| L8 | **SKIP INTRO** goes to `/arena`; **REPLAY** restarts from the dark stadium (five quick presses give exactly one more `done`) and is hidden under reduced motion. The Intro never auto-advances. | Audit §6.5. |
+| L9 | **Shortcuts.** Landing at 1200px and up: `Enter` is ENTER THE ARENA, `Q` is Quick View. Ignored with Ctrl, Alt or Cmd, key repeat, `defaultPrevented`, and while focus is on a link, button, field, select, tab or contenteditable. Active only while the Landing is mounted. | A8; WCAG 2.1.4. |
+| L10 | **SOFTWARE ENGINEER keeps its .42em tracking** (the boot settles on the recipe's own tracking, 12.6px at 30px). The Main reference's collapsed end state is masked. | Intent over a keyframe accident (audit risk #11). |
+| L11 | **Commentary is silent below 768px**, for screen readers too (`say()` returns early). From 768px the line is said as before; on a tablet the Landing's slot is inside the hidden Stage, so nothing is announced that is not on screen. | Spec §4.6; screen readers hear what is on screen. |
+| L12 | **Dust** in the beams: one canvas, 60 specks, 1 to 2px at 15%, inside the two cones (`CONE_REGIONS`); runs only at 1200px and up, not under reduced motion, paused when the tab is hidden; cancelled and unlistened on unmount. On the Intro it appears the instant playback starts. | README §6 + Opening F2; §7 dust rule. |
+| L13 | **Lighthouse** (`tools/lighthouse.mjs`, page-driven): `/` gates FCP at most 1500ms, CLS at most .1, accessibility 100, best practices at least .9, SEO at least .9, and performance at least .9 in the **reduced-motion run** (`--force-prefers-reduced-motion`); the full-motion performance is reported. `/intro` gates accessibility 100, best practices and SEO at least .9 (performance reported). `/scout` keeps its gate. Mobile runs are reported. Results below. | Spec §9.1; the designed 3s name reveal is the largest paint by design. |
+| L14 | **Animated properties.** The board power-up, impact ring and bank flare are separate glow layers whose opacity animates (`shadow-board-on`, `shadow-board-hit`, `shadow-bank-flare`), not `box-shadow`. Transform, opacity, `filter` blur and the 0.32s `clip-path` glitch are the only others. The head-turn strips step through frames with `background-position`. | §7 performance rules. |
+
+Design-system changes:
+
+| Change | Detail |
+|---|---|
+| Stage | `from?: "md" \| "lg" \| null` replaces `desktopOnly` (default `md`; the Landing passes `lg`, the Intro `md`). `skyClassName` / `skyStyle` for the letterbox sky (`data-part="letterbox-sky"`), so it boots and fades with the rest. `--stage-mono-min` and `--stage-body-min` (L2). |
+| Motion lib | `loadGsap()` (memoised dynamic import, a failed load retries), `prefetchGsap()` (idle, skipped under reduced motion), `bezier()`, `EASE` (six eases mirroring `theme.css`; a test parses the CSS). No static `gsap` import: the GSAP chunk is in no first-load graph (smoke test walks `/`, `/scout`, `/intro`). `useTilt` loads it the same way. |
+| Shell and lib | `HEAD_FLAGS_SCRIPT` + `LANDING_SEEN_KEY` (`.js` class and `data-return-visit`), `useScreenShortcuts`, `lib/useMediaQuery`, commentary silent below 768px. `src/features/landing-preview` is deleted; `landing` replaces it. |
+| ArenaBackdrop | `layout="landing" \| "intro"` from one per-layout table; `boot?: BootBeats` (each layer gets `animate-boot-fade` and its `--d`, banks flicker at `boot.banks[i]`; omitted means the stands are lit); `dust`; `layerClassName` (the Intro's `intro-part` hold); `data-part` on every layer. |
+| Cones | `cones.ts` is the single source: `CONE_BOXES`, `LAMP_SPANS`, `apexOf` (D-1 as code), `CONE_APEX`, `CONE_REGIONS`; a test parses `scene.css` and the rendered classes against it. Intro apexes: left 7.4074% to 28.1481%, right 71.8519% to 92.5926%. |
+| Scoreboard | `size="landing" \| "intro" \| "compact"`; `Scan variant="band" \| "bar"`; `Power` (the `board-on` / `board-hit` glow layers, a sibling of the board because the board clips); parts take `style` and `data-part`. Compact: header 39 and footer 49 (content-box rules, as Main's 53 / 71), `shadow-board-compact`, title `w-min`. |
+| Scene | `FloodlightBank` `lg-flat` (112x44) / `sm-flat` (84x32) + `flare`; `CrowdTier flat` (+ `scene-crowd-flat`, the board's 6x5 dot grid); `Field ovalClassName`; `SpriteStrip` (+ `deferred`; `lib/sprite.ts`); `Dust`. |
+| Boot and intro CSS | Boot presets `animate-boot-fade`, `-rise`, `-name`, `-scan` on `--d` x `--pace` (they reuse `fade-in` / `rise-in`; every entrance's first frame is `visibility: hidden` so nothing hidden is focusable, except `boot-name`, which starts at opacity 0 only so the heading can take focus on arrival); one `bank-flicker`; `intro-part` (hold until `data-intro="playing"`, 8s fallback to visible, visible under reduced motion); idle loops `animate-breathe`, `animate-face-sweep`, `animate-cta-glow` (off under reduced motion); `intro-fig`, `intro-letter` (`data-lit` in / glow / done), `intro-turn`, `intro-cta`, `intro-ghost-*`, `intro-streak`, `intro-glint`, `intro-led-grid`, `intro-scanlines`, `intro-edge-mask`, `intro-backlight`, `intro-pixel-*`, `intro-flash`, `scene-bank-flare`, `scene-scan-band` / `-bar`. |
+| New type recipes (8) | `type-hero-sm` (132/.85), `type-hero-stack` (96, 120 from `md`), `type-sub-lg` (34/.4em), `type-sub-sm` (18, 22 from `md`), `type-score-md` (22/.08em), `type-btn-bar-lg` (22/900/.14em), `type-btn-2xl` (28/900/.14em), `type-welcome` (60/.9/.06em, 32 on phones). |
+| Components | `Button size="bar-lg"` (h-16, full width) and `"2xl"` (340x74); `AudioToggle variant="text"`; `HUDButton tone="glass-compact"`; `LandingColumn`, `IntroColumn`. |
+| New tokens | `--rgb-ember` (255 178 92), `--rgb-backlight` (255 150 60), `--rgb-board` (6 8 11), `bg-ember`; shadows `shadow-board-compact`, `-board-on`, `-board-hit`, `-bank-flare`; `--pace`. |
+| Copy | `ui.landing.*` (incl. `enterSubPhone`, `playerShort`), `ui.audio.labelPhone`, `ui.intro.*`, `ui.glyph.bullet`; `ui.record` is `{ label, value, career }`. |
+
+Deviations from the artboards (visual tests accept exactly these):
+
+| Where | Deviation | Check |
+|---|---|---|
+| Main (route and artboard-copy story) | SOFTWARE ENGINEER box `{560,368,320,52}` (L10). | Both parity tests |
+| Main (route and story) | D-1 wedges `{106,120,78,142}` and `{1255,120,80,151}` (§11.4). | Both |
+| Main (route and story) | COMM `{30,815,400,60}`: the line animates in (the story has none, Main draws one). | Both |
+| Main | The crowd ends at opacity 1 (Main's `.fade` end frame) where the static landing drew .7; the unmasked difference is inside the 2%. | Both |
+| Mobile-Landing (route and story) | A2: the board's 10px labels are 11px. Six boxes, each the text span's own box: `LIVE · THE ARENA`, `01 / 01`, `STATUS`, `AWAY`, `LITE · ONE-THUMB GAMES`, `RECRUITER VIEW · 90 SEC`. | Both |
+| Mobile-Landing | L5: the toggle's state word only (ON on the page, OFF on the board). | Both |
+| Intro (route and story) | COMM `{30,815,400,60}`. | Both |
+| Intro (route and story) | D-1 wedges (our beam starts under each lamp, the artboard's is offset): `{74,58,134,40}`, `{84,98,16,56}`, `{1232,58,134,40}` (arithmetic in `tests/e2e/intro.spec.ts`). Never the board, name, portrait or CTA. | Both |
+| Intro | The CTA keeps the design system's skewed primary button; the artboard's end frame is square because its `rise` keyframe (fill both, `transform: none`) overrides the `skewX(-12deg)`. About 0.2% of the pixels, unmasked. | Both |
+| Intro | The board outer box is 1242x542 (the artboard sizes the content box). The board's unlit start is not drawn (opacity layers only fade in); the artboard's title bar, drawn from t=0, shows from the title beat; the 90 pixels end hidden. | Intro tests |
+| Intro | Field uses `scene-field` (turf .75 / .55 and faint stripes) where the artboard draws .7 / .5 and none; the crowd shares `scene-crowd`'s mask (30 / 55 / 90%) where the artboard draws 30 / 60 / 95%. | Intro tests |
+| Phone Intro (derived) | No board: the portrait is a plain decorative `<img alt="">` (the h1 under it names him; it costs no extra request, the stage's `rest` img is the same file); `01 / 01` is hidden below 368px (the header cannot hold both); the compact board has no power ring (its own 5px bezel is the lit edge); the title bar travels the title's own width; commentary does nothing; the banks still play the floodlight sound. | `intro.spec.ts` phone block |
+| Every board | A2: 11px labels where 10px is drawn. | The masks above |
+
+Token merges that moved a value by more than ~2% (extends §11.6):
+
+| Artboard value | Token used | Where |
+|---|---|---|
+| Intro flare halo `rgb(220 232 250)` | `--rgb-beam` (225 236 250) | Bank flare |
+| Face-sweep highlight `rgba(255,250,235,.38)` | white at .38 (2% on blue) | `animate-face-sweep` |
+| Name glow 20px .30 / 24px .30 | `glow-led` (28px .35) | Compact and Intro names |
+| Compact board border `#232A33` | `line-strong` (`#2A323C`; see §11.6) | Compact scoreboard |
+| Compact footer values untracked | `type-d5` (.08em) | Compact footer |
+| Intro field turf .7 / .5, no stripes | `scene-field` .75 / .55 + 3.5% stripes (about .05 alpha on the green centre) | Intro backdrop |
+| Intro crowd mask 30 / 60 / 95% | `scene-crowd` 30 / 55 / 90% (opacity .6 exact) | Intro backdrop |
+| Intro flare as a replacement shadow | a separate glow layer over the bank's own shadow (L14), so the peak is the sum | Intro banks |
+| Intro board power-up/hit `box-shadow` | opacity of `shadow-board-on` / `-hit` layers without the 50px / 140px drop shadow | Intro board |
+| Phone `type-sub-sm` md step | 22px (derived, no tablet board exists) | Compact subtitle |
+
+Measured:
+- Visual ratios (2% limit): Main route .0076, story .0112; Mobile-Landing .0036 (route and story); Intro .0026 (route .2591%, story .2603%). Without any mask the Intro is .0032.
+- Intro lengths: desktop and tablet 6.5s (labels per `INTRO_BEATS`), slow or failed rig about 8.0s, phone 2.0s.
+- Landing boot, checked on screenshots: dark at 0.7s, banks lit by 1.8s, header and field by 2.9s, complete at 6.2s; the return visit's CTA entrance ends at 1.35s.
+- The factory has 76 unit tests (labels and lengths per tier, rig gate, letters, pixels, end-state parity).
+
+Lighthouse (production build served by `tools/lighthouse.mjs`, median of 3 runs, desktop preset unless said; load average 2.6 to 3.9 (one-minute, at the end of the two runs)):
+
+| Page and run | Perf | A11y | BP | SEO | FCP | LCP | CLS | TBT | Gate |
+|---|---|---|---|---|---|---|---|---|---|
+| `/scout` desktop | 97 | 100 | 96 | 100 | 1006 ms | 1046 ms | .002 | 0 | unchanged, met |
+| `/scout` mobile | 67 | 100 | 96 | 100 | 5255 ms | 5255 ms | 0 | 0 | accessibility 100, met |
+| `/` desktop, full motion | 95 | 100 | 96 | 100 | 1045 ms | 1264 ms | .011 | 0 | FCP, CLS, a11y, BP, SEO met; performance reported |
+| `/` desktop, reduced motion | 96 | 100 | 96 | 100 | 1045 ms | 1085 ms | .001 | 0 | all met, performance 96 at least 90 |
+| `/` mobile | 66 | 100 | 96 | 100 | 5404 ms | 5554 ms | .009 | 0 | reported |
+| `/intro` desktop | 94 | 100 | 96 | 100 | 1084 ms | 1337 ms | 0 | 0 | a11y, BP, SEO met; performance reported |
+| `/intro` mobile | 64 | 100 | 96 | 100 | 5405 ms | 6174 ms | .006 | 0 | reported |
+
+Best practices shows 96 only in the first run of each page after Chrome starts (100 in the next two); the gate takes the worst run and still clears .9. The mobile rows use Lighthouse's simulated slow 4G with a 4x CPU slowdown; the FCP budget is a desktop budget (§9.1), and `/scout`, which was gated before, sits at the same 5.3s there.
 
 ---
 

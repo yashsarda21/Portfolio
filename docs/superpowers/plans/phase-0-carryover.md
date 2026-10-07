@@ -21,9 +21,9 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [x] CommentaryBar: the commentary service owns the live region (pass `aria-hidden` through rest props) and flips `state="out"` before unmounting a line.
 
 - [ ] Phase 2: same-page hash links (e.g. `/trophies#academy`) are now left to the router by the ArenaLink bail-out (no wipe); verify on the real page.
-- [ ] Phase 3: tablet (768–1199) Stage shrinks 11px mono to ~6px; decide the tablet treatment.
-- [ ] Phase 3: commentary live region on the mobile placeholders (speak or stay silent?).
-- [ ] Phase 3 / 7: lazy-load GSAP (dynamic import in `go()` plus idle prefetch) and check Lighthouse.
+- [x] Phase 3: tablet (768–1199) Stage shrinks 11px mono to ~6px; decide the tablet treatment. → §11.11 L1 + L2 (Landing column on tablets; Intro on the stage with the mono and body floors)
+- [x] Phase 3: commentary live region on the mobile placeholders (speak or stay silent?). → §11.11 L11 (silent below 768px)
+- [x] Phase 3 / 7: lazy-load GSAP (dynamic import in `go()` plus idle prefetch) and check Lighthouse. → Task 1 (`loadGsap` / `prefetchGsap`), §11.11 (Lighthouse results)
 - [ ] Phase 4 / 5: match record shape guard/merge, and migrate on a version bump (`arena:v1`).
 - [ ] Phase 7: the host must serve a real Out-of-Bounds HTML page with HTTP 404 (not the SPA fallback's 200); verify it.
 - [ ] Phase 7: `og:image`, `og:url` and `<link rel="canonical">` from the production domain (env); Phase 1 ships og:title/description/type/site_name + twitter:card only.
@@ -49,9 +49,12 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] A2: the small ScoreBug uses an 11px mono floor where the artboard has 10px (Phase 5; keep 11px, log as a deviation).
 
 ## Phase 3
-- [ ] Count-up has no controlled trigger for tiles already in view at mount (they show the final value); the intro sequence needs a way to start it.
-- [ ] Main reference shows "SOFTWARE ENGINEER" with collapsed tracking (the `boot` keyframe end state, audit risk #11) — decide .42em design intent vs frozen end state; mask/log as deviation.
-- [ ] Intro light cones: apply D-1 (beam apex aligned to each lamp's span; spec §11.4). Phase 0 already applies it to the Landing stadium cones.
+- [x] Main reference shows "SOFTWARE ENGINEER" with collapsed tracking (the `boot` keyframe end state, audit risk #11) — decide .42em design intent vs frozen end state; mask/log as deviation. → §11.11 L10 (.42em kept, box masked)
+- [x] Intro light cones: apply D-1 (beam apex aligned to each lamp's span; spec §11.4). Phase 0 already applies it to the Landing stadium cones. → Task 2 (`cones.ts`), §11.11
+
+## Phase 4
+- [ ] Count-up has no controlled trigger for tiles already in view at mount (they show the final value); the Hub's record and matchday need a way to start it. (Moved from Phase 3: the intro has no count-ups.)
+- [ ] Hub tablet treatment (drawer, §12) and the stage mono floor at Hub scale (`--stage-mono-min`, §11.11 L2).
 
 ## When a git remote is added (Phase 7 at latest)
 - [ ] CI: add `permissions: contents: read`, a concurrency cancel group, and `if-no-files-found` on artifact upload; confirm the workflow passes on Ubuntu.
