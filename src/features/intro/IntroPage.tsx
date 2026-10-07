@@ -16,11 +16,11 @@ import { cn } from "@/lib/cn";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
-import { PlaceholderScreen } from "@/shell/PlaceholderScreen";
 import portraitRest from "@/assets/portrait-rest.webp?url";
 import turn0 from "@/assets/rig/turn_0.webp?url";
 import turn1 from "@/assets/rig/turn_1.webp?url";
 import turn2 from "@/assets/rig/turn_2.webp?url";
+import { IntroColumn } from "./IntroColumn";
 import { createLetters } from "./letters";
 import { createPixels, type PixelColor } from "./pixels";
 import type { IntroView } from "./view";
@@ -64,7 +64,8 @@ const GHOST_TINT = ["intro-ghost-volt", "intro-ghost-warm"] as const;
 /**
  * The Player Introduction. From 768px up (desktop and tablet, L1) the 1440x900 stage plays the intro: a
  * timeline (useIntroTimeline) lights the scene, swings the silhouette in, locks the name in and finishes with
- * the call to action. Below 768px the route keeps its placeholder until the phone cut exists.
+ * the call to action. Below 768px the phone's column plays its own two-second cut (IntroColumn, L6). Each
+ * layout is marked `data-intro-layout`, so the timeline collects the parts of the one on show only.
  *
  * `data-intro` on the root says where the show is (pending, playing, done). While it is pending, every part the
  * timeline reveals carries `intro-part` and is hidden by CSS, scenery included, so nothing shows lit before
@@ -84,236 +85,249 @@ export function IntroPage({
 
   return (
     <main id="main" ref={rootRef} data-intro="pending">
-      <Stage
-        from="md"
-        backdrop={<ArenaBackdrop layout="intro" bleed dust layerClassName="intro-part" />}
-        skyClassName="intro-part"
-      >
-        <HUD
-          className="absolute inset-x-0 top-0 z-9"
-          left={<BrandLockup mark={view.brand.mark} />}
-          right={
-            <>
-              <HUDButton onClick={onReplay} className="motion-reduce:hidden">
-                {view.replay}
-              </HUDButton>
-              <HUDButton as={ArenaLink} to={view.skip.to}>
-                {view.skip.label}
-              </HUDButton>
-            </>
-          }
-        />
-
-        {/* h-135.5 w-310.5: the board is 1240x540 inside its 1px border (the artboard sizes the content box), so 1242x542 outside. */}
-        <Scoreboard.Power className="top-24 left-25 h-135.5 w-310.5" />
-        <Scoreboard size="intro" className="absolute top-24 left-25 h-135.5 w-310.5">
-          <Scoreboard.Header data-part="board-header" className="intro-part">
-            <span className="flex items-center gap-2.5">
-              <LiveDot />
-              {view.header.live}
-            </span>
-            <span>{view.header.matchday}</span>
-          </Scoreboard.Header>
-
-          {/* The warm glow the silhouette is cut against. */}
-          <div
-            aria-hidden="true"
-            data-part="backlight"
-            className="pointer-events-none intro-part absolute -right-10 bottom-7.5 h-130 w-175 intro-backlight"
-          />
-          <Scoreboard.Scan variant="bar" />
-
-          {GHOST_TINT.map((tint) => (
-            <div
-              key={tint}
-              aria-hidden="true"
-              data-part="ghost"
-              className="pointer-events-none invisible absolute right-9 bottom-16 z-1 h-112.75 w-140"
-            >
-              <SpriteStrip deferred src={turn0} className={cn("intro-turn size-full", tint)} />
-            </div>
-          ))}
-
-          <div
-            aria-hidden="true"
-            data-part="shock"
-            className="pointer-events-none invisible absolute top-12 right-140 bottom-16 z-2 w-1.5 origin-left bg-linear-180 from-volt/0 via-volt to-volt/0 shadow-[0_0_30px] shadow-volt"
+      {/* No box of its own: it only names the stage's parts, so the hook never reaches into the phone column. */}
+      <div data-intro-layout="stage" className="contents">
+        <Stage
+          from="md"
+          backdrop={<ArenaBackdrop layout="intro" bleed dust layerClassName="intro-part" />}
+          skyClassName="intro-part"
+        >
+          <HUD
+            className="absolute inset-x-0 top-0 z-9"
+            left={<BrandLockup mark={view.brand.mark} />}
+            right={
+              <>
+                <HUDButton onClick={onReplay} className="motion-reduce:hidden">
+                  {view.replay}
+                </HUDButton>
+                <HUDButton as={ArenaLink} to={view.skip.to}>
+                  {view.skip.label}
+                </HUDButton>
+              </>
+            }
           />
 
-          <div
-            data-part="mover"
-            className="intro-part absolute right-9 bottom-16 z-3 h-112.75 w-140"
-          >
+          {/* h-135.5 w-310.5: the board is 1240x540 inside its 1px border (the artboard sizes the content box), so 1242x542 outside. */}
+          <Scoreboard.Power className="top-24 left-25 h-135.5 w-310.5" />
+          <Scoreboard size="intro" className="absolute top-24 left-25 h-135.5 w-310.5">
+            <Scoreboard.Header data-part="board-header" className="intro-part">
+              <span className="flex items-center gap-2.5">
+                <LiveDot />
+                {view.header.live}
+              </span>
+              <span>{view.header.matchday}</span>
+            </Scoreboard.Header>
+
+            {/* The warm glow the silhouette is cut against. */}
             <div
               aria-hidden="true"
-              data-part="trails"
-              className="pointer-events-none invisible absolute top-0 -left-150 h-112.75 w-170"
-            >
-              {[...TRAIL_STREAKS, ...TRAIL_SPECKS].map((classes) => (
-                <span key={classes} className={cn("absolute", classes)} />
-              ))}
-            </div>
+              data-part="backlight"
+              className="pointer-events-none intro-part absolute -right-10 bottom-7.5 h-130 w-175 intro-backlight"
+            />
+            <Scoreboard.Scan variant="bar" />
+
+            {GHOST_TINT.map((tint) => (
+              <div
+                key={tint}
+                aria-hidden="true"
+                data-part="ghost"
+                className="pointer-events-none invisible absolute right-9 bottom-16 z-1 h-112.75 w-140"
+              >
+                <SpriteStrip deferred src={turn0} className={cn("intro-turn size-full", tint)} />
+              </div>
+            ))}
 
             <div
-              data-part="fig"
-              role="img"
-              aria-label={view.portraitAlt}
-              className="absolute inset-0 intro-edge-mask intro-fig"
+              aria-hidden="true"
+              data-part="shock"
+              className="pointer-events-none invisible absolute top-12 right-140 bottom-16 z-2 w-1.5 origin-left bg-linear-180 from-volt/0 via-volt to-volt/0 shadow-[0_0_30px] shadow-volt"
+            />
+
+            <div
+              data-part="mover"
+              className="intro-part absolute right-9 bottom-16 z-3 h-112.75 w-140"
             >
-              <div data-part="idle" className="absolute inset-0">
-                {STRIPS.map((src) => (
-                  <SpriteStrip
-                    key={src}
-                    deferred
-                    src={src}
-                    aria-hidden="true"
-                    data-part="turn"
-                    className="intro-turn absolute inset-0"
-                  />
+              <div
+                aria-hidden="true"
+                data-part="trails"
+                className="pointer-events-none invisible absolute top-0 -left-150 h-112.75 w-170"
+              >
+                {[...TRAIL_STREAKS, ...TRAIL_SPECKS].map((classes) => (
+                  <span key={classes} className={cn("absolute", classes)} />
                 ))}
-                {/* The pose the head turn rests on, and what stands when it cannot play. */}
-                <img
-                  data-part="rest"
-                  src={portraitRest}
-                  alt=""
-                  aria-hidden="true"
-                  className="absolute inset-0 size-full"
-                />
+              </div>
+
+              <div
+                data-part="fig"
+                role="img"
+                aria-label={view.portraitAlt}
+                className="absolute inset-0 intro-edge-mask intro-fig"
+              >
+                <div data-part="idle" className="absolute inset-0">
+                  {STRIPS.map((src) => (
+                    <SpriteStrip
+                      key={src}
+                      deferred
+                      src={src}
+                      aria-hidden="true"
+                      data-part="turn"
+                      className="intro-turn absolute inset-0"
+                    />
+                  ))}
+                  {/* The pose the head turn rests on, and what stands when it cannot play. */}
+                  <img
+                    data-part="rest"
+                    src={portraitRest}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 size-full"
+                  />
+                  <div
+                    aria-hidden="true"
+                    data-part="sweep"
+                    className="absolute inset-0"
+                    style={{ "--mask": `url("${portraitRest}")` } as CSSProperties}
+                  />
+                </div>
+              </div>
+
+              <div
+                aria-hidden="true"
+                data-part="streak"
+                className="pointer-events-none invisible absolute top-41.25 left-15 z-2 h-0.5 w-115 origin-center intro-streak"
+              />
+              {(["left-61", "left-78.5"] as const).map((x) => (
                 <div
+                  key={x}
                   aria-hidden="true"
-                  data-part="sweep"
-                  className="absolute inset-0"
-                  style={{ "--mask": `url("${portraitRest}")` } as CSSProperties}
+                  data-part="glint"
+                  className={cn(
+                    "pointer-events-none invisible absolute top-40 z-2 size-3 rounded-full intro-glint",
+                    x,
+                  )}
+                />
+              ))}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-3 intro-led-grid"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-3 intro-scanlines"
+              />
+            </div>
+
+            {PIXELS.map((pixel, i) => (
+              <span
+                key={i}
+                aria-hidden="true"
+                data-part="pixel"
+                className="pointer-events-none invisible absolute z-4 size-0 origin-top-left"
+                style={{ left: pixel.x, top: pixel.y }}
+              >
+                <span
+                  data-part="pixel-dot"
+                  className={cn("absolute", PIXEL_CLASS[pixel.color])}
+                  style={{ left: pixel.dx, top: pixel.dy, width: pixel.size, height: pixel.size }}
+                />
+              </span>
+            ))}
+
+            <div className="absolute top-37.5 left-14 z-4 flex flex-col gap-4.5">
+              <Scoreboard.Title as="h1" aria-label={view.heading} className="whitespace-nowrap">
+                {letters.map((letter, i) => (
+                  <span
+                    key={i}
+                    aria-hidden="true"
+                    data-part="letter"
+                    data-kind={letter.kind}
+                    className={cn(
+                      "intro-part intro-letter",
+                      letter.ch === " " && "intro-letter-gap",
+                    )}
+                  >
+                    {letter.ch}
+                  </span>
+                ))}
+              </Scoreboard.Title>
+              <div className="relative h-9.5">
+                <Scoreboard.Subtitle
+                  data-part="title"
+                  className="intro-part block whitespace-nowrap"
+                >
+                  {view.title}
+                </Scoreboard.Subtitle>
+                <span
+                  aria-hidden="true"
+                  data-part="title-bar"
+                  className="invisible absolute -top-1 left-0 h-11.5 w-1 bg-led shadow-[0_0_16px] shadow-volt"
                 />
               </div>
+              {/* max-w-140 (560): the name column ends before the portrait (x 644 on the board); the 12px gap is the row gap too, so the 11px floor on a tablet wraps the tagline instead of running into the figure. */}
+              <p className="flex max-w-140 flex-wrap items-center gap-3">
+                {view.tagline.map((part, i) => (
+                  <Text
+                    key={i}
+                    variant="mono-lg"
+                    leading="font"
+                    tone={TAGLINE_TONE[part.tone]}
+                    aria-hidden={part.kind === "sep" ? true : undefined}
+                    data-part="tagline"
+                    className="intro-part whitespace-nowrap"
+                  >
+                    {part.text}
+                  </Text>
+                ))}
+              </p>
             </div>
 
-            <div
-              aria-hidden="true"
-              data-part="streak"
-              className="pointer-events-none invisible absolute top-41.25 left-15 z-2 h-0.5 w-115 origin-center intro-streak"
-            />
-            {(["left-61", "left-78.5"] as const).map((x) => (
-              <div
-                key={x}
-                aria-hidden="true"
-                data-part="glint"
-                className={cn(
-                  "pointer-events-none invisible absolute top-40 z-2 size-3 rounded-full intro-glint",
-                  x,
-                )}
-              />
-            ))}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-3 intro-led-grid"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-3 intro-scanlines"
-            />
-          </div>
+            <Scoreboard.Footer data-part="board-strip" className="intro-part">
+              {view.footer.map((cell) => (
+                <Scoreboard.FooterCell
+                  key={cell.label}
+                  label={cell.label}
+                  value={cell.value}
+                  tone={cell.tone}
+                  align={cell.align}
+                />
+              ))}
+            </Scoreboard.Footer>
+          </Scoreboard>
 
-          {PIXELS.map((pixel, i) => (
-            <span
-              key={i}
-              aria-hidden="true"
-              data-part="pixel"
-              className="pointer-events-none invisible absolute z-4 size-0 origin-top-left"
-              style={{ left: pixel.x, top: pixel.y }}
+          <div
+            aria-hidden="true"
+            data-part="flash"
+            className="pointer-events-none invisible absolute inset-0 z-6 intro-flash"
+          />
+
+          <div className="absolute inset-x-0 top-167 z-7 flex flex-col items-center gap-5.5">
+            <Text
+              as="p"
+              variant="welcome"
+              tone="primary"
+              data-part="welcome"
+              className="intro-part"
             >
-              <span
-                data-part="pixel-dot"
-                className={cn("absolute", PIXEL_CLASS[pixel.color])}
-                style={{ left: pixel.dx, top: pixel.dy, width: pixel.size, height: pixel.size }}
-              />
-            </span>
-          ))}
-
-          <div className="absolute top-37.5 left-14 z-4 flex flex-col gap-4.5">
-            <Scoreboard.Title as="h1" aria-label={view.heading} className="whitespace-nowrap">
-              {letters.map((letter, i) => (
-                <span
-                  key={i}
-                  aria-hidden="true"
-                  data-part="letter"
-                  data-kind={letter.kind}
-                  className={cn("intro-part intro-letter", letter.ch === " " && "intro-letter-gap")}
-                >
-                  {letter.ch}
-                </span>
-              ))}
-            </Scoreboard.Title>
-            <div className="relative h-9.5">
-              <Scoreboard.Subtitle data-part="title" className="intro-part block whitespace-nowrap">
-                {view.title}
-              </Scoreboard.Subtitle>
-              <span
-                aria-hidden="true"
-                data-part="title-bar"
-                className="invisible absolute -top-1 left-0 h-11.5 w-1 bg-led shadow-[0_0_16px] shadow-volt"
-              />
-            </div>
-            {/* max-w-140 (560): the name column ends before the portrait (x 644 on the board); the 12px gap is the row gap too, so the 11px floor on a tablet wraps the tagline instead of running into the figure. */}
-            <p className="flex max-w-140 flex-wrap items-center gap-3">
-              {view.tagline.map((part, i) => (
-                <Text
-                  key={i}
-                  variant="mono-lg"
-                  leading="font"
-                  tone={TAGLINE_TONE[part.tone]}
-                  aria-hidden={part.kind === "sep" ? true : undefined}
-                  data-part="tagline"
-                  className="intro-part whitespace-nowrap"
-                >
-                  {part.text}
-                </Text>
-              ))}
-            </p>
+              {view.welcome}
+            </Text>
+            <Button
+              as={ArenaLink}
+              to={view.enter.to}
+              size="2xl"
+              data-part="cta"
+              className="intro-part intro-cta"
+              onClick={audio.unlock}
+            >
+              {view.enter.label}
+            </Button>
           </div>
 
-          <Scoreboard.Footer data-part="board-strip" className="intro-part">
-            {view.footer.map((cell) => (
-              <Scoreboard.FooterCell
-                key={cell.label}
-                label={cell.label}
-                value={cell.value}
-                tone={cell.tone}
-                align={cell.align}
-              />
-            ))}
-          </Scoreboard.Footer>
-        </Scoreboard>
-
-        <div
-          aria-hidden="true"
-          data-part="flash"
-          className="pointer-events-none invisible absolute inset-0 z-6 intro-flash"
-        />
-
-        <div className="absolute inset-x-0 top-167 z-7 flex flex-col items-center gap-5.5">
-          <Text as="p" variant="welcome" tone="primary" data-part="welcome" className="intro-part">
-            {view.welcome}
-          </Text>
-          <Button
-            as={ArenaLink}
-            to={view.enter.to}
-            size="2xl"
-            data-part="cta"
-            className="intro-part intro-cta"
-            onClick={audio.unlock}
-          >
-            {view.enter.label}
-          </Button>
-        </div>
-
-        {/* The line mounts at its beat (IntroScreen says it then) and enters with its own animation. */}
-        <CommentarySlot tag={view.commTag} className="absolute bottom-9 left-9 z-7" />
-      </Stage>
-
-      <div className="md:hidden">
-        <PlaceholderScreen route="intro" as="div" announce={false} />
+          {/* The line mounts at its beat (IntroScreen says it then) and enters with its own animation. */}
+          <CommentarySlot tag={view.commTag} className="absolute bottom-9 left-9 z-7" />
+        </Stage>
       </div>
+
+      <IntroColumn view={view} letters={letters} onReplay={onReplay} />
     </main>
   );
 }

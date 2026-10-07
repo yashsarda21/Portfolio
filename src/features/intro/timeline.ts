@@ -66,6 +66,8 @@ export interface IntroRefs {
   strips?: HTMLElement[];
   /** The still pose shown when the head turn cannot play. */
   rest?: HTMLElement;
+  /** The phone's portrait: there is no mover or head turn there, so the rest pose fades in with the board. */
+  portrait?: HTMLElement;
   shock?: HTMLElement;
   streak?: HTMLElement;
   glints?: HTMLElement[];
@@ -104,7 +106,7 @@ const STRIP_AT = [0, 0.667, 1.333] as const;
 const RIG_WAIT_MS = 1500;
 /** Parts that depend on the rig's answer start just after the pause that waits for it. */
 const AFTER_GATE = 0.001;
-/** How far the title's leading bar travels (design px). */
+/** How far the title's leading bar travels on the stage (design px). */
 const BAR_TRAVEL = 560;
 
 /** The artboard's bank flicker (keyframes `bank`). */
@@ -148,6 +150,7 @@ interface RigWatch {
 }
 
 interface Ctx {
+  tier: IntroTier;
   tl: Timeline;
   refs: IntroRefs;
   beats: Partial<Record<Beat, number>>;
@@ -258,6 +261,7 @@ function addBoard(c: Ctx): void {
   const { refs, tl } = c;
   fade(c, refs.boardOn, "boardOn", 0.7);
   fade(c, refs.boardHeader, "boardHeader", 1);
+  fade(c, refs.portrait, "boardHeader", 1);
   appear(c, refs.boardHit, at(c, "impact"), 0.7, OUT, {
     0: { autoAlpha: 0 },
     25: { autoAlpha: 1 },
@@ -580,10 +584,19 @@ function addTitle(c: Ctx): void {
   if (refs.titleBar) {
     hide(c, refs.titleBar);
     show(c, refs.titleBar, pos);
+    // The stage's bar runs the artboard's 560px. A phone's title is narrower than that, so the bar follows the
+    // title: its width is read when the wipe starts (the fonts are in by then), not when the timeline is built.
+    const title = refs.title;
+    const phone = c.tier === "mobile" && title !== undefined;
     tl.fromTo(
       refs.titleBar,
       { x: 0 },
-      { x: BAR_TRAVEL, duration: seconds, ease: EASE.swing },
+      {
+        x: phone ? () => title.offsetWidth : BAR_TRAVEL,
+        duration: seconds,
+        ease: EASE.swing,
+        ...(phone ? { immediateRender: false } : {}),
+      },
       pos.label,
     );
     const fadeOut = at(c, "title", seconds * 0.9)!;
@@ -676,6 +689,7 @@ export function createIntroTimeline(
   const beats: Partial<Record<Beat, number>> = INTRO_BEATS[opts.tier];
   const tl = gsap.timeline();
   const c: Ctx = {
+    tier: opts.tier,
     tl,
     refs,
     beats,
@@ -719,6 +733,7 @@ export function showIntroEndState(gsap: typeof Gsap, refs: IntroRefs): void {
       refs.boardHeader,
       refs.mover,
       refs.rest,
+      refs.portrait,
       refs.title,
       refs.strip,
       refs.welcome,

@@ -14,7 +14,11 @@ describe("buildIntroView", () => {
   });
 
   it("the board header and the welcome line come from ui.intro", () => {
-    expect(view.header).toEqual({ live: ui.intro.live, matchday: ui.intro.matchday });
+    expect(view.header).toEqual({
+      live: ui.intro.live,
+      matchday: ui.intro.matchday,
+      count: ui.landing.playerShort,
+    });
     expect(view.welcome).toBe(ui.intro.welcome);
   });
 
@@ -48,6 +52,13 @@ describe("buildIntroView", () => {
       { label: ui.landing.status, value: ui.landing.undefeated, tone: "volt", align: "end" },
     ]);
     expect(ui.record.career).toBe(`${ui.record.label} ${ui.record.value}`);
+  });
+
+  it("the phone board's footer is two cells, RECORD and STATUS, from the same copy as the wide board's", () => {
+    expect(view.footerPhone).toEqual([
+      { label: ui.record.label, value: ui.record.value, tone: "primary", align: "start" },
+      { label: ui.landing.status, value: ui.landing.undefeated, tone: "volt", align: "end" },
+    ]);
   });
 
   it("ENTER THE ARENA and SKIP INTRO both go to the Arena Hub", () => {

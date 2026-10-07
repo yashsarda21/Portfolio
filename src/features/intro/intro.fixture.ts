@@ -7,7 +7,11 @@ export const artboardIntroView: IntroView = {
   title: "SOFTWARE ENGINEER",
   portraitAlt: "Yash Sarda",
   brand: { mark: "YS" },
-  header: { live: "LIVE · PLAYER INTRODUCTION", matchday: "THE ARENA · MATCHDAY" },
+  header: {
+    live: "LIVE · PLAYER INTRODUCTION",
+    matchday: "THE ARENA · MATCHDAY",
+    count: "01 / 01",
+  },
   tagline: [
     { kind: "word", text: "PLAYER 01", tone: "primary" },
     { kind: "sep", text: "•", tone: "volt" },
@@ -20,6 +24,10 @@ export const artboardIntroView: IntroView = {
   footer: [
     { label: "INTRODUCING", value: "NO. 01", tone: "primary", align: "start" },
     { label: "RECORD", value: "99 – 1", tone: "primary", align: "center" },
+    { label: "STATUS", value: "UNDEFEATED", tone: "volt", align: "end" },
+  ],
+  footerPhone: [
+    { label: "RECORD", value: "99 – 1", tone: "primary", align: "start" },
     { label: "STATUS", value: "UNDEFEATED", tone: "volt", align: "end" },
   ],
   welcome: "WELCOME TO MY ARENA",

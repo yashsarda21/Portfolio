@@ -22,9 +22,12 @@ export interface IntroView {
   title: string;
   portraitAlt: string;
   brand: { mark: string };
-  header: { live: string; matchday: string };
+  /** `count` is the phone board's right-hand cell ("01 / 01"); the wide board shows `matchday` instead. */
+  header: { live: string; matchday: string; count: string };
   tagline: TaglinePart[];
   footer: IntroFooterCell[];
+  /** The phone board's two cells: the wide board's INTRODUCING cell is not drawn there. */
+  footerPhone: IntroFooterCell[];
   welcome: string;
   enter: { label: string; to: string };
   skip: { label: string; to: string };
@@ -51,11 +54,15 @@ export function buildIntroView(
     title: content.player.title,
     portraitAlt: i.portraitAlt,
     brand: { mark: ui.brand.mark },
-    header: { live: i.live, matchday: i.matchday },
+    header: { live: i.live, matchday: i.matchday, count: ui.landing.playerShort },
     tagline,
     footer: [
       { label: i.introducing, value: i.number, tone: "primary", align: "start" },
       { label: ui.record.label, value: ui.record.value, tone: "primary", align: "center" },
+      { label: ui.landing.status, value: ui.landing.undefeated, tone: "volt", align: "end" },
+    ],
+    footerPhone: [
+      { label: ui.record.label, value: ui.record.value, tone: "primary", align: "start" },
       { label: ui.landing.status, value: ui.landing.undefeated, tone: "volt", align: "end" },
     ],
     welcome: i.welcome,

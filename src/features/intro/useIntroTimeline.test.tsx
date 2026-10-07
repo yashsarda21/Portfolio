@@ -25,16 +25,34 @@ const QUERY = {
   reduce: "(prefers-reduced-motion: reduce)",
 } as const;
 
+let current: keyof typeof QUERY = "desktop";
+const listeners = new Set<() => void>();
+
 /** matchMedia that answers for one situation: which of the three tier queries is true. */
 function situation(active: keyof typeof QUERY) {
-  window.matchMedia = ((query: string) => ({
-    matches: query === QUERY[active],
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-  })) as unknown as typeof window.matchMedia;
+  current = active;
+  listeners.clear();
+  window.matchMedia = ((query: string) => {
+    const mq = {
+      get matches() {
+        return query === QUERY[current];
+      },
+      media: query,
+      addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+      removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+      addListener: (fn: () => void) => listeners.add(fn),
+      removeListener: (fn: () => void) => listeners.delete(fn),
+    };
+    return mq;
+  }) as unknown as typeof window.matchMedia;
+}
+
+/** The window changes width or motion preference: every query listener is told. */
+async function changeTo(active: keyof typeof QUERY) {
+  current = active;
+  await act(async () => {
+    for (const fn of [...listeners]) fn();
+  });
 }
 
 const seen: { api?: ReturnType<typeof useIntroTimeline> } = {};
@@ -140,15 +158,96 @@ describe("useIntroTimeline", () => {
     expect(root.querySelector<HTMLElement>('[data-part="rest"]')!.style.visibility).not.toBe(
       "hidden",
     );
+    // the phone's column is at its end state too (the width can change under reduced motion)
+    const column = root.querySelector('[data-intro-layout="column"]')!;
+    const phoneLetters = column.querySelectorAll('[data-part="letter"]');
+    expect([...phoneLetters].every((l) => l.getAttribute("data-lit") === "done")).toBe(true);
+    for (const part of ["cta", "welcome", "portrait", "board-strip"])
+      expect(
+        column.querySelector<HTMLElement>(`[data-part="${part}"]`)!.style.visibility,
+        part,
+      ).not.toBe("hidden");
   });
 
-  it("phone width (no phone intro yet): nothing plays, nothing loads, the root is done", async () => {
+  it("phone width: plays the column's cut, never loads the rig, and says nothing on the commentary beat", async () => {
     situation("mobile");
     const { root } = await mount();
     expect(loadRig).not.toHaveBeenCalled();
-    expect(timelines()).toHaveLength(0);
     expect(root).not.toHaveAttribute("data-rig");
+    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(timelines()).toHaveLength(1);
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    act(() => void tl.progress(1));
+    expect(onComm).not.toHaveBeenCalled();
     expect(root).toHaveAttribute("data-intro", "done");
+    expect(api.state).toBe("done");
+  });
+
+  it("each layout's timeline touches its own parts only: the same data-part names, two layouts", async () => {
+    const part = (layout: string, name: string) =>
+      document.querySelector<HTMLElement>(`[data-intro-layout="${layout}"] [data-part="${name}"]`)!;
+    const ofLayout = (layout: string) => [
+      ...document.querySelectorAll<HTMLElement>(`[data-intro-layout="${layout}"] [data-part]`),
+    ];
+    const tweened = (layout: string) =>
+      ofLayout(layout).filter((el) => gsap.getTweensOf(el).length > 0);
+
+    situation("mobile");
+    const phone = await mount();
+    expect(tweened("column").length).toBeGreaterThan(10);
+    expect(tweened("stage")).toEqual([]);
+    expect(gsap.getTweensOf(part("column", "cta")).length).toBeGreaterThan(0);
+    expect(gsap.getTweensOf(part("stage", "cta"))).toHaveLength(0);
+    phone.unmount();
+    gsap.globalTimeline.clear();
+
+    situation("desktop");
+    await mount();
+    expect(tweened("stage").length).toBeGreaterThan(10);
+    expect(tweened("column")).toEqual([]);
+    expect(gsap.getTweensOf(part("column", "letter"))).toHaveLength(0);
+  });
+
+  it("phone REPLAY restarts the same cut from the dark", async () => {
+    situation("mobile");
+    const { root } = await mount();
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    act(() => void tl.progress(1));
+    expect(root).toHaveAttribute("data-intro", "done");
+    act(() => api.replay());
+    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(tl.time()).toBeLessThan(0.5);
+    for (let i = 0; i < 5; i++) act(() => api.replay());
+    expect(timelines()).toHaveLength(1);
+  });
+
+  it("resizing from the stage to the phone mid-play builds the column's show and reaches done", async () => {
+    situation("desktop");
+    const { root } = await mount();
+    const stageTl = timelines()[0] as gsap.core.Timeline;
+    stageTl.time(1);
+    expect(root).toHaveAttribute("data-rig");
+
+    await changeTo("mobile");
+    expect(root).not.toHaveAttribute("data-rig");
+    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(timelines()).toHaveLength(1);
+    expect(timelines()[0]).not.toBe(stageTl);
+    expect(
+      gsap.getTweensOf(document.querySelector('[data-intro-layout="stage"] [data-part="cta"]')!),
+    ).toHaveLength(0);
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    act(() => void tl.progress(1));
+    expect(root).toHaveAttribute("data-intro", "done");
+
+    // and back again
+    await changeTo("desktop");
+    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(timelines()).toHaveLength(1);
+    expect(root).toHaveAttribute("data-rig");
   });
 
   it("leaving the page reverts the show: no tween is left on the unmounted nodes", async () => {

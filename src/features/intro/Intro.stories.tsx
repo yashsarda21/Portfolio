@@ -24,7 +24,9 @@ function EndState() {
     void loadGsap().then((gsap) => {
       const root = rootRef.current;
       if (!live || !root) return;
-      showIntroEndState(gsap, collectIntroRefs(root));
+      // Both layouts, each from its own refs (they share part names); CSS shows the one that fits the width.
+      for (const layout of root.querySelectorAll<HTMLElement>("[data-intro-layout]"))
+        showIntroEndState(gsap, collectIntroRefs(layout));
       root.setAttribute("data-intro", "done");
     });
     return () => {
@@ -45,6 +47,22 @@ export const Desktop: StoryObj = {
       "/arena",
     );
     await expect(canvas.getByRole("link", { name: /SKIP INTRO/ })).toHaveAttribute(
+      "href",
+      "/arena",
+    );
+  },
+};
+
+/**
+ * The phone column at the end of its cut (L6). DERIVED: no artboard exists for the phone intro, so this is an
+ * eyeball story, not a parity one. Narrow the viewport below 768px to see it (from there up the stage shows).
+ */
+export const Phone: StoryObj = {
+  render: () => <EndState />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { level: 1, name: "Yash Sarda" })).toBeInTheDocument();
+    await expect(canvas.getByRole("link", { name: /ENTER THE ARENA/ })).toHaveAttribute(
       "href",
       "/arena",
     );

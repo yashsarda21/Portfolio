@@ -1,7 +1,7 @@
 import { gsap } from "gsap";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { frameAt, framePosition } from "@/lib/sprite";
-import { INTRO_BEATS } from "./beats";
+import { INTRO_BEATS, INTRO_TEMPO } from "./beats";
 import { planLetters } from "./letters";
 import { createPixels } from "./pixels";
 import type { RigResult } from "./rig";
@@ -35,6 +35,7 @@ function fullRefs(): Full {
     fig: el(),
     strips: many(3),
     rest: el(),
+    portrait: el(),
     shock: el(),
     streak: el(),
     glints: many(2),
@@ -589,6 +590,48 @@ describe("createIntroTimeline: title, tagline and finale", () => {
     expect(hidden(refs.titleBar)).toBe(true);
   });
 
+  it("the bar travels the title's own width on the phone, and the stage's fixed 560 on the stage", () => {
+    // jsdom has no layout: the title reports the width a phone would give SOFTWARE ENGINEER.
+    const widthOf = (refs: Full, width: number) =>
+      Object.defineProperty(refs.title, "offsetWidth", { value: width });
+    const wipe = 0.6 * INTRO_TEMPO.mobile;
+
+    const phone = fullRefs();
+    widthOf(phone, 240);
+    const tl = make(phone, "mobile");
+    tl.time(M.title + wipe * 0.5);
+    const mid = gsap.getProperty(phone.titleBar, "x") as number;
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(240);
+    tl.time(M.title + wipe * 0.9);
+    // just before the bar fades out, it is at the title's right edge and never past it
+    expect(gsap.getProperty(phone.titleBar, "x")).toBeGreaterThan(200);
+    expect(gsap.getProperty(phone.titleBar, "x")).toBeLessThanOrEqual(240);
+
+    const stage = fullRefs();
+    widthOf(stage, 240);
+    const desktop = make(stage, "desktop");
+    desktop.time(D.title + 0.6 * 0.9);
+    expect(gsap.getProperty(stage.titleBar, "x")).toBeGreaterThan(500);
+    desktop.progress(1);
+    expect(hidden(stage.titleBar)).toBe(true);
+  });
+
+  it("the phone's portrait is held back, then fades in with the board's header; the stage has no such part", () => {
+    const refs = fullRefs();
+    const tl = make(refs, "mobile");
+    expect(hidden(refs.portrait)).toBe(true);
+    tl.time(M.boardHeader - 0.05);
+    expect(hidden(refs.portrait)).toBe(true);
+    tl.time(M.boardHeader + 0.2);
+    expect(shown(refs.portrait)).toBe(true);
+    expect(Number(refs.portrait.style.opacity)).toBeLessThan(1);
+    tl.progress(1);
+    expect(refs.portrait.style.opacity).toBe("1");
+    const stage = { ...fullRefs(), portrait: undefined };
+    expect(() => make(stage, "desktop").progress(1)).not.toThrow();
+  });
+
   it("ticks the tagline in piece by piece, 60 ms apart", () => {
     const refs = fullRefs();
     const tl = make(refs);
@@ -736,6 +779,14 @@ describe("showIntroEndState", () => {
     expect(refs.title.style.clipPath).toBe("");
     expect(refs.fig.style.getPropertyValue("--lit")).toBe("1");
     expect(gsap.getProperty(refs.mover, "x")).toBe(0);
+  });
+
+  it("shows the phone's portrait", () => {
+    const refs = fullRefs();
+    refs.portrait.style.visibility = "hidden";
+    showIntroEndState(gsap, refs);
+    expect(shown(refs.portrait)).toBe(true);
+    expect(refs.portrait.style.opacity).toBe("1");
   });
 
   it("hides the strips, the effects and the pixels", () => {

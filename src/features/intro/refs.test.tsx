@@ -14,14 +14,16 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 });
 
-function page() {
+/** The page renders both layouts; a timeline collects the refs of the one it plays, by its `data-intro-layout`. */
+function page(layout: "stage" | "column" = "stage") {
   const { container } = render(
     <WithShell>
       <IntroPage view={view} />
     </WithShell>,
   );
   const root = container.querySelector<HTMLElement>("main#main")!;
-  return { root, refs: collectIntroRefs(root) };
+  const scope = root.querySelector<HTMLElement>(`[data-intro-layout="${layout}"]`)!;
+  return { root, scope, refs: collectIntroRefs(scope) };
 }
 
 describe("IntroPage: what the timeline can reach", () => {
@@ -108,7 +110,7 @@ describe("IntroPage: what the timeline can reach", () => {
   it("the h1 is the name for assistive tech; its letters and every effect are decorative", () => {
     const { root, refs } = page();
     const h1s = root.querySelectorAll("h1");
-    expect(h1s).toHaveLength(2); // the stage's, and the phone placeholder's (display:none from 768px)
+    expect(h1s).toHaveLength(2); // the stage's, and the phone column's (each display:none at the other's width)
     const h1 = h1s[0]!;
     expect(h1).toHaveAttribute("aria-label", view.heading);
     expect(h1.hasAttribute("aria-hidden")).toBe(false);
@@ -141,6 +143,27 @@ describe("IntroPage: what the timeline can reach", () => {
     expect(replay).toHaveClass("motion-reduce:hidden");
   });
 
+  it("the stage's refs never include the phone column's parts, and the column's never the stage's", () => {
+    const stage = page("stage");
+    const column = collectIntroRefs(
+      stage.root.querySelector<HTMLElement>('[data-intro-layout="column"]')!,
+    );
+    const columnEl = stage.root.querySelector('[data-intro-layout="column"]')!;
+    const stageEl = stage.scope;
+    expect(stageEl.contains(columnEl)).toBe(false);
+    for (const el of [
+      ...stage.refs.letters!,
+      stage.refs.cta!,
+      stage.refs.welcome!,
+      stage.refs.title!,
+    ])
+      expect(columnEl.contains(el)).toBe(false);
+    for (const el of [...column.letters!, column.cta!, column.welcome!, column.title!])
+      expect(stageEl.contains(el)).toBe(false);
+    // the whole page would find the stage's parts first, which is the mistake the scoping prevents
+    expect(collectIntroRefs(stage.root).letters).toHaveLength(20);
+  });
+
   it("holds no copy of its own: the visible text is the view's", () => {
     const { root } = page();
     const stage = root.querySelector("[data-stage]") as HTMLElement;
@@ -154,6 +177,115 @@ describe("IntroPage: what the timeline can reach", () => {
       view.replay,
       view.skip.label,
       ...view.footer.flatMap((c) => [c.label, c.value]),
+      ...view.tagline.map((t) => t.text),
+    ])
+      expect(text, s).toContain(s);
+  });
+});
+
+describe("IntroColumn: the phone's parts", () => {
+  it("offers the mobile tier what it moves (two banks, the name, the title, the tagline, the strip, WELCOME, the CTA) and nothing of the stage", () => {
+    const { refs } = page("column");
+    expect(refs.banks).toHaveLength(2);
+    expect(refs.letters).toHaveLength(10);
+    expect(refs.tagline).toHaveLength(7);
+    for (const key of [
+      "boardHeader",
+      "portrait",
+      "title",
+      "titleBar",
+      "strip",
+      "welcome",
+      "cta",
+    ] as const)
+      expect(refs[key], key).toBeInstanceOf(HTMLElement);
+    for (const key of [
+      "mover",
+      "fig",
+      "rest",
+      "backlight",
+      "shock",
+      "streak",
+      "flash",
+      "trails",
+      "idle",
+      "sweep",
+    ] as const)
+      expect(refs[key], key).toBeUndefined();
+    expect(refs.strips).toEqual([]);
+    expect(refs.ghosts).toEqual([]);
+    expect(refs.pixels).toEqual([]);
+    expect(refs.flares).toEqual([]);
+  });
+
+  it("the h1 is the name for assistive tech, its letters are decorative, and the words never break", () => {
+    const { scope, refs } = page("column");
+    const h1 = scope.querySelector("h1")!;
+    expect(scope.querySelectorAll("h1")).toHaveLength(1);
+    expect(h1).toHaveAttribute("aria-label", view.heading);
+    expect(refs.letters!.map((l) => l.textContent).join("")).toBe(content.player.name);
+    for (const letter of refs.letters!) expect(letter).toHaveAttribute("aria-hidden", "true");
+    // YASH and SARDA are one line each; the space between them is a letter that draws nothing
+    const lines = [...h1.children] as HTMLElement[];
+    expect(lines.map((l) => l.textContent)).toEqual(["Yash", " Sarda"]);
+    expect(lines.every((l) => l.classList.contains("whitespace-nowrap"))).toBe(true);
+    expect(refs.letters![4]).toHaveClass("hidden");
+  });
+
+  it("every part the timeline reveals is held back while the show is pending", () => {
+    const { refs } = page("column");
+    for (const el of [
+      ...refs.banks!,
+      refs.boardHeader,
+      refs.portrait,
+      refs.title,
+      refs.strip,
+      refs.welcome,
+      refs.cta,
+      ...refs.letters!,
+      ...refs.tagline!,
+    ])
+      expect(el!.classList.contains("intro-part"), el!.getAttribute("data-part") ?? "").toBe(true);
+  });
+
+  it("the portrait is the rest pose: decorative (the h1 names him), sized by attributes, decoded off the main thread", () => {
+    const { refs } = page("column");
+    const img = refs.portrait as HTMLImageElement;
+    expect(img.tagName).toBe("IMG");
+    expect(img.getAttribute("src")).toMatch(/portrait-rest/);
+    expect(img.getAttribute("alt")).toBe("");
+    expect(img).toHaveAttribute("width", "700");
+    expect(img).toHaveAttribute("height", "564");
+    expect(img).toHaveAttribute("decoding", "async");
+    expect(img).toHaveClass("portrait-fade");
+  });
+
+  it("REPLAY (hidden under reduced motion), SKIP INTRO and ENTER THE ARENA are all there, and no commentary", () => {
+    const { scope } = page("column");
+    const links = [...scope.querySelectorAll<HTMLAnchorElement>("a[href='/arena']")];
+    expect(links.map((a) => a.textContent)).toEqual(
+      expect.arrayContaining([view.skip.label, view.enter.label]),
+    );
+    const replay = [...scope.querySelectorAll("button")].find(
+      (b) => b.textContent === view.replay,
+    )!;
+    expect(replay).toHaveClass("motion-reduce:hidden");
+    expect(scope.querySelector("[data-commentary-bar]")).toBeNull();
+    expect(scope.querySelector("canvas")).toBeNull();
+  });
+
+  it("holds no copy of its own: the visible text is the view's", () => {
+    const { scope } = page("column");
+    const text = scope.textContent!;
+    for (const s of [
+      view.header.live,
+      view.header.count,
+      view.title,
+      view.welcome,
+      view.enter.label,
+      view.replay,
+      view.skip.label,
+      ...view.footerPhone.flatMap((c) => [c.label, c.value]),
       ...view.tagline.map((t) => t.text),
     ])
       expect(text, s).toContain(s);

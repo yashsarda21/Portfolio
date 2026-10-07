@@ -36,6 +36,7 @@ export function collectIntroRefs(scope: HTMLElement): IntroRefs {
     fig: one("fig"),
     strips: many("turn"),
     rest: one("rest"),
+    portrait: one("portrait"),
     shock: one("shock"),
     streak: one("streak"),
     glints: many("glint"),

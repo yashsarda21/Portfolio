@@ -157,14 +157,18 @@
   line-height: 0.9;
   text-transform: uppercase;
 }
-/* WELCOME TO MY ARENA (Intro): type-d2's 60px at .9, tracked .06em. */
+/* WELCOME TO MY ARENA (Intro): type-d2's 60px at .9, tracked .06em. The phone's intro (derived, no board) steps
+   it down to 32px so the line holds a 360px screen on one line, above the full-width call to action. */
 @utility type-welcome {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 60px;
+  font-size: 32px;
   line-height: 0.9;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  @media (width >= 48rem) {
+    font-size: 60px;
+  }
 }
 @utility type-d2s {
   font-family: var(--font-display);

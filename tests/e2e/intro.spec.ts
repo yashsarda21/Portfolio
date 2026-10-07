@@ -4,7 +4,7 @@ import { expect, test as base, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
 import { expectMatchesArtboard, type Rect } from "../support/visual";
-import { waitForHydration } from "./support/contentPage";
+import { expectNoHorizontalOverflow, waitForHydration } from "./support/contentPage";
 
 /*
  * Console errors and uncaught exceptions fail every test in this file, except the ones a test names with
@@ -35,9 +35,12 @@ const name = (page: Page) => page.getByRole("heading", { level: 1, name: ui.rout
 const enter = (page: Page) => page.getByRole("link", { name: ui.intro.enter });
 const skip = (page: Page) => page.getByRole("link", { name: ui.hud.skipIntro });
 const replay = (page: Page) => page.getByRole("button", { name: ui.hud.replay });
-const part = (page: Page, p: string) => page.locator(`[data-part="${p}"]`);
-const style = (page: Page, p: string) =>
-  part(page, p)
+/** The page draws the stage and the phone column with the same part names: say which one (the stage by default). */
+type Layout = "stage" | "column";
+const part = (page: Page, p: string, layout: Layout = "stage") =>
+  page.locator(`[data-intro-layout="${layout}"] [data-part="${p}"]`);
+const style = (page: Page, p: string, layout: Layout = "stage") =>
+  part(page, p, layout)
     .first()
     .evaluate((el) => {
       const s = getComputedStyle(el);
@@ -45,8 +48,8 @@ const style = (page: Page, p: string) =>
     });
 
 /** Every letter of the name is drawn (the gap between the words has no height of its own, so it is judged by style). */
-async function expectLettersShown(page: Page) {
-  const letters = await part(page, "letter").evaluateAll((els) =>
+async function expectLettersShown(page: Page, layout: Layout = "stage") {
+  const letters = await part(page, "letter", layout).evaluateAll((els) =>
     els.map((el) => getComputedStyle(el).visibility),
   );
   expect(letters).toHaveLength(10);
@@ -381,7 +384,7 @@ test.describe("desktop", () => {
     await expectNoA11yViolations(page);
   });
 
-  test("exactly one h1 is rendered from 768px up, and the phone placeholder's from below", async ({
+  test("exactly one h1 is rendered from 768px up (the stage's); the phone column's is the one below", async ({
     page,
   }) => {
     for (const [width, height] of [
@@ -464,16 +467,204 @@ test.describe("tablet (L1): the same stage intro on the scaled stage", () => {
   }
 });
 
-test.describe("phone (until the phone's intro is built)", () => {
-  test.skip(({ viewport }) => (viewport?.width ?? 0) >= 768, "the phone project");
-
-  test("keeps its placeholder: one h1, no stage, nothing held back", async ({ page }) => {
-    await page.goto("/intro");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.intro.heading, {
-      ignoreCase: true,
+/** The page's own clock for the show: when the root became playing, and when it first became done after that. */
+async function watchShow(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __show: { playing?: number; done?: number } };
+    w.__show = {};
+    document.addEventListener("DOMContentLoaded", () => {
+      const main = document.querySelector("main#main")!;
+      new MutationObserver(() => {
+        const state = main.getAttribute("data-intro");
+        if (state === "playing" && w.__show.playing === undefined)
+          w.__show.playing = performance.now();
+        else if (state === "done" && w.__show.playing !== undefined && w.__show.done === undefined)
+          w.__show.done = performance.now();
+      }).observe(main, { attributes: true, attributeFilter: ["data-intro"] });
     });
-    await expect(page.locator("[data-stage]")).toBeHidden();
-    await expect(root(page)).toHaveAttribute("data-intro", "done");
+  });
+}
+const showSeconds = (page: Page) =>
+  page.evaluate(() => {
+    const { playing, done } = (window as unknown as { __show: { playing: number; done: number } })
+      .__show;
+    return (done - playing) / 1000;
+  });
+
+/** Every request for the rest portrait (the phone and the stage draw the same file). */
+function trackPortrait(page: Page) {
+  const urls: string[] = [];
+  page.on("request", (r) => /portrait-rest[^/]*\.webp/.test(r.url()) && urls.push(r.url()));
+  return urls;
+}
+
+test.describe("phone (L6): the column's two-second cut", () => {
+  test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
+
+  for (const [width, height] of [
+    [390, 844],
+    [375, 667],
+    [360, 640],
+  ] as const) {
+    test(`${width}x${height}: done in 2.6 s, no head-turn frames, targets and CTA sized, nothing clipped, mono at 11px or more`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      const strips = trackStrips(page);
+      const portrait = trackPortrait(page);
+      await watchShow(page);
+      await page.goto("/intro");
+      await playing(page);
+      await done(page);
+      expect(await showSeconds(page), "seconds from playing to done").toBeLessThanOrEqual(2.6);
+      await page.waitForTimeout(400);
+
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      await expect(name(page)).toBeVisible();
+      await expect(page.locator("[data-stage]")).toBeHidden();
+      expect([...strips], "head-turn frames requested on a phone").toEqual([]);
+      expect(portrait.length, "the rest portrait is one request").toBeLessThanOrEqual(1);
+
+      // Touch targets, and the call to action across the board's width.
+      for (const control of [replay(page), skip(page)]) {
+        const box = (await control.boundingBox())!;
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(box.width).toBeGreaterThanOrEqual(44);
+      }
+      const board = (await part(page, "board-header", "column").locator("..").boundingBox())!;
+      const cta = (await enter(page).boundingBox())!;
+      expect(Math.abs(cta.width - board.width)).toBeLessThanOrEqual(1);
+      expect(cta.height).toBeGreaterThanOrEqual(44);
+      await enter(page).focus();
+      await expect(enter(page)).toBeFocused();
+      await expect(enter(page)).toHaveAttribute("href", "/arena");
+
+      // Short phones scroll: nothing sideways, and the call to action sits fully inside the document.
+      await expectNoHorizontalOverflow(page, [width], height);
+      await enter(page).scrollIntoViewIfNeeded();
+      const inside = await enter(page).evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const doc = document.documentElement;
+        return {
+          left: r.left >= 0,
+          right: r.right <= doc.scrollWidth,
+          bottom: r.bottom + window.scrollY <= doc.scrollHeight,
+        };
+      });
+      expect(inside).toEqual({ left: true, right: true, bottom: true });
+
+      const small = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[class*="type-mono"]')]
+          .filter((el) => el.getClientRects().length > 0)
+          .map((el) => ({ text: el.textContent, size: parseFloat(getComputedStyle(el).fontSize) }))
+          .filter((m) => m.size < 10.99),
+      );
+      expect(small, "mono text under 11px").toEqual([]);
+    });
+  }
+
+  test("the CTA is hidden, and out of the Tab order, until its beat; the name's letters lock in", async ({
+    page,
+  }) => {
+    await page.goto("/intro");
+    await playing(page);
+    expect((await style(page, "cta", "column")).visibility).toBe("hidden");
+    const stops = await tabStops(page, 3);
+    expect(stops.join(" | ")).toContain(ui.hud.skipIntro);
+    expect(stops.join(" | ")).not.toContain(ui.intro.enter);
+    await done(page);
+    await expectLettersShown(page, "column");
+    await enter(page).focus();
+    await expect(enter(page)).toBeFocused();
+  });
+
+  test("silent: no commentary line (not even in the hidden stage) and no dust", async ({
+    page,
+  }) => {
+    await page.goto("/intro");
+    await done(page);
+    // The line mounts only when said, and phones say nothing (L11): not even in the hidden stage.
+    await page.waitForTimeout(500);
+    await expect(page.locator("[data-commentary-bar]")).toHaveCount(0);
+    await expect(page.locator("canvas:visible")).toHaveCount(0);
+  });
+
+  test("SKIP INTRO works half a second in; REPLAY plays the same cut again", async ({ page }) => {
+    await page.goto("/intro");
+    await playing(page);
+    await page.waitForTimeout(500);
+    await skip(page).click();
+    await expect(page).toHaveURL("/arena");
+
+    await page.goto("/intro");
+    await done(page);
+    await replay(page).click();
+    await playing(page);
+    await done(page);
+    await expectLettersShown(page, "column");
+    await expect(enter(page)).toBeVisible();
+  });
+
+  test("resizing from the stage to the phone width mid-play (and back) reaches done with no errors", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto("/intro");
+    await playing(page);
+    await page.waitForTimeout(700);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await done(page);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(name(page)).toBeVisible();
+    await expect(enter(page)).toBeVisible();
+    await expectLettersShown(page, "column");
+
+    await replay(page).click();
+    await playing(page);
+    await page.waitForTimeout(500);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await done(page);
+    await expect(name(page)).toBeVisible();
+    await expect(enter(page)).toBeVisible();
+    await expectLettersShown(page);
+  });
+
+  test("has no accessibility violations once the show is done", async ({ page }) => {
+    await page.goto("/intro");
+    await done(page);
+    await expectNoA11yViolations(page);
+  });
+
+  test.describe("reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+    test("the end state at once, no frames requested, REPLAY gone", async ({ page }) => {
+      const strips = trackStrips(page);
+      await page.goto("/intro", { waitUntil: "commit" });
+      await done(page, 5000);
+      await expect(name(page)).toBeVisible();
+      await expect(enter(page)).toBeVisible();
+      await expect(replay(page)).toBeHidden();
+      await expect(skip(page)).toBeVisible();
+      await expectLettersShown(page, "column");
+      expect([...strips]).toEqual([]);
+    });
+  });
+
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+    test("the column's end state: the name, the portrait, ENTER THE ARENA and SKIP INTRO", async ({
+      page,
+    }) => {
+      await page.goto("/intro");
+      await expect(name(page)).toBeVisible();
+      await expect(enter(page)).toBeVisible();
+      await expect(enter(page)).toHaveAttribute("href", "/arena");
+      await expect(skip(page)).toBeVisible();
+      await expect(root(page)).toHaveAttribute("data-intro", "pending");
+      for (const p of ["board-header", "portrait", "title", "board-strip", "welcome", "bank-1"])
+        expect((await style(page, p, "column")).visibility, p).toBe("visible");
+      await expectLettersShown(page, "column");
+      await expect(part(page, "portrait", "column")).toBeVisible();
+    });
   });
 });

@@ -14,14 +14,22 @@ import { createIntroTimeline, showIntroEndState } from "./timeline";
 export type IntroState = "pending" | "playing" | "done";
 
 /**
- * Which intro this screen gets. The stage (desktop AND tablet, L1) plays the full show; the phone's own cut
- * comes with Task 7; reduced motion gets the end state at once, whatever the width.
+ * Which intro this screen gets. The stage (desktop AND tablet, L1) plays the full show; the phone column
+ * plays its own two-second cut (L6); reduced motion gets the end state at once, whatever the width.
  */
 const TIERS = {
   desktop: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
   mobile: "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
   reduce: "(prefers-reduced-motion: reduce)",
 } as const;
+
+/**
+ * The page draws both layouts and CSS shows one. Each is marked, and a branch collects the parts of its own
+ * layout only: the stage and the column use the same `data-part` names.
+ */
+const LAYOUT = { desktop: "stage", mobile: "column" } as const;
+const layoutOf = (root: HTMLElement, tier: keyof typeof LAYOUT) =>
+  root.querySelector<HTMLElement>(`[data-intro-layout="${LAYOUT[tier]}"]`);
 
 /** The head-turn strips, in play order. Only the desktop branch ever asks for them. */
 const RIG_URLS = [turn0, turn1, turn2];
@@ -36,7 +44,8 @@ const RIG_WAIT_SECONDS = 1.5;
  * reduced motion it shows the end state and never touches the rig. If GSAP cannot load, the state stays pending
  * and the CSS fallback shows the parts after 8 s. Leaving the page reverts everything (`mm.revert()`).
  *
- * Phone width (until Task 7 draws the phone's intro) plays nothing and marks the root done.
+ * Phone width plays the column's cut: no rig (it never loads, so no head-turn frame is ever requested) and
+ * no commentary (L11). Resizing across 768px mid-play reverts one branch and builds the other.
  * `replay()` restarts the timeline from the dark stadium; replaying while playing restarts again.
  */
 export function useIntroTimeline(
@@ -72,15 +81,37 @@ export function useIntroTimeline(
         mm = gsap.matchMedia();
         mm.add(TIERS, (context) => {
           const { desktop, reduce } = context.conditions as Record<keyof typeof TIERS, boolean>;
-          const refs = collectIntroRefs(root);
           if (reduce) {
-            showIntroEndState(gsap, refs);
+            // Whichever layout is on show (the width can change without this branch running again).
+            for (const tier of ["desktop", "mobile"] as const) {
+              const layout = layoutOf(root, tier);
+              if (layout) showIntroEndState(gsap, collectIntroRefs(layout));
+            }
             mark("done");
             return;
           }
-          if (!desktop) {
+          const layout = layoutOf(root, desktop ? "desktop" : "mobile");
+          if (!layout) {
             mark("done");
             return;
+          }
+          const refs = collectIntroRefs(layout);
+          if (!desktop) {
+            const tl = createIntroTimeline(gsap, refs, {
+              tier: "mobile",
+              // No head turn on a phone: the rig is not loaded, the timeline never waits for it.
+              rig: Promise.resolve("timeout"),
+              onBeat: (beat) => {
+                if (beat === "bank") latest.current.play("floodlight");
+                else if (beat === "done") mark("done");
+                // "comm": phones are silent (L11), the column draws no commentary
+              },
+            });
+            timeline.current = tl;
+            mark("playing");
+            return () => {
+              timeline.current = null;
+            };
           }
           // The page may draw the head-turn frames now (CSS keys off this); reduced motion and the phone never do.
           root.setAttribute("data-rig", "");
