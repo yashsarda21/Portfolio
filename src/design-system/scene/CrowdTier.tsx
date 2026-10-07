@@ -5,15 +5,18 @@ import { cn } from "@/lib/cn";
 export function CrowdTier({
   alpha,
   curved = false,
+  "data-part": part,
   className,
 }: {
   alpha?: number;
   curved?: boolean;
+  "data-part"?: string;
   className?: string;
 }) {
   return (
     <div
       aria-hidden="true"
+      data-part={part}
       className={cn(
         "pointer-events-none absolute scene-crowd opacity-70",
         curved && "[border-radius:50%_50%_0_0/60%_60%_0_0]",

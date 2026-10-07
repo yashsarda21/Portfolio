@@ -63,6 +63,85 @@ describe("Scoreboard", () => {
   });
 });
 
+describe("Scoreboard sizes", () => {
+  const board = (size?: "landing" | "intro" | "compact") =>
+    render(
+      <Scoreboard size={size}>
+        <Scoreboard.Header>H</Scoreboard.Header>
+        <Scoreboard.Body>
+          <Scoreboard.Title>NAME</Scoreboard.Title>
+          <Scoreboard.Subtitle>SUB</Scoreboard.Subtitle>
+        </Scoreboard.Body>
+        <Scoreboard.Footer>
+          <Scoreboard.FooterCell label="A" value="ONE" tone="volt" align="start" />
+          <Scoreboard.FooterCell label="B" value="TWO" tone="label" align="end" />
+        </Scoreboard.Footer>
+      </Scoreboard>,
+    );
+
+  it("landing is the default: header 53, footer 71, three columns, 24px values", () => {
+    board();
+    expect(screen.getByText("H")).toHaveClass("h-13.25", "type-mono-eyebrow");
+    expect(screen.getByText("H").parentElement).toHaveClass("shadow-board");
+    expect(screen.getByText("ONE").closest(".grid")).toHaveClass("h-17.75", "grid-cols-3");
+    expect(screen.getByText("ONE")).toHaveClass("type-score-lg");
+    expect(screen.getByText("NAME")).toHaveClass("type-hero");
+    expect(screen.getByText("SUB")).toHaveClass("type-sub", "pl-[0.42em]");
+  });
+
+  it("intro: header 48 and footer 64 sit on the board's own ground; values are 22px", () => {
+    board("intro");
+    expect(screen.getByText("H")).toHaveClass("h-12", "bg-board");
+    const footer = screen.getByText("ONE").closest(".grid");
+    expect(footer).toHaveClass("h-16", "bg-board", "grid-cols-3");
+    expect(screen.getByText("ONE")).toHaveClass("type-score-md");
+    expect(screen.getByText("H").parentElement).toHaveClass("shadow-board");
+  });
+
+  it("compact: header 38 at 11px, two footer cells, 18px values, a 5px bezel", () => {
+    board("compact");
+    expect(screen.getByText("H")).toHaveClass("h-9.5", "type-mono-label");
+    const footer = screen.getByText("ONE").closest(".grid");
+    expect(footer).toHaveClass("h-12", "grid-cols-2");
+    expect(footer?.children).toHaveLength(2);
+    expect(screen.getByText("ONE")).toHaveClass("type-d5");
+    expect(screen.getByText("NAME")).toHaveClass("type-hero-stack");
+    expect(screen.getByText("SUB")).toHaveClass("type-sub-sm", "pl-[0.38em]");
+    expect(screen.getByText("H").parentElement).toHaveClass("shadow-board-compact");
+    expect(screen.getByText("H").parentElement).not.toHaveClass("shadow-board");
+  });
+
+  it("Power: two decorative ring layers, hidden until a timeline lights them", () => {
+    const { container } = render(<Scoreboard.Power className="absolute top-24 left-25" />);
+    const layers = container.querySelectorAll("[data-part]");
+    expect([...layers].map((l) => l.getAttribute("data-part"))).toEqual(["board-on", "board-hit"]);
+    for (const layer of layers) {
+      expect(layer).toHaveAttribute("aria-hidden", "true");
+      expect(layer).toHaveClass("opacity-0");
+    }
+    expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
+    expect(container.firstElementChild).toHaveClass("top-24", "left-25");
+  });
+
+  it("a board without Power has no ring layers (the resting ring is its own shadow)", () => {
+    const { container } = board();
+    expect(container.querySelector('[data-part="board-on"], [data-part="board-hit"]')).toBeNull();
+  });
+
+  it("Scan: Main's 90-high band or Intro's 90-wide bar, decorative and at rest invisible", () => {
+    const { container } = render(
+      <Scoreboard>
+        <Scoreboard.Scan variant="band" />
+        <Scoreboard.Scan variant="bar" />
+      </Scoreboard>,
+    );
+    const [band, bar] = [...container.querySelectorAll('[data-part="scan"]')];
+    expect(band).toHaveClass("h-22.5", "scene-scan-band", "opacity-0");
+    expect(bar).toHaveClass("w-22.5", "scene-scan-bar", "opacity-0");
+    for (const scan of [band, bar]) expect(scan).toHaveAttribute("aria-hidden", "true");
+  });
+});
+
 describe("SkillGroup", () => {
   const skills = [
     { name: "Java", level: "shipped", tierLabel: "SHIPPED" },

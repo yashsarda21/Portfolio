@@ -83,6 +83,27 @@
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
+/* The name on the Intro board: 132px at .85 (type-hero is the Landing's 156px at .86). */
+@utility type-hero-sm {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 132px;
+  line-height: 0.85;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* The name stacked on two lines on the narrow board (Mobile-Landing): 96px at .82, untracked; 120px from the tablet. */
+@utility type-hero-stack {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 96px;
+  line-height: 0.82;
+  text-align: center;
+  text-transform: uppercase;
+  @media (width >= 48rem) {
+    font-size: 120px;
+  }
+}
 @utility type-hero-fluid {
   font-family: var(--font-display);
   font-weight: 900;
@@ -237,6 +258,27 @@
   letter-spacing: 0.42em;
   text-transform: uppercase;
 }
+/* The subtitle on the Intro board: 34px at .4em (type-sub is the Landing's 30px at .42em). */
+@utility type-sub-lg {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+}
+/* The subtitle on the narrow board (Mobile-Landing): 18px at .38em; 22px from the tablet (one size step up, L1). */
+@utility type-sub-sm {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  @media (width >= 48rem) {
+    font-size: 22px;
+  }
+}
 /*
  * mono: the engineer (11px floor, spec A2).
  * L2 (Phase 3): inside a scaled stage, a laptop screen shrinks the 1440x900 design space (scale < 1), so an
@@ -380,6 +422,16 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 24px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+/* The Intro board's footer values: type-score-lg's face at 22px. */
+@utility type-score-md {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
   line-height: 1;
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;

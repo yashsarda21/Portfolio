@@ -137,6 +137,16 @@
   /* shadows & glows (audit §2.7) */
   --shadow-board:
     0 0 0 8px var(--ref-board-bezel), 0 0 0 9px var(--ref-board-ring), 0 50px 140px rgb(0 0 0 / 0.7);
+  /* the compact board (Mobile-Landing): one 5px bezel and nothing else */
+  --shadow-board-compact: 0 0 0 5px var(--ref-board-bezel);
+  /* Intro board layers (L14): opacity-tweened rings drawn over the board's resting shadow (the drop shadow stays the board's own). board-on adds the volt glow
+     of a powered board; board-hit is the volt ring and flash of the figure landing. */
+  --shadow-board-on:
+    0 0 0 8px var(--ref-board-bezel), 0 0 0 9px var(--ref-board-ring),
+    0 0 120px rgb(var(--rgb-volt) / 0.06);
+  --shadow-board-hit:
+    0 0 0 8px var(--ref-board-bezel), 0 0 0 9px var(--ref-volt),
+    0 0 90px rgb(var(--rgb-volt) / 0.45);
   --shadow-card-3d: 0 30px 80px rgb(0 0 0 / 0.5);
   --shadow-toast: 0 20px 60px rgb(0 0 0 / 0.6);
   --shadow-holo: 0 60px 120px rgb(0 0 0 / 0.7), 0 0 60px rgb(var(--rgb-volt) / 0.1);
@@ -147,6 +157,9 @@
     0 0 40px 12px rgb(var(--rgb-bulb) / 0.45), 0 0 220px 80px rgb(var(--rgb-halo) / 0.14);
   --shadow-bank-sm:
     0 0 30px 10px rgb(var(--rgb-bulb) / 0.4), 0 0 160px 60px rgb(var(--rgb-halo) / 0.1);
+  /* the intro's bank flare: the bank's glow at its brightest (white at .9, a 420px halo of the beam light at .35) */
+  --shadow-bank-flare:
+    0 0 80px 30px rgb(var(--rgb-white) / 0.9), 0 0 420px 180px rgb(var(--rgb-beam) / 0.35);
   --shadow-bank-mini: 0 0 22px 6px rgb(var(--rgb-bulb) / 0.4);
   --shadow-inset-cabinet: inset 0 0 120px rgb(0 0 0 / 0.8);
 

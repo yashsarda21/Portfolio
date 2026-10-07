@@ -40,9 +40,12 @@
 }
 
 /* Entrance presets (spec §7 CSS layer). Stagger with --d: style={{ "--d": "0.3s" }}. */
+/* Every entrance's first frame is visibility: hidden, so a part that has not appeared yet cannot take focus
+   or a click. (visibility is discrete: it is visible from the first moment the animation runs.) */
 @keyframes fade-in {
   from {
     opacity: 0;
+    visibility: hidden;
   }
   to {
     opacity: 1;
@@ -52,6 +55,7 @@
   from {
     opacity: 0;
     transform: translateY(18px);
+    visibility: hidden;
   }
   to {
     opacity: 1;
@@ -62,6 +66,7 @@
   0% {
     opacity: 0;
     transform: scale(0.8);
+    visibility: hidden;
   }
   60% {
     opacity: 1;
@@ -83,6 +88,145 @@
 @utility animate-pop {
   animation: pop-in var(--dur-pop) var(--ease-follow) both;
   animation-delay: var(--d, 0s);
+}
+
+/* ---------- the boot (Landing) ----------
+   Main's per-part entrances. --d is a part's turn in seconds; --pace is the page's speed: 1 on a first visit,
+   .25 on a return visit (the head script sets data-return-visit before first paint). Both multiply into the
+   delay, and --pace into the duration, so a return visit is the same show in a quarter of the time. The global
+   reduced-motion rule (base.css) ends all of these at once, on their last frame. */
+:root {
+  --pace: 1;
+}
+:root[data-return-visit] {
+  --pace: 0.25;
+}
+
+/* The name's lock-in: blur and wide tracking settle into the element's own tracking (no `to` letter-spacing,
+   so the end is whatever the element is set to: .02em for the name, .42em for the subtitle). Start the
+   tracking at --boot-from (.3em; the subtitle sets .7em). */
+@keyframes boot-name {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    letter-spacing: var(--boot-from, 0.3em);
+    visibility: hidden;
+  }
+  55% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+@keyframes boot-scan {
+  0% {
+    transform: translateY(-120%);
+    opacity: 1;
+    visibility: hidden;
+  }
+  100% {
+    transform: translateY(420%);
+    opacity: 0;
+  }
+}
+@utility animate-boot-fade {
+  animation: fade-in calc(1.8s * var(--pace, 1)) ease-out both;
+  animation-delay: calc(var(--d, 0s) * var(--pace, 1));
+}
+@utility animate-boot-rise {
+  animation: rise-in calc(0.9s * var(--pace, 1)) var(--ease-follow) both;
+  animation-delay: calc(var(--d, 0s) * var(--pace, 1));
+}
+@utility animate-boot-name {
+  animation: boot-name calc(1.2s * var(--pace, 1)) var(--ease-follow) both;
+  animation-delay: calc(var(--d, 0s) * var(--pace, 1));
+}
+@utility animate-boot-scan {
+  animation: boot-scan calc(1.4s * var(--pace, 1)) ease-in both;
+  animation-delay: calc(var(--d, 0s) * var(--pace, 1));
+}
+
+/* ---------- the intro ---------- */
+/* Parts an intro timeline reveals: hidden only when JS is on (no flash of the end state before GSAP starts);
+   if the timeline never runs (script error), they appear at 8s. Without JS, or with reduced motion, they are just there. */
+@keyframes intro-fallback {
+  to {
+    visibility: visible;
+  }
+}
+@utility intro-part {
+  :root.js [data-intro="pending"] & {
+    visibility: hidden;
+    animation: intro-fallback 0s 8s forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root.js [data-intro="pending"] & {
+      visibility: visible;
+      animation: none;
+    }
+  }
+}
+
+/* Idle loops of the intro (spec §7: loops are CSS). The figure breathes from its feet every 3.6s; a light sweeps
+   across the face every 6s. Start them late with --d. Reduced motion: both off. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-2px) scale(1.009);
+  }
+}
+@keyframes face-sweep {
+  0% {
+    background-position: 150% 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  60% {
+    background-position: -50% 0;
+    opacity: 1;
+  }
+  61%,
+  100% {
+    background-position: -50% 0;
+    opacity: 0;
+  }
+}
+@utility animate-breathe {
+  transform-origin: 50% 100%;
+  animation: breathe 3.6s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+/* The sweep is a light band 300% as wide as the face. The shape it lights comes from --mask (a url(), set by
+   the screen: the rest portrait), so only the face is lit. */
+@utility animate-face-sweep {
+  background: linear-gradient(
+      100deg,
+      rgb(var(--rgb-white) / 0) 42%,
+      rgb(var(--rgb-white) / 0.38) 50%,
+      rgb(var(--rgb-volt) / 0.18) 54%,
+      rgb(var(--rgb-white) / 0) 62%
+    )
+    0 0 / 300% 100% no-repeat;
+  opacity: 0;
+  -webkit-mask-image: var(--mask);
+  mask-image: var(--mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  animation: face-sweep 6s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 /* Trophy Room presets. The spotlight drops onto its trophy (stagger with --i: 0, 1, 2 ... = 300ms apart);

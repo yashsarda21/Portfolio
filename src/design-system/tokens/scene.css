@@ -54,12 +54,39 @@
  *   left  (box x 60-580):    bank 96-208   -> (96-60)/520 = 6.9231%,  (208-60)/520 = 28.4615%
  *   right (box x 860-1380):  bank 1232-1344 -> (1232-860)/520 = 71.5385%, (1344-860)/520 = 93.0769%
  * Bottom edges are unchanged. Banks render after cones, so the beam's start sits behind the housing.
+ * The apex is two variables (--cone-apex-a / -b, the top edge's left and right corner), so the Intro
+ * layout only overrides the numbers (below), not the shape.
  */
 @utility scene-cone-left {
-  clip-path: polygon(6.9231% 0, 28.4615% 0, 100% 100%, 40% 100%);
+  clip-path: polygon(
+    var(--cone-apex-a, 6.9231%) 0,
+    var(--cone-apex-b, 28.4615%) 0,
+    100% 100%,
+    40% 100%
+  );
 }
 @utility scene-cone-right {
-  clip-path: polygon(71.5385% 0, 93.0769% 0, 60% 100%, 0 100%);
+  clip-path: polygon(
+    var(--cone-apex-a, 71.5385%) 0,
+    var(--cone-apex-b, 93.0769%) 0,
+    60% 100%,
+    0 100%
+  );
+}
+/*
+ * The same D-1 rule for the Intro layout: cone boxes are 540px wide (Intro.dc.html: left 40 / right 40,
+ * top 60, 540x800) and the large flat bank is 112px wide at left 80 / right 80:
+ *   left  (box x 40-580):    bank 80-192    -> (80-40)/540 = 7.4074%,  (192-40)/540 = 28.1481%
+ *   right (box x 860-1400):  bank 1248-1360 -> (1248-860)/540 = 71.8519%, (1360-860)/540 = 92.5926%
+ * The Intro artboard draws the apex at 18%-30% / 70%-82%, offset from the lamp. Bottom edges unchanged.
+ */
+[data-layout="intro"] [data-part="cone-left"] {
+  --cone-apex-a: 7.4074%;
+  --cone-apex-b: 28.1481%;
+}
+[data-layout="intro"] [data-part="cone-right"] {
+  --cone-apex-a: 71.8519%;
+  --cone-apex-b: 92.5926%;
 }
 @utility scene-cone-down {
   clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
@@ -77,6 +104,34 @@
   background: var(--ref-fixture);
   box-shadow: none;
   opacity: 0.6;
+}
+
+/* The bank's flare: a brighter, wider halo laid over the bank, resting invisible. A timeline tweens its
+   opacity (L14: never the bank's box-shadow). Pair with shadow-bank-flare. */
+@utility scene-bank-flare {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  opacity: 0;
+}
+
+/* The scan light on the scoreboard (Scoreboard.Scan). Both rest invisible; the boot or the timeline runs them.
+   band: Main's 90px-high band sweeping down (volt at .16). bar: Intro's 90px-wide bar leading the entrance (.24). */
+@utility scene-scan-band {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--rgb-volt) / 0),
+    rgb(var(--rgb-volt) / 0.16),
+    rgb(var(--rgb-volt) / 0)
+  );
+}
+@utility scene-scan-bar {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--rgb-volt) / 0),
+    rgb(var(--rgb-volt) / 0.24),
+    rgb(var(--rgb-volt) / 0)
+  );
 }
 
 @utility scene-mast {
@@ -258,8 +313,13 @@
 }
 
 /* ---------- keyframes ---------- */
+/* The bank switching on: one definition for every page. Its first frame is hidden (nothing invisible is
+   drawn before its turn); --d is the bank's turn in seconds, --pace the page's speed (motion.css). */
 @keyframes bank-flicker {
-  0%,
+  0% {
+    opacity: 0.05;
+    visibility: hidden;
+  }
   18% {
     opacity: 0.05;
   }
@@ -275,8 +335,8 @@
   }
 }
 @utility animate-bank-flicker {
-  animation: bank-flicker 1.6s ease-out both;
-  animation-delay: var(--flicker-delay, 0s);
+  animation: bank-flicker calc(1.6s * var(--pace, 1)) ease-out both;
+  animation-delay: calc(var(--d, 0s) * var(--pace, 1));
 }
 
 @keyframes live-pulse {

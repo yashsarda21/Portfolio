@@ -2,14 +2,26 @@ import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
 
 /** Turf oval in perspective (Landing/Intro). Position the wrapper with className. */
-export function Field({ tilt = 70, className }: { tilt?: number; className?: string }) {
+export function Field({
+  tilt = 70,
+  ovalClassName,
+  "data-part": part,
+  className,
+}: {
+  tilt?: number;
+  /** The oval's size: 1240x760 by default (`h-190 w-310`); the Intro's is 1300x700. */
+  ovalClassName?: string;
+  "data-part"?: string;
+  className?: string;
+}) {
   return (
     <div
       aria-hidden="true"
+      data-part={part}
       className={cn("pointer-events-none absolute inset-x-0 [perspective:900px]", className)}
     >
       <div
-        className="mx-auto h-190 w-310 scene-field"
+        className={cn("mx-auto h-190 w-310 scene-field", ovalClassName)}
         style={{ "--field-tilt": `${tilt}deg` } as CSSProperties}
       />
     </div>

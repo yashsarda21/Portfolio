@@ -1,9 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import turnStrip from "@/assets/rig/turn_0.webp";
+import { framePosition } from "@/lib/sprite";
 import { LiveDot } from "../broadcast/LiveDot";
 import { Scoreboard } from "../broadcast/Scoreboard";
 import { ArenaBackdrop } from "./ArenaBackdrop";
 import { CrowdTier } from "./CrowdTier";
+import { CONE_REGIONS } from "./cones";
+import { Dust } from "./Dust";
 import { FloodlightBank } from "./FloodlightBank";
+import { SpriteStrip } from "./SpriteStrip";
 import { VenueGlow } from "./VenueGlow";
 
 const meta: Meta = { title: "Scene/Stadium", parameters: { layout: "fullscreen" } };
@@ -49,5 +54,66 @@ export const Venues: StoryObj = {
         </div>
       ))}
     </div>
+  ),
+};
+
+/** The Landing scene with the floodlight boot played to its end (every bank flickered on). */
+export const LandingBackdrop: StoryObj = {
+  render: () => (
+    <div className="relative h-225 w-360">
+      <ArenaBackdrop boot />
+    </div>
+  ),
+  play: () => {
+    for (const animation of document.getAnimations()) animation.finish();
+  },
+};
+
+/** The Intro scene at rest: lower crowd and field, wider cones, flat banks lit (their flares at 0). */
+export const IntroBackdrop: StoryObj = {
+  render: () => (
+    <div className="relative h-225 w-360">
+      <ArenaBackdrop layout="intro" boot={false} />
+    </div>
+  ),
+};
+
+/** Dust drifting in the Landing's two beams. Drawn on a wide screen only; here it shows on desktop. */
+export const DustInBeams: StoryObj = {
+  render: () => (
+    <div className="relative h-225 w-360">
+      <ArenaBackdrop boot={false} dust />
+    </div>
+  ),
+};
+
+/** Dust alone, in the Intro's two beams (the cones drawn faintly for reference). */
+export const DustAlone: StoryObj = {
+  render: () => (
+    <div className="relative h-225 w-360 bg-night">
+      <Dust regions={CONE_REGIONS.intro} count={120} />
+    </div>
+  ),
+};
+
+/** The flat banks of the Intro, with their flares pushed to 1 (a timeline tweens them from 0). */
+export const FlatBanksWithFlare: StoryObj = {
+  render: () => (
+    <div className="relative h-60 w-160 overflow-hidden bg-night [&_[data-part=flare]]:opacity-100">
+      <FloodlightBank size="lg-flat" flare className="top-12 left-20" />
+      <FloodlightBank size="sm-flat" flare className="top-12 left-80" />
+    </div>
+  ),
+};
+
+/** A sprite strip scaled to its box, parked on frame 7 of 16. */
+export const SpriteFrame: StoryObj = {
+  render: () => (
+    <SpriteStrip
+      src={turnStrip}
+      data-frame="7"
+      className="h-112.75 w-140"
+      style={{ backgroundPosition: framePosition(7, 16) }}
+    />
   ),
 };

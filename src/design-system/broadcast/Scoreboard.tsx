@@ -1,18 +1,45 @@
+import { createContext, useContext } from "react";
 import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { PolymorphicProps } from "../lib/polymorphic";
 import { MonoLabel } from "../primitives/Text";
 
-function Root({ className, children }: { className?: string; children: ReactNode }) {
+/**
+ * Named for where the board's shape comes from.
+ * landing: Main (header 53, footer 71, three columns). intro: the Intro board (header 48 and footer 64 on the
+ * board's own ground, the content placed freely between them). compact: Mobile-Landing (header 38, two columns).
+ */
+export type ScoreboardSize = "landing" | "intro" | "compact";
+
+const SizeContext = createContext<ScoreboardSize>("landing");
+
+const ROOT: Record<ScoreboardSize, string> = {
+  landing: "shadow-board",
+  intro: "shadow-board",
+  compact: "shadow-board-compact",
+};
+
+function Root({
+  size = "landing",
+  className,
+  children,
+}: {
+  size?: ScoreboardSize;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <div
-      className={cn(
-        "relative flex flex-col overflow-hidden border border-line-strong bg-board led-dots shadow-board",
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <SizeContext value={size}>
+      <div
+        className={cn(
+          "relative flex flex-col overflow-hidden border border-line-strong bg-board led-dots",
+          ROOT[size],
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </SizeContext>
   );
 }
 
@@ -21,11 +48,18 @@ interface PartProps {
   children: ReactNode;
 }
 
+const HEADER: Record<ScoreboardSize, string> = {
+  landing: "h-13.25 px-7 type-mono-eyebrow",
+  intro: "absolute inset-x-0 top-0 z-5 h-12 bg-board px-7 type-mono-eyebrow",
+  compact: "h-9.5 px-3.5 type-mono-label",
+};
+
 function Header({ className, children }: PartProps) {
   return (
     <div
       className={cn(
-        "flex h-13.25 shrink-0 items-center justify-between border-b border-board-line px-7 type-mono-eyebrow text-scout",
+        "flex shrink-0 items-center justify-between border-b border-board-line text-scout",
+        HEADER[useContext(SizeContext)],
         className,
       )}
     >
@@ -34,13 +68,31 @@ function Header({ className, children }: PartProps) {
   );
 }
 
+const BODY: Record<ScoreboardSize, string> = {
+  landing: "gap-3.5",
+  intro: "gap-3.5",
+  compact: "gap-2.5 px-3.5 py-6.5",
+};
+
 function Body({ className, children }: PartProps) {
   return (
-    <div className={cn("flex flex-1 flex-col items-center justify-center gap-3.5", className)}>
+    <div
+      className={cn(
+        "flex flex-1 flex-col items-center justify-center",
+        BODY[useContext(SizeContext)],
+        className,
+      )}
+    >
       {children}
     </div>
   );
 }
+
+const TITLE: Record<ScoreboardSize, string> = {
+  landing: "type-hero",
+  intro: "type-hero-sm",
+  compact: "type-hero-stack",
+};
 
 /** The big LED name. Renders a span; pass as="h1" where it is the page heading. */
 function Title<T extends ElementType = "span">({
@@ -51,33 +103,72 @@ function Title<T extends ElementType = "span">({
 }: PolymorphicProps<T>) {
   const Comp: ElementType = as ?? "span";
   return (
-    <Comp className={cn("type-hero text-led glow-led", className)} {...rest}>
+    <Comp className={cn(TITLE[useContext(SizeContext)], "text-led glow-led", className)} {...rest}>
       {children}
     </Comp>
   );
 }
 
+// Padding-left equal to the tracking keeps wide-tracked, centred text optically centred. The Intro's
+// subtitle is left-aligned, so it takes none.
+const SUBTITLE: Record<ScoreboardSize, string> = {
+  landing: "pl-[0.42em] type-sub",
+  intro: "type-sub-lg",
+  compact: "pl-[0.38em] type-sub-sm",
+};
+
 function Subtitle({ className, children }: PartProps) {
-  // Padding-left equal to the tracking keeps wide-tracked text optically centred.
   return (
-    <span className={cn("pl-[0.42em] type-sub text-volt glow-volt", className)}>{children}</span>
+    <span className={cn(SUBTITLE[useContext(SizeContext)], "text-volt glow-volt", className)}>
+      {children}
+    </span>
   );
 }
 
+const FOOTER: Record<ScoreboardSize, string> = {
+  landing: "h-17.75 grid-cols-3",
+  intro: "absolute inset-x-0 bottom-0 z-5 h-16 grid-cols-3 bg-board",
+  compact: "h-12 grid-cols-2",
+};
+
 function Footer({ className, children }: PartProps) {
   return (
-    <div className={cn("grid h-17.75 shrink-0 grid-cols-3 border-t border-board-line", className)}>
+    <div
+      className={cn(
+        "grid shrink-0 border-t border-board-line",
+        FOOTER[useContext(SizeContext)],
+        className,
+      )}
+    >
       {children}
     </div>
   );
 }
 
 const VALUE_TONE = { primary: "text-floodlight", volt: "text-volt", label: "text-scout" } as const;
-const ALIGN = {
-  start: "px-7",
-  center: "justify-center border-x border-board-line",
-  end: "justify-end px-7",
-} as const;
+const VALUE_TYPE: Record<ScoreboardSize, string> = {
+  landing: "type-score-lg",
+  intro: "type-score-md",
+  compact: "type-d5",
+};
+// On the compact board the two cells split the width: the first has a divider, both are centred.
+const ALIGN: Record<ScoreboardSize, Record<"start" | "center" | "end", string>> = {
+  landing: {
+    start: "gap-3.5 px-7",
+    center: "gap-3.5 justify-center border-x border-board-line",
+    end: "gap-3.5 justify-end px-7",
+  },
+  intro: {
+    start: "gap-3.5 px-7",
+    center: "gap-3.5 justify-center border-x border-board-line",
+    end: "gap-3.5 justify-end px-7",
+  },
+  compact: {
+    start: "gap-2 justify-center border-r border-board-line",
+    center: "gap-2 justify-center border-x border-board-line",
+    end: "gap-2 justify-center",
+  },
+};
 
 function FooterCell({
   label,
@@ -90,12 +181,59 @@ function FooterCell({
   label: string;
   value: ReactNode;
   tone?: keyof typeof VALUE_TONE;
-  align?: keyof typeof ALIGN;
+  align?: "start" | "center" | "end";
 }) {
+  const size = useContext(SizeContext);
   return (
-    <div className={cn("flex items-center gap-3.5", ALIGN[align], className)}>
-      <MonoLabel tone="dim">{label}</MonoLabel>
-      <span className={cn("type-score-lg", VALUE_TONE[tone])}>{value}</span>
+    <div className={cn("flex items-center", ALIGN[size][align], className)}>
+      <MonoLabel tone="dim" variant={size === "compact" ? "mono-tag" : "mono-label"}>
+        {label}
+      </MonoLabel>
+      <span className={cn(VALUE_TYPE[size], VALUE_TONE[tone])}>{value}</span>
+    </div>
+  );
+}
+
+/**
+ * A light that crosses the board. It lives inside it (the board clips it) and rests invisible: the boot
+ * (animate-boot-scan) or a timeline runs it. band: Main's 90px-high band sweeping down. bar: the Intro's
+ * 90px-wide bar leading the entrance, between the header and footer.
+ */
+function Scan({ variant, className }: { variant: "band" | "bar"; className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-part="scan"
+      className={cn(
+        "pointer-events-none absolute opacity-0",
+        variant === "band"
+          ? "inset-x-0 top-0 h-22.5 scene-scan-band"
+          : "top-12 bottom-16 left-0 z-2 w-22.5 scene-scan-bar",
+        className,
+      )}
+    />
+  );
+}
+
+/**
+ * The Intro board's power-up and impact rings (L14): two glow layers whose opacity a timeline tweens,
+ * instead of animating the board's box-shadow. They draw outside the board, which clips its children, so
+ * place Power NEXT TO the board, on the board's own box (same position and size classes). A board without
+ * Power rests on its own shadow (the Landing).
+ */
+function Power({ className }: { className?: string }) {
+  return (
+    <div aria-hidden="true" className={cn("pointer-events-none absolute", className)}>
+      <div
+        aria-hidden="true"
+        data-part="board-on"
+        className="absolute inset-0 opacity-0 shadow-board-on"
+      />
+      <div
+        aria-hidden="true"
+        data-part="board-hit"
+        className="absolute inset-0 opacity-0 shadow-board-hit"
+      />
     </div>
   );
 }
@@ -108,4 +246,6 @@ export const Scoreboard = Object.assign(Root, {
   Subtitle,
   Footer,
   FooterCell,
+  Scan,
+  Power,
 });

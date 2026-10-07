@@ -9,6 +9,7 @@ interface GlowProps {
   alpha?: number;
   /** "sky" (default): the cool sky blue. "venue": the venue's own light (the hall's warm white), read from `data-venue`. */
   tone?: "sky" | "venue";
+  "data-part"?: string;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function SkyGlow({
   h = "50%",
   alpha = 0.2,
   tone = "sky",
+  "data-part": part,
   className,
 }: GlowProps) {
   const style = {
@@ -31,6 +33,7 @@ export function SkyGlow({
   return (
     <div
       aria-hidden="true"
+      data-part={part}
       className={cn(
         "pointer-events-none absolute inset-0 scene-sky",
         tone === "venue" && "scene-sky-venue",
