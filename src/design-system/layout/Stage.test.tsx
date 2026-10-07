@@ -22,6 +22,8 @@ describe("Stage", () => {
   });
   it("sets the 11px mono floor on the stage", () => {
     const { container } = render(<Stage>x</Stage>);
-    expect(container.querySelector("[data-stage]")).toHaveClass("[--stage-mono-floor:11px]");
+    expect(container.querySelector("[data-stage]")).toHaveClass(
+      "[--stage-mono-min:calc(11px/var(--stage-scale,1))]",
+    );
   });
 });

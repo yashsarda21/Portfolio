@@ -7,7 +7,7 @@ interface StageProps {
   backdrop?: ReactNode;
   /**
    * The width from which the stage shows (spec D2): "md" hides it below 768px (default), "lg" below
-   * 1024px, null always shows it. Cinematic screens render their own layout where it is hidden.
+   * 1200px, null always shows it. Cinematic screens render their own layout where it is hidden.
    */
   from?: "md" | "lg" | null;
   className?: string;
@@ -29,7 +29,7 @@ export function Stage({ backdrop, from = "md", className, children }: StageProps
       <SkyGlow />
       <div
         data-stage
-        className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-mono-floor:11px]"
+        className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-mono-min:calc(11px/var(--stage-scale,1))]"
       >
         {backdrop ? <div className="absolute inset-0">{backdrop}</div> : null}
         <div className="relative h-full w-full">{children}</div>

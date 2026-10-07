@@ -1,12 +1,23 @@
 import type { gsap as Gsap } from "gsap";
 
-let pending: Promise<typeof Gsap> | null = null;
+/** A memoised loader that forgets a failed attempt, so a later call can retry the download. */
+export function createGsapLoader(
+  load: () => Promise<{ gsap: typeof Gsap }> = () => import("gsap"),
+): () => Promise<typeof Gsap> {
+  let pending: Promise<typeof Gsap> | null = null;
+  return () => {
+    pending ??= load()
+      .then((m) => m.gsap)
+      .catch((e: unknown) => {
+        pending = null;
+        throw e;
+      });
+    return pending;
+  };
+}
 
 /** GSAP is loaded on demand so it never sits in the first-load bundle (spec §9.1 budget). */
-export function loadGsap(): Promise<typeof Gsap> {
-  pending ??= import("gsap").then((m) => m.gsap);
-  return pending;
-}
+export const loadGsap = createGsapLoader();
 
 /** Warm the GSAP chunk once the page is idle (landing → intro, any wipe). */
 export function prefetchGsap(): void {

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { createGsapLoader } from "./motion";
 
 describe("loadGsap", () => {
   it("imports gsap once and returns the same instance", async () => {
@@ -8,6 +9,18 @@ describe("loadGsap", () => {
     const [a, b] = await Promise.all([loadGsap(), loadGsap()]);
     expect(a).toBe(b);
     expect(typeof a.timeline).toBe("function");
+  });
+});
+
+describe("createGsapLoader", () => {
+  it("loads once, and retries after a failed load", async () => {
+    const gsap = { timeline: () => null } as never;
+    const load = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ gsap });
+    const loader = createGsapLoader(load);
+    await expect(loader()).rejects.toThrow("offline");
+    await expect(loader()).resolves.toBe(gsap);
+    await loader();
+    expect(load).toHaveBeenCalledTimes(2);
   });
 });
 

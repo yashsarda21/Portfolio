@@ -239,11 +239,11 @@
 }
 /*
  * mono: the engineer (11px floor, spec A2).
- * L2 (Phase 3): inside a scaled stage, a laptop screen shrinks the 1440x900 design space (scale < 1), so a
+ * L2 (Phase 3): inside a scaled stage, a laptop screen shrinks the 1440x900 design space (scale < 1), so an
  * 11px label would render under 11px. Every mono recipe of 13px or less therefore takes
- * max(its size, floor / scale): [data-stage] sets --stage-mono-floor to 11px and the head script sets
- * --stage-scale on <html>, so the label grows slightly in the design space and stays 11px on screen.
- * At scale 1 (1440x900) the floor is 11px and no size changes. Outside a stage the floor var is unset
+ * max(its size, var(--stage-mono-min)): [data-stage] sets --stage-mono-min to 11px / --stage-scale (the head
+ * script sets --stage-scale on <html>), so the label grows slightly in the design space and stays 11px on
+ * screen. At scale 1 (1440x900) the minimum is 11px and no size changes. Outside a stage the var is unset
  * (0px), so the max() is the recipe's own size: nothing else on the site changes.
  */
 @utility type-mono-lg {
@@ -257,7 +257,7 @@
 @utility type-mono-md {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: 1.3;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -265,7 +265,7 @@
 @utility type-mono-eyebrow {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: 1;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -273,7 +273,7 @@
 @utility type-mono-brand {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: 1;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -281,7 +281,7 @@
 @utility type-mono-label {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(11px, var(--stage-mono-min, 0px));
   line-height: 1.3;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -289,13 +289,13 @@
 @utility type-mono-code {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(13px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(13px, var(--stage-mono-min, 0px));
   line-height: 1.3;
 }
 @utility type-mono-tag {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(11px, var(--stage-mono-min, 0px));
   line-height: 1;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -303,7 +303,7 @@
 @utility type-mono-comm {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(11px, var(--stage-mono-min, 0px));
   line-height: 1;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -311,7 +311,7 @@
 @utility type-mono-xs {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(11px, var(--stage-mono-min, 0px));
   line-height: 1.2;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -494,7 +494,7 @@
 @utility type-mono-nav {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: normal;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -507,14 +507,14 @@
 @utility type-mono-chip {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: normal;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   /* A2 compensation: 0.09em at 11px is the drawn 1px tracking (0.1em at 10px). Without it the three
      mobile hero chips are 1px too wide for one row and wrap. */
   @media (width < 48rem) {
-    font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+    font-size: max(11px, var(--stage-mono-min, 0px));
     line-height: 13px;
     letter-spacing: 0.09em;
   }
@@ -523,19 +523,19 @@
 @utility type-mono-date {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: normal;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   @media (width < 48rem) {
-    font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+    font-size: max(11px, var(--stage-mono-min, 0px));
     line-height: 13px;
   }
 }
 @utility type-mono-round {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(11px, var(--stage-mono-min, 0px));
   line-height: normal;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -548,22 +548,22 @@
 @utility type-mono-stack {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: normal;
   @media (width < 48rem) {
-    font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+    font-size: max(11px, var(--stage-mono-min, 0px));
   }
 }
 /* Section-header meta (counts, hints). Mobile is drawn untracked. */
 @utility type-mono-meta {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: normal;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   @media (width < 48rem) {
-    font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+    font-size: max(11px, var(--stage-mono-min, 0px));
     line-height: 13px;
     letter-spacing: normal;
   }
@@ -572,12 +572,12 @@
 @utility type-mono-kicker {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: normal;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   @media (width < 48rem) {
-    font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+    font-size: max(11px, var(--stage-mono-min, 0px));
     line-height: 13px;
     letter-spacing: 0.2em;
   }
@@ -673,7 +673,7 @@
 @utility type-mono-note {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(11px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(11px, var(--stage-mono-min, 0px));
   line-height: normal;
 }
 /* A skill group's name (Badminton-Attributes "BACKEND"): 32px at .02em on the font's own line box. */
@@ -689,7 +689,7 @@
 @utility type-mono-run {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: max(12px, calc(var(--stage-mono-floor, 0px) / var(--stage-scale, 1)));
+  font-size: max(12px, var(--stage-mono-min, 0px));
   line-height: 1.6;
 }
 /* The Player Card and Team Up (artboards Player-Card, Team-Up). */
