@@ -64,15 +64,23 @@ describe("ContentPage", () => {
     );
   });
 
-  it("puts a stage and a rail inside main", () => {
-    setup({ stage: <p>STAGE</p>, rail: <p>RAIL</p> });
+  it("puts a showcase's stage, caption and rail inside main", () => {
+    setup({
+      columns: {
+        kind: "showcase",
+        stage: <p>STAGE</p>,
+        caption: <p>CAPTION</p>,
+        rail: <p>RAIL</p>,
+      },
+    });
     const main = screen.getByRole("main");
     expect(within(main).getByText("STAGE")).toBeInTheDocument();
+    expect(within(main).getByText("CAPTION")).toBeInTheDocument();
     expect(within(main).getByText("RAIL")).toBeInTheDocument();
   });
 
   it("puts a lede under the h1 and a side column inside main, and can set the 96px title", () => {
-    setup({ lede: "LEDE", side: <p>SIDE</p>, titleSize: "xl" });
+    setup({ lede: "LEDE", columns: { kind: "split", side: <p>SIDE</p> }, titleSize: "xl" });
     const main = screen.getByRole("main");
     expect(within(main).getByText("LEDE")).toBeInTheDocument();
     expect(within(main).getByText("SIDE")).toBeInTheDocument();
@@ -225,14 +233,18 @@ describe("ContentPage", () => {
 
   it("has no footer without next or comm, so the panels run to the bottom gutter", () => {
     setup();
-    expect(screen.getByRole("main").children).toHaveLength(2);
+    const main = screen.getByRole("main");
+    expect(within(main).queryByText(ui.comm.tag)).toBeNull();
+    expect(within(main).queryByRole("link", { name: ui.hud.nextVenue })).toBeNull();
   });
 
   it("has the commentary + next footer when either is given", () => {
     const { unmount } = setup({ comm: "A line." });
-    expect(screen.getByRole("main").children).toHaveLength(3);
+    expect(within(screen.getByRole("main")).getAllByText("A line.").length).toBeGreaterThan(0);
     unmount();
     setup({ next: { label: ui.hud.nextVenue, to: ROUTES.highlights } });
-    expect(screen.getByRole("main").children).toHaveLength(3);
+    expect(
+      within(screen.getByRole("main")).getByRole("link", { name: ui.hud.nextVenue }),
+    ).toBeInTheDocument();
   });
 });

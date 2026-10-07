@@ -277,101 +277,85 @@ describe("ContentLayout", () => {
     expect(screen.getByRole("banner")).toHaveTextContent("head");
   });
 
-  describe("with a stage and a rail", () => {
-    const render3 = () =>
+  /** Everything inside main, in document order. */
+  const orderIn = (texts: string[]) => {
+    const main = screen.getByRole("main");
+    const els = texts.map((t) => screen.getByText(t));
+    for (const el of els) expect(main).toContainElement(el);
+    for (let i = 1; i < els.length; i++)
+      expect(
+        els[i - 1]!.compareDocumentPosition(els[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+  };
+
+  describe("with a showcase", () => {
+    const renderShowcase = (rail = true, caption = true) =>
       render(
         <ContentLayout
           mainId="main"
           header={<header>head</header>}
           title={<h1>title</h1>}
           footer={<span>foot</span>}
-          stage={<div>stage</div>}
-          rail={<div>rail</div>}
+          columns={{
+            kind: "showcase",
+            stage: <div>stage</div>,
+            caption: caption ? <p>caption</p> : undefined,
+            rail: rail ? <div>rail</div> : undefined,
+          }}
         >
           <section>panels</section>
         </ContentLayout>,
       );
 
-    it("keeps every part inside main, in reading order: title, panels, stage, rail, footer", () => {
-      render3();
+    it("keeps every part inside main, in reading order: title, panels, stage, caption, rail, footer", () => {
+      renderShowcase();
+      orderIn(["title", "panels", "stage", "caption", "rail", "foot"]);
+    });
+
+    it("leaves out the caption and the rail when none is given", () => {
+      renderShowcase(false, false);
+      expect(screen.queryByText("caption")).toBeNull();
+      expect(screen.queryByText("rail")).toBeNull();
+      orderIn(["title", "panels", "stage", "foot"]);
+    });
+
+    it("gives the footer its own row under the columns", () => {
+      renderShowcase();
       const main = screen.getByRole("main");
-      const texts = ["title", "panels", "stage", "rail", "foot"];
-      for (const text of texts) expect(main).toContainElement(screen.getByText(text));
-      const order = texts.map((t) => screen.getByText(t));
-      for (let i = 1; i < order.length; i++)
-        expect(
-          order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
-    });
-
-    it("is one grid from the tablet up, and the panels come last on the phone", () => {
-      render3();
-      const body = screen.getByText("title").parentElement!.parentElement!;
-      expect(body).toHaveClass(
-        "md:grid",
-        "min-[1200px]:grid-cols-[minmax(0,26.25rem)_auto_minmax(0,26.25rem)]",
-      );
-      expect(screen.getByText("panels").parentElement).toHaveClass("max-md:order-last");
-    });
-
-    it("is the same flat layout without a stage", () => {
-      render(
-        <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
-          <section>panels</section>
-        </ContentLayout>,
-      );
-      expect(screen.getByText("title").parentElement).toHaveClass("px-9");
-      expect(screen.getByText("title").parentElement).not.toHaveClass("md:col-start-1");
+      expect(main.children).toHaveLength(2);
+      expect(main.lastElementChild).toContainElement(screen.getByText("foot"));
     });
   });
 
-  describe("with a side column", () => {
-    const renderSide = () =>
+  describe("with a split", () => {
+    const renderSplit = () =>
       render(
         <ContentLayout
           mainId="main"
           header={<header>head</header>}
           title={<h1>title</h1>}
-          side={<aside>side</aside>}
+          columns={{ kind: "split", side: <aside>side</aside> }}
         >
           <section>panels</section>
         </ContentLayout>,
       );
 
     it("keeps the title, panels and side inside main, in that reading order", () => {
-      renderSide();
-      const main = screen.getByRole("main");
-      const order = ["title", "panels", "side"].map((t) => screen.getByText(t));
-      for (const el of order) expect(main).toContainElement(el);
-      for (let i = 1; i < order.length; i++)
-        expect(
-          order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
+      renderSplit();
+      orderIn(["title", "panels", "side"]);
     });
+  });
 
-    it("is a two-column grid from 1200px, the side starting level with the panels (160px down)", () => {
-      renderSide();
-      const body = screen.getByText("title").parentElement!.parentElement!;
-      expect(body).toHaveClass(
-        "min-[1200px]:grid",
-        "min-[1200px]:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]",
-        "min-[1440px]:grid-cols-[minmax(0,1fr)_34rem]",
-      );
-      expect(screen.getByText("side").parentElement).toHaveClass(
-        "min-[1200px]:col-start-2",
-        "min-[1200px]:pt-40",
-      );
-    });
-
-    it("leaves the flat layout alone without a side", () => {
-      render(
-        <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
-          <section>panels</section>
-        </ContentLayout>,
-      );
-      expect(screen.getByText("title").parentElement).toHaveClass("px-9");
-      expect(screen.getByText("title").parentElement).not.toHaveClass("min-[1200px]:col-start-1");
-    });
+  it("without columns there is no side or stage, and the title and panels still share one body", () => {
+    render(
+      <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
+        <section>panels</section>
+      </ContentLayout>,
+    );
+    orderIn(["title", "panels"]);
+    expect(screen.getByText("title").parentElement!.parentElement).toBe(
+      screen.getByText("panels").parentElement!.parentElement,
+    );
   });
 
   it("leaves the main landmark without an id unless asked", () => {
@@ -391,7 +375,7 @@ describe("ContentLayout", () => {
     );
     const panels = () => screen.getByText("panels").parentElement!;
     expect(panels()).toHaveClass("pb-9");
-    expect(screen.getByRole("main").children).toHaveLength(2);
+    expect(screen.getByRole("main").children).toHaveLength(1);
     rerender(
       <ContentLayout
         header={<header>head</header>}
@@ -402,6 +386,6 @@ describe("ContentLayout", () => {
       </ContentLayout>,
     );
     expect(panels()).not.toHaveClass("pb-9");
-    expect(screen.getByRole("main").children).toHaveLength(3);
+    expect(screen.getByRole("main").children).toHaveLength(2);
   });
 });

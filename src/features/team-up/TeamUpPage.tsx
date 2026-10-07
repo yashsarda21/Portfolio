@@ -49,7 +49,7 @@ export function TeamUpPage({ view, deps }: { view: TeamUpView; deps: TeamUpDeps 
       titleSize="xl"
       lede={view.intro}
       backdrop={<TeamUpBackdrop pulse={sent} />}
-      side={<DirectLines view={view} />}
+      columns={{ kind: "split", side: <DirectLines view={view} /> }}
     >
       {sent ? (
         <SuccessPanel

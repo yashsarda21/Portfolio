@@ -68,7 +68,7 @@ export { Stage } from "./layout/Stage";
 export { STAGE_SCALE_SCRIPT } from "./layout/stageScript";
 export { SectionHeader } from "./layout/SectionHeader";
 export { HorizontalScroller } from "./layout/HorizontalScroller";
-export { ContentLayout } from "./layout/ContentLayout";
+export { ContentLayout, type ContentColumns } from "./layout/ContentLayout";
 export { PageTitle } from "./layout/PageTitle";
 export { StickyBottomActions } from "./layout/StickyBottomActions";
 export { DashedPanel } from "./layout/DashedPanel";

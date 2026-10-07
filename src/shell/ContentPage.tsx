@@ -4,6 +4,7 @@ import {
   Breadcrumb,
   Button,
   ContentLayout,
+  type ContentColumns,
   HUD,
   HUDButton,
   PageTitle,
@@ -59,12 +60,8 @@ export interface ContentPageProps {
   titleSize?: "default" | "xl";
   /** A line under the h1 (Team Up's invitation). */
   lede?: ReactNode;
-  /** A column beside the title and panels (Team Up's direct lines): see ContentLayout. Not with `stage`. */
-  side?: ReactNode;
-  /** A showpiece beside the title and panels (the player card): see ContentLayout. */
-  stage?: ReactNode;
-  /** The column to the right of the stage (the take-away actions). Needs `stage`. */
-  rail?: ReactNode;
+  /** More than the title and panels: a showpiece with its actions (the player card) or a side column (Team Up's direct lines). See ContentColumns. */
+  columns?: ContentColumns;
   /** The panels. */
   children: ReactNode;
 }
@@ -112,9 +109,7 @@ export function ContentPage({
   title,
   titleSize,
   lede,
-  side,
-  stage,
-  rail,
+  columns,
   children,
 }: ContentPageProps) {
   const preset = venue ? VENUE_GLOWS[venue] : undefined;
@@ -176,9 +171,7 @@ export function ContentPage({
             aside={aside}
           />
         }
-        stage={stage}
-        rail={rail}
-        side={side}
+        columns={columns}
         footer={
           comm || next ? (
             <>

@@ -14,7 +14,7 @@ export function DirectLines({ view }: { view: TeamUpView }) {
       <Text as="h2" id={labelId} variant="mono-label" tone="label" leading="font">
         {view.skip}
       </Text>
-      <ul className="grid grid-cols-1 gap-2.5 md:max-[1199px]:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-2.5 md:max-lg:grid-cols-2">
         {view.channels.map((channel) => (
           <li key={channel.id} className="flex flex-col">
             <ChannelCard
@@ -29,9 +29,9 @@ export function DirectLines({ view }: { view: TeamUpView }) {
       </ul>
       <DashedPanel label={view.after.label} className="mt-5">
         <CommentaryBar variant="inline" tag={ui.comm.tag} line={view.after.comm} />
-        <Text as="p" variant="caption-copy" tone="label">
+        <Text as="p" variant="caption" tone="label">
           {view.after.text}{" "}
-          <Text variant="mono-inline" tone="primary">
+          <Text variant="mono-code" tone="primary">
             {view.after.board}
           </Text>
           {view.after.end}
