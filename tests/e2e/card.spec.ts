@@ -16,7 +16,11 @@ import {
 const content = JSON.parse(
   readFileSync(join(process.cwd(), "src/content/content.json"), "utf8"),
 ) as {
-  player: { name: string; cardStats: { label: string; value: string }[] };
+  player: {
+    name: string;
+    cardStats: { label: string; value: string }[];
+    contact: { email: string };
+  };
 };
 const t = ui.pages.card;
 const NEXT = new RegExp(t.next);
@@ -29,8 +33,8 @@ const front = (page: Page) => page.locator('[data-face="front"]');
 const back = (page: Page) => page.locator('[data-face="back"]');
 /** The card's flip button: its name says where it flips to. Only the face that shows is exposed. */
 const flipButton = (page: Page, name: string) => page.getByRole("button", { name });
-/** By tag, not by role: while the front shows, the back is aria-hidden and inert, so it has no links in the role tree. */
-const backLinks = (page: Page) => back(page).locator("a");
+/** The back's index rows. By tag, not by role: while the front shows, the back is aria-hidden and inert, so it has no links in the role tree. */
+const backLinks = (page: Page) => back(page).locator("ul a");
 
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
@@ -99,14 +103,12 @@ test.describe("flipping", () => {
     await page.goto(ROUTES.card);
     await waitForHydration(page);
     const toBack = flipButton(page, t.flipToBack);
-    await expect(toBack).toHaveAttribute("aria-pressed", "false");
     await expect(back(page)).toHaveAttribute("inert", "");
     await toBack.focus();
     await page.keyboard.press("Enter");
 
     // The front is inert now, and focus stayed on the card: its button on the back face.
     const toFront = flipButton(page, t.flipToFront);
-    await expect(toFront).toHaveAttribute("aria-pressed", "true");
     await expect(toFront).toBeFocused();
     await expect(front(page)).toHaveAttribute("inert", "");
     await expect(back(page)).not.toHaveAttribute("inert");
@@ -126,10 +128,23 @@ test.describe("flipping", () => {
 
     await toFront.focus();
     await page.keyboard.press("Space");
-    await expect(toBack).toHaveAttribute("aria-pressed", "false");
     await expect(toBack).toBeFocused();
     await expect(back(page)).toHaveAttribute("inert", "");
     await expect(front(page)).not.toHaveAttribute("inert");
+  });
+
+  test("the back also says how to reach the player: the address, as a mail link", async ({
+    page,
+  }) => {
+    await page.goto(ROUTES.card);
+    await waitForHydration(page);
+    await flipButton(page, t.flipToBack).click({ force: true });
+    const mail = back(page).getByRole("link", { name: content.player.contact.email });
+    await expect(mail).toBeVisible();
+    await expect(mail).toHaveAttribute("href", `mailto:${content.player.contact.email}`);
+    await expect(
+      back(page).getByText(ui.pages.teamUp.channels.email, { exact: true }),
+    ).toBeVisible();
   });
 
   test("a click flips it too, and a link on the back goes where it says without flipping", async ({
@@ -139,7 +154,7 @@ test.describe("flipping", () => {
     await waitForHydration(page);
     // Forced: the card floats, so it is never "stable" for the click's own check. A visitor clicks it anyway.
     await flipButton(page, t.flipToBack).click({ force: true });
-    await expect(flipButton(page, t.flipToFront)).toHaveAttribute("aria-pressed", "true");
+    await expect(flipButton(page, t.flipToFront)).toBeVisible();
     const hrefs = await backLinks(page).evaluateAll((links) =>
       links.map((l) => l.getAttribute("href")),
     );
@@ -165,7 +180,7 @@ test.describe("flipping", () => {
 
     await expect(backLinks(page).first()).toBeHidden();
     await flipButton(page, t.flipToBack).click();
-    await expect(flipButton(page, t.flipToFront)).toHaveAttribute("aria-pressed", "true");
+    await expect(flipButton(page, t.flipToFront)).toBeVisible();
     await expect(backLinks(page).first()).toBeVisible();
     await expect(front(page).getByText(content.player.name, { exact: true })).toBeHidden();
   });
@@ -219,7 +234,8 @@ test.describe("copy link", () => {
       el.value.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0),
     );
     expect(selected).toBe(await field.inputValue());
-    await expect(page.getByRole("status").filter({ hasText: t.copy.fallback })).toHaveCount(1);
+    // The focus move to the labelled field is the message: the status stays quiet (no double announcement).
+    await expect(page.getByRole("status").filter({ hasText: /\S/ })).toHaveCount(0);
     await expect(page.getByText(t.copy.done)).toHaveCount(0);
   });
 
@@ -252,7 +268,7 @@ test.describe("desktop", () => {
         { x: 24, y: 812, width: 392, height: 60 },
         // C1: with no public PDF the real page shows the email request and the copy row only, so the actions
         // column differs from the artboard's three rows, and its note below the rows rises to meet them.
-        { x: 984, y: 236, width: 420, height: 430 },
+        { x: 984, y: 262, width: 420, height: 404 },
         // SEASON {year}: the card shows the visitor's year, the artboard 2026. Only masked once they differ.
         ...(new Date().getFullYear() === ARTBOARD_YEAR
           ? []
@@ -316,6 +332,54 @@ test.describe("phone", () => {
       await y(page.getByText(/hands-on full-stack/)),
     ];
     expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  test("the card is fluid, keeps its proportions, and holds its text at full size without zoom", async ({
+    page,
+  }) => {
+    await page.goto(ROUTES.card);
+    await waitForHydration(page);
+    const card = page.locator("[data-player-card]");
+    for (const width of [320, 360, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      const box = (await card.boundingBox())!;
+      // As wide as the 16px gutters allow (never wider than drawn), and 402:642 tall.
+      expect(Math.abs(box.width - Math.min(402, width - 32))).toBeLessThanOrEqual(1);
+      expect(Math.abs(box.height / box.width - 642 / 402)).toBeLessThan(0.02);
+      for (const side of ["front", "back"] as const) {
+        const face = page.locator(`[data-face="${side}"]`);
+        const report = await face.evaluate((el) => {
+          const small: string[] = [];
+          for (const node of el.querySelectorAll("*")) {
+            const own = [...node.childNodes].some(
+              (n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim() !== "",
+            );
+            if (own && parseFloat(getComputedStyle(node).fontSize) < 11)
+              small.push(`${node.textContent} ${getComputedStyle(node).fontSize}`);
+          }
+          // Nothing is clipped by the face's own edge, and no element is zoomed.
+          return {
+            small,
+            clipped: el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
+            zoom: getComputedStyle(el.closest("[data-player-card]")!).zoom,
+          };
+        });
+        expect(report, `${side} at ${width}`).toEqual({ small: [], clipped: false, zoom: "1" });
+      }
+    }
+  });
+
+  test("the stat cells put the label over the value", async ({ page }) => {
+    await page.goto(ROUTES.card);
+    await page.setViewportSize({ width: 360, height: 844 });
+    const [label, value] = await front(page)
+      .getByText(content.player.cardStats[0]!.label, { exact: true })
+      .evaluate((el) => {
+        const cell = el.parentElement!;
+        const [l, v] = [...cell.children].map((c) => c.getBoundingClientRect());
+        return [l!.bottom, v!.top];
+      });
+    expect(value!).toBeGreaterThanOrEqual(label! - 1);
   });
 
   test("shows the tab bar with no tab current, and the last control clears it", async ({

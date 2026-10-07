@@ -21,13 +21,13 @@ export function CardFront({ view, year }: { view: CardView["front"]; year: numbe
 }
 
 /**
- * The card's back: an index of the other pages, each a row linking to it, under the same foot line. Its links
+ * The card's back: an index of the other pages (each a row linking to it), the address, and the same foot line. Its links
  * are only reachable while this face shows (the front is inert then, and this one is inert until the flip).
  */
 export function CardBack({ view }: { view: CardView["back"] }) {
   return (
     <>
-      <div className="flex flex-col gap-4 px-6 pt-6">
+      <div className="flex flex-col gap-3 px-6 pt-5">
         <Heading level={2} variant="d3" tone="volt">
           {view.title}
         </Heading>
@@ -41,7 +41,13 @@ export function CardBack({ view }: { view: CardView["back"] }) {
           ))}
         </ul>
       </div>
-      <PlayerCard.Footer left={view.footer.left} right={view.footer.right} />
+      <PlayerCard.Contact
+        label={view.contact.label}
+        value={view.contact.value}
+        href={view.contact.href}
+      />
+      {/* The contact block owns the free space above it; the foot line follows it. */}
+      <PlayerCard.Footer left={view.footer.left} right={view.footer.right} className="mt-0" />
     </>
   );
 }

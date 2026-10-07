@@ -30,6 +30,6 @@ export const Flipped: StoryObj = {
     await userEvent.click(flip!);
     await expect(
       await canvas.findByRole("button", { name: artboardCardView.flip.toFront }),
-    ).toHaveAttribute("aria-pressed", "true");
+    ).toBeVisible();
   },
 };

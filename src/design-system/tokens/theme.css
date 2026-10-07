@@ -39,6 +39,8 @@
 
   /* How far the viewer stands from a 3D card: the Player Card's flip and tilt. */
   --perspective-card: 1400px;
+  /* The showcase scene's floor: the viewer stands close, so the floor lies back steeply. */
+  --perspective-floor: 700px;
 }
 
 @theme inline {

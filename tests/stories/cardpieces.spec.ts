@@ -68,11 +68,9 @@ test.describe("Player Card pieces", () => {
     await page.keyboard.press("Tab");
     const toBack = page.getByRole("button", { name: "Flip card: show the back" });
     await expect(toBack).toBeFocused();
-    await expect(toBack).toHaveAttribute("aria-pressed", "false");
     await page.keyboard.press("Enter");
     const toFront = page.getByRole("button", { name: "Flip card: show the front" });
     await expect(toFront).toBeFocused();
-    await expect(toFront).toHaveAttribute("aria-pressed", "true");
     // The back's links are now reachable; the front face is gone from the tab order.
     await page.keyboard.press("Tab");
     await expect(page.getByRole("link", { name: "CAREER STATS" })).toBeFocused();

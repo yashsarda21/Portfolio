@@ -18,14 +18,15 @@ describe("parseStat", () => {
 });
 
 describe("StatTile cell", () => {
-  it("lays the label and value out in one row, baseline-aligned, as drawn", () => {
+  it("lays the label and value out in one baseline row from the tablet up, stacked on the phone", () => {
     const { container } = render(<StatTile tone="cell" label="CGPA" value="8.94" />);
     const root = container.firstElementChild as HTMLElement;
-    expect(root).toHaveClass("flex-row", "justify-between", "items-baseline", "p-2.5");
+    expect(root).toHaveClass("md:flex-row", "md:justify-between", "md:items-baseline", "p-2.5");
+    // Below md the label sits over the value (the card is narrower than drawn there).
+    expect(root).toHaveClass("flex-col");
     // The label never touches the value: a guaranteed gap, and neither part wraps.
-    expect(root).toHaveClass("gap-1.5");
+    expect(root).toHaveClass("md:gap-1.5");
     expect(root.children[0]).toHaveClass("whitespace-nowrap");
-    expect(root).not.toHaveClass("flex-col");
     expect(root.children[0]).toHaveTextContent("CGPA");
     expect(root.children[1]).toHaveTextContent("8.94");
   });

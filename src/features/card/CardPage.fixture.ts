@@ -43,6 +43,11 @@ export const artboardCardView: CardView = {
       { label: "TROPHY ROOM", to: "/trophies" },
       { label: "TEAM UP", to: "/team-up" },
     ],
+    contact: {
+      label: "EMAIL",
+      value: "yashsarda2002@gmail.com",
+      href: "mailto:yashsarda2002@gmail.com",
+    },
     footer,
   },
   hint: { pointer: "DRAG TO TILT · CLICK TO FLIP FOR FULL RESUME", touch: "TAP TO FLIP" },

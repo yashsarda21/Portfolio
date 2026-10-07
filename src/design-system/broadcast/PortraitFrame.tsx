@@ -10,8 +10,9 @@ const frame = cva("relative box-content h-62.5 overflow-hidden", {
     size: {
       // Badminton-Attributes: stand gradient in a hairline border, 320x258 image.
       attr: "border border-line bg-linear-180 from-stand-hi to-inset",
-      // Player-Card: a volt glow rising from the foot and a volt hairline under it, 340x274 image.
-      card: "border-b border-b-volt-a35 portrait-card-glow",
+      // Player-Card: a volt glow rising from the foot and a volt hairline under it, 340x274 image. On the phone the
+      // card is shorter than drawn, so the frame takes whatever height the rest of the card leaves.
+      card: "border-b border-b-volt-a35 portrait-card-glow max-md:h-auto max-md:min-h-0 max-md:flex-1",
     },
   },
   defaultVariants: { size: "attr" },
@@ -19,7 +20,13 @@ const frame = cva("relative box-content h-62.5 overflow-hidden", {
 
 const IMAGE = {
   attr: { width: 320, height: 258, className: "-ml-40 h-64.5 w-80" },
-  card: { width: 340, height: 274, className: "-ml-42.5 h-68.5 w-85" },
+  // On the phone the frame is shorter than drawn: the image shrinks to the frame (whole head, same proportions).
+  card: {
+    width: 340,
+    height: 274,
+    className:
+      "-ml-42.5 h-68.5 w-85 max-md:ml-0 max-md:h-full max-md:max-h-68.5 max-md:w-auto max-md:-translate-x-1/2",
+  },
 } as const;
 
 type PortraitFrameProps = {

@@ -149,6 +149,8 @@
   }
 }
 @utility animate-sheen {
+  /* The band's first frame: off the card. A cancelled or paused animation (parity compare) then shows no band. */
+  background-position: -200% 0;
   animation: sheen 4.5s ease-in-out infinite;
   @media (prefers-reduced-motion: reduce) {
     animation: none;

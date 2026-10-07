@@ -57,7 +57,8 @@ const BACK = (
         ))}
       </ul>
     </div>
-    <PlayerCard.Footer left="THE ARENA · NO. 01" right="RECORD 99–1" />
+    <PlayerCard.Contact label="EMAIL" value="yashsarda2002@gmail.com" href="#email" />
+    <PlayerCard.Footer left="THE ARENA · NO. 01" right="RECORD 99–1" className="mt-0" />
   </>
 );
 

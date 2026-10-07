@@ -26,7 +26,8 @@ const tile = cva("flex", {
       // A cell of the card's stat grid: label left, value right on one baseline, as drawn. The gap is the
       // least air between them: the 11px label is wider than the drawn 10px, so a full cell ("PROBLEMS 750+")
       // spills the 6px into the cell's own padding instead of letting the two touch. Neither part wraps.
-      cell: "flex-row items-baseline justify-between gap-1.5 bg-inset p-2.5",
+      // On the phone the card is narrower than drawn: the label sits over the value instead.
+      cell: "flex-col items-start gap-0.5 bg-inset p-2.5 md:flex-row md:items-baseline md:justify-between md:gap-1.5",
     },
   },
   defaultVariants: { tone: "glass" },

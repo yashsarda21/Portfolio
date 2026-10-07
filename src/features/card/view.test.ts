@@ -68,6 +68,14 @@ describe("buildCardView", () => {
       ]);
     });
 
+    it("says how to reach the player: the address, as a mail link, labelled from the copy", () => {
+      expect(build().back.contact).toEqual({
+        label: ui.pages.teamUp.channels.email,
+        value: content.player.contact.email,
+        href: `mailto:${content.player.contact.email}`,
+      });
+    });
+
     it("keeps the front's footer", () => {
       const v = build();
       expect(v.back.footer).toEqual(v.front.footer);

@@ -30,6 +30,8 @@ export interface CardView {
   back: {
     title: string;
     items: { label: string; to: string }[];
+    /** The address, one tap from the index: the back is the full sheet, so it says how to reach the player. */
+    contact: { label: string; value: string; href: string };
     footer: { left: string; right: string };
   };
   hint: { pointer: string; touch: string };
@@ -131,6 +133,11 @@ export function buildCardView(
         { label: t.back.trophies, to: routes.trophies },
         { label: t.back.contact, to: routes.teamUp },
       ],
+      contact: {
+        label: copy.pages.teamUp.channels.email,
+        value: player.contact.email,
+        href: `mailto:${player.contact.email}`,
+      },
       footer,
     },
     hint: { pointer: t.hint, touch: t.hintTouch },

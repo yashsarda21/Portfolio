@@ -18,7 +18,6 @@ type Side = "front" | "back";
 interface FaceProps {
   side: Side;
   hidden: boolean;
-  pressed: boolean;
   label: string;
   onToggle: (e: MouseEvent<HTMLButtonElement>) => void;
   buttonRef: ComponentPropsWithRef<"button">["ref"];
@@ -26,11 +25,11 @@ interface FaceProps {
 }
 
 /**
- * One face. It carries its OWN flip button, laid under the face's content, so a link on the back is never
+ * One face. It carries its OWN flip button (named for where it flips to, so it is not a toggle: no `aria-pressed`), laid under the face's content, so a link on the back is never
  * inside a button. The content layer lets clicks fall through to the button, except on links and buttons.
  * Both faces are `backface-visibility: hidden`; the one facing away is `inert` + `aria-hidden`.
  */
-function Face({ side, hidden, pressed, label, onToggle, buttonRef, children }: FaceProps) {
+function Face({ side, hidden, label, onToggle, buttonRef, children }: FaceProps) {
   return (
     <div
       data-face={side}
@@ -49,7 +48,6 @@ function Face({ side, hidden, pressed, label, onToggle, buttonRef, children }: F
       <button
         ref={buttonRef}
         type="button"
-        aria-pressed={pressed}
         aria-label={label}
         onClick={onToggle}
         className="absolute inset-0 cursor-pointer focus-visible:-outline-offset-4"
@@ -80,7 +78,8 @@ type PlayerCardProps = {
 } & Omit<ComponentPropsWithRef<"div">, "children">;
 
 /**
- * The collector's card: a 400x640 (content box) 3D card that floats, shows a sheen, tilts toward a fine
+ * The collector's card: a 400x640 (content box) 3D card (402x642 with its border; narrower on the phone, same
+ * proportions, the portrait giving up height and the stat cells stacking) that floats, shows a sheen, tilts toward a fine
  * pointer and flips on click, Enter or Space. Under reduced motion it stands flat and the faces swap.
  *
  * Structure: a still wrapper (perspective, pointer handlers) > tilt layer (GSAP) > float layer (CSS) >
@@ -124,7 +123,12 @@ export function PlayerCard({
       onPointerMove={tilt.onPointerMove}
       onPointerUp={tilt.onPointerUp}
       onPointerLeave={tilt.onPointerLeave}
-      className={cn("group/card relative h-160.5 w-100.5 perspective-card", className)}
+      className={cn(
+        // The drawn 402x642 box. On the phone it is as wide as the column allows (never wider than drawn) and keeps
+        // its proportions, so the text inside stays at full size.
+        "group/card relative aspect-402/642 w-100.5 perspective-card max-md:w-full max-md:max-w-100.5",
+        className,
+      )}
     >
       <div ref={tiltRef} className="size-full transform-3d">
         <div className={cn("size-full transform-3d", float && "animate-card-float")}>
@@ -132,7 +136,6 @@ export function PlayerCard({
             <Face
               side="front"
               hidden={flipped}
-              pressed={flipped}
               label={label}
               onToggle={toggle}
               buttonRef={frontButton}
@@ -142,7 +145,6 @@ export function PlayerCard({
             <Face
               side="back"
               hidden={!flipped}
-              pressed={flipped}
               label={label}
               onToggle={toggle}
               buttonRef={backButton}
@@ -230,6 +232,36 @@ function CardStats({
   );
 }
 
+/** A way to reach the player, pinned to the foot of a face (above CardFooter): a small label over a link. */
+function CardContact({
+  label,
+  value,
+  href,
+  className,
+  ...rest
+}: { label: ReactNode; value: ReactNode; href: string } & Omit<ComponentProps<"div">, "children">) {
+  return (
+    <div
+      className={cn("mx-6 mt-auto mb-3 flex flex-col gap-0.5 border-t border-line pt-3", className)}
+      {...rest}
+    >
+      <Text variant="mono-label" tone="label" leading="font">
+        {label}
+      </Text>
+      <Text
+        as="a"
+        href={href}
+        variant="mono-brand"
+        tone="primary"
+        leading="font"
+        className="hover:text-volt"
+      >
+        {value}
+      </Text>
+    </div>
+  );
+}
+
 /** The foot line, pinned to the bottom of the face. */
 function CardFooter({
   left,
@@ -239,7 +271,10 @@ function CardFooter({
 }: { left: ReactNode; right: ReactNode } & Omit<ComponentProps<"div">, "children">) {
   return (
     <div
-      className={cn("mt-auto flex justify-between border-t border-line px-6 py-3.5", className)}
+      className={cn(
+        "mt-auto flex justify-between gap-4 border-t border-line px-6 py-3.5",
+        className,
+      )}
       {...rest}
     >
       <Text variant="mono-label" tone="dim" leading="font">
@@ -256,4 +291,5 @@ PlayerCard.Header = CardHeader;
 PlayerCard.Portrait = CardPortrait;
 PlayerCard.Name = CardName;
 PlayerCard.Stats = CardStats;
+PlayerCard.Contact = CardContact;
 PlayerCard.Footer = CardFooter;

@@ -50,7 +50,6 @@ describe("useTilt", () => {
     });
     await Promise.resolve();
     expect(quickTo).not.toHaveBeenCalled();
-    expect(result.current.dragging).toBe(false);
   });
 
   it("does nothing under reduced motion", async () => {
@@ -62,7 +61,6 @@ describe("useTilt", () => {
     });
     await Promise.resolve();
     expect(quickTo).not.toHaveBeenCalled();
-    expect(result.current.dragging).toBe(false);
   });
 
   it("tilts toward the pointer (at most max degrees), lifts, and settles on leave", async () => {
@@ -84,7 +82,6 @@ describe("useTilt", () => {
       result.current.onPointerDown(at(100, 100, 1));
       result.current.onPointerMove(at(103, 102, 1));
     });
-    expect(result.current.dragging).toBe(false);
     expect(result.current.consumeDrag()).toBe(false);
   });
 
@@ -95,7 +92,6 @@ describe("useTilt", () => {
       result.current.onPointerDown(at(100, 100, 1));
       result.current.onPointerMove(at(110, 100, 1));
     });
-    expect(result.current.dragging).toBe(true);
     expect(result.current.consumeDrag()).toBe(true);
     expect(result.current.consumeDrag()).toBe(false);
   });
@@ -104,6 +100,39 @@ describe("useTilt", () => {
     media({ fine: true, reduced: false });
     const { result } = setup();
     act(() => result.current.onPointerMove(at(300, 300)));
-    expect(result.current.dragging).toBe(false);
+    expect(result.current.consumeDrag()).toBe(false);
+  });
+
+  it("a drag that leaves the card and comes back with the button held still swallows the click", () => {
+    media({ fine: true, reduced: false });
+    vi.useFakeTimers();
+    const { result } = setup();
+    act(() => {
+      result.current.onPointerDown(at(100, 100, 1));
+      result.current.onPointerMove(at(160, 100, 1));
+      result.current.onPointerLeave();
+    });
+    // The leave's own timers run; the visitor drags back over the card and lets go.
+    act(() => vi.advanceTimersByTime(10));
+    act(() => {
+      result.current.onPointerMove(at(120, 100, 1));
+      result.current.onPointerUp();
+    });
+    expect(result.current.consumeDrag()).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("a drag let go outside the card does not swallow a later keyboard click", () => {
+    media({ fine: true, reduced: false });
+    const { result } = setup();
+    act(() => {
+      result.current.onPointerDown(at(100, 100, 1));
+      result.current.onPointerMove(at(160, 100, 1));
+      result.current.onPointerLeave();
+    });
+    // The button was released elsewhere. Hovering over the card again (no button) forgets the press...
+    act(() => result.current.onPointerMove(at(300, 300)));
+    // ...and a click that comes with no press (Enter on the focused button) is a real click.
+    expect(result.current.consumeDrag()).toBe(false);
   });
 });

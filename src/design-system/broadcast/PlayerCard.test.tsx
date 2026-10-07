@@ -23,17 +23,16 @@ function Card({ onFlip = vi.fn() }: { onFlip?: () => void }) {
 const face = (text: string) => screen.getByText(text, { selector: "p, a" }).closest("[data-face]");
 
 describe("PlayerCard", () => {
-  it("is a button that reports pressed and calls onFlip on click", async () => {
+  it("is a button named for where it flips to (not a toggle), and calls onFlip on click", async () => {
     const onFlip = vi.fn();
     render(<Card onFlip={onFlip} />);
     const btn = screen.getByRole("button", { name: "Flip card: show the back" });
     expect(btn).toHaveAttribute("type", "button");
-    expect(btn).toHaveAttribute("aria-pressed", "false");
+    expect(btn).not.toHaveAttribute("aria-pressed");
     await userEvent.click(btn);
     expect(onFlip).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: "Flip card: show the front" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Flip card: show the front" })).not.toHaveAttribute(
       "aria-pressed",
-      "true",
     );
   });
 
@@ -80,5 +79,20 @@ describe("PlayerCard", () => {
       <PlayerCard flipped={false} onFlip={vi.fn()} label="Flip" front="f" back="b" float={false} />,
     );
     expect(container.querySelector(".animate-card-float")).toBeNull();
+  });
+
+  it("Contact is a label over a link, and Footer stays below it", () => {
+    render(
+      <>
+        <PlayerCard.Contact label="EMAIL" value="a@b.dev" href="mailto:a@b.dev" />
+        <PlayerCard.Footer left="L" right="R" />
+      </>,
+    );
+    const link = screen.getByRole("link", { name: "a@b.dev" });
+    expect(link).toHaveAttribute("href", "mailto:a@b.dev");
+    expect(screen.getByText("EMAIL")).toBeInTheDocument();
+    expect(
+      link.compareDocumentPosition(screen.getByText("L")) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

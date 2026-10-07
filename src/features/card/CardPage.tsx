@@ -55,34 +55,25 @@ export function CardPage({ view, liveYear = true }: { view: CardView; liveYear?:
       backdrop={<ShowcaseBackdrop />}
       next={{ label: t.next, to: ROUTES.teamUp }}
       comm={t.comm}
-      stage={
-        <div className="flex flex-col items-center pt-0 min-[1200px]:relative min-[1200px]:pt-11">
+      columns={{
+        kind: "showcase",
+        stage: (
           <PlayerCard
             flipped={flipped}
             onFlip={() => setFlipped((f) => !f)}
             label={flipped ? view.flip.toFront : view.flip.toBack}
-            className="card-fit"
             front={<CardFront view={view.front} year={year} />}
             back={<CardBack view={view.back} />}
           />
-          {/* On the board the hint hangs under the card, past the page's own foot; below 1200px it is in the flow. */}
-          <Text
-            as="p"
-            variant="mono-round"
-            tone="dim"
-            leading="font"
-            className="mt-5.5 text-center min-[1200px]:absolute min-[1200px]:inset-x-0 min-[1200px]:top-full"
-          >
+        ),
+        caption: (
+          <Text as="p" variant="mono-round" tone="dim" leading="font" className="text-center">
             <span className="pointer-coarse:hidden">{view.hint.pointer}</span>
             <span className="hidden pointer-coarse:inline">{view.hint.touch}</span>
           </Text>
-        </div>
-      }
-      rail={
-        <div className="pt-8 min-[1200px]:pt-40">
-          <TakeAway take={view.take} note={view.backNote} link={link} />
-        </div>
-      }
+        ),
+        rail: <TakeAway take={view.take} note={view.backNote} link={link} />,
+      }}
     >
       <Profile view={view} />
     </ContentPage>
