@@ -5,27 +5,31 @@ import { SkyGlow } from "../scene/SkyGlow";
 interface StageProps {
   /** Scene drawn beneath the UI in the same 1440×900 space (e.g. <ArenaBackdrop bleed />). */
   backdrop?: ReactNode;
-  /** Hide below 768px — cinematic screens render a mobile layout instead (spec D2). */
-  desktopOnly?: boolean;
+  /**
+   * The width from which the stage shows (spec D2): "md" hides it below 768px (default), "lg" below
+   * 1024px, null always shows it. Cinematic screens render their own layout where it is hidden.
+   */
+  from?: "md" | "lg" | null;
   className?: string;
   children: ReactNode;
 }
 
 /** Fixed 1440×900 design space scaled to fit the viewport; the scene bleeds into the letterbox (spec §4.4). */
-export function Stage({ backdrop, desktopOnly = true, className, children }: StageProps) {
+export function Stage({ backdrop, from = "md", className, children }: StageProps) {
   return (
     <div
       data-transition-scene
       className={cn(
         "relative h-dvh w-full overflow-hidden bg-night",
-        desktopOnly && "max-md:hidden",
+        from === "md" && "max-md:hidden",
+        from === "lg" && "max-lg:hidden",
         className,
       )}
     >
       <SkyGlow />
       <div
         data-stage
-        className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))]"
+        className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-mono-floor:11px]"
       >
         {backdrop ? <div className="absolute inset-0">{backdrop}</div> : null}
         <div className="relative h-full w-full">{children}</div>

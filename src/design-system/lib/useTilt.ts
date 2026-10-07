@@ -1,4 +1,5 @@
 import { useEffect, useRef, type PointerEvent, type RefObject } from "react";
+import { loadGsap } from "@/lib/motion";
 
 /** A press that moves farther than this is a drag, not a click. */
 const DRAG_PX = 4;
@@ -37,8 +38,8 @@ export function useTilt(
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   function load(): Promise<Setters | null> {
-    setters.current ??= import("gsap")
-      .then(({ gsap }) => {
+    setters.current ??= loadGsap()
+      .then((gsap) => {
         const el = ref.current;
         if (!el) return null;
         const opts = { duration: 0.4, ease: "power3.out" };

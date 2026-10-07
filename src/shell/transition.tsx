@@ -11,7 +11,7 @@ import {
 import { useLocation, useNavigate, type NavigateOptions } from "react-router";
 import { BrandLockup } from "@/design-system";
 import { ui } from "@/content";
-import { gsap, prefersReducedMotion } from "@/lib/motion";
+import { loadGsap, prefersReducedMotion, prefetchGsap } from "@/lib/motion";
 
 type Kind = "wipe" | "tunnel";
 interface TransitionApi {
@@ -32,6 +32,10 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   }, [locationKey]);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
+  // Warm the GSAP chunk once the page is idle, so the first wipe does not wait for the download.
+  useEffect(() => {
+    if (!prefersReducedMotion()) prefetchGsap();
+  }, []);
   const bar = useRef<HTMLDivElement>(null);
   const mark = useRef<HTMLDivElement>(null);
 
@@ -45,8 +49,16 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       }
       busyRef.current = true;
       setBusy(true);
+      let gsap: Awaited<ReturnType<typeof loadGsap>> | undefined;
       const startKey = locationKeyRef.current;
       try {
+        try {
+          gsap = await loadGsap();
+        } catch {
+          // The chunk failed to download: navigate without the wipe rather than strand the visitor.
+          await navigate(to, options);
+          return;
+        }
         const scene = document.querySelector<HTMLElement>("[data-transition-scene]");
         if (kind === "tunnel" && scene) {
           await gsap.to(scene, {
@@ -74,9 +86,11 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
           .set(bar.current, { autoAlpha: 0 });
       } finally {
         // Whatever happened above (interrupted, rejected), leave nothing covering or transformed.
-        gsap.set([bar.current, mark.current].filter(Boolean), { autoAlpha: 0 });
-        const scenes = document.querySelectorAll<HTMLElement>("[data-transition-scene]");
-        if (scenes.length > 0) gsap.set(scenes, { clearProps: "transform,filter" });
+        if (gsap) {
+          gsap.set([bar.current, mark.current].filter(Boolean), { autoAlpha: 0 });
+          const scenes = document.querySelectorAll<HTMLElement>("[data-transition-scene]");
+          if (scenes.length > 0) gsap.set(scenes, { clearProps: "transform,filter" });
+        }
         busyRef.current = false;
         setBusy(false);
       }

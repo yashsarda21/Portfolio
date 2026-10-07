@@ -100,6 +100,42 @@ test("stage scales to fit", async ({ page }, testInfo) => {
   expect(Math.round(box.x)).toBe(64);
 });
 
+test("stage mono labels stay at 11px or more on screen (L2)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the stage is hidden on phones");
+  // The keyboard hint (12px recipe) and a scoreboard footer label (11px recipe), as rendered, times the stage scale.
+  const read = () =>
+    page.evaluate(
+      ({ hint, label }) => {
+        const size = (text: string) => {
+          const el = [...document.querySelectorAll<HTMLElement>("[data-stage] *")].find(
+            (e) => e.children.length === 0 && e.textContent?.trim() === text,
+          )!;
+          return parseFloat(getComputedStyle(el).fontSize);
+        };
+        const scale = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue("--stage-scale"),
+        );
+        return { hint: size(hint), label: size(label), scale };
+      },
+      { hint: ui.landing.hint, label: ui.landing.home },
+    );
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/");
+  const small = await read();
+  expect(small.scale).toBeCloseTo(0.8, 2);
+  expect(small.hint * small.scale).toBeGreaterThanOrEqual(11 - 0.01);
+  expect(small.label * small.scale).toBeGreaterThanOrEqual(11 - 0.01);
+
+  // At 1440×900 the scale is 1 and nothing changes: the hint is its recipe size.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const full = await read();
+  expect(full.scale).toBe(1);
+  expect(full.hint).toBe(12);
+  expect(full.label).toBe(11);
+});
+
 test("home matches the Main artboard", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Main is a 1440×900 board");
   await page.goto("/");

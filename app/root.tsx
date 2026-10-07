@@ -4,6 +4,7 @@ import displayFont from "@fontsource/big-shoulders-display/files/big-shoulders-d
 import { ui } from "@/content";
 import { Glass, Heading, STAGE_SCALE_SCRIPT, Text } from "@/design-system";
 import { ArenaShell } from "@/shell/ArenaShell";
+import { HEAD_FLAGS_SCRIPT } from "@/shell/headFlags";
 import { ROUTES } from "@/shell/routes";
 import "./app.css";
 
@@ -18,6 +19,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <script dangerouslySetInnerHTML={{ __html: STAGE_SCALE_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: HEAD_FLAGS_SCRIPT }} />
         <Meta />
         <Links />
       </head>

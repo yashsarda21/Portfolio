@@ -85,4 +85,48 @@ describe("commentary service", () => {
     const live = document.querySelector('[aria-live="polite"]')!;
     expect(live).toHaveTextContent("Career high score updated.");
   });
+
+  describe("below md (phones are silent)", () => {
+    function phone(on: boolean) {
+      vi.stubGlobal("matchMedia", (q: string) => ({
+        matches: on && q === "(max-width: 767px)",
+        media: q,
+        addEventListener() {},
+        removeEventListener() {},
+      }));
+    }
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("queues and announces nothing on a phone", () => {
+      phone(true);
+      const { result } = renderHook(() => useCommentary(), strict);
+      act(() => result.current.say("Still not out."));
+      expect(result.current.current).toBeNull();
+      act(() => vi.advanceTimersByTime(5000));
+      expect(result.current.current).toBeNull();
+    });
+
+    it("keeps the live region empty on a phone", () => {
+      phone(true);
+      function Speaker() {
+        const { say } = useCommentary();
+        return <button onClick={() => say("Career high score updated.")}>speak</button>;
+      }
+      render(
+        <CommentaryProvider>
+          <Speaker />
+          <CommentarySlot tag="COMM" />
+        </CommentaryProvider>,
+      );
+      act(() => screen.getByText("speak").click());
+      expect(document.querySelector('[aria-live="polite"]')).toBeEmptyDOMElement();
+    });
+
+    it("is unchanged at md and up", () => {
+      phone(false);
+      const { result } = renderHook(() => useCommentary(), strict);
+      act(() => result.current.say("Still not out."));
+      expect(result.current.current).toEqual({ line: "Still not out.", state: "in" });
+    });
+  });
 });
