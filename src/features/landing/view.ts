@@ -13,6 +13,8 @@ export interface LandingView {
     tone: "primary" | "volt" | "label";
     align: "start" | "center" | "end";
   }[];
+  /** The phone board's two cells (the wide board's HOME is not drawn there). */
+  footerPhone: LandingView["footer"];
   challenge: string;
   enter: { label: string; sub: string; subPhone: string; to: string };
   view: { label: string; sub: string; to: string };
@@ -39,6 +41,10 @@ export function buildLandingView(
     footer: [
       { label: l.home, value: getPlayerFirstName(content), tone: "primary", align: "start" },
       { label: l.status, value: l.undefeated, tone: "volt", align: "center" },
+      { label: l.away, value: l.you, tone: "label", align: "end" },
+    ],
+    footerPhone: [
+      { label: l.status, value: l.undefeated, tone: "volt", align: "start" },
       { label: l.away, value: l.you, tone: "label", align: "end" },
     ],
     challenge: l.challenge,

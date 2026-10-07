@@ -26,6 +26,13 @@ describe("buildLandingView", () => {
     ]);
   });
 
+  it("the phone board's footer is STATUS and AWAY, stated outright (not a slice of the wide board's)", () => {
+    expect(view.footerPhone).toEqual([
+      { label: ui.landing.status, value: ui.landing.undefeated, tone: "volt", align: "start" },
+      { label: ui.landing.away, value: ui.landing.you, tone: "label", align: "end" },
+    ]);
+  });
+
   it("the calls to action and where they go", () => {
     expect(view.challenge).toBe(ui.landing.challenge);
     expect(view.enter).toEqual({

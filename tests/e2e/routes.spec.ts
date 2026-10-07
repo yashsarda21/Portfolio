@@ -52,7 +52,7 @@ test("focus moves to the new heading after a wipe navigation", async ({ page }) 
 test("focus lands on the rendered heading of the landing page, not its hidden twin", async ({
   page,
 }) => {
-  // "/" holds two <h1>s (desktop Scoreboard, mobile placeholder); only one is rendered per breakpoint.
+  // "/" holds two <h1>s (desktop Scoreboard, phone/tablet column); only one is rendered per breakpoint.
   // A page that is still a placeholder (they carry the site map).
   await page.goto(ROUTES.lockerRoom);
   await page

@@ -11,6 +11,10 @@ export const artboardLandingView: LandingView = {
     { label: "STATUS", value: "UNDEFEATED", tone: "volt", align: "center" },
     { label: "AWAY", value: "YOU?", tone: "label", align: "end" },
   ],
+  footerPhone: [
+    { label: "STATUS", value: "UNDEFEATED", tone: "volt", align: "start" },
+    { label: "AWAY", value: "YOU?", tone: "label", align: "end" },
+  ],
   challenge: "Think you can beat me?",
   enter: {
     label: "ENTER THE ARENA",

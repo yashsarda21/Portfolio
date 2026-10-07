@@ -355,6 +355,35 @@ test.describe("tablet", () => {
     await expect(enter(page)).toContainText(ui.landing.enterSubPhone);
   });
 
+  test("portrait: the board and the challenge line sit together, not a screen apart", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(name(page)).toBeVisible();
+    const board = (await column(page).locator("[data-part='board']").boundingBox())!;
+    const challenge = (await column(page).getByText(ui.landing.challenge).boundingBox())!;
+    expect(challenge.y - (board.y + board.height)).toBeLessThanOrEqual(96);
+    // Centred as one block: the space under the buttons is no bigger than the space above the board (plus the top row).
+    const quickBox = (await quick(page).boundingBox())!;
+    expect(board.y).toBeGreaterThan(60);
+    expect(1024 - (quickBox.y + quickBox.height)).toBeGreaterThan(40);
+  });
+
+  test("landscape: the floodlight banks sit over the column, not at the window's edges", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto("/");
+    await expect(name(page)).toBeVisible();
+    const board = (await column(page).locator("[data-part='board']").boundingBox())!;
+    for (const side of ["bank-left", "bank-right"]) {
+      const bank = (await column(page).locator(`[data-part='${side}']`).boundingBox())!;
+      const centre = bank.x + bank.width / 2;
+      expect(centre, side).toBeGreaterThanOrEqual(board.x - 40);
+      expect(centre, side).toBeLessThanOrEqual(board.x + board.width + 40);
+    }
+  });
+
   test("has no accessibility violations", async ({ page }) => {
     await page.goto("/");
     await expect(name(page)).toBeVisible();
