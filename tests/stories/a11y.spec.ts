@@ -24,7 +24,11 @@ test("the story index is not empty", () => {
   expect(entries.length).toBeGreaterThan(0);
 });
 
-for (const story of entries) {
+// A story that plays a live GSAP show is mid-animation whenever axe looks (translucent text, parts still
+// arriving), which it cannot judge. Its end state is a story of its own, and the route's e2e runs axe at done.
+const PLAYS_LIVE = new Set(["features-intro--playing"]);
+
+for (const story of entries.filter((e) => !PLAYS_LIVE.has(e.id))) {
   test(`a11y: ${story.title} / ${story.name}`, async ({ page }) => {
     // a11y.manual: the addon's own auto-run would race our axe run ("Axe is already running").
     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=a11y.manual:!true`);

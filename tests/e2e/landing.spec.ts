@@ -221,7 +221,7 @@ test.describe("desktop", () => {
     test.use({ reducedMotion: "reduce" });
     test("everything is there at once and no rig frames are requested", async ({ page }) => {
       const strips: string[] = [];
-      page.on("request", (r) => /turn_[012]/.test(r.url()) && strips.push(r.url()));
+      page.on("request", (r) => /turn_[012][^/]*\.webp/.test(r.url()) && strips.push(r.url()));
       await page.goto("/");
       await expect(name(page)).toBeVisible();
       for (const target of [name(page), enter(page), quick(page)]) {
@@ -236,7 +236,7 @@ test.describe("desktop", () => {
 
   test("the intro's head-turn frames are fetched after the page has loaded", async ({ page }) => {
     const strips = new Set<string>();
-    page.on("request", (r) => /turn_[012]/.test(r.url()) && strips.add(r.url()));
+    page.on("request", (r) => /turn_[012][^/]*\.webp/.test(r.url()) && strips.add(r.url()));
     await page.goto("/");
     await expect.poll(() => strips.size, { timeout: 8000 }).toBe(3);
   });

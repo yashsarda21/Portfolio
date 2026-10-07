@@ -9,10 +9,16 @@ const entries = Object.entries(ROUTES) as [keyof typeof ROUTES, string][];
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
   for (const [key, path] of entries) {
-    test(`renders without JavaScript: ${path}`, async ({ page }) => {
+    test(`renders without JavaScript: ${path}`, async ({ page }, testInfo) => {
       await page.goto(path);
       // The card page is "PLAYER CARD" in the trail and the title, and "PLAYER PROFILE" on the board's h1.
-      const heading = key === "card" ? ui.pages.card.titleLines.join(" ") : ui.routes[key].heading;
+      // The Intro's h1 is the name from 768px up; the phone keeps its placeholder until the phone's intro is built.
+      const heading =
+        key === "card"
+          ? ui.pages.card.titleLines.join(" ")
+          : key === "intro" && testInfo.project.name === "desktop"
+            ? ui.routes.home.heading
+            : ui.routes[key].heading;
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading, {
         ignoreCase: true,
       });
@@ -25,6 +31,11 @@ for (const [, path] of entries) {
   test(`a11y: ${path}`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // The Intro plays for 6.5 s, and axe judges a page at rest.
+    if (path === ROUTES.intro)
+      await expect(page.locator("main#main")).toHaveAttribute("data-intro", "done", {
+        timeout: 15_000,
+      });
     await expectNoA11yViolations(page);
   });
 }
