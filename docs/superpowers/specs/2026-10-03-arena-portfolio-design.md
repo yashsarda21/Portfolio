@@ -525,6 +525,49 @@ Deviations from the artboards (visual tests accept exactly these):
 
 ---
 
+### 11.10 Player Card and Team Up (Phase 2C)
+
+Rulings, as built:
+
+| ID | Decision | Why |
+|---|---|---|
+| C1 | While `player.resumePdf` is `null` the volt action row is **REQUEST RESUME** (mailto) and the DOWNLOAD PDF row is not drawn. Both PDF rows appear on their own once a public PDF is set (View opens a new tab and says so; Download downloads). The private PDF is never linked. | A dead download row looks broken; the phone-number PDF never ships (§12). |
+| C2 | The card's back is a derived section index (Career, Highlights, Attributes, Trophy Room, Team Up), then the player's address as a mail link, under the same foot line. | §12 derived design; the address fills the back (fix wave M15) using only existing content. |
+| C3 | The card is two faces, each with its own full-face flip button under its content, so the back's links are never inside a button. The button is named for where it flips to ("Flip card: show the back" / "…the front") and is **not** a toggle: no `aria-pressed` (a toggle's name must not change with its state; fix wave M1, owner ruling follows the APG). Fine pointer only tilts (max 6 deg, lifted 8px); a drag never flips, including a drag that leaves the card and returns with the button held (M2). Reduced motion: no float, sheen or tilt, faces swap instantly. | A8: no global keys; the card is a normal button. |
+| C4 | SEASON shows the **build** year in the HTML and the visitor's own year after mount. The build year is injected by Vite `define` (`__BUILD_YEAR__`, `vite.define.ts`, read as `BUILD_YEAR` from `shell/config.ts`) so the client bundle and the prerendered HTML agree whatever the visitor's year; a unit test hydrates the prerendered page with a clock one year ahead and expects no recoverable error. "Pro debut" shows the long month. | Spec §11.2 #12; the earlier module-scope `new Date()` mismatched on every visit after 1 January. |
+| C5 | Team Up sends through the form service when `VITE_FORM_ENDPOINT` is an https URL (JSON POST, Formspree-compatible; the honeypot field is named `_gotcha` and is hidden from sight, the tab order and the accessibility tree). Without one it opens the visitor's email app, pre-filled. Web3Forms-style services that need an `access_key` in the body are not supported as is. | Nothing to set up today; works the moment an endpoint is added. |
+| C6 | Success (the service answered 2xx, or the honeypot was filled and the send is quietly dropped): the form is replaced by the CHALLENGE RECEIVED panel, focus goes to its heading, the floodlights pulse once (reduced motion: none), SEND ANOTHER starts an empty form. A failed send keeps the visitor's text and shows the error with the OR EMAIL link. | §12 derived design. |
+| C7 | The AFTER YOU SEND preview box stays on Team Up as drawn. | As drawn. |
+| C8 | Phone: single column; Team Up marks its tab current, Player Card none. Player Card = title, card, actions, profile. Tablet: profile and card side by side, actions below; Team Up = form full width, direct lines below in two columns. | §12 derived. |
+| P1 | **Phone card without zoom.** Below `md` the card is as wide as the gutters allow (never wider than the drawn 402px) at the drawn 402:642 proportions; the portrait frame gives up height (the head shot shrinks to fit, whole), the stat cells stack label over value, and every label stays at 11px or more (A2). The earlier CSS-`zoom` fit (`card-fit`) took the labels to 7.7-9.4px on common phones and is removed. Desktop is unchanged. | A2 holds on the card too; a floor that a zoom silently overrides is not a floor. |
+| P2 | **The email path is not a success.** With no endpoint, opening the mail app only asks the OS; the visitor still has to press send there. So `mailto` has its own state: the form and every word stay, a polite status says `YOUR EMAIL APP SHOULD OPEN WITH THE MESSAGE READY. PRESS SEND THERE.`, the OR EMAIL link stays, and a `COPY MESSAGE` button (`MESSAGE COPIED ✓` for 2s, announced) copies the whole message, falling back to a selected read-only field if the clipboard refuses. New copy: `ui.pages.teamUp.mailto { note, copy, copied }`. | Telling visitors "Challenge received" when nothing was sent, and clearing their text on SEND ANOTHER, loses messages. |
+| P3 | The copy-link row's "copied" line is visual only (the row is not a live region); a separate polite status announces it. When the clipboard refuses, the focus move to the selected, labelled field is the announcement (the status stays quiet). | One announcement, no stray re-reads when the row returns to its sub-line. |
+| P4 | Content: each `cardStats` entry has an `id`; Team Up and the scouting report read the problems count by `id: "problems"`, not by the printed label. The closing "." of the AFTER YOU SEND line is copy (`ui.glyph.period`). | A renamed label must not break the build; no visible copy in components. |
+| P5 | `ContentLayout` takes one `columns` prop: `{ kind: "showcase", stage, caption?, rail? }` or `{ kind: "split", side }`. The title, panels and body render once with a `cva` per kind; the stage, rail and caption offsets live in the layout (a page passes plain nodes); `lg:` and `xl:` replace the arbitrary 1200 and 1440 breakpoints in the new code. | No repeated branches; offsets in a feature are pixel fitting the style guard cannot see. |
+
+Design-system changes:
+
+| Change | Detail |
+|---|---|
+| New tokens | `--ref-card-end` / `card-end`, `--rgb-sheen`, `volt-a07`, `--perspective-card` (1400px), `--perspective-floor` (700px, the showcase floor). |
+| New motion | `animate-card-float`, `animate-sheen` (rests on its first frame, so a paused or cancelled animation shows no band), `animate-floodlight-pulse`; `card-sheen`, `scene-centre-glow`, `scene-floor` utilities. |
+| New recipes (kept, 7) | `type-d0` (96/.85), `type-body-intro` (20/1.45), `type-btn-lg` (24/900/.14em), `type-card-position` (64/.85), `type-card-name` (52/.9/.02em), `type-action-lg` (24/.1em), `type-action` (20/800/.1em; also the direct lines' titles). |
+| Recipes merged away | `type-mono-line` into `type-mono-date`, `type-channel` into `type-action` (.02em less tracking, about 5px across the longest title), `type-caption-copy` into `type-caption` (1.45 for 1.5), `type-mono-inline` into `type-mono-code` (the paragraph's own recipe sets the rhythm), `type-body-note` into `type-body-cell` (1.5 for 1.6). Nothing uses the removed names. |
+| Components | `PlayerCard` (+ `Header`, `Portrait`, `Name`, `Stats`, `Contact`, `Footer`), `ActionRow`, `ChannelCard`, `DashedPanel`, `ShowcaseBackdrop`, `useTilt`; `StatTile tone="cell"` (stacked on the phone), `PageTitle size/lede`, `Button size="ml"` (the 62px body with the 24px label; named by scale), `ContentLayout columns`. Shared hook `lib/useCopyText` (copied, fallback, 2s). |
+| ActionRow | `status` is visual only; the consumer owns the announcement. |
+
+Deviations from the artboards (visual tests accept exactly these):
+
+| Where | Deviation | Check |
+|---|---|---|
+| Card story and route | Labels are 11px, not the drawn 10px (A2); the stat cells' gap and the glass rows' 66px (the artboard's COPY row is a 64px button) shift a few pixels. | Card story and route fidelity |
+| Card story | COMM only (fixed area `{24,812,392,60}`: the line animates on and off air). | Card story fidelity |
+| Real `/card` | COMM; the actions column from the first row down (`{984,262,420,404}`; C1: the real page has the request row and the copy row only, so the note below rises); SEASON only when the visitor's year is not 2026. | `/card` fidelity |
+| Real `/team-up` | None: the real content equals the board's words and the page has no commentary on arrival. | `/team-up` fidelity |
+| Team Up's `mailto` state | New (P2); not on the artboard. | `MailtoOpened` story, e2e |
+
+---
+
 ## 12. Derived designs (not in the artboards; built from existing components, flagged for Yash's review)
 
 | Screen / state | Approach |
@@ -535,7 +578,7 @@ Deviations from the artboards (visual tests accept exactly these):
 | Mobile Career, Highlights, Attributes, Trophy, Card, Team Up, Tennis, Badminton | Built from the Mobile-QuickView and Mobile-Game patterns: single column, solid panels, 16px gutter, bottom tab bar |
 | Player Card back face | Section index (career, highlights, skills, trophies, contact) as ActionRows |
 | Copy-link feedback | Button label swaps to "LINK COPIED ✓" for 2s, announced politely |
-| Team Up submit | Form validates locally. If `VITE_FORM_ENDPOINT` is set (Formspree/Web3Forms-style), it POSTs there. Otherwise it opens the visitor's email app with subject and body prefilled from the chosen format. Success: COMM "Challenge received. I'll serve first.", floodlight pulse, scoreboard "NEW FIXTURE · VISITOR vs YASH". Error state shows "OR EMAIL" fallback. |
+| Team Up submit | Form validates locally. If `VITE_FORM_ENDPOINT` is set (Formspree-compatible: JSON with `Accept: application/json`, honeypot `_gotcha`), it POSTs there. Otherwise it opens the visitor's email app with subject and body prefilled from the chosen format and says nothing is sent yet (§11.10 P2). Success (service answered 2xx, or a quiet honeypot drop): COMM "Challenge received. I'll serve first.", floodlight pulse, scoreboard "NEW FIXTURE · VISITOR vs YASH". Error state shows "OR EMAIL" fallback. |
 | Resume buttons | The phone-number PDF is **never shipped**. If `content.player.resumePdf` is `null`, buttons read "REQUEST RESUME" (mailto). When a public PDF is added to `public/`, the buttons automatically switch to View/Download. |
 | Project media | `MediaSlot` shows the designed striped placeholder while `media` is `null`, and a muted video with controls when set. `media` is `{ src, poster?, captions?, silent }`: every URL is https or a root path; a silent screen recording needs no captions but is described by the project line and problem / approach / result (`aria-describedby`); a recording with sound must have `captions` (the schema rejects it otherwise). The captions track exists only when there are captions. |
 | Locker Room `/locker-room` | "The making of the arena": thank-you headline, the visitor's record, how the site was built (stack, design system, the 1% maths), and a direct-line contact band. Locked state for visitors who haven't won. |

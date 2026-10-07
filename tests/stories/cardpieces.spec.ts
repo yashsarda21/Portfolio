@@ -6,27 +6,32 @@ const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y
 test.describe("Player Card pieces", () => {
   test("the card, the action rows and the channel cards are drawn at the artboard's boxes", async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.goto(story("broadcast-card--front"));
     const card = page.locator("[data-player-card]");
     await card.waitFor();
-    // 400x640 content box plus the 1px border all round.
-    expect(
-      await card.evaluate((el) => [
-        (el as HTMLElement).offsetWidth,
-        (el as HTMLElement).offsetHeight,
-      ]),
-    ).toEqual([402, 642]);
+    const [width, height] = await card.evaluate((el) => [
+      (el as HTMLElement).offsetWidth,
+      (el as HTMLElement).offsetHeight,
+    ]);
+    if (testInfo.project.name === "desktop") {
+      // 400x640 content box plus the 1px border all round.
+      expect([width, height]).toEqual([402, 642]);
+    } else {
+      // On the phone it is fluid (never wider than drawn) and keeps the drawn proportions.
+      expect(width).toBeLessThanOrEqual(402);
+      expect(Math.abs(height / width - 642 / 402)).toBeLessThan(0.01);
+    }
 
     await page.goto(story("broadcast-card--action-rows"));
-    const height = (name: RegExp) =>
+    const rowHeight = (name: RegExp) =>
       page
         .locator("a, button")
         .filter({ hasText: name })
         .evaluate((el) => (el as HTMLElement).offsetHeight);
-    expect(await height(/VIEW PLAYER CARD/)).toBe(74);
-    expect(await height(/DOWNLOAD PDF/)).toBe(66); // 64 + the glass border
-    expect(await height(/COPY SCOUTING LINK/)).toBe(66);
+    expect(await rowHeight(/VIEW PLAYER CARD/)).toBe(74);
+    expect(await rowHeight(/DOWNLOAD PDF/)).toBe(66); // 64 + the glass border
+    expect(await rowHeight(/COPY SCOUTING LINK/)).toBe(66);
 
     await page.goto(story("broadcast-card--channel-cards"));
     expect(
