@@ -24,6 +24,21 @@ describe("KeyValueList", () => {
     expect(screen.getByText("Pune, India")).toHaveClass("text-floodlight");
   });
 
+  it("row variant: a rule above every row and under the last, on the font's own line box", () => {
+    render(
+      <KeyValueList
+        items={[
+          { k: "Home ground", v: "Pune, India" },
+          { k: "Academy", v: "PICT" },
+        ]}
+      />,
+    );
+    const row = screen.getByText("Home ground").parentElement!;
+    expect(row).toHaveClass("border-t", "last:border-b");
+    expect(screen.getByText("Home ground")).toHaveClass("leading-auto");
+    expect(screen.getByText("Pune, India")).toHaveClass("leading-auto");
+  });
+
   it("stacked variant puts mono labels over values", () => {
     render(<KeyValueList variant="stacked" items={[{ k: "TYPE", v: "Analytics web platform" }]} />);
     expect(screen.getByText("TYPE")).toHaveClass("type-mono-xs");

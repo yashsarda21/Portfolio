@@ -321,3 +321,33 @@
   animation: seg-fill 0.35s var(--ease-follow) both;
   animation-delay: calc(var(--i, 0) * 40ms);
 }
+
+/* ---------- showcase scene (Player-Card, Team-Up artboards): a lit centre and a floor under the exhibit ---------- */
+/* A volt pool of light at the middle of the page. */
+@utility scene-centre-glow {
+  background: radial-gradient(circle at 50% 50%, rgb(var(--rgb-volt) / 0.08), transparent 40%);
+}
+/* The floor: a 900x500 ellipse lying back 75 degrees from its top edge. The parent sets perspective (700px). */
+@utility scene-floor {
+  transform: rotateX(75deg);
+  transform-origin: 50% 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(var(--rgb-volt) / 0.12), transparent 60%);
+}
+
+/* The 402px-wide card, fitted to a narrow phone. `zoom` shrinks the layout box too, so the page never scrolls
+   sideways. One step per width the 16px gutters allow: 402 x .95 fits 414, .9 fits 394, .85 fits 374, .8 fits 354. */
+@utility card-fit {
+  @media (width < 414px) {
+    zoom: 0.9;
+  }
+  @media (width < 394px) {
+    zoom: 0.85;
+  }
+  @media (width < 374px) {
+    zoom: 0.8;
+  }
+  @media (width < 354px) {
+    zoom: 0.7;
+  }
+}

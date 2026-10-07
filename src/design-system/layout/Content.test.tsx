@@ -264,6 +264,54 @@ describe("ContentLayout", () => {
     expect(screen.getByRole("banner")).toHaveTextContent("head");
   });
 
+  describe("with a stage and a rail", () => {
+    const render3 = () =>
+      render(
+        <ContentLayout
+          mainId="main"
+          header={<header>head</header>}
+          title={<h1>title</h1>}
+          footer={<span>foot</span>}
+          stage={<div>stage</div>}
+          rail={<div>rail</div>}
+        >
+          <section>panels</section>
+        </ContentLayout>,
+      );
+
+    it("keeps every part inside main, in reading order: title, panels, stage, rail, footer", () => {
+      render3();
+      const main = screen.getByRole("main");
+      const texts = ["title", "panels", "stage", "rail", "foot"];
+      for (const text of texts) expect(main).toContainElement(screen.getByText(text));
+      const order = texts.map((t) => screen.getByText(t));
+      for (let i = 1; i < order.length; i++)
+        expect(
+          order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
+    it("is one grid from the tablet up, and the panels come last on the phone", () => {
+      render3();
+      const body = screen.getByText("title").parentElement!.parentElement!;
+      expect(body).toHaveClass(
+        "md:grid",
+        "min-[1200px]:grid-cols-[minmax(0,26.25rem)_auto_minmax(0,26.25rem)]",
+      );
+      expect(screen.getByText("panels").parentElement).toHaveClass("max-md:order-last");
+    });
+
+    it("is the same flat layout without a stage", () => {
+      render(
+        <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
+          <section>panels</section>
+        </ContentLayout>,
+      );
+      expect(screen.getByText("title").parentElement).toHaveClass("px-9");
+      expect(screen.getByText("title").parentElement).not.toHaveClass("md:col-start-1");
+    });
+  });
+
   it("leaves the main landmark without an id unless asked", () => {
     render(
       <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>

@@ -552,6 +552,13 @@
   text-transform: uppercase;
 }
 /* Problem / approach / result cell copy: 14px at 1.5. */
+/* A short note under a panel (the card's "ON THE BACK" block, Team Up's "AFTER YOU SEND"): 14px at a 1.6 rhythm. */
+@utility type-body-note {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.6;
+}
 @utility type-body-cell {
   font-family: var(--font-body);
   font-weight: 400;

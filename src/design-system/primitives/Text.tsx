@@ -67,6 +67,7 @@ export const textVariants = cva("", {
       "body-copy": "type-body-copy",
       "body-sm": "type-body-sm",
       "body-cell": "type-body-cell",
+      "body-note": "type-body-note",
       "body-deck": "type-body-deck",
       caption: "type-caption",
       comm: "type-comm",

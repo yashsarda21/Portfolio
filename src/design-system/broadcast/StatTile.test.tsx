@@ -22,6 +22,9 @@ describe("StatTile cell", () => {
     const { container } = render(<StatTile tone="cell" label="CGPA" value="8.94" />);
     const root = container.firstElementChild as HTMLElement;
     expect(root).toHaveClass("flex-row", "justify-between", "items-baseline", "p-2.5");
+    // The label never touches the value: a guaranteed gap, and neither part wraps.
+    expect(root).toHaveClass("gap-1.5");
+    expect(root.children[0]).toHaveClass("whitespace-nowrap");
     expect(root).not.toHaveClass("flex-col");
     expect(root.children[0]).toHaveTextContent("CGPA");
     expect(root.children[1]).toHaveTextContent("8.94");

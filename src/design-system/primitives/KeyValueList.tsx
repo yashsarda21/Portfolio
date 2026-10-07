@@ -12,7 +12,7 @@ interface KeyValueItem {
 interface KeyValueListProps {
   items: KeyValueItem[];
   /**
-   * "row": ruled rows, label left and value right. "stacked": mono labels over values, ruled below.
+   * "row": ruled rows (a rule above each and under the last), label left and value right, 15px on the font's own line box. "stacked": mono labels over values, ruled below.
    * "profile": a compact spec sheet under one rule (Badminton-Attributes): 14px rows, label left and value
    * right, and an item marked `stacked` shows its mono value under the label.
    */
@@ -52,12 +52,12 @@ export function KeyValueList({ items, variant = "row", className }: KeyValueList
         ) : variant === "row" ? (
           <div
             key={i}
-            className="flex items-baseline justify-between gap-4 border-t border-line py-3"
+            className="flex items-baseline justify-between gap-4 border-t border-line py-3 last:border-b"
           >
-            <dt className="type-body-md text-scout">{item.k}</dt>
+            <dt className="type-body-md leading-auto text-scout">{item.k}</dt>
             <dd
               className={cn(
-                "text-right type-body-md",
+                "text-right type-body-md leading-auto",
                 item.accent ? "text-volt" : "text-floodlight",
               )}
             >

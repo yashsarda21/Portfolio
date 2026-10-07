@@ -11,7 +11,9 @@ test.describe("without JavaScript", () => {
   for (const [key, path] of entries) {
     test(`renders without JavaScript: ${path}`, async ({ page }) => {
       await page.goto(path);
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes[key].heading, {
+      // The card page is "PLAYER CARD" in the trail and the title, and "PLAYER PROFILE" on the board's h1.
+      const heading = key === "card" ? ui.pages.card.titleLines.join(" ") : ui.routes[key].heading;
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading, {
         ignoreCase: true,
       });
       await expect(page).toHaveTitle(ui.routes[key].title);

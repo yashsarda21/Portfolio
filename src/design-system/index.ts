@@ -56,6 +56,7 @@ export { FloodlightBank } from "./scene/FloodlightBank";
 export { FloodlightMast } from "./scene/FloodlightMast";
 export { Field } from "./scene/Field";
 export { PitchGlow } from "./scene/PitchGlow";
+export { ShowcaseBackdrop } from "./scene/ShowcaseBackdrop";
 export { ArenaBackdrop } from "./scene/ArenaBackdrop";
 export { Trophy } from "./scene/Trophy";
 export type { TrophyKind } from "./scene/Trophy";

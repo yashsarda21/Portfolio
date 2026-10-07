@@ -132,6 +132,7 @@ export const TOKEN_CATALOG = {
     "type-body-copy",
     "type-body-sm",
     "type-body-cell",
+    "type-body-note",
     "type-title-detail",
     "type-body-deck",
     "type-draw-name",

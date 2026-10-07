@@ -53,6 +53,12 @@ export interface ContentPageProps {
   sky?: SkyGlowSpec;
   /** The venue glow at the bottom edge. Defaults to the venue's artboard values. */
   glow?: GlowSpec;
+  /** The h1, when it differs from the route's name (the card page is "PLAYER CARD" in the trail, "PLAYER PROFILE" on the board). */
+  title?: ReactNode;
+  /** A showpiece beside the title and panels (the player card): see ContentLayout. */
+  stage?: ReactNode;
+  /** The column to the right of the stage (the take-away actions). Needs `stage`. */
+  rail?: ReactNode;
   /** The panels. */
   children: ReactNode;
 }
@@ -97,6 +103,9 @@ export function ContentPage({
   backdrop,
   sky,
   glow,
+  title,
+  stage,
+  rail,
   children,
 }: ContentPageProps) {
   const preset = venue ? VENUE_GLOWS[venue] : undefined;
@@ -149,8 +158,15 @@ export function ContentPage({
           />
         }
         title={
-          <PageTitle eyebrow={eyebrow} eyebrowTone={eyebrowTone} title={heading} aside={aside} />
+          <PageTitle
+            eyebrow={eyebrow}
+            eyebrowTone={eyebrowTone}
+            title={title ?? heading}
+            aside={aside}
+          />
         }
+        stage={stage}
+        rail={rail}
         footer={
           comm || next ? (
             <>

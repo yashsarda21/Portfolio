@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ArenaBackdrop } from "./ArenaBackdrop";
 import { CrowdTier } from "./CrowdTier";
+import { ShowcaseBackdrop } from "./ShowcaseBackdrop";
 import { SkyGlow } from "./SkyGlow";
 
 describe("SkyGlow", () => {
@@ -30,5 +31,17 @@ describe("scene", () => {
     expect(root).toHaveAttribute("data-venue", "turf");
     rerender(<ArenaBackdrop venue="hall" />);
     expect(root).toHaveAttribute("data-venue", "hall");
+  });
+});
+
+describe("ShowcaseBackdrop", () => {
+  it("is decorative: a centre glow, the sky, and a floor, all from scene utilities", () => {
+    const { container } = render(<ShowcaseBackdrop />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveAttribute("aria-hidden", "true");
+    expect(root.querySelector(".scene-centre-glow")).not.toBeNull();
+    expect(root.querySelector(".scene-sky")).not.toBeNull();
+    expect(root.querySelector(".scene-floor")).not.toBeNull();
+    expect(root.innerHTML).not.toMatch(/#[0-9a-f]{3,6}|rgb\(/i);
   });
 });

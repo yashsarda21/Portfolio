@@ -56,6 +56,21 @@ describe("ContentPage", () => {
     expect(within(main).getByText(ui.pages.career.eyebrow)).toBeInTheDocument();
   });
 
+  it("a title prop replaces the h1 text but not the breadcrumb's last crumb", () => {
+    setup({ title: "PLAYER PROFILE", trail: [] });
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("PLAYER PROFILE");
+    expect(screen.getByRole("navigation", { name: ui.pages.breadcrumb })).toHaveTextContent(
+      ui.routes.career.heading,
+    );
+  });
+
+  it("puts a stage and a rail inside main", () => {
+    setup({ stage: <p>STAGE</p>, rail: <p>RAIL</p> });
+    const main = screen.getByRole("main");
+    expect(within(main).getByText("STAGE")).toBeInTheDocument();
+    expect(within(main).getByText("RAIL")).toBeInTheDocument();
+  });
+
   it("starts the breadcrumb at the hub and ends it with the page", () => {
     setup();
     const crumbs = screen.getByRole("navigation", { name: ui.pages.breadcrumb });

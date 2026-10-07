@@ -1,9 +1,9 @@
 import type { Route } from "./+types/card";
-import { PlaceholderScreen } from "@/shell/PlaceholderScreen";
+import { CardScreen } from "@/features/card/CardPage";
 import { pageMeta } from "@/shell/meta";
 
 export const meta: Route.MetaFunction = () => pageMeta("card");
 
 export default function Card() {
-  return <PlaceholderScreen route="card" />;
+  return <CardScreen />;
 }

@@ -138,9 +138,13 @@
     background-position: 200% 0;
   }
 }
+/* The resting pose is the animation's first frame (the artboard's own frame 0), so a paused or cancelled
+   animation shows the card as drawn. Reduced motion: no animation and no pose, the card stands flat. */
 @utility animate-card-float {
+  transform: rotateY(-12deg) rotateX(5deg);
   animation: card-float 6s ease-in-out infinite;
   @media (prefers-reduced-motion: reduce) {
+    transform: none;
     animation: none;
   }
 }

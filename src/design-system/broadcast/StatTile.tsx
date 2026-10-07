@@ -23,8 +23,10 @@ const tile = cva("flex", {
       glass:
         "glass flex-col gap-0.5 w-52 px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
       volt: "flex-col gap-0.5 w-51.5 bg-volt px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
-      // A cell of the card's stat grid: label left, value right on one baseline, as drawn.
-      cell: "flex-row items-baseline justify-between bg-inset p-2.5",
+      // A cell of the card's stat grid: label left, value right on one baseline, as drawn. The gap is the
+      // least air between them: the 11px label is wider than the drawn 10px, so a full cell ("PROBLEMS 750+")
+      // spills the 6px into the cell's own padding instead of letting the two touch. Neither part wraps.
+      cell: "flex-row items-baseline justify-between gap-1.5 bg-inset p-2.5",
     },
   },
   defaultVariants: { tone: "glass" },
@@ -32,12 +34,12 @@ const tile = cva("flex", {
 const LABEL = {
   glass: "type-mono-round text-scout",
   volt: "type-mono-round text-volt-ink-2",
-  cell: "type-mono-note text-scout",
+  cell: "type-mono-note whitespace-nowrap text-scout",
 } as const;
 const VALUE = {
   glass: "type-stat text-floodlight max-md:type-d4s",
   volt: "type-stat text-volt-ink max-md:type-d4s",
-  cell: "type-title-sm leading-auto text-floodlight",
+  cell: "type-title-sm leading-auto whitespace-nowrap text-floodlight",
 } as const;
 
 interface StatTileProps {

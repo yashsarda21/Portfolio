@@ -44,7 +44,8 @@ export async function expectNextButtonOneLine(
   widths: readonly number[],
   height = 900,
 ) {
-  const next = page.getByRole("link", { name });
+  // In main: the phone's tab bar can carry a link of the same name (TEAM UP).
+  const next = page.locator("main#main").getByRole("link", { name });
   for (const width of widths) {
     await page.setViewportSize({ width, height });
     await expect(next, `next button at ${width}px`).toBeVisible();
