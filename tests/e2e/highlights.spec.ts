@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ui } from "../../src/content/ui-copy";
@@ -56,6 +56,13 @@ test.describe("without JavaScript", () => {
   });
 });
 
+/** The commentary answers from 768px up; phones show none, so they announce none (spec 11.11, L11). */
+async function expectCommentary(page: Page, line: string) {
+  const live = page.locator("[aria-live=polite]").filter({ hasText: /\S/ });
+  if ((page.viewportSize()?.width ?? 0) < 768) await expect(live).toHaveCount(0);
+  else await expect(live).toHaveText(line);
+}
+
 test.describe("the draw", () => {
   test("arrow keys move between rounds, the panel follows and the commentary answers", async ({
     page,
@@ -75,16 +82,12 @@ test.describe("the draw", () => {
     await expect(page.getByRole("heading", { level: 2, name: "KUDO BOARD" })).toBeVisible();
     await expect(page.getByText(semi.winner, { exact: true })).toBeVisible();
     await expect(page.getByText(final.winner, { exact: true })).toBeHidden();
-    await expect(page.locator("[aria-live=polite]").filter({ hasText: /\S/ })).toHaveText(
-      "Another project shipped.",
-    );
+    await expectCommentary(page, "Another project shipped.");
 
     // Back to the final: its own line.
     await page.keyboard.press("ArrowDown");
     await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator("[aria-live=polite]").filter({ hasText: /\S/ })).toHaveText(
-      ui.pages.highlights.commFinal,
-    );
+    await expectCommentary(page, ui.pages.highlights.commFinal);
   });
 
   test("keeps one main landmark with the one h1", async ({ page }) => {
