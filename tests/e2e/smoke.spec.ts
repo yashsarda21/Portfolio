@@ -6,11 +6,19 @@ import { expectNoA11yViolations } from "../support/a11y";
 
 test("home page renders its heading", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: ui.routes.home.heading })).toBeVisible();
+  // The name is hidden until its turn in the boot (3 s).
+  await expect(page.getByRole("heading", { level: 1, name: ui.routes.home.heading })).toBeVisible({
+    timeout: 10_000,
+  });
 });
 
 test("home page has no accessibility violations", async ({ page }) => {
   await page.goto("/");
+  // Axe judges the board at rest: wait for the boot to end.
+  await page.evaluate(async () => {
+    const group = document.querySelector("a[href='/intro']")?.parentElement?.parentElement;
+    await Promise.all((group?.getAnimations() ?? []).map((a) => a.finished));
+  });
   await expectNoA11yViolations(page);
 });
 
@@ -19,9 +27,9 @@ test.describe("without JavaScript", () => {
 
   test("renders without JavaScript", async ({ page }) => {
     await page.goto("/");
-    await expect(
-      page.getByRole("heading", { level: 1, name: ui.routes.home.heading }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: ui.routes.home.heading })).toBeVisible(
+      { timeout: 10_000 },
+    );
   });
 });
 

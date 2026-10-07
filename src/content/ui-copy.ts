@@ -190,6 +190,7 @@ export const ui = {
     challenge: "Think you can beat me?",
     enter: "ENTER THE ARENA",
     enterSub: "INTERACTIVE · ~3 MIN",
+    enterSubPhone: "LITE · ONE-THUMB GAMES",
     view: "VIEW PORTFOLIO",
     viewSub: "RECRUITER VIEW · 90 SEC",
     hint: "ENTER ↵ TO PLAY · Q FOR QUICK VIEW",

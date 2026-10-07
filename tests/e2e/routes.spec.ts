@@ -139,7 +139,13 @@ test("stage mono labels stay at 11px or more on screen (L2)", async ({ page }, t
 test("home matches the Main artboard", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Main is a 1440×900 board");
   await page.goto("/");
-  await page.waitForTimeout(3800); // floodlight flicker settles
+  // The boot is over when the CTA group, the last scoreboard-area part to enter, has finished its entrance.
+  // (Playwright's animations: "disabled" would also run the finite animations to their last frame; waiting
+  // for the real end makes the check say the show itself ends on Main's board.)
+  await page.evaluate(async () => {
+    const group = document.querySelector("a[href='/intro']")!.parentElement!.parentElement!;
+    await Promise.all(group.getAnimations().map((a) => a.finished));
+  });
   const ratio = await expectMatchesArtboard(page, "Main", {
     maxDiffRatio: 0.02,
     maskRects: [

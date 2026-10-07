@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ElementType, ReactNode } from "react";
+import type { CSSProperties, ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { PolymorphicProps } from "../lib/polymorphic";
 import { MonoLabel } from "../primitives/Text";
@@ -46,6 +46,8 @@ function Root({
 
 interface PartProps {
   className?: string;
+  /** For a part's own custom properties, e.g. the boot's `--d`. */
+  style?: CSSProperties;
   children: ReactNode;
 }
 
@@ -55,9 +57,10 @@ const HEADER: Record<ScoreboardSize, string> = {
   compact: "h-9.5 px-3.5 type-mono-label",
 };
 
-function Header({ className, children }: PartProps) {
+function Header({ className, style, children }: PartProps) {
   return (
     <div
+      style={style}
       className={cn(
         "flex shrink-0 items-center justify-between border-b border-board-line text-scout",
         HEADER[useContext(SizeContext)],
@@ -114,9 +117,12 @@ const SUBTITLE: Record<ScoreboardSize, string> = {
   compact: "pl-[0.38em] type-sub-sm",
 };
 
-function Subtitle({ className, children }: PartProps) {
+function Subtitle({ className, style, children }: PartProps) {
   return (
-    <span className={cn(SUBTITLE[useContext(SizeContext)], "text-volt glow-volt", className)}>
+    <span
+      style={style}
+      className={cn(SUBTITLE[useContext(SizeContext)], "text-volt glow-volt", className)}
+    >
       {children}
     </span>
   );
@@ -128,9 +134,10 @@ const FOOTER: Record<ScoreboardSize, string> = {
   compact: "h-12 grid-cols-2",
 };
 
-function Footer({ className, children }: PartProps) {
+function Footer({ className, style, children }: PartProps) {
   return (
     <div
+      style={style}
       className={cn(
         "grid shrink-0 border-t border-board-line",
         FOOTER[useContext(SizeContext)],
@@ -191,10 +198,19 @@ function FooterCell({
  * (animate-boot-scan) or a timeline runs it. band: Main's 90px-high band sweeping down. bar: the Intro's
  * 90px-wide bar leading the entrance, between the header and footer.
  */
-function Scan({ variant, className }: { variant: "band" | "bar"; className?: string }) {
+function Scan({
+  variant,
+  className,
+  style,
+}: {
+  variant: "band" | "bar";
+  className?: string;
+  style?: CSSProperties;
+}) {
   return (
     <div
       aria-hidden="true"
+      style={style}
       data-part="scan"
       className={cn(
         "pointer-events-none absolute opacity-0",
