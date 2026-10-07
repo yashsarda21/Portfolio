@@ -7,11 +7,13 @@ export function CrowdTier({
   curved = false,
   "data-part": part,
   className,
+  style,
 }: {
   alpha?: number;
   curved?: boolean;
   "data-part"?: string;
   className?: string;
+  style?: CSSProperties;
 }) {
   return (
     <div
@@ -22,7 +24,7 @@ export function CrowdTier({
         curved && "[border-radius:50%_50%_0_0/60%_60%_0_0]",
         className,
       )}
-      style={alpha === undefined ? undefined : ({ "--crowd-a": alpha } as CSSProperties)}
+      style={alpha === undefined ? style : ({ "--crowd-a": alpha, ...style } as CSSProperties)}
     />
   );
 }

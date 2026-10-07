@@ -8,9 +8,6 @@ function firstRenderedHeading(): HTMLElement | undefined {
   );
 }
 
-/** How long a heading that is still hidden (the Landing's name, until its turn in the boot) is waited for. */
-const HIDDEN_HEADING_WAIT_MS = 8000;
-
 const HEADING = "h1, h2, h3, h4, h5, h6";
 
 /** The element a URL hash points at, if the page has one. */
@@ -56,15 +53,6 @@ export function RouteAnnouncer() {
         if (landing) {
           landing.setAttribute("tabindex", "-1");
           landing.focus({ preventScroll: true });
-          // A hidden element cannot take focus: keep trying until it shows, unless the visitor moved on.
-          const until = performance.now() + HIDDEN_HEADING_WAIT_MS;
-          const retry = () => {
-            const idle = document.activeElement === document.body || !document.activeElement;
-            if (document.activeElement === landing || !idle || performance.now() > until) return;
-            landing.focus({ preventScroll: true });
-            later(retry);
-          };
-          later(retry);
         }
         // Clear first so two pages with the same title still re-announce.
         setMessage("");

@@ -20,8 +20,8 @@ import type { LandingView } from "./view";
 
 /**
  * The Landing. From 1200px the stage plays Main's floodlight boot in CSS (L3): every part carries its beat as
- * `--d`, and a part that has not appeared yet is `visibility: hidden`, so nothing unseen takes focus. The
- * scenery's own beats live in ArenaBackdrop (boot). The HUD is there from the first frame.
+ * `--d`, and a control that has not appeared yet is `visibility: hidden`, so nothing unseen takes focus. The
+ * scenery (backdrop and the letterbox sky) enters on the same table. The HUD is there from the first frame.
  */
 export function LandingPage({ view }: { view: LandingView }) {
   const audio = useAudio();
@@ -30,7 +30,12 @@ export function LandingPage({ view }: { view: LandingView }) {
   // One <main>; the stage (its title is the h1) and the phone/tablet column are mutually exclusive by breakpoint.
   return (
     <main id="main">
-      <Stage from="lg" backdrop={<ArenaBackdrop bleed boot />}>
+      <Stage
+        from="lg"
+        backdrop={<ArenaBackdrop bleed boot={beat} />}
+        skyClassName="animate-boot-fade"
+        skyStyle={bootDelay(beat.sky)}
+      >
         <HUD
           className="absolute inset-x-0 top-0"
           left={<BrandLockup mark={view.brand.mark} label={view.brand.label} />}

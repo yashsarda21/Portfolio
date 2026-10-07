@@ -20,6 +20,16 @@ describe("Stage", () => {
     const { container } = render(<Stage from={null}>x</Stage>);
     expect(scene(container).className).not.toMatch(/max-(md|lg):hidden/);
   });
+  it("passes a class and style to the letterbox sky, so a page can boot it", () => {
+    const { container } = render(
+      <Stage skyClassName="animate-boot-fade" skyStyle={{ "--d": "2.2s" } as React.CSSProperties}>
+        x
+      </Stage>,
+    );
+    const sky = container.querySelector("[data-transition-scene] > .scene-sky") as HTMLElement;
+    expect(sky).toHaveClass("animate-boot-fade");
+    expect(sky.style.getPropertyValue("--d")).toBe("2.2s");
+  });
   it("sets the 11px mono floor on the stage", () => {
     const { container } = render(<Stage>x</Stage>);
     expect(container.querySelector("[data-stage]")).toHaveClass(

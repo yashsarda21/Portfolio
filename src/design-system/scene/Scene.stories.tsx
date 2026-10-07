@@ -3,7 +3,7 @@ import turnStrip from "@/assets/rig/turn_0.webp";
 import { framePosition } from "@/lib/sprite";
 import { LiveDot } from "../broadcast/LiveDot";
 import { Scoreboard } from "../broadcast/Scoreboard";
-import { ArenaBackdrop } from "./ArenaBackdrop";
+import { ArenaBackdrop, type BootBeats } from "./ArenaBackdrop";
 import { CrowdTier } from "./CrowdTier";
 import { CONE_REGIONS } from "./cones";
 import { Dust } from "./Dust";
@@ -57,11 +57,22 @@ export const Venues: StoryObj = {
   ),
 };
 
-/** The Landing scene with the floodlight boot played to its end (every bank flickered on). */
+/** Main's beats for the scene (seconds). The Landing page owns the real table; this is its copy for the story. */
+const LANDING_BOOT: BootBeats = {
+  crowd: 0.3,
+  coneL: 1,
+  coneR: 1.5,
+  sky: 2.2,
+  field: 2.4,
+  pitch: 2.6,
+  banks: [0.6, 1.1, 1.6, 2],
+};
+
+/** The Landing scene with the floodlight boot played to its end (every layer in, every bank flickered on). */
 export const LandingBackdrop: StoryObj = {
   render: () => (
     <div className="relative h-225 w-360">
-      <ArenaBackdrop boot />
+      <ArenaBackdrop boot={LANDING_BOOT} />
     </div>
   ),
   play: () => {
@@ -73,7 +84,7 @@ export const LandingBackdrop: StoryObj = {
 export const IntroBackdrop: StoryObj = {
   render: () => (
     <div className="relative h-225 w-360">
-      <ArenaBackdrop layout="intro" boot={false} />
+      <ArenaBackdrop layout="intro" />
     </div>
   ),
 };
@@ -82,7 +93,7 @@ export const IntroBackdrop: StoryObj = {
 export const DustInBeams: StoryObj = {
   render: () => (
     <div className="relative h-225 w-360">
-      <ArenaBackdrop boot={false} dust />
+      <ArenaBackdrop dust />
     </div>
   ),
 };

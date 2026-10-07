@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { SkyGlow } from "../scene/SkyGlow";
 
@@ -11,11 +11,21 @@ interface StageProps {
    */
   from?: "md" | "lg" | null;
   className?: string;
+  /** Class and style for the full-bleed letterbox sky, so a page can boot it with the rest of the scene. */
+  skyClassName?: string;
+  skyStyle?: CSSProperties;
   children: ReactNode;
 }
 
 /** Fixed 1440×900 design space scaled to fit the viewport; the scene bleeds into the letterbox (spec §4.4). */
-export function Stage({ backdrop, from = "md", className, children }: StageProps) {
+export function Stage({
+  backdrop,
+  from = "md",
+  className,
+  skyClassName,
+  skyStyle,
+  children,
+}: StageProps) {
   return (
     <div
       data-transition-scene
@@ -26,7 +36,7 @@ export function Stage({ backdrop, from = "md", className, children }: StageProps
         className,
       )}
     >
-      <SkyGlow />
+      <SkyGlow className={skyClassName} style={skyStyle} />
       <div
         data-stage
         className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-mono-min:calc(11px/var(--stage-scale,1))]"

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import { content, ui } from "@/content";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { prefetchGsap } from "@/lib/motion";
@@ -19,12 +19,25 @@ import { buildLandingView } from "./view";
 
 const view = buildLandingView(content, ui, ROUTES);
 
+/**
+ * True once this page session has played the whole boot (set when the commentary line is due, the last beat).
+ * Coming back to the Landing in the same session (back button, a logo link) then gets the cut-down, like a
+ * return visit. Set that late so a strict-mode double mount can never trip it.
+ */
+let bootPlayed = false;
+
 /** The route's screen: marks the visit, says the entrance line at its beat, wires the shortcuts, warms the intro. */
 export function LandingScreen() {
   const { say } = useCommentary();
   const audio = useAudio();
   const { go } = useArenaTransition();
   const desktop = useMediaQuery("(min-width: 1200px)");
+
+  // Before paint, so the animations start at the quick pace (the head script only knows about earlier visits).
+  useLayoutEffect(() => {
+    if (typeof window !== "undefined" && bootPlayed)
+      document.documentElement.setAttribute("data-return-visit", "");
+  }, []);
 
   useEffect(() => {
     // Seen: the next visit plays the cut-down (the head script reads this before first paint).
@@ -36,7 +49,10 @@ export function LandingScreen() {
   useEffect(() => {
     // The pace is read here, not at render: it comes from the page's flags, which prerender does not have.
     const timer = window.setTimeout(
-      () => say(view.comm, { interrupt: true }),
+      () => {
+        bootPlayed = true;
+        say(view.comm, { interrupt: true });
+      },
       LANDING_BEATS.comm * landingPace() * 1000,
     );
     return () => window.clearTimeout(timer);

@@ -23,13 +23,18 @@ describe("entrance presets never leave a hidden part focusable", () => {
   it.each([
     ["fade-in", motion, "from"],
     ["rise-in", motion, "from"],
-    ["boot-name", motion, "0%"],
     ["boot-scan", motion, "0%"],
     ["bank-flicker", scene, "0%"],
   ])("%s: its first frame is visibility: hidden", (name, css, first) => {
     const body = keyframes(css, name);
     const frame = new RegExp(`${first}\\s*\\{[^}]*visibility:\\s*hidden`);
     expect(body).toMatch(frame);
+  });
+});
+
+describe("the name and subtitle stay in the page", () => {
+  it("boot-name does not hide its first frame: the page heading must stay readable and focusable during the boot", () => {
+    expect(keyframes(motion, "boot-name")).not.toMatch(/visibility/);
   });
 });
 

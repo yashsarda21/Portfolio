@@ -11,6 +11,8 @@ interface GlowProps {
   tone?: "sky" | "venue";
   "data-part"?: string;
   className?: string;
+  /** Extra custom properties (e.g. the boot's --d), merged over the glow's own. */
+  style?: CSSProperties;
 }
 
 export function SkyGlow({
@@ -22,6 +24,7 @@ export function SkyGlow({
   tone = "sky",
   "data-part": part,
   className,
+  style: extra,
 }: GlowProps) {
   const style = {
     "--sky-x": x,
@@ -29,6 +32,7 @@ export function SkyGlow({
     "--sky-w": w,
     "--sky-h": h,
     "--sky-a": alpha,
+    ...extra,
   } as CSSProperties;
   return (
     <div

@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import { cn } from "@/lib/cn";
 import { CONE_REGIONS } from "./cones";
 import { CrowdTier } from "./CrowdTier";
@@ -20,15 +20,29 @@ interface LayoutSpec {
   /** Cone classes. The numbers behind them are CONE_BOXES in cones.ts (Scene.test.tsx checks the match). */
   cones: { left: string; right: string };
   masts: ReadonlyArray<{ part: string; className: string }>;
-  /** Left to right. `turn` is the second the bank flickers on in the CSS boot; null where a timeline drives the banks (Intro). */
+  /** Left to right. The CSS boot's turn for each comes from the caller (BootBeats). */
   banks: ReadonlyArray<{
     part: string;
     size: NonNullable<ComponentProps<typeof FloodlightBank>["size"]>;
-    turn: number | null;
     className: string;
   }>;
   /** Give each bank a flare layer for a timeline to tween. */
   flare: boolean;
+}
+
+/**
+ * When each layer enters in the CSS boot, in seconds (the page multiplies by its --pace). Pass it as
+ * ArenaBackdrop's `boot`; Main's values live with the Landing (LANDING_BEATS).
+ */
+export interface BootBeats {
+  crowd: number;
+  coneL: number;
+  coneR: number;
+  sky: number;
+  field: number;
+  pitch: number;
+  /** Left to right: bank-1 .. bank-4. */
+  banks: readonly [number, number, number, number];
 }
 
 // Class strings stay literal so Tailwind sees them.
@@ -49,10 +63,10 @@ const LAYOUT = {
       { part: "mast-right", className: "top-29.5 right-37.5" },
     ],
     banks: [
-      { part: "bank-1", size: "lg", turn: 0.6, className: "top-17.5 left-24" },
-      { part: "bank-2", size: "sm", turn: 1.1, className: "top-10 left-89" },
-      { part: "bank-3", size: "sm", turn: 1.6, className: "top-10 right-89" },
-      { part: "bank-4", size: "lg", turn: 2, className: "top-17.5 right-24" },
+      { part: "bank-1", size: "lg", className: "top-17.5 left-24" },
+      { part: "bank-2", size: "sm", className: "top-10 left-89" },
+      { part: "bank-3", size: "sm", className: "top-10 right-89" },
+      { part: "bank-4", size: "lg", className: "top-17.5 right-24" },
     ],
     flare: false,
   },
@@ -69,10 +83,10 @@ const LAYOUT = {
     },
     masts: [],
     banks: [
-      { part: "bank-1", size: "lg-flat", turn: null, className: "top-8.5 left-20" },
-      { part: "bank-2", size: "sm-flat", turn: null, className: "top-5 left-95" },
-      { part: "bank-3", size: "sm-flat", turn: null, className: "top-5 right-95" },
-      { part: "bank-4", size: "lg-flat", turn: null, className: "top-8.5 right-20" },
+      { part: "bank-1", size: "lg-flat", className: "top-8.5 left-20" },
+      { part: "bank-2", size: "sm-flat", className: "top-5 left-95" },
+      { part: "bank-3", size: "sm-flat", className: "top-5 right-95" },
+      { part: "bank-4", size: "lg-flat", className: "top-8.5 right-20" },
     ],
     flare: true,
   },
@@ -86,7 +100,7 @@ const LAYOUT = {
  */
 export function ArenaBackdrop({
   layout = "landing",
-  boot = true,
+  boot,
   dust = false,
   venue = "turf",
   bleed = false,
@@ -94,8 +108,8 @@ export function ArenaBackdrop({
 }: {
   /** "landing": Main's positions. "intro": the Intro artboard's (lower crowd and field, wider cones, flat banks with flare layers, no pitch glow or masts). */
   layout?: "landing" | "intro";
-  /** true: the banks flicker on by CSS, each at its own turn, at the page's --pace. false: they stand lit and a timeline drives them. */
-  boot?: boolean;
+  /** The CSS boot: every layer fades in at its beat and the banks flicker on, at the page's --pace (the masts have no entrance). Omit it and the scene stands lit for a timeline to drive. */
+  boot?: BootBeats;
   /** Dust drifting in the beams (desktop, motion allowed). */
   dust?: boolean;
   /** Re-tints every layer through the data-venue token overrides. */
@@ -105,6 +119,10 @@ export function ArenaBackdrop({
   className?: string;
 }) {
   const spec: LayoutSpec = LAYOUT[layout];
+  // A layer's boot: the shared fade class and its turn as --d (undefined without a boot).
+  const fade = boot ? "animate-boot-fade" : undefined;
+  const at = (beat: number | undefined): CSSProperties | undefined =>
+    boot && beat !== undefined ? ({ "--d": `${beat}s` } as CSSProperties) : undefined;
   return (
     <div
       aria-hidden="true"
@@ -116,38 +134,48 @@ export function ArenaBackdrop({
         className,
       )}
     >
-      <SkyGlow data-part="sky" alpha={spec.skyAlpha} />
-      <CrowdTier data-part="crowd" curved className={spec.crowd} />
+      <SkyGlow data-part="sky" alpha={spec.skyAlpha} className={fade} style={at(boot?.sky)} />
+      <CrowdTier
+        data-part="crowd"
+        curved
+        className={cn(spec.crowd, fade)}
+        style={at(boot?.crowd)}
+      />
       <Field
         data-part="field"
         tilt={spec.field.tilt}
         ovalClassName={spec.field.oval}
-        className={spec.field.className}
+        className={cn(spec.field.className, fade)}
+        style={at(boot?.field)}
       />
-      {spec.pitch && <PitchGlow data-part="pitch" className={spec.pitch} />}
+      {spec.pitch && (
+        <PitchGlow data-part="pitch" className={cn(spec.pitch, fade)} style={at(boot?.pitch)} />
+      )}
       <LightCone
         data-part="cone-left"
         side="left"
         alpha={spec.coneAlpha}
-        className={spec.cones.left}
+        className={cn(spec.cones.left, fade)}
+        style={at(boot?.coneL)}
       />
       <LightCone
         data-part="cone-right"
         side="right"
         alpha={spec.coneAlpha}
-        className={spec.cones.right}
+        className={cn(spec.cones.right, fade)}
+        style={at(boot?.coneR)}
       />
       {dust && <Dust regions={CONE_REGIONS[layout]} />}
       {spec.masts.map((mast) => (
         <FloodlightMast key={mast.part} data-part={mast.part} className={mast.className} />
       ))}
-      {spec.banks.map((bank) => (
+      {spec.banks.map((bank, i) => (
         <FloodlightBank
           key={bank.part}
           data-part={bank.part}
           size={bank.size}
           flare={spec.flare}
-          flickerDelay={boot ? (bank.turn ?? undefined) : undefined}
+          flickerDelay={boot?.banks[i]}
           className={bank.className}
         />
       ))}

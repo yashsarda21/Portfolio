@@ -58,7 +58,7 @@ export { FloodlightMast } from "./scene/FloodlightMast";
 export { Field } from "./scene/Field";
 export { PitchGlow } from "./scene/PitchGlow";
 export { ShowcaseBackdrop } from "./scene/ShowcaseBackdrop";
-export { ArenaBackdrop } from "./scene/ArenaBackdrop";
+export { ArenaBackdrop, type BootBeats } from "./scene/ArenaBackdrop";
 export { Dust } from "./scene/Dust";
 export { CONE_REGIONS } from "./scene/cones";
 export type { Polygon } from "./scene/cones";

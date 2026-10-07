@@ -68,7 +68,7 @@ test("Intro cones: each beam's top edge spans its large flat bank (D-1)", async 
   await expectApexOnBank(page, "scene-stadium--intro-backdrop");
 });
 
-test("Boot presets: hidden before their turn, and the subtitle settles on its own .42em", async ({
+test("Boot presets: the name waits faded out (still in the page), and the subtitle settles on its own .42em", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Main is a 1440×900 board");
@@ -81,16 +81,18 @@ test("Boot presets: hidden before their turn, and the subtitle settles on its ow
     .toBe("12.6px");
   expect(await title.evaluate((el) => getComputedStyle(el).visibility)).toBe("visible");
   expect(await title.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
-  // Replayed from the start, a part waiting for its turn is hidden (so it cannot take focus).
-  const hidden = await page.evaluate(() => {
+  // Replayed from the start, the name waits at opacity 0 but stays visible to the page (it is not interactive,
+  // and the page heading must stay readable and focusable during the boot).
+  const waiting = await page.evaluate(() => {
     const el = document.querySelector<HTMLElement>('[data-boot="name"]')!;
     const animation = el.getAnimations()[0]!;
     animation.cancel();
     animation.currentTime = 0;
     animation.pause();
-    return getComputedStyle(el).visibility;
+    const style = getComputedStyle(el);
+    return { visibility: style.visibility, opacity: style.opacity };
   });
-  expect(hidden).toBe("hidden");
+  expect(waiting).toEqual({ visibility: "visible", opacity: "0" });
 });
 
 test("Boot presets: a return visit runs in a quarter of the time", async ({ page }, testInfo) => {

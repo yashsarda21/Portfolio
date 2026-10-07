@@ -7,18 +7,21 @@ export function Field({
   ovalClassName,
   "data-part": part,
   className,
+  style,
 }: {
   tilt?: number;
   /** The oval's size: 1240x760 by default (`h-190 w-310`); the Intro's is 1300x700. */
   ovalClassName?: string;
   "data-part"?: string;
   className?: string;
+  style?: CSSProperties;
 }) {
   return (
     <div
       aria-hidden="true"
       data-part={part}
       className={cn("pointer-events-none absolute inset-x-0 [perspective:900px]", className)}
+      style={style}
     >
       <div
         className={cn("mx-auto h-190 w-310 scene-field", ovalClassName)}

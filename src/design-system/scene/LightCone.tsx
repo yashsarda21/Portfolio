@@ -12,18 +12,20 @@ export function LightCone({
   alpha = 0.16,
   "data-part": part,
   className,
+  style,
 }: {
   side: keyof typeof SIDE;
   alpha?: number;
   "data-part"?: string;
   className?: string;
+  style?: CSSProperties;
 }) {
   return (
     <div
       aria-hidden="true"
       data-part={part}
       className={cn("pointer-events-none absolute scene-cone", SIDE[side], className)}
-      style={{ "--cone-a": alpha } as CSSProperties}
+      style={{ "--cone-a": alpha, ...style } as CSSProperties}
     />
   );
 }

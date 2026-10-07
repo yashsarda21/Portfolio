@@ -104,13 +104,14 @@
 
 /* The name's lock-in: blur and wide tracking settle into the element's own tracking (no `to` letter-spacing,
    so the end is whatever the element is set to: .02em for the name, .42em for the subtitle). Start the
-   tracking at --boot-from (.3em; the subtitle sets .7em). */
+   tracking at --boot-from (.3em; the subtitle sets .7em). No visibility:hidden here, unlike the fade, rise,
+   scan and bank presets: the name and subtitle are not interactive, and the page heading must stay readable
+   and focusable from the first frame (a screen reader hears the name at once; focus can land on it). */
 @keyframes boot-name {
   0% {
     opacity: 0;
     filter: blur(10px);
     letter-spacing: var(--boot-from, 0.3em);
-    visibility: hidden;
   }
   55% {
     opacity: 0.7;

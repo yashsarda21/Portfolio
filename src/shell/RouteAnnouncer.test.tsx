@@ -92,48 +92,6 @@ describe("RouteAnnouncer (strict mode)", () => {
     expect(document.querySelector("[data-hidden]")).not.toHaveFocus();
   });
 
-  describe("a heading that is hidden at first (the Landing's boot)", () => {
-    /** Focus does nothing on the heading until `shown` flips, as for visibility: hidden. */
-    function hideHeading(shown: { value: boolean }) {
-      const real = HTMLElement.prototype.focus;
-      vi.spyOn(HTMLElement.prototype, "focus").mockImplementation(function (
-        this: HTMLElement,
-        ...args
-      ) {
-        if (this.tagName === "H1" && this.textContent === "Next" && !shown.value) return;
-        real.apply(this, args);
-      });
-    }
-
-    it("takes focus once it shows", async () => {
-      const shown = { value: false };
-      hideHeading(shown);
-      const router = setup();
-      await frames(6);
-      await act(() => router.navigate("/next"));
-      await frames(10);
-      expect(document.body).toHaveFocus();
-      shown.value = true;
-      await waitFor(() => expect(screen.getByRole("heading", { name: "Next" })).toHaveFocus());
-    });
-
-    it("does not pull focus from a visitor who has moved on", async () => {
-      const shown = { value: false };
-      hideHeading(shown);
-      const router = setup();
-      await frames(6);
-      await act(() => router.navigate("/next"));
-      await frames(4);
-      const other = document.createElement("button");
-      document.body.append(other);
-      other.focus();
-      shown.value = true;
-      await frames(10);
-      expect(other).toHaveFocus();
-      other.remove();
-    });
-  });
-
   describe("with a hash", () => {
     it("focuses the target section's heading, not the page h1", async () => {
       const router = setup();

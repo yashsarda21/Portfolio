@@ -14,6 +14,14 @@ const SILENT_VIDEO = "video[data-silent]";
 
 /** Fails the test with a readable list if axe finds any WCAG A/AA violation. */
 export async function expectNoA11yViolations(page: Page): Promise<void> {
+  // The commentary line eases in (translucent while it does), and axe cannot judge text mid-fade: let it land.
+  await page.evaluate(async () => {
+    const running = [...document.querySelectorAll("[data-commentary-bar]")].flatMap((bar) =>
+      bar.getAnimations({ subtree: true }),
+    );
+    const cap = new Promise((resolve) => setTimeout(resolve, 2000));
+    await Promise.race([Promise.allSettled(running.map((a) => a.finished)), cap]);
+  });
   const results = await new AxeBuilder({ page }).withTags(TAGS).exclude(SILENT_VIDEO).analyze();
   const silent =
     (await page.locator(SILENT_VIDEO).count()) > 0

@@ -74,7 +74,7 @@ describe("ArenaBackdrop layouts", () => {
   });
 
   it("intro draws four flat banks, each with a flare layer, and no pitch or masts", () => {
-    const { container } = render(<ArenaBackdrop layout="intro" boot={false} />);
+    const { container } = render(<ArenaBackdrop layout="intro" />);
     const root = container.firstElementChild as HTMLElement;
     expect(root).toHaveAttribute("data-layout", "intro");
     for (const name of PARTS) expect(part(root, name), name).toHaveLength(1);
@@ -111,27 +111,41 @@ describe("ArenaBackdrop layouts", () => {
     }
   });
 
-  it("boot adds the CSS flicker with a delay per bank; boot={false} leaves the banks to a timeline", () => {
-    const { container, rerender } = render(<ArenaBackdrop boot />);
+  const BEATS = {
+    crowd: 0.3,
+    coneL: 1,
+    coneR: 1.5,
+    sky: 2.2,
+    field: 2.4,
+    pitch: 2.6,
+    banks: [0.6, 1.1, 1.6, 2],
+  } as const;
+
+  it("given boot beats, every layer fades in at its own beat and each bank flickers at its own", () => {
+    const { container } = render(<ArenaBackdrop boot={BEATS} />);
     const root = container.firstElementChild as HTMLElement;
-    const banks = () => [1, 2, 3, 4].map((n) => part(root, `bank-${n}`)[0] as HTMLElement);
-    expect(banks().map((b) => b.style.getPropertyValue("--d"))).toEqual([
-      "0.6s",
-      "1.1s",
-      "1.6s",
-      "2s",
+    const d = (name: string) => (part(root, name)[0] as HTMLElement).style.getPropertyValue("--d");
+    expect(["sky", "crowd", "cone-left", "cone-right", "field", "pitch"].map(d)).toEqual([
+      "2.2s",
+      "0.3s",
+      "1s",
+      "1.5s",
+      "2.4s",
+      "2.6s",
     ]);
-    for (const bank of banks()) expect(bank).toHaveClass("animate-bank-flicker");
-    rerender(<ArenaBackdrop boot={false} />);
-    for (const bank of banks()) {
-      expect(bank).not.toHaveClass("animate-bank-flicker");
-      expect(bank.style.getPropertyValue("--d")).toBe("");
-    }
+    for (const name of ["sky", "crowd", "cone-left", "cone-right", "field", "pitch"])
+      expect(part(root, name)[0], name).toHaveClass("animate-boot-fade");
+    expect([1, 2, 3, 4].map((n) => d(`bank-${n}`))).toEqual(["0.6s", "1.1s", "1.6s", "2s"]);
+    expect(root.querySelectorAll(".animate-bank-flicker")).toHaveLength(4);
+    // The masts have no entrance in Main.
+    for (const mast of ["mast-left", "mast-right"])
+      expect(part(root, mast)[0]).not.toHaveClass("animate-boot-fade");
   });
 
-  it("boot is on by default (today's Landing flicker until Task 3 passes it explicitly)", () => {
+  it("without boot beats the scene stands lit for a timeline to drive", () => {
     const { container } = render(<ArenaBackdrop />);
-    expect(container.querySelectorAll(".animate-bank-flicker")).toHaveLength(4);
+    expect(container.querySelectorAll(".animate-boot-fade, .animate-bank-flicker")).toHaveLength(0);
+    expect(container.querySelectorAll("[style*='--d']")).toHaveLength(0);
   });
 
   it("every scene layer is decorative", () => {

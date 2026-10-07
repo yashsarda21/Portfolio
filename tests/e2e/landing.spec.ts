@@ -49,7 +49,7 @@ async function tabStops(page: Page, count: number): Promise<string[]> {
 }
 
 test.describe("boot order", () => {
-  test("at 0.2 s the name is hidden and the calls to action cannot take focus", async ({
+  test("at 0.2 s the name is faded out and the calls to action cannot take focus", async ({
     page,
   }) => {
     await page.goto("/");
@@ -57,7 +57,11 @@ test.describe("boot order", () => {
     await seekBoot(page, 200);
     const visibility = (sel: string) =>
       page.evaluate((s) => getComputedStyle(document.querySelector(s)!).visibility, sel);
-    expect(await visibility("h1")).toBe("hidden");
+    // The name is not interactive: it stays in the page (readable, focusable) and only fades in.
+    expect(await visibility("h1")).toBe("visible");
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector("h1")!).opacity)).toBe(
+      "0",
+    );
     expect(await visibility("a[href='/intro']")).toBe("hidden");
     expect(await visibility("a[href='/scout']")).toBe("hidden");
 
@@ -65,6 +69,36 @@ test.describe("boot order", () => {
     expect(stops.join(" | ")).toContain(ui.hud.skipIntro);
     expect(stops.join(" | ")).not.toContain(ui.landing.enter);
     expect(stops.join(" | ")).not.toContain(ui.landing.view);
+  });
+
+  test("the scenery enters on Main's beats: dark at 0.5 s, fully lit at the end", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await waitForHydration(page);
+    const opacity = (part: string) =>
+      page.evaluate(
+        (p) => Number(getComputedStyle(document.querySelector(`[data-part="${p}"]`)!).opacity),
+        part,
+      );
+    const letterbox = () =>
+      page.evaluate(() =>
+        Number(
+          getComputedStyle(document.querySelector("[data-transition-scene] > .scene-sky")!).opacity,
+        ),
+      );
+    await seekBoot(page, 500);
+    // Only the crowd (.3 s) has begun; the sky, field and pitch wait until 2.2 s and later.
+    for (const part of ["sky", "field", "pitch", "cone-left", "cone-right"])
+      expect(await opacity(part), part).toBeLessThan(0.1);
+    expect(await letterbox()).toBeLessThan(0.1);
+    // The crowd is mid-fade at 0.5 s (.3 s delay, 1.8 s ease-out).
+    expect(await opacity("crowd")).toBeLessThan(0.5);
+    // At 6 s every layer has finished.
+    await seekBoot(page, 6000);
+    for (const part of ["sky", "field", "pitch", "cone-left", "cone-right", "crowd"])
+      expect(await opacity(part), part).toBe(1);
+    expect(await letterbox()).toBe(1);
   });
 
   test("after the boot, Tab reaches both calls to action", async ({ page }) => {
@@ -100,6 +134,29 @@ test.describe("return visit", () => {
     await enter(page).focus();
     await expect(enter(page)).toBeFocused();
     await expect(quick(page)).toBeVisible();
+  });
+
+  test("coming back in the same session plays the cut-down too", async ({ page }) => {
+    await page.goto("/");
+    await waitForHydration(page);
+    await bootDone(page);
+    // The commentary line is the last beat; it marks the boot as played.
+    await expect(page.locator("[data-commentary-bar]")).toBeVisible();
+    await quick(page).click();
+    await expect(page).toHaveURL("/scout");
+    await page.goBack();
+    await expect(page).toHaveURL("/");
+    await expect(page.locator("html")).toHaveAttribute("data-return-visit", "");
+    const end = await page.evaluate(() => {
+      const group = document.querySelector("a[href='/intro']")!.parentElement!.parentElement!;
+      return Math.max(
+        ...group.getAnimations().map((a) => Number(a.effect!.getComputedTiming().endTime)),
+      );
+    });
+    expect(end).toBeLessThanOrEqual(1600);
+    await bootDone(page);
+    await enter(page).focus();
+    await expect(enter(page)).toBeFocused();
   });
 
   test("the first visit marks the browser, so the next one is quick", async ({ page }) => {
