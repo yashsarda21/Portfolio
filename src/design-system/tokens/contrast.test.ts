@@ -170,3 +170,23 @@ describe("trophy zone text contrast (WCAG AA 4.5:1)", () => {
     }
   }
 });
+
+// The Player Card: text on the three stops of its 160deg gradient, and in the stat cells (inset).
+describe("player card text contrast (WCAG AA 4.5:1)", () => {
+  const cardStops: Record<string, Rgb> = {
+    "stand-hi (card top)": ref("stand-hi"),
+    "stand-3 (card middle)": ref("stand-3"),
+    "card-end (card foot)": ref("card-end"),
+    "inset (stat cell)": ref("stand-2"),
+  };
+  for (const [bgName, bg] of Object.entries(cardStops)) {
+    for (const text of ["floodlight", "text-2", "scout-grey", "dim", "volt"] as const) {
+      it(`${text} on ${bgName}`, () => {
+        expect(contrast(ref(text), bg)).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+  }
+  it("volt-ink-2 on volt (the primary action row's sub-line)", () => {
+    expect(contrast(ref("volt-ink-2"), ref("volt"))).toBeGreaterThanOrEqual(4.5);
+  });
+});

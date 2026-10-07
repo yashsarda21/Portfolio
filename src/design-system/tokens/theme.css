@@ -14,6 +14,7 @@
   --ease-*: initial;
   --animate-*: initial;
   --blur-*: initial;
+  --perspective-*: initial;
   --breakpoint-*: initial;
 
   --breakpoint-md: 48rem; /* 768 */
@@ -35,6 +36,9 @@
   --ease-absorb: cubic-bezier(0.7, 0, 0.84, 0);
 
   --blur-beam: 6px;
+
+  /* How far the viewer stands from a 3D card: the Player Card's flip and tilt. */
+  --perspective-card: 1400px;
 }
 
 @theme inline {
@@ -48,6 +52,7 @@
   --color-inset: var(--surface-inset);
   --color-stand-3: var(--ref-stand-3);
   --color-stand-hi: var(--ref-stand-hi);
+  --color-card-end: var(--ref-card-end);
   --color-fixture: var(--ref-fixture);
   --color-plinth: var(--ref-plinth);
   --color-cabinet-hi: var(--ref-cabinet-hi);

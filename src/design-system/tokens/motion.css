@@ -118,3 +118,35 @@
     animation: none;
   }
 }
+
+/* Player Card presets. The card hovers (rotateY -12 to -8, rotateX 5 to 3, up 8px) every 6s; a sheen sweeps
+   across it every 4.5s (pair with card-sheen). Reduced motion: the card stands flat and the sheen is gone. */
+@keyframes card-float {
+  0%,
+  100% {
+    transform: rotateY(-12deg) rotateX(5deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(-8deg) rotateX(3deg) translateY(-8px);
+  }
+}
+@keyframes sheen {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+@utility animate-card-float {
+  animation: card-float 6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@utility animate-sheen {
+  animation: sheen 4.5s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

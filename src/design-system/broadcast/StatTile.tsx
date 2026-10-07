@@ -16,13 +16,15 @@ export function parseStat(value: string) {
   };
 }
 
-const tile = cva("flex flex-col gap-0.5", {
+const tile = cva("flex", {
   variants: {
     tone: {
       // On the phone, tiles share a full-width row (the page title's aside) and the values step down a size.
-      glass: "glass w-52 px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
-      volt: "w-51.5 bg-volt px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
-      cell: "bg-inset p-2.5",
+      glass:
+        "glass flex-col gap-0.5 w-52 px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
+      volt: "flex-col gap-0.5 w-51.5 bg-volt px-4.5 py-3.5 max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:px-3",
+      // A cell of the card's stat grid: label left, value right on one baseline, as drawn.
+      cell: "flex-row items-baseline justify-between bg-inset p-2.5",
     },
   },
   defaultVariants: { tone: "glass" },
@@ -30,12 +32,12 @@ const tile = cva("flex flex-col gap-0.5", {
 const LABEL = {
   glass: "type-mono-round text-scout",
   volt: "type-mono-round text-volt-ink-2",
-  cell: "type-mono-xs text-scout",
+  cell: "type-mono-note text-scout",
 } as const;
 const VALUE = {
   glass: "type-stat text-floodlight max-md:type-d4s",
   volt: "type-stat text-volt-ink max-md:type-d4s",
-  cell: "type-d4s text-floodlight",
+  cell: "type-title-sm leading-auto text-floodlight",
 } as const;
 
 interface StatTileProps {
@@ -43,6 +45,8 @@ interface StatTileProps {
   value: string;
   tone?: "glass" | "volt" | "cell";
   countUp?: boolean;
+  /** cell tone: paint the value volt (the card's headline stats). */
+  accent?: boolean;
   className?: string;
 }
 
@@ -52,6 +56,7 @@ export function StatTile({
   value,
   tone = "glass",
   countUp = false,
+  accent = false,
   className,
 }: StatTileProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -66,7 +71,7 @@ export function StatTile({
   return (
     <div ref={ref} className={cn(tile({ tone }), className)}>
       <span className={LABEL[tone]}>{label}</span>
-      <span className={cn(VALUE[tone], "tabular-nums")}>
+      <span className={cn(VALUE[tone], accent && "text-volt", "tabular-nums")}>
         <span className="sr-only">{value}</span>
         <span aria-hidden="true">{display}</span>
       </span>

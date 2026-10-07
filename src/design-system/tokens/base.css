@@ -653,6 +653,51 @@
   font-size: 12px;
   line-height: 1.6;
 }
+/* The Player Card and Team Up (artboards Player-Card, Team-Up). */
+/* The position on the card front ("SE"): 64px at .85. */
+@utility type-card-position {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 0.85;
+  text-transform: uppercase;
+}
+/* The name on the card front: 52px at .02em on a .9 line (type-d2s is the untracked 52px). */
+@utility type-card-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 52px;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* The volt action row's title (VIEW PLAYER CARD): 24px at .1em on the font's own line box. */
+@utility type-action-lg {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 24px;
+  line-height: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* A glass action row's title (DOWNLOAD PDF): 20px at .1em on the font's own line box. */
+@utility type-action {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* A direct-line card's title (EMAIL, LINKEDIN): 20px at .08em on the font's own line box. */
+@utility type-channel {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {

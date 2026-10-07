@@ -15,6 +15,7 @@
   --ref-stand-2: #0b0f14;
   --ref-stand-3: #0a0e13;
   --ref-stand-hi: #141b23;
+  --ref-card-end: #11160e; /* the Player Card's gradient foot: a green-tinted black (160deg, stand-hi to stand-3 to this) */
   --ref-fixture: #1a2027;
   --ref-plinth: #13171c;
   --ref-cabinet-hi: #0a0c10; /* the Trophy Room cabinet: top and bottom of its 180deg ground */
@@ -69,6 +70,7 @@
   --rgb-crowd: 214 224 236;
   --rgb-warm: 255 228 184;
   --rgb-spot: 255 236 200;
+  --rgb-sheen: 140 200 255; /* the cool edge of the Player Card's sheen */
   --rgb-volt: 215 255 63;
   --rgb-white: 255 255 255;
   --rgb-ground: 5 7 10;

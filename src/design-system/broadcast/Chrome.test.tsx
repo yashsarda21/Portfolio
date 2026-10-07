@@ -74,6 +74,13 @@ describe("broadcast chrome", () => {
     expect(screen.getByText("Still not out.")).toHaveClass("type-comm", "glass");
   });
 
+  it("the inline CommentaryBar line is 15px italic on the font's own line box (Team Up)", () => {
+    render(<CommentaryBar tag="COMM" variant="inline" line="I'll serve first." />);
+    const line = screen.getByText("I'll serve first.");
+    expect(line).toHaveClass("type-body-md", "italic", "leading-auto", "bg-panel");
+    expect(line).not.toHaveClass("type-comm");
+  });
+
   it("HUD is a banner landmark with three slots", () => {
     render(<HUD left={<span>L</span>} center={<span>C</span>} right={<span>R</span>} fade />);
     const banner = screen.getByRole("banner");

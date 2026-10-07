@@ -238,6 +238,19 @@
   background: radial-gradient(ellipse at 50% 100%, rgb(var(--rgb-volt) / 0.14), transparent 70%);
 }
 
+/* The Player Card's sheen: a slanted band of light, 250% wide so animate-sheen can sweep it across the face. */
+@utility card-sheen {
+  background-image: linear-gradient(
+    105deg,
+    rgb(var(--rgb-white) / 0) 35%,
+    rgb(var(--rgb-volt) / 0.1) 45%,
+    rgb(var(--rgb-white) / 0.18) 50%,
+    rgb(var(--rgb-sheen) / 0.08) 55%,
+    rgb(var(--rgb-white) / 0) 65%
+  );
+  background-size: 250% 100%;
+}
+
 /* The head shot's lower edge fades to nothing (Attributes and Player Card portraits). */
 @utility portrait-fade {
   -webkit-mask-image: linear-gradient(180deg, #000 75%, transparent 100%);

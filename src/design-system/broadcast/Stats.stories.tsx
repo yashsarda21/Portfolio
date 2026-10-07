@@ -15,11 +15,20 @@ export const Tiles: StoryObj = {
         <StatTile label="PROBLEMS" value="750+" countUp />
         <StatTile label="CURRENT" value="NOT OUT" tone="volt" />
       </div>
-      <div className="grid w-100 grid-cols-3 gap-px bg-line">
-        <StatTile tone="cell" label="CGPA" value="8.94" />
-        <StatTile tone="cell" label="CET %ILE" value="99.5" />
-        <StatTile tone="cell" label="RECORDS" value="10K+" />
-      </div>
+    </div>
+  ),
+};
+
+/** The Player Card's stat cells at the card's inner width (352px): label left, value right, the first three volt. */
+export const CellGrid: StoryObj = {
+  render: () => (
+    <div className="grid w-88 grid-cols-3 gap-px border border-line bg-line">
+      <StatTile tone="cell" accent label="PROBLEMS" value="750+" />
+      <StatTile tone="cell" accent label="CGPA" value="8.94" />
+      <StatTile tone="cell" accent label="CET %ILE" value="99.5" />
+      <StatTile tone="cell" label="LISTS" value="200+" />
+      <StatTile tone="cell" label="RECORDS" value="10K+" />
+      <StatTile tone="cell" label="TESTS" value="75+" />
     </div>
   ),
 };

@@ -41,10 +41,13 @@ export function CommentaryBar({
         key={line}
         data-state={state}
         className={cn(
-          "flex animate-comm-in items-center type-comm text-text-1 transition duration-(--dur-hover) ease-follow",
+          "flex animate-comm-in items-center text-text-1 transition duration-(--dur-hover) ease-follow",
           // Switches the entrance off so it cannot override the exit transition.
           "data-[state=out]:-translate-x-3 data-[state=out]:animate-none data-[state=out]:opacity-0",
-          variant === "overlay" ? "glass px-4.5 py-2.5" : "bg-panel px-3.5 py-2.5",
+          // Inline, as drawn on Team Up: 15px italic on the font's own line box.
+          variant === "overlay"
+            ? "glass px-4.5 py-2.5 type-comm"
+            : "bg-panel px-3.5 py-2.5 type-body-md leading-auto italic",
         )}
       >
         {line}

@@ -17,6 +17,29 @@ describe("parseStat", () => {
   });
 });
 
+describe("StatTile cell", () => {
+  it("lays the label and value out in one row, baseline-aligned, as drawn", () => {
+    const { container } = render(<StatTile tone="cell" label="CGPA" value="8.94" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveClass("flex-row", "justify-between", "items-baseline", "p-2.5");
+    expect(root).not.toHaveClass("flex-col");
+    expect(root.children[0]).toHaveTextContent("CGPA");
+    expect(root.children[1]).toHaveTextContent("8.94");
+  });
+
+  it("accent paints the value volt", () => {
+    render(<StatTile tone="cell" accent label="CGPA" value="8.94" />);
+    expect(
+      screen.getByText("8.94", { selector: "[aria-hidden='true']" }).parentElement,
+    ).toHaveClass("text-volt");
+  });
+
+  it("the glass tile stays a column", () => {
+    const { container } = render(<StatTile label="PROBLEMS" value="750+" />);
+    expect(container.firstElementChild).toHaveClass("flex-col");
+  });
+});
+
 describe("StatTile count-up", () => {
   let observe: ReturnType<typeof vi.fn>;
   beforeEach(() => {

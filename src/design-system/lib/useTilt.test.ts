@@ -1,0 +1,109 @@
+import { act, renderHook, waitFor } from "@testing-library/react";
+import type { PointerEvent as ReactPointerEvent } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const setters: Record<string, ReturnType<typeof vi.fn>> = {};
+const quickTo = vi.fn((_el: unknown, prop: string) => (setters[prop] = vi.fn()));
+const killTweensOf = vi.fn();
+vi.mock("gsap", () => ({ gsap: { quickTo, killTweensOf } }));
+
+import { useTilt } from "./useTilt";
+
+function media({ fine, reduced }: { fine: boolean; reduced: boolean }) {
+  vi.stubGlobal("matchMedia", (q: string) => ({
+    matches: q.includes("pointer: fine") ? fine : q.includes("reduce") ? reduced : false,
+    media: q,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
+}
+
+/** A pointer event over a 400x640 card at the origin. */
+const at = (clientX: number, clientY: number, buttons = 0) =>
+  ({
+    clientX,
+    clientY,
+    buttons,
+    currentTarget: {
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 400, height: 640 }),
+    },
+  }) as unknown as ReactPointerEvent<HTMLElement>;
+
+function setup() {
+  const el = document.createElement("div");
+  return renderHook(() => useTilt({ current: el }, { max: 6, lift: 8 }));
+}
+
+describe("useTilt", () => {
+  beforeEach(() => {
+    quickTo.mockClear();
+    killTweensOf.mockClear();
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("does nothing without a fine pointer", async () => {
+    media({ fine: false, reduced: false });
+    const { result } = setup();
+    act(() => {
+      result.current.onPointerDown(at(100, 100, 1));
+      result.current.onPointerMove(at(300, 300, 1));
+    });
+    await Promise.resolve();
+    expect(quickTo).not.toHaveBeenCalled();
+    expect(result.current.dragging).toBe(false);
+  });
+
+  it("does nothing under reduced motion", async () => {
+    media({ fine: true, reduced: true });
+    const { result } = setup();
+    act(() => {
+      result.current.onPointerDown(at(100, 100, 1));
+      result.current.onPointerMove(at(300, 300, 1));
+    });
+    await Promise.resolve();
+    expect(quickTo).not.toHaveBeenCalled();
+    expect(result.current.dragging).toBe(false);
+  });
+
+  it("tilts toward the pointer (at most max degrees), lifts, and settles on leave", async () => {
+    media({ fine: true, reduced: false });
+    const { result } = setup();
+    act(() => result.current.onPointerMove(at(400, 320)));
+    await waitFor(() => expect(setters.rotationY).toHaveBeenCalledWith(6));
+    expect(setters.rotationX).toHaveBeenCalledWith(-0);
+    expect(setters.y).toHaveBeenCalledWith(-8);
+    act(() => result.current.onPointerLeave());
+    await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(0));
+    expect(setters.y).toHaveBeenLastCalledWith(0);
+  });
+
+  it("a press that moves 4px or less is a click, not a drag", () => {
+    media({ fine: true, reduced: false });
+    const { result } = setup();
+    act(() => {
+      result.current.onPointerDown(at(100, 100, 1));
+      result.current.onPointerMove(at(103, 102, 1));
+    });
+    expect(result.current.dragging).toBe(false);
+    expect(result.current.consumeDrag()).toBe(false);
+  });
+
+  it("a press that moves more than 4px is a drag, and the click after it is swallowed once", () => {
+    media({ fine: true, reduced: false });
+    const { result } = setup();
+    act(() => {
+      result.current.onPointerDown(at(100, 100, 1));
+      result.current.onPointerMove(at(110, 100, 1));
+    });
+    expect(result.current.dragging).toBe(true);
+    expect(result.current.consumeDrag()).toBe(true);
+    expect(result.current.consumeDrag()).toBe(false);
+  });
+
+  it("moving without a press never counts as a drag", () => {
+    media({ fine: true, reduced: false });
+    const { result } = setup();
+    act(() => result.current.onPointerMove(at(300, 300)));
+    expect(result.current.dragging).toBe(false);
+  });
+});
