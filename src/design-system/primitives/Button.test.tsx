@@ -131,8 +131,8 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveClass("h-13.5", "w-full", "type-btn-bar");
   });
 
-  it("has a form size: the 62px body with the 24px heavy label, full width on the phone", () => {
-    render(<Button size="form">SEND CHALLENGE</Button>);
+  it("has an ml size: the 62px body with the 24px heavy label, full width on the phone", () => {
+    render(<Button size="ml">SEND CHALLENGE</Button>);
     expect(screen.getByRole("button")).toHaveClass(
       "h-15.5",
       "px-10",

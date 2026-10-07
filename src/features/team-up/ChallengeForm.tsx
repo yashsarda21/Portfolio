@@ -187,7 +187,7 @@ export function ChallengeForm({
       <div className="flex items-center gap-5 max-md:flex-col max-md:items-stretch max-md:gap-4">
         <Button
           type="submit"
-          size="form"
+          size="ml"
           skew="desktop"
           glow={false}
           aria-disabled={sending || undefined}
@@ -198,7 +198,7 @@ export function ChallengeForm({
         <Text
           as="a"
           href={view.orEmail.href}
-          variant="mono-line"
+          variant="mono-date"
           tone="label"
           className="hover:text-floodlight"
         >

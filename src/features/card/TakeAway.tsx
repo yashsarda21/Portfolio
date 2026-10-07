@@ -79,7 +79,7 @@ export function TakeAway({
         <Text variant="mono-label" tone="label" leading="font">
           {note.label}
         </Text>
-        <Text as="p" variant="body-note" tone="secondary">
+        <Text as="p" variant="body-cell" tone="secondary">
           {note.text}
         </Text>
         <Text variant="mono-note" tone="dim">

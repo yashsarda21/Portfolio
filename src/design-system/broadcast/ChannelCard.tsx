@@ -36,7 +36,7 @@ export function ChannelCard<T extends ElementType = "a">({
     >
       <Icon name={icon} size={22} className="text-volt" />
       <span className="flex min-w-0 flex-col">
-        <Text variant="channel">{title}</Text>
+        <Text variant="action">{title}</Text>
         <Text variant="mono-stack" tone="label">
           {sub}
         </Text>

@@ -24,8 +24,8 @@ export const buttonVariants = cva(
         s: "h-13 shrink-0 px-6.5 type-btn whitespace-nowrap max-md:h-13.5 max-md:w-full max-md:px-4 max-md:type-btn-bar",
         m: "h-15.5 px-10 type-btn",
         l: "h-18.5 px-10 type-btn-xl",
-        // The form's send button (Team-Up): the 62px body of `m` with the 24px heavy label. Full width on the phone.
-        form: "h-15.5 px-10 type-btn-lg whitespace-nowrap max-md:w-full max-md:px-4",
+        // Between m and l: the 62px body of `m` with the 24px heavy label (Team-Up's send button). Full width on the phone.
+        ml: "h-15.5 px-10 type-btn-lg whitespace-nowrap max-md:w-full max-md:px-4",
         xl: "h-19.5 w-77.5 flex-col gap-1 type-btn-xl",
         cta: "min-h-14 px-7 type-btn-heavy",
         bar: "h-13.5 w-full px-4 type-btn-bar",
@@ -68,7 +68,7 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "panel";
 
 export type ButtonOwnProps = {
   variant?: Variant;
-  size?: "s" | "m" | "l" | "form" | "xl" | "cta" | "bar";
+  size?: "s" | "m" | "l" | "ml" | "xl" | "cta" | "bar";
   /** true = always skewed, false = never, "desktop" = skewed from 768px up (default). */
   skew?: boolean | "desktop";
   /** Second line under the label (XL CTAs). */
