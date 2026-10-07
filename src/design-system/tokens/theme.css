@@ -89,6 +89,7 @@
   --color-volt-ink: var(--text-on-accent);
   --color-volt-ink-2: var(--text-on-accent-2);
   --color-live: var(--signal-live);
+  --color-ember: rgb(var(--rgb-ember));
   --color-gold: var(--accent-gold); /* defined only inside [data-zone="trophy"] (spec §5.1) */
   --color-court-line: var(--ref-court-line);
   /* the trophy ramp: defined only inside [data-zone="trophy"], like gold */

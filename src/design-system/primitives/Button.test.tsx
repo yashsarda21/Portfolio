@@ -54,6 +54,11 @@ describe("Button", () => {
     );
   });
 
+  it("2xl is the Intro's 340x74 call to action, with the 28px heavy label", () => {
+    render(<Button size="2xl">Enter the arena</Button>);
+    expect(screen.getByRole("button")).toHaveClass("h-18.5", "w-85", "type-btn-2xl");
+  });
+
   it("bar-lg is the phone's 64px full-width bar with a stacked sub-label", () => {
     render(
       <Button size="bar-lg" skew={false} subLabel="LITE">

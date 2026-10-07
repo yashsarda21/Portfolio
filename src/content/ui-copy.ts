@@ -1,3 +1,6 @@
+/** The record, split so the Intro board's cell can show label and value apart while `career` says it once. */
+const RECORD = { label: "RECORD", value: "99 – 1" } as const;
+
 /** Interface copy that is not resume data (spec §6). Screens never hard-code strings. */
 export const ui = {
   brand: { mark: "YS", wordmark: "THE ARENA", siteName: "The Arena" },
@@ -196,6 +199,16 @@ export const ui = {
     viewSub: "RECRUITER VIEW · 90 SEC",
     hint: "ENTER ↵ TO PLAY · Q FOR QUICK VIEW",
   },
+  intro: {
+    live: "LIVE · PLAYER INTRODUCTION",
+    matchday: "THE ARENA · MATCHDAY",
+    tagline: ["PLAYER 01", "ENGINEER", "BUILDER", "COMPETITOR"],
+    introducing: "INTRODUCING",
+    number: "NO. 01",
+    welcome: "WELCOME TO MY ARENA",
+    enter: "ENTER THE ARENA",
+    portraitAlt: "Portrait of Yash Sarda",
+  },
   routes: {
     home: {
       title: "Yash Sarda — The Arena",
@@ -352,8 +365,8 @@ export const ui = {
   },
   // Shared by every screen. Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one, and says so.
   a11y: { newTab: "(opens in a new tab)", copied: "Scouting link copied" },
-  glyph: { next: "→", external: "↗", download: "↓", sep: "·", period: "." },
-  record: { career: "RECORD 99 – 1", yours: "YOUR RECORD" },
+  glyph: { next: "→", external: "↗", download: "↓", sep: "·", bullet: "•", period: "." },
+  record: { ...RECORD, career: `${RECORD.label} ${RECORD.value}` as const, yours: "YOUR RECORD" },
 } as const;
 
 export type UiCopy = typeof ui;

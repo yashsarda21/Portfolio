@@ -36,7 +36,7 @@ export function Stage({
         className,
       )}
     >
-      <SkyGlow className={skyClassName} style={skyStyle} />
+      <SkyGlow data-part="letterbox-sky" className={skyClassName} style={skyStyle} />
       <div
         data-stage
         className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-mono-min:calc(11px/var(--stage-scale,1))]"

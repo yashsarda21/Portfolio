@@ -101,6 +101,34 @@ describe("ArenaBackdrop layouts", () => {
     }
   });
 
+  it("layerClassName reaches the sky, crowd, field, pitch, both cones and every bank (not the masts)", () => {
+    const { container } = render(<ArenaBackdrop layerClassName="intro-part" bleed />);
+    const root = container.firstElementChild as HTMLElement;
+    const marked = [...root.querySelectorAll(".intro-part")].map((el) =>
+      el.getAttribute("data-part"),
+    );
+    expect(marked.sort()).toEqual(
+      [
+        "bank-1",
+        "bank-2",
+        "bank-3",
+        "bank-4",
+        "cone-left",
+        "cone-right",
+        "crowd",
+        "field",
+        "pitch",
+        "sky",
+      ].sort(),
+    );
+    expect(root).not.toHaveClass("intro-part");
+  });
+
+  it("no layerClassName, no extra classes (the Landing draws as before)", () => {
+    const { container } = render(<ArenaBackdrop />);
+    expect(container.querySelector(".intro-part")).toBeNull();
+  });
+
   it("each cone's classes draw the box cones.ts names (the source of the geometry)", () => {
     // 1 spacing unit = 4 design px; a right-anchored cone sits `right` px in from the 1440 edge.
     const px = (el: Element, prefix: string) => {
@@ -186,6 +214,14 @@ describe("SpriteStrip", () => {
     expect(strip.style.backgroundRepeat).toBe("no-repeat");
     expect(strip.style.backgroundPosition).toBe("0px 0px");
     expect(strip).toHaveClass("h-30", "w-35");
+  });
+
+  it("deferred keeps the image in --sprite and fetches nothing until a class applies it", () => {
+    const { container } = render(<SpriteStrip deferred src="/rig/turn_0.webp" />);
+    const strip = container.firstElementChild as HTMLElement;
+    expect(strip.style.backgroundImage).toBe("");
+    expect(strip.style.getPropertyValue("--sprite")).toContain("/rig/turn_0.webp");
+    expect(strip.style.backgroundSize).toBe("1600% 100%");
   });
 
   it("frames sets the strip width, and the caller owns data-frame", () => {

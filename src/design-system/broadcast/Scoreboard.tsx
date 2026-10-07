@@ -48,6 +48,8 @@ interface PartProps {
   className?: string;
   /** For a part's own custom properties, e.g. the boot's `--d`. */
   style?: CSSProperties;
+  /** Names the part for the timeline or CSS that addresses it. */
+  "data-part"?: string;
   children: ReactNode;
 }
 
@@ -57,10 +59,11 @@ const HEADER: Record<ScoreboardSize, string> = {
   compact: "h-9.75 px-3.5 type-mono-label",
 };
 
-function Header({ className, style, children }: PartProps) {
+function Header({ className, style, "data-part": part, children }: PartProps) {
   return (
     <div
       style={style}
+      data-part={part}
       className={cn(
         "flex shrink-0 items-center justify-between border-b border-board-line text-scout",
         HEADER[useContext(SizeContext)],
@@ -118,10 +121,11 @@ const SUBTITLE: Record<ScoreboardSize, string> = {
   compact: "pl-[0.38em] type-sub-sm",
 };
 
-function Subtitle({ className, style, children }: PartProps) {
+function Subtitle({ className, style, "data-part": part, children }: PartProps) {
   return (
     <span
       style={style}
+      data-part={part}
       className={cn(SUBTITLE[useContext(SizeContext)], "text-volt glow-volt", className)}
     >
       {children}
@@ -135,10 +139,11 @@ const FOOTER: Record<ScoreboardSize, string> = {
   compact: "h-12.25 grid-cols-2",
 };
 
-function Footer({ className, style, children }: PartProps) {
+function Footer({ className, style, "data-part": part, children }: PartProps) {
   return (
     <div
       style={style}
+      data-part={part}
       className={cn(
         "grid shrink-0 border-t border-board-line",
         FOOTER[useContext(SizeContext)],

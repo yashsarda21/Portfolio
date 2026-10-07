@@ -7,7 +7,7 @@ import { createPixels } from "./pixels";
 import type { RigResult } from "./rig";
 import { createIntroTimeline, showIntroEndState, type IntroRefs } from "./timeline";
 
-type Full = Required<IntroRefs>;
+type Full = Required<IntroRefs> & { sky: HTMLElement };
 
 const el = () => document.createElement("div");
 const many = (n: number) => Array.from({ length: n }, el);
@@ -172,6 +172,18 @@ describe("createIntroTimeline: nothing invisible is reachable", () => {
       ...refs.pixels.map((p) => p.anchor),
     ];
     expect(later.filter(shown)).toEqual([]);
+  });
+
+  it("the sky may be several layers (the scene's and the letterbox's): all start hidden, all end shown", () => {
+    const sky = many(2);
+    const tl = make({ ...fullRefs(), sky });
+    expect(sky.filter(shown)).toEqual([]);
+    tl.progress(1);
+    expect(sky.map((e) => e.style.opacity)).toEqual(["1", "1"]);
+    const still = many(2);
+    showIntroEndState(gsap, { ...fullRefs(), sky: still });
+    expect(still.every(shown)).toBe(true);
+    expect(still.map((e) => e.style.opacity)).toEqual(["1", "1"]);
   });
 
   it("the floodlights start dim, not gone", () => {

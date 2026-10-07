@@ -45,6 +45,7 @@ export const textVariants = cva("", {
       d1: "type-d1",
       d2: "type-d2",
       d2s: "type-d2s",
+      welcome: "type-welcome",
       stat: "type-stat",
       d3: "type-d3",
       d3s: "type-d3s",

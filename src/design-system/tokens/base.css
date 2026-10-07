@@ -157,6 +157,15 @@
   line-height: 0.9;
   text-transform: uppercase;
 }
+/* WELCOME TO MY ARENA (Intro): type-d2's 60px at .9, tracked .06em. */
+@utility type-welcome {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 60px;
+  line-height: 0.9;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 @utility type-d2s {
   font-family: var(--font-display);
   font-weight: 900;
@@ -204,6 +213,15 @@
   font-size: 24px;
   line-height: 1;
   letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+/* The Intro's call to action: type-btn-heavy's face at 28px (340x74 button). */
+@utility type-btn-2xl {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 @utility type-btn-xl {
@@ -258,12 +276,12 @@
   letter-spacing: 0.42em;
   text-transform: uppercase;
 }
-/* The subtitle on the Intro board: 34px at .4em (type-sub is the Landing's 30px at .42em). */
+/* The subtitle on the Intro board: 34px at .4em on the font's own line box (type-sub is the Landing's 30px at .42em, line-height 1). */
 @utility type-sub-lg {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 34px;
-  line-height: 1;
+  line-height: normal;
   letter-spacing: 0.4em;
   text-transform: uppercase;
 }
@@ -291,7 +309,8 @@
 @utility type-mono-lg {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: 14px;
+  /* 14px still falls under 11px once a tablet scales the stage below 79% (the Intro plays there, L1). */
+  font-size: max(14px, var(--stage-mono-min, 0px));
   line-height: 1.4;
   letter-spacing: 0.22em;
   text-transform: uppercase;

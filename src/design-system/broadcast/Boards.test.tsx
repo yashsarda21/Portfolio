@@ -123,6 +123,19 @@ describe("Scoreboard sizes", () => {
     expect(container.firstElementChild).toHaveClass("top-24", "left-25");
   });
 
+  it("Header and Footer take a data-part, so a timeline can find them", () => {
+    render(
+      <Scoreboard size="intro">
+        <Scoreboard.Header data-part="board-header">H</Scoreboard.Header>
+        <Scoreboard.Footer data-part="board-strip">
+          <Scoreboard.FooterCell label="A" value="ONE" />
+        </Scoreboard.Footer>
+      </Scoreboard>,
+    );
+    expect(screen.getByText("H")).toHaveAttribute("data-part", "board-header");
+    expect(screen.getByText("ONE").closest(".grid")).toHaveAttribute("data-part", "board-strip");
+  });
+
   it("a board without Power has no ring layers (the resting ring is its own shadow)", () => {
     const { container } = board();
     expect(container.querySelector('[data-part="board-on"], [data-part="board-hit"]')).toBeNull();

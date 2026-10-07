@@ -170,6 +170,39 @@
   }
 }
 
+/* The name's letters. A timeline tells each letter's state through data-lit: "in" while it drops in (volt),
+   "glow" from 55% of the way (volt with a glow), "done" once locked in (LED white, eased over a third of a
+   second). No attribute is the end colour, so a page that never plays reads white. */
+@utility intro-letter {
+  display: inline-block;
+  &[data-lit="in"] {
+    color: var(--ref-volt);
+  }
+  &[data-lit="glow"] {
+    color: var(--ref-volt);
+    text-shadow: 0 0 30px rgb(var(--rgb-volt) / 0.9);
+  }
+  &[data-lit="done"] {
+    transition:
+      color 0.315s var(--ease-follow),
+      text-shadow 0.315s var(--ease-follow);
+  }
+}
+/* The gap between YASH and SARDA is a letter too: an inline-block holding one space has no width of its own. */
+@utility intro-letter-gap {
+  min-width: 0.28em;
+}
+
+/* The CTA's glow follows its skewed plate, not the unskewed box a timeline adds animate-cta-glow to. */
+@utility intro-cta {
+  &.animate-cta-glow {
+    animation: none;
+    > [data-plate] {
+      animation: cta-glow 2.4s var(--ease-standard) infinite;
+    }
+  }
+}
+
 /* Idle loops of the intro (spec §7: loops are CSS). The figure breathes from its feet every 3.6s; a light sweeps
    across the face every 6s. Start them late with --d. Reduced motion: both off. */
 @keyframes breathe {

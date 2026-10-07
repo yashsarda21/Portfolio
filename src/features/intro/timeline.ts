@@ -46,7 +46,8 @@ export interface IntroRefs {
   /** [left, right]. */
   cones?: HTMLElement[];
   crowd?: HTMLElement;
-  sky?: HTMLElement;
+  /** The scene's sky glow and the Stage's letterbox sky fade in together, so this may be several layers. */
+  sky?: HTMLElement | HTMLElement[];
   field?: HTMLElement;
   backlight?: HTMLElement;
   /** Board power-up glow layer. */
@@ -711,7 +712,7 @@ export function showIntroEndState(gsap: typeof Gsap, refs: IntroRefs): void {
   gsap.set(
     defined([
       refs.crowd,
-      refs.sky,
+      ...parts(refs.sky),
       refs.field,
       refs.backlight,
       refs.boardOn,

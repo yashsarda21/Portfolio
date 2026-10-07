@@ -104,6 +104,7 @@ export function ArenaBackdrop({
   dust = false,
   venue = "turf",
   bleed = false,
+  layerClassName,
   className,
 }: {
   /** "landing": Main's positions. "intro": the Intro artboard's (lower crowd and field, wider cones, flat banks with flare layers, no pitch glow or masts). */
@@ -116,6 +117,8 @@ export function ArenaBackdrop({
   venue?: "turf" | "court" | "hall";
   /** Let the scene extend past 1440×900 into the Stage letterbox. */
   bleed?: boolean;
+  /** A class for every layer that enters (sky, crowd, field, pitch, cones, banks, dust), so a screen can hold the whole scene back until its own show starts. */
+  layerClassName?: string;
   className?: string;
 }) {
   const spec: LayoutSpec = LAYOUT[layout];
@@ -134,38 +137,47 @@ export function ArenaBackdrop({
         className,
       )}
     >
-      <SkyGlow data-part="sky" alpha={spec.skyAlpha} className={fade} style={at(boot?.sky)} />
+      <SkyGlow
+        data-part="sky"
+        alpha={spec.skyAlpha}
+        className={cn(fade, layerClassName)}
+        style={at(boot?.sky)}
+      />
       <CrowdTier
         data-part="crowd"
         curved
-        className={cn(spec.crowd, fade)}
+        className={cn(spec.crowd, fade, layerClassName)}
         style={at(boot?.crowd)}
       />
       <Field
         data-part="field"
         tilt={spec.field.tilt}
         ovalClassName={spec.field.oval}
-        className={cn(spec.field.className, fade)}
+        className={cn(spec.field.className, fade, layerClassName)}
         style={at(boot?.field)}
       />
       {spec.pitch && (
-        <PitchGlow data-part="pitch" className={cn(spec.pitch, fade)} style={at(boot?.pitch)} />
+        <PitchGlow
+          data-part="pitch"
+          className={cn(spec.pitch, fade, layerClassName)}
+          style={at(boot?.pitch)}
+        />
       )}
       <LightCone
         data-part="cone-left"
         side="left"
         alpha={spec.coneAlpha}
-        className={cn(spec.cones.left, fade)}
+        className={cn(spec.cones.left, fade, layerClassName)}
         style={at(boot?.coneL)}
       />
       <LightCone
         data-part="cone-right"
         side="right"
         alpha={spec.coneAlpha}
-        className={cn(spec.cones.right, fade)}
+        className={cn(spec.cones.right, fade, layerClassName)}
         style={at(boot?.coneR)}
       />
-      {dust && <Dust regions={CONE_REGIONS[layout]} />}
+      {dust && <Dust regions={CONE_REGIONS[layout]} className={layerClassName} />}
       {spec.masts.map((mast) => (
         <FloodlightMast key={mast.part} data-part={mast.part} className={mast.className} />
       ))}
@@ -176,7 +188,7 @@ export function ArenaBackdrop({
           size={bank.size}
           flare={spec.flare}
           flickerDelay={boot?.banks[i]}
-          className={bank.className}
+          className={cn(bank.className, layerClassName)}
         />
       ))}
     </div>

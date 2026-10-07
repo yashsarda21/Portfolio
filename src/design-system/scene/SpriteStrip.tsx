@@ -5,6 +5,8 @@ type SpriteStripProps = {
   /** The strip image: `frames` equal frames laid side by side. */
   src: string;
   frames?: number;
+  /** Hold the image in `--sprite` and draw nothing: no request is made until a class sets `background-image: var(--sprite)` (the Intro's gate, `intro-turn`). */
+  deferred?: boolean;
 } & Omit<ComponentPropsWithoutRef<"div">, "children">;
 
 /**
@@ -12,9 +14,18 @@ type SpriteStripProps = {
  * It shows frame 0; whoever plays it moves background-position (see framePosition in @/lib/sprite) and may
  * mirror the frame in a `data-frame` attribute. Decorative unless the caller gives it a role and a label.
  */
-export function SpriteStrip({ src, frames = 16, className, style, ...rest }: SpriteStripProps) {
+export function SpriteStrip({
+  src,
+  frames = 16,
+  deferred = false,
+  className,
+  style,
+  ...rest
+}: SpriteStripProps) {
   const strip: CSSProperties = {
-    backgroundImage: `url("${src}")`,
+    ...(deferred
+      ? ({ "--sprite": `url("${src}")` } as CSSProperties)
+      : { backgroundImage: `url("${src}")` }),
     backgroundSize: `${frames * 100}% 100%`,
     backgroundRepeat: "no-repeat",
     backgroundPosition: "0 0",

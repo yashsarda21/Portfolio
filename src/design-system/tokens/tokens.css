@@ -80,6 +80,9 @@
   --rgb-turf: 46 132 78;
   --rgb-turf-deep: 14 52 32;
   --rgb-pitch: 150 128 88;
+  --rgb-ember: 255 178 92; /* the Intro's warm light: trail, backlit rim, the amber pixels */
+  --rgb-backlight: 255 150 60; /* the warm glow the silhouette is cut against */
+  --rgb-board: 6 8 11; /* the scoreboard's own ground, for alpha */
 
   /* alpha ramps (replace the audit's 142 one-off rgba values) */
   --ref-volt-a04: rgb(var(--rgb-volt) / 0.04);
