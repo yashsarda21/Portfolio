@@ -13,11 +13,12 @@ export type ScoreboardSize = "landing" | "intro" | "compact";
 
 const SizeContext = createContext<ScoreboardSize>("landing");
 
-const ROOT: Record<ScoreboardSize, string> = {
-  landing: "shadow-board",
-  intro: "shadow-board",
-  compact: "shadow-board-compact",
-};
+/** A per-size record where the landing and the intro (the wide boards) share one value and compact has its own. */
+function wideOr<T>(wide: T, compact: T): Record<ScoreboardSize, T> {
+  return { landing: wide, intro: wide, compact };
+}
+
+const ROOT = wideOr("shadow-board", "shadow-board-compact");
 
 function Root({
   size = "landing",
@@ -68,11 +69,7 @@ function Header({ className, children }: PartProps) {
   );
 }
 
-const BODY: Record<ScoreboardSize, string> = {
-  landing: "gap-3.5",
-  intro: "gap-3.5",
-  compact: "gap-2.5 px-3.5 py-6.5",
-};
+const BODY = wideOr("gap-3.5", "gap-2.5 px-3.5 py-6.5");
 
 function Body({ className, children }: PartProps) {
   return (
@@ -152,23 +149,18 @@ const VALUE_TYPE: Record<ScoreboardSize, string> = {
   compact: "type-d5",
 };
 // On the compact board the two cells split the width: the first has a divider, both are centred.
-const ALIGN: Record<ScoreboardSize, Record<"start" | "center" | "end", string>> = {
-  landing: {
+const ALIGN = wideOr<Record<"start" | "center" | "end", string>>(
+  {
     start: "gap-3.5 px-7",
     center: "gap-3.5 justify-center border-x border-board-line",
     end: "gap-3.5 justify-end px-7",
   },
-  intro: {
-    start: "gap-3.5 px-7",
-    center: "gap-3.5 justify-center border-x border-board-line",
-    end: "gap-3.5 justify-end px-7",
-  },
-  compact: {
+  {
     start: "gap-2 justify-center border-r border-board-line",
     center: "gap-2 justify-center border-x border-board-line",
     end: "gap-2 justify-center",
   },
-};
+);
 
 function FooterCell({
   label,

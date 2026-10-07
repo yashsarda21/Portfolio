@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ArenaBackdrop } from "./ArenaBackdrop";
+import { CONE_BOXES } from "./cones";
 import { CrowdTier } from "./CrowdTier";
 import { FloodlightBank } from "./FloodlightBank";
 import { SpriteStrip } from "./SpriteStrip";
@@ -88,6 +89,25 @@ describe("ArenaBackdrop layouts", () => {
       const flare = bank.querySelector('[data-part="flare"]');
       expect(flare).not.toBeNull();
       expect(flare).toHaveAttribute("aria-hidden", "true");
+    }
+  });
+
+  it("each cone's classes draw the box cones.ts names (the source of the geometry)", () => {
+    // 1 spacing unit = 4 design px; a right-anchored cone sits `right` px in from the 1440 edge.
+    const px = (el: Element, prefix: string) => {
+      const m = [...el.classList].find((c) => c.startsWith(`${prefix}-`));
+      return m ? Number(m.slice(prefix.length + 1)) * 4 : undefined;
+    };
+    for (const layout of ["landing", "intro"] as const) {
+      const { container } = render(<ArenaBackdrop layout={layout} />);
+      for (const side of ["left", "right"] as const) {
+        const cone = part(container, `cone-${side}`)[0]!;
+        const w = px(cone, "w")!;
+        const x = side === "left" ? px(cone, "left")! : 1440 - px(cone, "right")! - w;
+        expect({ x, y: px(cone, "top"), w, h: px(cone, "h") }, `${layout} ${side}`).toEqual(
+          CONE_BOXES[layout][side],
+        );
+      }
     }
   });
 

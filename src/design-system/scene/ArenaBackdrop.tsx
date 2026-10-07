@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 import { CONE_REGIONS } from "./cones";
 import { CrowdTier } from "./CrowdTier";
@@ -8,6 +9,74 @@ import { FloodlightMast } from "./FloodlightMast";
 import { LightCone } from "./LightCone";
 import { PitchGlow } from "./PitchGlow";
 import { SkyGlow } from "./SkyGlow";
+
+interface LayoutSpec {
+  skyAlpha: number;
+  crowd: string;
+  field: { tilt: number; oval: string; className: string };
+  /** The pitch glow's classes, or null where the artboard draws none. */
+  pitch: string | null;
+  coneAlpha: number;
+  /** Cone classes. The numbers behind them are CONE_BOXES in cones.ts (Scene.test.tsx checks the match). */
+  cones: { left: string; right: string };
+  masts: ReadonlyArray<{ part: string; className: string }>;
+  /** Left to right. `turn` is the second the bank flickers on in the CSS boot; null where a timeline drives the banks (Intro). */
+  banks: ReadonlyArray<{
+    part: string;
+    size: NonNullable<ComponentProps<typeof FloodlightBank>["size"]>;
+    turn: number | null;
+    className: string;
+  }>;
+  /** Give each bank a flare layer for a timeline to tween. */
+  flare: boolean;
+}
+
+// Class strings stay literal so Tailwind sees them.
+const LAYOUT = {
+  // Main.dc.html
+  landing: {
+    skyAlpha: 0.2,
+    crowd: "-inset-x-30 top-95 h-90",
+    field: { tilt: 70, oval: "h-190 w-310", className: "top-150 h-105" },
+    pitch: "top-160 left-171 h-50 w-18",
+    coneAlpha: 0.16,
+    cones: {
+      left: "top-17.5 left-15 h-190 w-130",
+      right: "top-17.5 right-15 h-190 w-130",
+    },
+    masts: [
+      { part: "mast-left", className: "top-29.5 left-37.5" },
+      { part: "mast-right", className: "top-29.5 right-37.5" },
+    ],
+    banks: [
+      { part: "bank-1", size: "lg", turn: 0.6, className: "top-17.5 left-24" },
+      { part: "bank-2", size: "sm", turn: 1.1, className: "top-10 left-89" },
+      { part: "bank-3", size: "sm", turn: 1.6, className: "top-10 right-89" },
+      { part: "bank-4", size: "lg", turn: 2, className: "top-17.5 right-24" },
+    ],
+    flare: false,
+  },
+  // Intro.dc.html: lower crowd and field, wider cones, flat banks, no pitch glow or masts
+  intro: {
+    skyAlpha: 0.18,
+    crowd: "-inset-x-30 top-132.5 h-75 opacity-60",
+    field: { tilt: 72, oval: "h-175 w-325", className: "top-172.5 h-105" },
+    pitch: null,
+    coneAlpha: 0.14,
+    cones: {
+      left: "top-15 left-10 h-200 w-135",
+      right: "top-15 right-10 h-200 w-135",
+    },
+    masts: [],
+    banks: [
+      { part: "bank-1", size: "lg-flat", turn: null, className: "top-8.5 left-20" },
+      { part: "bank-2", size: "sm-flat", turn: null, className: "top-5 left-95" },
+      { part: "bank-3", size: "sm-flat", turn: null, className: "top-5 right-95" },
+      { part: "bank-4", size: "lg-flat", turn: null, className: "top-8.5 right-20" },
+    ],
+    flare: true,
+  },
+} as const satisfies Record<"landing" | "intro", LayoutSpec>;
 
 /**
  * The floodlit stadium, laid out in the 1440×900 design space (0D's <Stage> scales it).
@@ -35,9 +104,7 @@ export function ArenaBackdrop({
   bleed?: boolean;
   className?: string;
 }) {
-  const intro = layout === "intro";
-  // Seconds into the page that each bank flickers on (Main), only while the CSS boot runs.
-  const turn = (seconds: number) => (boot ? seconds : undefined);
+  const spec: LayoutSpec = LAYOUT[layout];
   return (
     <div
       aria-hidden="true"
@@ -49,73 +116,41 @@ export function ArenaBackdrop({
         className,
       )}
     >
-      <SkyGlow data-part="sky" alpha={intro ? 0.18 : undefined} />
-      {intro ? (
-        <CrowdTier data-part="crowd" curved className="-inset-x-30 top-132.5 h-75 opacity-60" />
-      ) : (
-        <CrowdTier data-part="crowd" curved className="-inset-x-30 top-95 h-90" />
-      )}
-      {intro ? (
-        <Field
-          data-part="field"
-          tilt={72}
-          ovalClassName="h-175 w-325"
-          className="top-172.5 h-105"
-        />
-      ) : (
-        <Field data-part="field" className="top-150 h-105" />
-      )}
-      {!intro && <PitchGlow data-part="pitch" className="top-160 left-171 h-50 w-18" />}
+      <SkyGlow data-part="sky" alpha={spec.skyAlpha} />
+      <CrowdTier data-part="crowd" curved className={spec.crowd} />
+      <Field
+        data-part="field"
+        tilt={spec.field.tilt}
+        ovalClassName={spec.field.oval}
+        className={spec.field.className}
+      />
+      {spec.pitch && <PitchGlow data-part="pitch" className={spec.pitch} />}
       <LightCone
         data-part="cone-left"
         side="left"
-        alpha={intro ? 0.14 : undefined}
-        className={intro ? "top-15 left-10 h-200 w-135" : "top-17.5 left-15 h-190 w-130"}
+        alpha={spec.coneAlpha}
+        className={spec.cones.left}
       />
       <LightCone
         data-part="cone-right"
         side="right"
-        alpha={intro ? 0.14 : undefined}
-        className={intro ? "top-15 right-10 h-200 w-135" : "top-17.5 right-15 h-190 w-130"}
+        alpha={spec.coneAlpha}
+        className={spec.cones.right}
       />
       {dust && <Dust regions={CONE_REGIONS[layout]} />}
-      {!intro && <FloodlightMast data-part="mast-left" className="top-29.5 left-37.5" />}
-      {!intro && <FloodlightMast data-part="mast-right" className="top-29.5 right-37.5" />}
-      {intro ? (
-        <>
-          <FloodlightBank data-part="bank-1" size="lg-flat" flare className="top-8.5 left-20" />
-          <FloodlightBank data-part="bank-2" size="sm-flat" flare className="top-5 left-95" />
-          <FloodlightBank data-part="bank-3" size="sm-flat" flare className="top-5 right-95" />
-          <FloodlightBank data-part="bank-4" size="lg-flat" flare className="top-8.5 right-20" />
-        </>
-      ) : (
-        <>
-          <FloodlightBank
-            data-part="bank-1"
-            size="lg"
-            flickerDelay={turn(0.6)}
-            className="top-17.5 left-24"
-          />
-          <FloodlightBank
-            data-part="bank-2"
-            size="sm"
-            flickerDelay={turn(1.1)}
-            className="top-10 left-89"
-          />
-          <FloodlightBank
-            data-part="bank-3"
-            size="sm"
-            flickerDelay={turn(1.6)}
-            className="top-10 right-89"
-          />
-          <FloodlightBank
-            data-part="bank-4"
-            size="lg"
-            flickerDelay={turn(2)}
-            className="top-17.5 right-24"
-          />
-        </>
-      )}
+      {spec.masts.map((mast) => (
+        <FloodlightMast key={mast.part} data-part={mast.part} className={mast.className} />
+      ))}
+      {spec.banks.map((bank) => (
+        <FloodlightBank
+          key={bank.part}
+          data-part={bank.part}
+          size={bank.size}
+          flare={spec.flare}
+          flickerDelay={boot ? (bank.turn ?? undefined) : undefined}
+          className={bank.className}
+        />
+      ))}
     </div>
   );
 }
