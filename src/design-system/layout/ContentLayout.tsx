@@ -19,6 +19,12 @@ interface ContentLayoutProps {
   stage?: ReactNode;
   /** A third column to the right of the stage (the take-away actions). Below 1200px it runs under the rest. Needs `stage`. */
   rail?: ReactNode;
+  /**
+   * A column beside the title and panels (Team Up's direct lines). From 1200px it is the right-hand column, 64px
+   * to the side (544px wide from 1440, 480px below), its top level with the panels' (y 236); the title and panels
+   * share the column on its left. Below 1200px it follows the panels. Not with `stage`.
+   */
+  side?: ReactNode;
   /** Mobile main navigation (MobileTabBar). It is fixed; the page leaves room for it. */
   tabBar?: ReactNode;
   /** Decorative full-bleed layer behind the page (venue glows). */
@@ -45,6 +51,7 @@ export function ContentLayout({
   footer,
   stage,
   rail,
+  side,
   tabBar,
   backdrop,
   mainId,
@@ -90,6 +97,25 @@ export function ContentLayout({
                   {rail}
                 </div>
               ) : null}
+            </div>
+          ) : side ? (
+            <div
+              className={cn(
+                "flex flex-1 flex-col px-9 max-md:px-4 min-[1200px]:grid min-[1200px]:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] min-[1200px]:grid-rows-[auto_1fr] min-[1200px]:gap-x-16 min-[1440px]:grid-cols-[minmax(0,1fr)_34rem]",
+                !footer && "pb-9 max-md:pb-4",
+              )}
+            >
+              {/* The Team-Up board sits its form 22px under the title. */}
+              <div className="pt-6 pb-6 max-md:pt-5 max-md:pb-11 min-[1200px]:col-start-1 min-[1200px]:row-start-1 min-[1200px]:pb-5.5 md:min-h-40">
+                {title}
+              </div>
+              <div className="flex min-w-0 flex-col min-[1200px]:col-start-1 min-[1200px]:row-start-2">
+                {children}
+              </div>
+              {/* 160px: the title's own minimum height, so the column starts where the panels do. */}
+              <div className="min-w-0 pt-10 max-md:pt-8 min-[1200px]:col-start-2 min-[1200px]:row-span-2 min-[1200px]:row-start-1 min-[1200px]:pt-40">
+                {side}
+              </div>
             </div>
           ) : (
             <>

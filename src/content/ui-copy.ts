@@ -154,7 +154,12 @@ export const ui = {
         text: "Floodlights pulse once, the crowd lifts, and the scoreboard reads",
         board: "NEW FIXTURE · VISITOR vs YASH",
       },
-      success: { title: "CHALLENGE RECEIVED", again: "SEND ANOTHER" },
+      success: {
+        title: "CHALLENGE RECEIVED",
+        again: "SEND ANOTHER",
+        // The fixture strip on the success panel: the same words as `after.board`, in the parts the board lays out.
+        board: { fixture: "NEW FIXTURE", visitor: "VISITOR", versus: "vs", home: "YASH" },
+      },
       error: "That didn't go through. Your message is still here.",
       honeypot: "Leave this empty",
     },

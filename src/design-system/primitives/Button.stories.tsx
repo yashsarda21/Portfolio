@@ -27,6 +27,7 @@ export const Sizes: Story = {
     <div className="flex flex-col items-start gap-6 p-6">
       <Button size="s">Next venue</Button>
       <Button size="m">See the full scorecard</Button>
+      <Button size="form">Send challenge</Button>
       <Button size="l" pulse data-testid="cta-pulse">
         Enter the arena →
       </Button>

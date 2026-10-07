@@ -92,6 +92,18 @@ describe("Fieldset + RadioCard", () => {
     expect(screen.getByRole("radio", { name: "Sign a player" })).not.toBeChecked();
   });
 
+  it("draws a chosen card as the artboard does: volt border, 7% volt wash, 22px display title", () => {
+    render(<RadioCard name="format" value="sign" title="Sign a player" description="Hiring" />);
+    const card = screen.getByRole("radio").closest("label")!;
+    expect(card).toHaveClass(
+      "border-line-strong",
+      "has-checked:border-volt",
+      "has-checked:bg-volt-a07",
+    );
+    expect(screen.getByText("Sign a player")).toHaveClass("type-monogram");
+    expect(screen.getByText("Hiring")).toHaveClass("leading-auto");
+  });
+
   it("names the radio by its title only and describes it with the description", () => {
     render(
       <RadioCard name="format" value="doubles" title="Doubles" description="Project collab" />,

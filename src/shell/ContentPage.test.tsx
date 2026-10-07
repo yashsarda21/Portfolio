@@ -71,6 +71,14 @@ describe("ContentPage", () => {
     expect(within(main).getByText("RAIL")).toBeInTheDocument();
   });
 
+  it("puts a lede under the h1 and a side column inside main, and can set the 96px title", () => {
+    setup({ lede: "LEDE", side: <p>SIDE</p>, titleSize: "xl" });
+    const main = screen.getByRole("main");
+    expect(within(main).getByText("LEDE")).toBeInTheDocument();
+    expect(within(main).getByText("SIDE")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass("type-d0");
+  });
+
   it("starts the breadcrumb at the hub and ends it with the page", () => {
     setup();
     const crumbs = screen.getByRole("navigation", { name: ui.pages.breadcrumb });

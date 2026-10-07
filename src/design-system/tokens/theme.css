@@ -108,6 +108,7 @@
   /* alpha ramps */
   --color-volt-a04: var(--ref-volt-a04);
   --color-volt-a06: var(--ref-volt-a06);
+  --color-volt-a07: var(--ref-volt-a07);
   --color-volt-a08: var(--ref-volt-a08);
   --color-volt-a12: var(--ref-volt-a12);
   --color-volt-a16: var(--ref-volt-a16);

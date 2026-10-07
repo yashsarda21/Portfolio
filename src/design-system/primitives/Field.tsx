@@ -1,8 +1,9 @@
 import { useId, type ComponentPropsWithRef, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
+// Field text sits on the font's own line box, as drawn: the placeholder starts 14px under a textarea's top edge.
 const CONTROL =
-  "w-full border border-line-strong bg-inset px-3.5 type-body text-floodlight placeholder:text-dim transition-colors duration-(--dur-snap) ease-snap hover:border-line-hover focus-visible:border-volt aria-invalid:border-live";
+  "w-full border border-line-strong bg-inset px-3.5 type-body leading-auto text-floodlight placeholder:text-dim transition-colors duration-(--dur-snap) ease-snap hover:border-line-hover focus-visible:border-volt aria-invalid:border-live";
 
 interface FieldChromeProps {
   id: string;

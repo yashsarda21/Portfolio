@@ -106,6 +106,18 @@
   text-transform: uppercase;
 }
 /* The page title (h1): 84px; 48px on the phone as the Mobile-Hub title is drawn. */
+/* The page title one step above d1: 96px at .85 (Team-Up). On the phone it is d1's 48px. */
+@utility type-d0 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 96px;
+  line-height: 0.85;
+  text-transform: uppercase;
+  @media (width < 48rem) {
+    font-size: 48px;
+    line-height: 0.9;
+  }
+}
 @utility type-d1 {
   font-family: var(--font-display);
   font-weight: 900;
@@ -177,6 +189,15 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 26px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* The form's send button: type-btn-heavy's weight and tracking at 24px (Team-Up). */
+@utility type-btn-lg {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 24px;
   line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -263,6 +284,14 @@
   font-size: 13px;
   line-height: 1.3;
 }
+/* A run of mono set inside a 13px paragraph (Team-Up's fixture line): its own 1.6 line box is what makes the
+   artboard's lines 21px apart. */
+@utility type-mono-inline {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.6;
+}
 @utility type-mono-tag {
   font-family: var(--font-mono);
   font-weight: 400;
@@ -325,6 +354,13 @@
   font-size: 13px;
   line-height: 1.45;
 }
+/* A small paragraph as drawn on Team-Up's AFTER YOU SEND panel: 13px at the 1.5 rhythm (caption is the tighter 1.45). */
+@utility type-caption-copy {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+}
 @utility type-comm {
   font-family: var(--font-body);
   font-weight: 400;
@@ -366,6 +402,16 @@
   text-transform: uppercase;
 }
 /* fluid pages (Quick View); the mobile override lives inside each recipe, so screens use one class */
+/* The line under a page title (Team-Up): 20px at 1.45, 17px on the phone like the lede. */
+@utility type-body-intro {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.45;
+  @media (width < 48rem) {
+    font-size: 17px;
+  }
+}
 @utility type-lede {
   font-family: var(--font-body);
   font-weight: 400;
@@ -638,6 +684,15 @@
   line-height: normal;
 }
 /* A quiet counter or aside: 11px mono, untracked, on the font's own line box ("1 / 5"). */
+/* A line of tracked mono beside a button ("OR EMAIL ..."): 12px at .12em on the font's own line box. */
+@utility type-mono-line {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 @utility type-mono-note {
   font-family: var(--font-mono);
   font-weight: 400;

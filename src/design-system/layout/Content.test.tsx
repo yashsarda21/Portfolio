@@ -219,6 +219,19 @@ describe("PageTitle", () => {
     expect(screen.getByText("aside")).toBeInTheDocument();
   });
 
+  it("sets the 96px title and a line under it when asked", () => {
+    render(
+      <PageTitle eyebrow="CONTACT" title="TEAM UP" size="xl" lede="You've seen how I play." />,
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "TEAM UP" })).toHaveClass("type-d0");
+    const lede = screen.getByText("You've seen how I play.");
+    expect(lede.tagName).toBe("P");
+    expect(lede).toHaveClass("type-body-intro", "text-text-2");
+    // Reads in order: eyebrow, title, line.
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1.compareDocumentPosition(lede) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("uses the gold eyebrow tone when asked", () => {
     render(<PageTitle eyebrow="HALL" eyebrowTone="gold" title="TROPHY ROOM" />);
     expect(screen.getByText("HALL")).toHaveClass("text-gold");
@@ -309,6 +322,55 @@ describe("ContentLayout", () => {
       );
       expect(screen.getByText("title").parentElement).toHaveClass("px-9");
       expect(screen.getByText("title").parentElement).not.toHaveClass("md:col-start-1");
+    });
+  });
+
+  describe("with a side column", () => {
+    const renderSide = () =>
+      render(
+        <ContentLayout
+          mainId="main"
+          header={<header>head</header>}
+          title={<h1>title</h1>}
+          side={<aside>side</aside>}
+        >
+          <section>panels</section>
+        </ContentLayout>,
+      );
+
+    it("keeps the title, panels and side inside main, in that reading order", () => {
+      renderSide();
+      const main = screen.getByRole("main");
+      const order = ["title", "panels", "side"].map((t) => screen.getByText(t));
+      for (const el of order) expect(main).toContainElement(el);
+      for (let i = 1; i < order.length; i++)
+        expect(
+          order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
+    it("is a two-column grid from 1200px, the side starting level with the panels (160px down)", () => {
+      renderSide();
+      const body = screen.getByText("title").parentElement!.parentElement!;
+      expect(body).toHaveClass(
+        "min-[1200px]:grid",
+        "min-[1200px]:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]",
+        "min-[1440px]:grid-cols-[minmax(0,1fr)_34rem]",
+      );
+      expect(screen.getByText("side").parentElement).toHaveClass(
+        "min-[1200px]:col-start-2",
+        "min-[1200px]:pt-40",
+      );
+    });
+
+    it("leaves the flat layout alone without a side", () => {
+      render(
+        <ContentLayout header={<header>head</header>} title={<h1>title</h1>}>
+          <section>panels</section>
+        </ContentLayout>,
+      );
+      expect(screen.getByText("title").parentElement).toHaveClass("px-9");
+      expect(screen.getByText("title").parentElement).not.toHaveClass("min-[1200px]:col-start-1");
     });
   });
 

@@ -131,6 +131,16 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveClass("h-13.5", "w-full", "type-btn-bar");
   });
 
+  it("has a form size: the 62px body with the 24px heavy label, full width on the phone", () => {
+    render(<Button size="form">SEND CHALLENGE</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "h-15.5",
+      "px-10",
+      "type-btn-lg",
+      "max-md:w-full",
+    );
+  });
+
   it("size s never wraps or shrinks, and is the full-width bar on the phone", () => {
     render(<Button size="s">NEXT VENUE · BADMINTON HALL →</Button>);
     expect(screen.getByRole("button")).toHaveClass(

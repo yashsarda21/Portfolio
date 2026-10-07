@@ -84,6 +84,7 @@
   /* alpha ramps (replace the audit's 142 one-off rgba values) */
   --ref-volt-a04: rgb(var(--rgb-volt) / 0.04);
   --ref-volt-a06: rgb(var(--rgb-volt) / 0.06); /* selected row on the scorecard and the draw */
+  --ref-volt-a07: rgb(var(--rgb-volt) / 0.07); /* the chosen format card on Team Up */
   --ref-volt-a08: rgb(var(--rgb-volt) / 0.08);
   --ref-volt-a12: rgb(var(--rgb-volt) / 0.12);
   --ref-volt-a16: rgb(var(--rgb-volt) / 0.16);
