@@ -2,6 +2,7 @@ import { Fragment, useState, useSyncExternalStore } from "react";
 import { content, ui } from "@/content";
 import { PlayerCard, ShowcaseBackdrop, Text } from "@/design-system";
 import portraitSrc from "@/assets/portrait-rest.webp";
+import { BUILD_YEAR } from "@/shell/config";
 import { ContentPage } from "@/shell/ContentPage";
 import { ROUTES } from "@/shell/routes";
 import { CardBack, CardFront } from "./CardFaces";
@@ -93,7 +94,7 @@ export function CardPage({ view, liveYear = true }: { view: CardView; liveYear?:
 const view = buildCardView(content, ui, ROUTES, {
   portraitSrc,
   origin: typeof window === "undefined" ? "" : window.location.origin,
-  buildYear: new Date().getFullYear(),
+  buildYear: BUILD_YEAR,
 });
 
 export function CardScreen() {
