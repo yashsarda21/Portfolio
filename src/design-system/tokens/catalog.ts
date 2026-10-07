@@ -100,6 +100,7 @@ export const TOKEN_CATALOG = {
     "type-title-sm",
     "type-btn-heavy",
     "type-btn-bar",
+    "type-btn-bar-lg",
     "type-mono-nav",
     "type-mono-chip",
     "type-mono-round",

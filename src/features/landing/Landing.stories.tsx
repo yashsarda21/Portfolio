@@ -30,6 +30,11 @@ export const ArtboardParity: StoryObj = {
   render: () => <LandingPage view={artboardLandingView} />,
 };
 
+/** The phone and tablet column (the artboard's own copy). Narrow the viewport below 1200px to see it; the story test compares it at 390×844. */
+export const Phone: StoryObj = {
+  render: () => <LandingPage view={artboardLandingView} />,
+};
+
 /** What a return visit sets before first paint: the same show at a quarter of the time (--pace .25). */
 function ReturnVisitFlag({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {

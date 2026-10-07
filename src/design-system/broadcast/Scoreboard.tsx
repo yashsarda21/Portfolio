@@ -7,7 +7,7 @@ import { MonoLabel } from "../primitives/Text";
 /**
  * Named for where the board's shape comes from.
  * landing: Main (header 53, footer 71, three columns). intro: the Intro board (header 48 and footer 64 on the
- * board's own ground, the content placed freely between them). compact: Mobile-Landing (header 38, two columns).
+ * board's own ground, the content placed freely between them). compact: Mobile-Landing (header 38 + its 1px rule, footer 48 + its rule, two columns).
  */
 export type ScoreboardSize = "landing" | "intro" | "compact";
 
@@ -54,7 +54,7 @@ interface PartProps {
 const HEADER: Record<ScoreboardSize, string> = {
   landing: "h-13.25 px-7 type-mono-eyebrow",
   intro: "absolute inset-x-0 top-0 z-5 h-12 bg-board px-7 type-mono-eyebrow",
-  compact: "h-9.5 px-3.5 type-mono-label",
+  compact: "h-9.75 px-3.5 type-mono-label",
 };
 
 function Header({ className, style, children }: PartProps) {
@@ -91,7 +91,8 @@ function Body({ className, children }: PartProps) {
 const TITLE: Record<ScoreboardSize, string> = {
   landing: "type-hero",
   intro: "type-hero-sm",
-  compact: "type-hero-stack",
+  // w-min: one word to a line at every width (a tablet's wider board would otherwise hold the name on one line).
+  compact: "type-hero-stack w-min",
 };
 
 /** The big LED name. Renders a span; pass as="h1" where it is the page heading. */
@@ -131,7 +132,7 @@ function Subtitle({ className, style, children }: PartProps) {
 const FOOTER: Record<ScoreboardSize, string> = {
   landing: "h-17.75 grid-cols-3",
   intro: "absolute inset-x-0 bottom-0 z-5 h-16 grid-cols-3 bg-board",
-  compact: "h-12 grid-cols-2",
+  compact: "h-12.25 grid-cols-2",
 };
 
 function Footer({ className, style, children }: PartProps) {

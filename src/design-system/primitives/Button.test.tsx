@@ -54,6 +54,17 @@ describe("Button", () => {
     );
   });
 
+  it("bar-lg is the phone's 64px full-width bar with a stacked sub-label", () => {
+    render(
+      <Button size="bar-lg" skew={false} subLabel="LITE">
+        Enter
+      </Button>,
+    );
+    const btn = screen.getByRole("button", { name: /Enter/ });
+    expect(btn).toHaveClass("h-16", "w-full", "type-btn-bar-lg", "flex-col");
+    expect(plateOf(btn).className).not.toMatch(/skew/);
+  });
+
   it("pulses only when asked", () => {
     const { rerender } = render(<Button>A</Button>);
     expect(plateOf(screen.getByRole("button"))).not.toHaveClass("animate-cta-glow");

@@ -172,7 +172,7 @@ export const ui = {
   },
   skipToContent: "Skip to content",
   comm: { tag: "COMM" },
-  audio: { name: "Crowd audio", label: "CROWD", on: "ON", off: "OFF" },
+  audio: { name: "Crowd audio", label: "CROWD", labelPhone: "SOUND", on: "ON", off: "OFF" },
   placeholder: {
     comingIn: "COMING IN PHASE",
     siteMap: "SITE MAP",
@@ -182,6 +182,7 @@ export const ui = {
   landing: {
     live: "LIVE · THE ARENA",
     player: "PLAYER 01 / 01",
+    playerShort: "01 / 01",
     home: "HOME",
     status: "STATUS",
     undefeated: "UNDEFEATED",

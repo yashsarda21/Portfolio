@@ -267,12 +267,12 @@
   letter-spacing: 0.4em;
   text-transform: uppercase;
 }
-/* The subtitle on the narrow board (Mobile-Landing): 18px at .38em; 22px from the tablet (one size step up, L1). */
+/* The subtitle on the narrow board (Mobile-Landing): 18px at .38em, on the font's own line box; 22px from the tablet (one size step up, L1). */
 @utility type-sub-sm {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
-  line-height: 1;
+  line-height: normal;
   letter-spacing: 0.38em;
   text-transform: uppercase;
   @media (width >= 48rem) {
@@ -531,6 +531,15 @@
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* The phone landing's call to action (Mobile-Landing): type-btn-heavy's face at 22px, on the 64px bar. */
+@utility type-btn-bar-lg {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 22px;
   line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;

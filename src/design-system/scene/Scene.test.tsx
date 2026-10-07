@@ -27,6 +27,15 @@ describe("scene", () => {
     expect(tier.style.getPropertyValue("--crowd-a")).toBe("0.5");
   });
 
+  it("CrowdTier flat is the phone's band: its own dot grid and fade, not the stand's", () => {
+    const { container } = render(<CrowdTier flat alpha={0.22} />);
+    const tier = container.firstElementChild!;
+    expect(tier).toHaveClass("scene-crowd-flat");
+    expect(tier).not.toHaveClass("scene-crowd");
+    expect(tier).toHaveAttribute("aria-hidden", "true");
+    expect(tier).toHaveStyle("--crowd-a: 0.22");
+  });
+
   it("ArenaBackdrop is decorative and picks its venue (default turf)", () => {
     const { container, rerender } = render(<ArenaBackdrop />);
     const root = container.firstElementChild as HTMLElement;

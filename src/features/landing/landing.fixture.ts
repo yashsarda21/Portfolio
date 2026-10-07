@@ -5,7 +5,7 @@ export const artboardLandingView: LandingView = {
   heading: "YASH SARDA",
   title: { name: "YASH SARDA", role: "SOFTWARE ENGINEER" },
   brand: { mark: "YS", label: "THE ARENA" },
-  header: { live: "LIVE · THE ARENA", player: "PLAYER 01 / 01" },
+  header: { live: "LIVE · THE ARENA", player: "PLAYER 01 / 01", playerShort: "01 / 01" },
   footer: [
     { label: "HOME", value: "Yash", tone: "primary", align: "start" },
     { label: "STATUS", value: "UNDEFEATED", tone: "volt", align: "center" },
@@ -23,5 +23,5 @@ export const artboardLandingView: LandingView = {
   comm: "New challenger enters the arena.",
   commTag: "COMM",
   skip: { label: "SKIP INTRO", to: "/arena" },
-  audio: { name: "Crowd audio", label: "CROWD", on: "ON", off: "OFF" },
+  audio: { name: "Crowd audio", label: "CROWD", labelPhone: "SOUND", on: "ON", off: "OFF" },
 };

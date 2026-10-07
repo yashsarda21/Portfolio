@@ -48,6 +48,26 @@ describe("broadcast chrome", () => {
     );
   });
 
+  it("AudioToggle text variant is the phone's chip: the word and the state, no icon, 44px", () => {
+    render(
+      <AudioToggle
+        name="Crowd audio"
+        variant="text"
+        label="SOUND"
+        on
+        onToggle={() => {}}
+        stateOn="ON"
+        stateOff="OFF"
+      />,
+    );
+    const btn = screen.getByRole("button", { name: "SOUND" });
+    expect(btn).toHaveAttribute("aria-pressed", "true");
+    expect(btn).toHaveTextContent("SOUND ON");
+    expect(btn.querySelector("svg")).toBeNull();
+    expect(btn).toHaveClass("h-11", "px-3", "type-mono-xs");
+    expect(btn).not.toHaveClass("type-mono-md", "px-4");
+  });
+
   it("CommentaryBar passes rest props and exposes its state", () => {
     const { container } = render(
       <CommentaryBar tag="COMM" line="Bye." state="out" aria-hidden="true" />,

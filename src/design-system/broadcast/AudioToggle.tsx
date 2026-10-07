@@ -7,7 +7,8 @@ interface AudioToggleProps {
   name: string;
   on: boolean;
   onToggle: () => void;
-  variant?: "labelled" | "icon";
+  /** "text" is the phone's chip: the word and its state, no speaker glyph. */
+  variant?: "labelled" | "icon" | "text";
   /** Labelled variant: the stable visible word that names the button, e.g. "CROWD". Defaults to `name`. */
   label?: string;
   /** Labelled variant: visual-only state words, e.g. "ON" / "OFF" (aria-pressed already says it). */
@@ -38,10 +39,12 @@ export function AudioToggle({
       />
     );
   }
+  const text = variant === "text";
   // No aria-label: the visible word is the accessible name (WCAG 2.5.3), aria-pressed carries the state.
   return (
     <HUDButton
-      icon={on ? "speaker-loud" : "speaker-off"}
+      icon={text ? undefined : on ? "speaker-loud" : "speaker-off"}
+      tone={text ? "glass-compact" : undefined}
       aria-pressed={on}
       onClick={onToggle}
       className={className}

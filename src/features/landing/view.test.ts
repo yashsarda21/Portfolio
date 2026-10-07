@@ -9,7 +9,11 @@ describe("buildLandingView", () => {
   it("the name is the heading and the title; the header and footer come from ui.landing", () => {
     expect(view.heading).toBe(ui.routes.home.heading);
     expect(view.title).toEqual({ name: content.player.name, role: content.player.title });
-    expect(view.header).toEqual({ live: ui.landing.live, player: ui.landing.player });
+    expect(view.header).toEqual({
+      live: ui.landing.live,
+      player: ui.landing.player,
+      playerShort: ui.landing.playerShort,
+    });
     expect(view.footer).toEqual([
       {
         label: ui.landing.home,
@@ -42,6 +46,8 @@ describe("buildLandingView", () => {
     expect(view.hint).toBe(ui.landing.hint);
     expect(view.comm).toBe(content.commentary.entrance[0]);
     expect(view.audio).toEqual(ui.audio);
+    expect(view.audio.labelPhone).toBe("SOUND");
+    expect(ui.landing.playerShort).toBe("01 / 01");
     expect(view.brand).toEqual({ mark: ui.brand.mark, label: ui.brand.wordmark });
     expect(view.commTag).toBe(ui.comm.tag);
   });

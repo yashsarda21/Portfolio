@@ -14,6 +14,8 @@ export const hudButtonVariants = cva(
         // Glass from 768 up; on the phone artboards the control is a plain bordered chip (12px gutters, 11px type).
         "glass-line":
           "glass text-floodlight hover:bg-white-a10 max-md:border-line-strong max-md:bg-transparent max-md:px-3 max-md:type-mono-xs",
+        // The phone landing's chip (Mobile-Landing): glass at every width, 12px gutters, 11px type, no icon.
+        "glass-compact": "glass text-floodlight hover:bg-white-a10 px-3 type-mono-xs",
         // The artboard's border is content-box (+2px): 46px with the border, vs the glass 44px.
         "volt-outline":
           "h-11.5 border border-volt bg-transparent text-volt hover:border-volt-hover hover:text-volt-hover",
@@ -31,7 +33,10 @@ export function HUDButton<T extends ElementType = "button">({
   className,
   children,
   ...rest
-}: PolymorphicProps<T, { icon?: IconName; tone?: "glass" | "glass-line" | "volt-outline" }>) {
+}: PolymorphicProps<
+  T,
+  { icon?: IconName; tone?: "glass" | "glass-line" | "glass-compact" | "volt-outline" }
+>) {
   const Comp: ElementType = as ?? "button";
   const typeProp = Comp === "button" ? { type: (rest as { type?: string }).type ?? "button" } : {};
   return (

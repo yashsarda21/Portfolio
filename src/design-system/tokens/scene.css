@@ -39,6 +39,18 @@
   mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 55%, transparent 90%);
 }
 
+/* The phone's crowd band (Mobile-Landing): a flat strip, a finer dot grid, fading in and out around its middle. */
+@utility scene-crowd-flat {
+  background-image: radial-gradient(
+    rgb(var(--venue-crowd-rgb, var(--rgb-crowd)) / var(--crowd-a, var(--venue-crowd-alpha, 0.3)))
+      1px,
+    transparent 1.6px
+  );
+  background-size: 6px 5px;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 50%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 50%, transparent);
+}
+
 @utility scene-cone {
   background: linear-gradient(
     180deg,

@@ -14,8 +14,8 @@ import {
 import { ArenaLink } from "@/shell/ArenaLink";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
-import { PlaceholderScreen } from "@/shell/PlaceholderScreen";
 import { LANDING_BEATS, bootDelay } from "./beats";
+import { LandingColumn } from "./LandingColumn";
 import type { LandingView } from "./view";
 
 /**
@@ -128,10 +128,7 @@ export function LandingPage({ view }: { view: LandingView }) {
           {view.hint}
         </KeyboardHint>
       </Stage>
-      {/* Phone and tablet: replaced by the real layout in Task 4. */}
-      <div className="lg:hidden">
-        <PlaceholderScreen route="home" as="div" announce={false} />
-      </div>
+      <LandingColumn view={view} />
     </main>
   );
 }

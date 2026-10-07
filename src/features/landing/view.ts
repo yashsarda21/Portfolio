@@ -6,7 +6,7 @@ export interface LandingView {
   heading: string;
   title: { name: string; role: string };
   brand: { mark: string; label: string };
-  header: { live: string; player: string };
+  header: { live: string; player: string; playerShort: string };
   footer: {
     label: string;
     value: string;
@@ -35,7 +35,7 @@ export function buildLandingView(
     heading: ui.routes.home.heading,
     title: { name: content.player.name, role: content.player.title },
     brand: { mark: ui.brand.mark, label: ui.brand.wordmark },
-    header: { live: l.live, player: l.player },
+    header: { live: l.live, player: l.player, playerShort: l.playerShort },
     footer: [
       { label: l.home, value: getPlayerFirstName(content), tone: "primary", align: "start" },
       { label: l.status, value: l.undefeated, tone: "volt", align: "center" },

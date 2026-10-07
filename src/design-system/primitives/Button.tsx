@@ -29,12 +29,15 @@ export const buttonVariants = cva(
         xl: "h-19.5 w-77.5 flex-col gap-1 type-btn-xl",
         cta: "min-h-14 px-7 type-btn-heavy",
         bar: "h-13.5 w-full px-4 type-btn-bar",
+        // The phone landing's call to action: the full-width bar at 64px, 22px heavy label (Mobile-Landing).
+        "bar-lg": "h-16 w-full px-4 type-btn-bar-lg",
       },
     },
     compoundVariants: [
       // The artboards' borders are content-box: an outlined control is 2px taller than a filled one.
       { variant: ["outline", "panel"], size: "cta", className: "min-h-14.5" },
       { variant: ["outline", "panel"], size: "bar", className: "h-14" },
+      { variant: ["secondary", "outline", "panel"], size: "bar-lg", className: "h-16.5" },
     ],
     defaultVariants: { variant: "primary", size: "m" },
   },
@@ -68,7 +71,7 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "panel";
 
 export type ButtonOwnProps = {
   variant?: Variant;
-  size?: "s" | "m" | "l" | "ml" | "xl" | "cta" | "bar";
+  size?: "s" | "m" | "l" | "ml" | "xl" | "cta" | "bar" | "bar-lg";
   /** true = always skewed, false = never, "desktop" = skewed from 768px up (default). */
   skew?: boolean | "desktop";
   /** Second line under the label (XL CTAs). */

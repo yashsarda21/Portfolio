@@ -98,14 +98,14 @@ describe("Scoreboard sizes", () => {
     expect(screen.getByText("H").parentElement).toHaveClass("shadow-board");
   });
 
-  it("compact: header 38 at 11px, two footer cells, 18px values, a 5px bezel", () => {
+  it("compact: header 39 (38 and its rule) at 11px, footer 49, two cells, 18px values, a 5px bezel", () => {
     board("compact");
-    expect(screen.getByText("H")).toHaveClass("h-9.5", "type-mono-label");
+    expect(screen.getByText("H")).toHaveClass("h-9.75", "type-mono-label");
     const footer = screen.getByText("ONE").closest(".grid");
-    expect(footer).toHaveClass("h-12", "grid-cols-2");
+    expect(footer).toHaveClass("h-12.25", "grid-cols-2");
     expect(footer?.children).toHaveLength(2);
     expect(screen.getByText("ONE")).toHaveClass("type-d5");
-    expect(screen.getByText("NAME")).toHaveClass("type-hero-stack");
+    expect(screen.getByText("NAME")).toHaveClass("type-hero-stack", "w-min");
     expect(screen.getByText("SUB")).toHaveClass("type-sub-sm", "pl-[0.38em]");
     expect(screen.getByText("H").parentElement).toHaveClass("shadow-board-compact");
     expect(screen.getByText("H").parentElement).not.toHaveClass("shadow-board");
