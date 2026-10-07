@@ -38,6 +38,21 @@ describe("content schema", () => {
     broken.player.resumePdf = "assets/Yash-Sarda-Resume.pdf";
     expect(() => parseContent(broken)).toThrow(/player\.resumePdf/);
   });
+  describe("card stat ids", () => {
+    type Stats = { player: { cardStats: { id: string }[] } };
+    it("must be unique", () => {
+      const broken = structuredClone(raw) as unknown as Stats;
+      broken.player.cardStats[1]!.id = broken.player.cardStats[0]!.id;
+      expect(() => parseContent(broken)).toThrow(/Ids must be unique/);
+    });
+
+    it('must include "problems" (Team Up and the scouting report read it)', () => {
+      const broken = structuredClone(raw) as unknown as Stats;
+      broken.player.cardStats[0]!.id = "solved";
+      expect(() => parseContent(broken)).toThrow(/"problems" stat/);
+    });
+  });
+
   describe("strictness (spec §6)", () => {
     // Loosely typed clone so each test can break one thing.
     type Loose = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any

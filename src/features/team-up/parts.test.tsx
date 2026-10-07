@@ -1,10 +1,11 @@
 import { render, screen, within, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { content, ui } from "@/content";
 import { ArenaShell } from "@/shell/ArenaShell";
 import { ChallengeForm, type TeamUpDeps } from "./ChallengeForm";
+import { HONEYPOT_NAME } from "./form";
 import { TeamUpPage } from "./TeamUpPage";
 import { buildTeamUpView } from "./view";
 
@@ -34,6 +35,8 @@ function renderPage(d: TeamUpDeps) {
   return render(<RouterProvider router={router} />);
 }
 
+/** The honeypot is hidden from assistive tech, so it is found by its name. */
+const honeypot = () => document.querySelector<HTMLInputElement>(`input[name="${HONEYPOT_NAME}"]`)!;
 const name = () => screen.getByLabelText(view.fields.name.label);
 const email = () => screen.getByLabelText(view.fields.email.label);
 const message = () => screen.getByLabelText(view.fields.message.label);
@@ -171,12 +174,14 @@ describe("ChallengeForm: wiring", () => {
     expect(email()).toHaveAttribute("autocomplete", "email");
   });
 
-  it("has an honeypot that is labelled, out of the tab order and never autofilled", () => {
-    render(<ChallengeForm view={view} deps={deps()} onSent={() => {}} />);
-    const trap = screen.getByLabelText(view.honeypot);
+  it("has an honeypot that is out of the tab order, out of the accessibility tree and never autofilled", () => {
+    const { container } = render(<ChallengeForm view={view} deps={deps()} onSent={() => {}} />);
+    // A screen reader cannot reach it, so it cannot fill it by accident (and a bot still finds the field).
+    expect(screen.queryByRole("textbox", { name: view.honeypot })).toBeNull();
+    const trap = container.querySelector<HTMLInputElement>(`input[name="${HONEYPOT_NAME}"]`)!;
     expect(trap).toHaveAttribute("tabindex", "-1");
     expect(trap).toHaveAttribute("autocomplete", "off");
-    expect(trap.closest(".sr-only")).not.toBeNull();
+    expect(trap.closest("[aria-hidden='true']")).not.toBeNull();
   });
 
   it("offers the email address as a link, spelled as drawn", () => {
@@ -184,6 +189,74 @@ describe("ChallengeForm: wiring", () => {
     expect(screen.getByRole("link", { name: view.orEmail.label })).toHaveAttribute(
       "href",
       `mailto:${view.address}`,
+    );
+  });
+});
+
+function setClipboard(clipboard: unknown) {
+  Object.defineProperty(navigator, "clipboard", { value: clipboard, configurable: true });
+}
+
+describe("ChallengeForm: the email app (no form service)", () => {
+  afterEach(() => setClipboard(undefined));
+
+  async function sendByEmail() {
+    const user = userEvent.setup();
+    const d = deps();
+    const onSent = vi.fn();
+    render(<ChallengeForm view={view} deps={d} onSent={onSent} />);
+    await user.click(screen.getByRole("radio", { name: "DOUBLES" }));
+    await fillIn(user);
+    await user.click(send());
+    return { user, d, onSent };
+  }
+
+  it("opens the email app, says nothing has been sent yet, and keeps every word", async () => {
+    const { d, onSent } = await sendByEmail();
+    expect(d.openUrl).toHaveBeenCalledTimes(1);
+    // Not a success: the page does not move on, and says what to do next in a polite status.
+    expect(onSent).not.toHaveBeenCalled();
+    const note = await screen.findByText(view.mailto.note);
+    expect(note.closest("[role='status']")).not.toBeNull();
+    expect(name()).toHaveValue("Sam Visitor");
+    expect(email()).toHaveValue("sam@example.com");
+    expect(message()).toHaveValue("We are hiring a full-stack engineer.");
+    expect(screen.getByRole("radio", { name: "DOUBLES" })).toBeChecked();
+    expect(screen.getByRole("link", { name: view.orEmail.label })).toBeVisible();
+    expect(send()).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("shows no note before a send", () => {
+    render(<ChallengeForm view={view} deps={deps()} onSent={() => {}} />);
+    expect(screen.queryByText(view.mailto.note)).toBeNull();
+    expect(screen.queryByRole("button", { name: view.mailto.copy })).toBeNull();
+  });
+
+  it("COPY MESSAGE puts the whole message on the clipboard, says so, and goes back after a moment", async () => {
+    const { user } = await sendByEmail();
+    // After the setup: user-event installs a clipboard of its own.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboard({ writeText });
+    await user.click(await screen.findByRole("button", { name: view.mailto.copy }));
+    expect(writeText).toHaveBeenCalledWith(
+      "DOUBLES — Sam Visitor\n\nWe are hiring a full-stack engineer.\n\nSam Visitor\nsam@example.com",
+    );
+    expect(screen.getByRole("button", { name: view.mailto.copied })).toBeInTheDocument();
+    // The change is announced by a status region, not by the button.
+    const statuses = screen.getAllByRole("status").map((s) => s.textContent);
+    expect(statuses).toContain(view.mailto.copied);
+  });
+
+  it("when the clipboard refuses, shows the message in a field, selected and focused", async () => {
+    const { user } = await sendByEmail();
+    setClipboard(undefined);
+    await user.click(await screen.findByRole("button", { name: view.mailto.copy }));
+    const field = await screen.findByRole("textbox", { name: view.mailto.copy });
+    expect(field).toHaveAttribute("readonly");
+    expect((field as HTMLTextAreaElement).value).toContain("We are hiring a full-stack engineer.");
+    expect(field).toHaveFocus();
+    expect((field as HTMLTextAreaElement).selectionEnd).toBe(
+      (field as HTMLTextAreaElement).value.length,
     );
   });
 });
@@ -206,7 +279,9 @@ describe("ChallengeForm: sending", () => {
 
     const busy = screen.getByRole("button", { name: view.sending });
     expect(busy).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByRole("status")).toHaveTextContent(view.sending);
+    expect(document.getElementById(busy.getAttribute("aria-describedby")!)).toHaveTextContent(
+      view.sending,
+    );
     // Enter in a field submits the form again: nothing goes out.
     await user.type(name(), "{Enter}");
     await user.click(busy);
@@ -285,7 +360,7 @@ describe("ChallengeForm: sending", () => {
     const onSent = vi.fn();
     render(<ChallengeForm view={view} deps={d} onSent={onSent} />);
     await fillIn(user);
-    await user.type(screen.getByLabelText(view.honeypot), "http://spam.example");
+    await user.type(honeypot(), "http://spam.example");
     await user.click(send());
     expect(onSent).toHaveBeenCalledTimes(1);
     expect(d.fetch).not.toHaveBeenCalled();
@@ -297,10 +372,12 @@ describe("ChallengeForm: sending", () => {
   });
 });
 
+const SERVICE = { endpoint: "https://forms.example/f/abc" };
+
 describe("TeamUpPage", () => {
   it("replaces the form with the success panel: the heading has the cursor and the line is announced", async () => {
     const user = userEvent.setup();
-    renderPage(deps());
+    renderPage(deps(SERVICE));
     await fillIn(user);
     await user.click(send());
 
@@ -317,7 +394,7 @@ describe("TeamUpPage", () => {
 
   it("SEND ANOTHER brings back an empty form with the cursor in the name", async () => {
     const user = userEvent.setup();
-    renderPage(deps());
+    renderPage(deps(SERVICE));
     await fillIn(user);
     await user.click(send());
     await user.click(await screen.findByRole("button", { name: view.success.again }));
@@ -332,12 +409,26 @@ describe("TeamUpPage", () => {
 
   it("pulses the floodlights once on success only", async () => {
     const user = userEvent.setup();
-    const { container } = renderPage(deps());
+    const { container } = renderPage(deps(SERVICE));
     expect(container.querySelector(".animate-floodlight-pulse")).toBeNull();
     await fillIn(user);
     await user.click(send());
     await screen.findByRole("heading", { level: 2, name: view.success.title });
     expect(container.querySelectorAll(".animate-floodlight-pulse")).toHaveLength(1);
+  });
+
+  it("through the email app nothing is called received: no success panel, no pulse, the form stays", async () => {
+    const user = userEvent.setup();
+    const { container } = renderPage(deps());
+    await fillIn(user);
+    await user.click(send());
+    expect(await screen.findByText(view.mailto.note)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2, name: view.success.title })).toBeNull();
+    expect(container.querySelector(".animate-floodlight-pulse")).toBeNull();
+    expect(screen.getAllByRole("status").map((s) => s.textContent)).not.toContain(
+      view.success.comm,
+    );
+    expect(name()).toHaveValue("Sam Visitor");
   });
 
   it("lists the four direct lines as same-tab links with a hidden arrow, then the after-you-send panel", () => {

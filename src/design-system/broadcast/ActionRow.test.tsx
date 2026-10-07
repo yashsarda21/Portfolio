@@ -25,8 +25,8 @@ describe("ActionRow", () => {
     expect(screen.getByRole("button", { name: /COPY/ })).toBeInTheDocument();
   });
 
-  it("status replaces the sub-line and sits in a polite live region", () => {
-    const { rerender } = render(
+  it("status replaces the sub-line, and the row announces nothing itself", () => {
+    const row = (status?: string) => (
       <ActionRow
         as="button"
         type="button"
@@ -34,22 +34,16 @@ describe("ActionRow", () => {
         sub="OPENS QUICK VIEW"
         icon="copy"
         tone="glass"
-      />,
+        status={status}
+      />
     );
-    expect(screen.getByText("OPENS QUICK VIEW")).toHaveAttribute("aria-live", "polite");
-    rerender(
-      <ActionRow
-        as="button"
-        type="button"
-        title="COPY"
-        sub="OPENS QUICK VIEW"
-        icon="copy"
-        tone="glass"
-        status="LINK COPIED ✓"
-      />,
-    );
+    const { container, rerender } = render(row());
+    expect(screen.getByText("OPENS QUICK VIEW")).toBeInTheDocument();
+    rerender(row("LINK COPIED ✓"));
     expect(screen.queryByText("OPENS QUICK VIEW")).not.toBeInTheDocument();
-    expect(screen.getByText("LINK COPIED ✓")).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByText("LINK COPIED ✓")).toBeInTheDocument();
+    // The consumer owns the announcement: no live region anywhere in the row.
+    expect(container.querySelector("[aria-live], [role='status'], [role='alert']")).toBeNull();
   });
 
   it("the primary tone is volt with ink text; glass is glass with a volt hover border", () => {

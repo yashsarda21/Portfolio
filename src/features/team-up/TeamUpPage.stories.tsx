@@ -21,6 +21,11 @@ const sendsByEmail: TeamUpDeps = {
   fetch: () => Promise.reject(),
   openUrl: () => {},
 };
+const accepted: TeamUpDeps = {
+  endpoint: ENDPOINT,
+  fetch: () => Promise.resolve(new Response("{}", { status: 200 })),
+  openUrl: () => {},
+};
 const never: TeamUpDeps = {
   endpoint: ENDPOINT,
   fetch: () => new Promise(() => {}),
@@ -75,9 +80,22 @@ export const Sending: StoryObj = {
   },
 };
 
-/** The challenge is in: the heading has the cursor, the line, the fixture and a way to send another. */
-export const Success: StoryObj = {
+/** No form service: the email app is asked to open. Nothing is sent yet, so the form stays with the note and COPY MESSAGE. */
+export const MailtoOpened: StoryObj = {
   render: () => <TeamUpPage view={view} deps={sendsByEmail} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fillIn(canvas);
+    await userEvent.click(canvas.getByRole("button", { name: view.send }));
+    await expect(await canvas.findByText(view.mailto.note)).toBeVisible();
+    await expect(canvas.getByRole("button", { name: view.mailto.copy })).toBeVisible();
+    await expect(canvas.getByLabelText(view.fields.name.label)).toHaveValue("Sam Visitor");
+  },
+};
+
+/** The challenge is in (the form service took it): the heading has the cursor, the line, the fixture and a way to send another. */
+export const Success: StoryObj = {
+  render: () => <TeamUpPage view={view} deps={accepted} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fillIn(canvas);

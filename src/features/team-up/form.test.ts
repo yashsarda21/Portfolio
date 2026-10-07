@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ui } from "@/content";
-import { buildMailto, submitChallenge, validate, type ChallengeValues } from "./form";
+import { buildMailto, messageText, submitChallenge, validate, type ChallengeValues } from "./form";
 
 const errors = ui.pages.teamUp.errors;
 const valid: ChallengeValues = {
@@ -93,6 +93,14 @@ describe("buildMailto", () => {
     ).searchParams;
     expect(params.get("subject")).toBe("DOUBLES — Sam");
     expect(params.get("body")?.startsWith("hello there, friend")).toBe(true);
+  });
+});
+
+describe("messageText", () => {
+  it("is the email's subject, then its body, as one block the visitor can paste", () => {
+    expect(messageText(valid, "SIGN A PLAYER")).toBe(
+      "SIGN A PLAYER — Sam Visitor\n\nWe are hiring a full-stack engineer.\n\nSam Visitor\nsam@example.com",
+    );
   });
 });
 

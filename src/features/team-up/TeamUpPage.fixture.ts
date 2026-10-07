@@ -28,6 +28,11 @@ export const artboardTeamUpView: TeamUpView = {
   send: "SEND CHALLENGE",
   sending: "SENDING…",
   error: "That didn't go through. Your message is still here.",
+  mailto: {
+    note: "YOUR EMAIL APP SHOULD OPEN WITH THE MESSAGE READY. PRESS SEND THERE.",
+    copy: "COPY MESSAGE",
+    copied: "MESSAGE COPIED ✓",
+  },
   honeypot: "Leave this empty",
   address: "yashsarda2002@gmail.com",
   orEmail: { label: "OR EMAIL YASHSARDA2002@GMAIL.COM", href: "mailto:yashsarda2002@gmail.com" },
@@ -67,6 +72,7 @@ export const artboardTeamUpView: TeamUpView = {
     comm: "Challenge received. I'll serve first.",
     text: "Floodlights pulse once, the crowd lifts, and the scoreboard reads",
     board: "NEW FIXTURE · VISITOR vs YASH",
+    end: ".",
   },
   success: {
     title: "CHALLENGE RECEIVED",

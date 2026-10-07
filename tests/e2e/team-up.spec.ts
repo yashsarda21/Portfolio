@@ -29,6 +29,19 @@ const sendButton = (page: Page) => page.getByRole("button", { name: t.send });
 const success = (page: Page) =>
   page.getByRole("heading", { level: 2, name: t.success.title, exact: true });
 
+/** The honeypot is out of the accessibility tree on purpose, so it is found by its name (Formspree's). */
+const honeypot = (page: Page) => page.locator('input[name="_gotcha"]');
+
+/**
+ * This build has no form service, so the one way to the "received" state in a real browser is a quiet drop:
+ * a filled honeypot reads as sent. (The service path is covered by unit tests with a faked network.)
+ */
+async function sendQuietly(page: Page) {
+  await fillIn(page);
+  await honeypot(page).fill("http://spam.example", { force: true });
+  await sendButton(page).click();
+}
+
 async function fillIn(page: Page) {
   await nameField(page).fill(NAME);
   await emailField(page).fill(VISITOR_EMAIL);
@@ -186,8 +199,25 @@ test.describe("checking the form", () => {
   });
 });
 
-test.describe("sending by email", () => {
-  test("opens the mail app pre-filled, then the heading has the cursor and the line is announced", async ({
+/** A clipboard the test controls (headless browsers refuse the real one), or none at all. */
+async function stubClipboard(page: Page, mode: "works" | "missing") {
+  await page.addInitScript((m) => {
+    const w = window as unknown as { __copied: string[] };
+    w.__copied = [];
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value:
+        m === "missing"
+          ? undefined
+          : { writeText: (t: string) => (w.__copied.push(t), Promise.resolve()) },
+    });
+  }, mode);
+}
+const copied = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __copied: string[] }).__copied);
+
+test.describe("sending by email (no form service)", () => {
+  test("opens the mail app pre-filled, then says nothing is sent yet and keeps every word", async ({
     page,
   }) => {
     await captureOpenedUrls(page);
@@ -197,8 +227,6 @@ test.describe("sending by email", () => {
     await fillIn(page);
     await sendButton(page).click();
 
-    await expect(success(page)).toBeFocused();
-    await expect(page.locator("form")).toHaveCount(0);
     const urls = await opened(page);
     expect(urls).toHaveLength(1);
     expect(urls[0]!.startsWith(`mailto:${EMAIL}?subject=`)).toBe(true);
@@ -207,26 +235,53 @@ test.describe("sending by email", () => {
     expect(params.get("body")).toContain(MESSAGE);
     expect(params.get("body")).toContain(VISITOR_EMAIL);
 
-    // A screen reader hears the line from the page's status; the bar itself is a picture of it.
-    await expect(page.getByRole("status").filter({ hasText: t.after.comm })).toHaveCount(1);
-    await expect(page.getByText(t.success.board.fixture, { exact: true })).toBeVisible();
-    await expect(page.getByText(t.success.board.visitor, { exact: true })).toBeVisible();
+    // Not a success: the visitor still has to press send in their mail app.
+    const note = page.getByRole("status").filter({ hasText: t.mailto.note });
+    await expect(note).toBeVisible();
+    await expect(success(page)).toHaveCount(0);
+    await expect(page.getByRole("status").filter({ hasText: t.after.comm })).toHaveCount(0);
+    await expect(page.locator(".animate-floodlight-pulse")).toHaveCount(0);
+    await expect(nameField(page)).toHaveValue(NAME);
+    await expect(emailField(page)).toHaveValue(VISITOR_EMAIL);
+    await expect(messageField(page)).toHaveValue(MESSAGE);
+    await expect(page.getByRole("radio", { name: t.formats.doubles.title })).toBeChecked();
+    await expect(
+      page.getByRole("link", { name: `${t.orEmail} ${EMAIL}`, exact: false }),
+    ).toBeVisible();
   });
 
-  test("SEND ANOTHER brings back an empty form with the cursor in the name", async ({ page }) => {
+  test("COPY MESSAGE puts the message on the clipboard and says so", async ({ page }) => {
     await captureOpenedUrls(page);
+    await stubClipboard(page, "works");
     await page.goto(ROUTES.teamUp);
     await waitForHydration(page);
     await fillIn(page);
     await sendButton(page).click();
-    await expect(success(page)).toBeFocused();
-    await page.getByRole("button", { name: t.success.again }).click();
-    await expect(nameField(page)).toBeFocused();
-    await expect(nameField(page)).toHaveValue("");
-    await expect(emailField(page)).toHaveValue("");
-    await expect(messageField(page)).toHaveValue("");
-    await expect(page.getByRole("radio", { name: t.formats.sign.title })).toBeChecked();
-    await expect(page.getByRole("status").filter({ hasText: t.after.comm })).toHaveCount(0);
+    await page.getByRole("button", { name: t.mailto.copy }).click();
+    await expect(page.getByRole("button", { name: t.mailto.copied })).toBeVisible();
+    const [text] = await copied(page);
+    expect(text).toContain(MESSAGE);
+    expect(text).toContain(VISITOR_EMAIL);
+    // The row goes back to COPY MESSAGE after a moment.
+    await expect(page.getByRole("button", { name: t.mailto.copy })).toBeVisible();
+  });
+
+  test("with no clipboard the message is shown in a field, selected, for copying by hand", async ({
+    page,
+  }) => {
+    await captureOpenedUrls(page);
+    await stubClipboard(page, "missing");
+    await page.goto(ROUTES.teamUp);
+    await waitForHydration(page);
+    await fillIn(page);
+    await sendButton(page).click();
+    await page.getByRole("button", { name: t.mailto.copy }).click();
+    const field = page.getByRole("textbox", { name: t.mailto.copy });
+    await expect(field).toBeFocused();
+    await expect(field).toHaveValue(new RegExp(MESSAGE));
+    expect(
+      await field.evaluate((el: HTMLTextAreaElement) => el.selectionEnd - el.selectionStart),
+    ).toBe(await field.evaluate((el: HTMLTextAreaElement) => el.value.length));
   });
 
   test("two submits in the same moment open one email, not two", async ({ page }) => {
@@ -239,28 +294,48 @@ test.describe("sending by email", () => {
       form.requestSubmit();
       form.requestSubmit();
     });
-    await expect(success(page)).toBeFocused();
+    await expect(page.getByText(t.mailto.note)).toBeVisible();
     expect(await opened(page)).toHaveLength(1);
   });
+});
 
-  test("a filled honeypot reads as sent but opens nothing", async ({ page }) => {
+test.describe("a challenge that is received", () => {
+  test("the heading has the cursor and the line is announced; nothing is opened", async ({
+    page,
+  }) => {
     await captureOpenedUrls(page);
     await page.goto(ROUTES.teamUp);
     await waitForHydration(page);
-    await fillIn(page);
-    await page.getByLabel(t.honeypot).fill("http://spam.example", { force: true });
-    await sendButton(page).click();
+    await sendQuietly(page);
+
     await expect(success(page)).toBeFocused();
+    await expect(page.locator("form")).toHaveCount(0);
     expect(await opened(page)).toEqual([]);
+    // A screen reader hears the line from the page's status; the bar itself is a picture of it.
+    await expect(page.getByRole("status").filter({ hasText: t.after.comm })).toHaveCount(1);
+    await expect(page.getByText(t.success.board.fixture, { exact: true })).toBeVisible();
+    await expect(page.getByText(t.success.board.visitor, { exact: true })).toBeVisible();
+  });
+
+  test("SEND ANOTHER brings back an empty form with the cursor in the name", async ({ page }) => {
+    await page.goto(ROUTES.teamUp);
+    await waitForHydration(page);
+    await sendQuietly(page);
+    await expect(success(page)).toBeFocused();
+    await page.getByRole("button", { name: t.success.again }).click();
+    await expect(nameField(page)).toBeFocused();
+    await expect(nameField(page)).toHaveValue("");
+    await expect(emailField(page)).toHaveValue("");
+    await expect(messageField(page)).toHaveValue("");
+    await expect(page.getByRole("radio", { name: t.formats.sign.title })).toBeChecked();
+    await expect(page.getByRole("status").filter({ hasText: t.after.comm })).toHaveCount(0);
   });
 
   test("the floodlights pulse once; with reduced motion nothing animates", async ({ page }) => {
-    await captureOpenedUrls(page);
     await page.goto(ROUTES.teamUp);
     await waitForHydration(page);
     await expect(page.locator(".animate-floodlight-pulse")).toHaveCount(0);
-    await fillIn(page);
-    await sendButton(page).click();
+    await sendQuietly(page);
     const pulse = page.locator(".animate-floodlight-pulse");
     await expect(pulse).toHaveCount(1);
     await expect(pulse).toHaveCSS("animation-name", "floodlight-pulse");
@@ -298,6 +373,11 @@ test.describe("desktop", () => {
     await expectNoHorizontalOverflow(page, [768, 1024, 1200, 1440]);
     await fillIn(page);
     await sendButton(page).click();
+    await expect(page.getByText(t.mailto.note)).toBeVisible();
+    await expectNoHorizontalOverflow(page, [768, 1024, 1200, 1440]);
+    await page.reload();
+    await waitForHydration(page);
+    await sendQuietly(page);
     await expect(success(page)).toBeVisible();
     await expectNoHorizontalOverflow(page, [768, 1024, 1200, 1440]);
   });
@@ -344,6 +424,11 @@ test.describe("phone", () => {
     await expectNoHorizontalOverflow(page, [360, 390], 844);
     await fillIn(page);
     await sendButton(page).click();
+    await expect(page.getByText(t.mailto.note)).toBeVisible();
+    await expectNoHorizontalOverflow(page, [360, 390], 844);
+    await page.reload();
+    await waitForHydration(page);
+    await sendQuietly(page);
     await expect(success(page)).toBeVisible();
     await expectNoHorizontalOverflow(page, [360, 390], 844);
   });

@@ -34,26 +34,32 @@
     "resumePdf": null,
     "cardStats": [
       {
+        "id": "problems",
         "label": "PROBLEMS",
         "value": "750+"
       },
       {
+        "id": "cgpa",
         "label": "CGPA",
         "value": "8.94"
       },
       {
+        "id": "cet",
         "label": "CET %ILE",
         "value": "99.5"
       },
       {
+        "id": "lists",
         "label": "LISTS",
         "value": "200+"
       },
       {
+        "id": "records",
         "label": "RECORDS",
         "value": "10K+"
       },
       {
+        "id": "tests",
         "label": "TESTS",
         "value": "75+"
       }

@@ -2,13 +2,13 @@ import { Fragment, useState, useSyncExternalStore } from "react";
 import { content, ui } from "@/content";
 import { PlayerCard, ShowcaseBackdrop, Text } from "@/design-system";
 import portraitSrc from "@/assets/portrait-rest.webp";
+import { useCopyText } from "@/lib/useCopyText";
 import { BUILD_YEAR } from "@/shell/config";
 import { ContentPage } from "@/shell/ContentPage";
 import { ROUTES } from "@/shell/routes";
 import { CardBack, CardFront } from "./CardFaces";
 import { Profile } from "./Profile";
 import { TakeAway } from "./TakeAway";
-import { useCopyLink } from "./useCopyLink";
 import { buildCardView, type CardView } from "./view";
 
 const t = ui.pages.card;
@@ -33,7 +33,7 @@ function useSeasonYear(buildYear: number, live: boolean) {
  */
 export function CardPage({ view, liveYear = true }: { view: CardView; liveYear?: boolean }) {
   const [flipped, setFlipped] = useState(false);
-  const link = useCopyLink(view.take.copy.url, view.take.copy);
+  const link = useCopyText();
   const year = useSeasonYear(view.front.season.buildYear, liveYear);
 
   return (

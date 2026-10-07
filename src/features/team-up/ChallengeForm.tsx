@@ -1,6 +1,9 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Button, Fieldset, RadioCard, Text, TextArea, TextField } from "@/design-system";
+import { useCopyText } from "@/lib/useCopyText";
 import {
+  HONEYPOT_NAME,
+  messageText,
   submitChallenge,
   validate,
   type ChallengeValues,
@@ -40,7 +43,9 @@ export function ChallengeForm({
   const statusId = useId();
   const [values, setValues] = useState<ChallengeValues>(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [phase, setPhase] = useState<"idle" | "sending" | "failed">("idle");
+  // "mailto": the visitor's email app was asked to open; nothing is sent until they press send there.
+  const [phase, setPhase] = useState<"idle" | "sending" | "failed" | "mailto">("idle");
+  const { state: copyState, copy: copyText, field: copyField } = useCopyText<HTMLTextAreaElement>();
   // A ref, not state: two presses can land before React re-renders.
   const inFlight = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -52,6 +57,7 @@ export function ChallengeForm({
   }, [focusName]);
 
   const sending = phase === "sending";
+  const mailto = phase === "mailto";
   const mailAction = `mailto:${view.address}`;
   const set = (patch: Partial<ChallengeValues>) => {
     const next = { ...values, ...patch };
@@ -68,6 +74,8 @@ export function ChallengeForm({
     (key: Field | "website") => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       set({ [key]: e.target.value });
 
+  const formatTitle = () => view.formats.options.find((o) => o.id === values.format)!.title;
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (inFlight.current) return;
@@ -80,10 +88,14 @@ export function ChallengeForm({
     }
     inFlight.current = true;
     setPhase("sending");
-    const title = view.formats.options.find((o) => o.id === values.format)!.title;
-    const result = await submitChallenge(values, { ...deps, to: view.address, formatTitle: title });
+    const result = await submitChallenge(values, {
+      ...deps,
+      to: view.address,
+      formatTitle: formatTitle(),
+    });
     inFlight.current = false;
     if (result === "error") setPhase("failed");
+    else if (result === "mailto") setPhase("mailto");
     else onSent();
   }
 
@@ -151,12 +163,12 @@ export function ChallengeForm({
         error={errors.message}
       />
 
-      {/* The honeypot: people never reach it (out of sight, out of the tab order); bots fill every field they find. */}
-      <div className="sr-only">
+      {/* The honeypot: people never reach it (out of sight, out of the tab order, out of the accessibility tree); bots fill every field they find. */}
+      <div aria-hidden="true" className="sr-only">
         <label>
           {view.honeypot}
           <input
-            name="website"
+            name={HONEYPOT_NAME}
             type="text"
             tabIndex={-1}
             autoComplete="off"
@@ -193,8 +205,39 @@ export function ChallengeForm({
           {view.orEmail.label}
         </Text>
       </div>
+      {/* The line shows where the visitor is looking; the region is in the page before it fills, so it is announced. */}
+      <div role="status" className="empty:hidden">
+        {mailto ? (
+          <Text as="p" variant="mono-note" tone="label">
+            {view.mailto.note}
+          </Text>
+        ) : null}
+      </div>
+      {mailto ? (
+        <div className="flex flex-col items-start gap-3 max-md:items-stretch">
+          <Button
+            type="button"
+            variant="outline"
+            size="s"
+            skew="desktop"
+            onClick={() => void copyText(messageText(values, formatTitle()))}
+          >
+            {copyState === "copied" ? view.mailto.copied : view.mailto.copy}
+          </Button>
+          {copyState === "fallback" ? (
+            <TextArea
+              ref={copyField}
+              label={view.mailto.copy}
+              readOnly
+              value={messageText(values, formatTitle())}
+              onFocus={(e) => e.currentTarget.select()}
+              className="w-full"
+            />
+          ) : null}
+        </div>
+      ) : null}
       <p id={statusId} role="status" className="sr-only">
-        {sending ? view.sending : ""}
+        {sending ? view.sending : copyState === "copied" ? view.mailto.copied : ""}
       </p>
     </form>
   );

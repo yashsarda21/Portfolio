@@ -7,7 +7,7 @@ export interface ChallengeValues {
   name: string;
   email: string;
   message: string;
-  /** The honeypot: a field no visitor sees. Bots fill it, so a value here means the challenge is dropped. */
+  /** The honeypot: a field no visitor sees or reaches. Bots fill it, so a value here means the challenge is dropped. */
   website: string;
 }
 
@@ -31,14 +31,34 @@ export function validate(
   return errors;
 }
 
+/** The challenge written out as an email: its subject and body. */
+export function buildMessage(v: ChallengeValues, formatTitle: string) {
+  const name = v.name.trim();
+  return {
+    subject: `${formatTitle} — ${name}`,
+    body: `${v.message.trim()}\n\n${name}\n${v.email.trim()}`,
+  };
+}
+
+/** The whole message as one block of text (what COPY MESSAGE puts on the clipboard). */
+export function messageText(v: ChallengeValues, formatTitle: string): string {
+  const { subject, body } = buildMessage(v, formatTitle);
+  return `${subject}\n\n${body}`;
+}
+
+/** The honeypot's field name: Formspree's own (`_gotcha`), so a service that has one ignores a bot's post. */
+export const HONEYPOT_NAME = "_gotcha";
+
 /** The email link that opens the visitor's mail app with the challenge written out. */
 export function buildMailto(v: ChallengeValues, to: string, formatTitle: string): string {
-  const name = v.name.trim();
-  const subject = `${formatTitle} — ${name}`;
-  const body = `${v.message.trim()}\n\n${name}\n${v.email.trim()}`;
+  const { subject, body } = buildMessage(v, formatTitle);
   return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+/**
+ * What a send came to. `sent`: the service took it (2xx). `mailto`: the visitor's mail app was asked to open,
+ * and nothing has gone out until they press send there. `dropped`: the honeypot was filled (reads as sent).
+ */
 export type SubmitResult = "sent" | "mailto" | "error" | "dropped";
 
 export interface SubmitDeps {
@@ -55,7 +75,7 @@ export interface SubmitDeps {
 
 /**
  * Sends a challenge. A filled honeypot is dropped quietly (it reads as sent, so bots learn nothing). With an
- * endpoint the challenge is posted as JSON; without one the visitor's mail app is opened, pre-filled.
+ * endpoint the challenge is posted as JSON (Formspree-compatible: `Accept: application/json`); without one the visitor's mail app is opened, pre-filled.
  * Never throws: a failure of any kind is "error", and the caller keeps the visitor's text.
  */
 export async function submitChallenge(v: ChallengeValues, deps: SubmitDeps): Promise<SubmitResult> {

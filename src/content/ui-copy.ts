@@ -161,6 +161,12 @@ export const ui = {
         board: { fixture: "NEW FIXTURE", visitor: "VISITOR", versus: "vs", home: "YASH" },
       },
       error: "That didn't go through. Your message is still here.",
+      // No form service is set: the visitor's email app is opened with the message ready (nothing has been sent yet).
+      mailto: {
+        note: "YOUR EMAIL APP SHOULD OPEN WITH THE MESSAGE READY. PRESS SEND THERE.",
+        copy: "COPY MESSAGE",
+        copied: "MESSAGE COPIED ✓",
+      },
       honeypot: "Leave this empty",
     },
   },
@@ -344,7 +350,7 @@ export const ui = {
   },
   // Shared by every screen. Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one, and says so.
   a11y: { newTab: "(opens in a new tab)", copied: "Scouting link copied" },
-  glyph: { next: "→", external: "↗", download: "↓", sep: "·" },
+  glyph: { next: "→", external: "↗", download: "↓", sep: "·", period: "." },
   record: { career: "RECORD 99 – 1", yours: "YOUR RECORD" },
 } as const;
 

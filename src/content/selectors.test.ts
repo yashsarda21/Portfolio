@@ -4,6 +4,7 @@ import { parseContent } from "./schema";
 import {
   getAcademy,
   getAttributeGroups,
+  getCardStat,
   getCareerRows,
   getHighlights,
   getInningsReveals,
@@ -138,6 +139,25 @@ describe("selectors", () => {
       delete rest.honoursShort;
       const plain = { ...c, trainingAcademy: rest } as typeof c;
       expect(getAcademy(plain).honoursShort).toBe("Distinction, SPPU");
+    });
+  });
+
+  describe("getCardStat", () => {
+    it("finds a stat by its id, whatever the card prints as its label", () => {
+      const relabelled = {
+        ...c,
+        player: {
+          ...c.player,
+          cardStats: c.player.cardStats.map((s) =>
+            s.id === "problems" ? { ...s, label: "SOLVED" } : s,
+          ),
+        },
+      };
+      expect(getCardStat(relabelled, "problems")).toMatchObject({ label: "SOLVED", value: "750+" });
+    });
+
+    it("throws when the id is missing", () => {
+      expect(() => getCardStat(c, "nope")).toThrow(/"nope"/);
     });
   });
 });

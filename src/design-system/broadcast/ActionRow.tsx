@@ -26,7 +26,10 @@ type ActionRowOwnProps = {
   /** Trailing icon (arrow, download, copy). Decorative. */
   icon: IconName;
   tone: "primary" | "glass";
-  /** Replaces the sub-line (e.g. "LINK COPIED ✓"). The sub-line is a polite live region, so the change is announced. */
+  /**
+   * Replaces the sub-line (e.g. "LINK COPIED ✓"). Visual only: the row is not a live region, so the consumer
+   * owns the announcement (a separate `role="status"` beside the row) and may hide this from assistive tech.
+   */
   status?: ReactNode;
 };
 
@@ -47,7 +50,7 @@ export function ActionRow<T extends ElementType = "a">({
     <Comp {...rest} className={cn(actionRowVariants({ tone }), className)}>
       <span className="flex flex-col">
         <Text variant={primary ? "action-lg" : "action"}>{title}</Text>
-        <Text variant="mono-note" tone={primary ? "ink-2" : "label"} aria-live="polite" caps>
+        <Text variant="mono-note" tone={primary ? "ink-2" : "label"} caps>
           {status ?? sub}
         </Text>
       </span>

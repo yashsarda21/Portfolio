@@ -1,7 +1,7 @@
-import { useEffect, useId, useRef } from "react";
+import { useId } from "react";
 import { ActionRow, Text, TextField, type IconName } from "@/design-system";
+import type { useCopyText } from "@/lib/useCopyText";
 import type { CardView } from "./view";
-import type { useCopyLink } from "./useCopyLink";
 
 const ICON: Record<CardView["take"]["actions"][number]["kind"], IconName> = {
   "pdf-view": "arrow-right",
@@ -12,8 +12,9 @@ const ICON: Record<CardView["take"]["actions"][number]["kind"], IconName> = {
 /**
  * "Take the card with you": the resume rows (a request by email until a PDF is public), the copy-link row
  * with its feedback, and a note on what the back of the card holds.
- * The copy row's feedback is a visible line plus a separate polite status for screen readers: a live region
- * inside a button is not reliably announced.
+ * The copy row's feedback is a visible line (hidden from screen readers) plus a separate polite status that
+ * announces "copied": a live region inside a button is not reliably announced. When the clipboard refuses,
+ * the focus move to the selected field is the announcement (its label says what to do), so the status stays quiet.
  */
 export function TakeAway({
   take,
@@ -22,19 +23,11 @@ export function TakeAway({
 }: {
   take: CardView["take"];
   note: CardView["backNote"];
-  link: ReturnType<typeof useCopyLink>;
+  link: ReturnType<typeof useCopyText<HTMLInputElement>>;
 }) {
+  const { state: linkState, copy: copyLink, field: linkField } = link;
   const labelId = useId();
   const hintId = useId();
-  const field = useRef<HTMLInputElement>(null);
-  const showFallback = link.state === "fallback";
-  useEffect(() => {
-    // The clipboard refused: hand the visitor the link, selected, ready for Ctrl/Cmd+C.
-    if (showFallback) {
-      field.current?.focus();
-      field.current?.select();
-    }
-  }, [showFallback]);
 
   return (
     <section aria-labelledby={labelId} className="flex flex-col gap-3">
@@ -66,20 +59,16 @@ export function TakeAway({
         sub={take.copy.sub}
         icon="copy"
         status={
-          link.state === "copied" ? <span aria-hidden="true">{take.copy.done}</span> : undefined
+          linkState === "copied" ? <span aria-hidden="true">{take.copy.done}</span> : undefined
         }
-        onClick={() => void link.copy()}
+        onClick={() => void copyLink(take.copy.url)}
       />
       <p role="status" className="sr-only">
-        {link.state === "copied"
-          ? take.copy.announce
-          : link.state === "fallback"
-            ? take.copy.fallback
-            : ""}
+        {linkState === "copied" ? take.copy.announce : ""}
       </p>
-      {showFallback ? (
+      {linkState === "fallback" ? (
         <TextField
-          ref={field}
+          ref={linkField}
           label={take.copy.fallback}
           readOnly
           value={take.copy.url}

@@ -69,9 +69,21 @@ export const ContentSchema = z.strictObject({
         "Must not be the private resume file",
       )
       .nullable(),
+    // `id` names a stat for code that needs one in particular (`problems`); `label` is only what the card prints.
     cardStats: z
-      .array(z.strictObject({ label: z.string().min(1), value: z.string().min(1) }))
-      .length(6),
+      .array(
+        z.strictObject({
+          id: z.string().regex(/^[a-z][a-z0-9-]*$/),
+          label: z.string().min(1),
+          value: z.string().min(1),
+        }),
+      )
+      .length(6)
+      .refine(
+        (stats) => new Set(stats.map((s) => s.id)).size === stats.length,
+        "Ids must be unique",
+      )
+      .refine((stats) => stats.some((s) => s.id === "problems"), 'Needs a "problems" stat'),
   }),
   careerStats: z
     .array(

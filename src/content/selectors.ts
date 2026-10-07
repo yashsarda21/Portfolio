@@ -166,3 +166,10 @@ export function getResumeAction(c: Content): ResumeAction {
 export function getPlayerFirstName(c: Content): string {
   return c.player.name.split(" ")[0]!;
 }
+
+/** A card stat by its `id` (the card's labels are display text and may change). Throws when it is missing. */
+export function getCardStat(c: Content, id: string): Content["player"]["cardStats"][number] {
+  const stat = c.player.cardStats.find((s) => s.id === id);
+  if (!stat) throw new Error(`content.player.cardStats needs a "${id}" entry`);
+  return stat;
+}

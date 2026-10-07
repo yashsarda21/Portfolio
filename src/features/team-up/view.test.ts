@@ -76,10 +76,19 @@ describe("buildTeamUpView", () => {
       comm: "Challenge received. I'll serve first.",
       text: "Floodlights pulse once, the crowd lifts, and the scoreboard reads",
       board: "NEW FIXTURE · VISITOR vs YASH",
+      end: ".",
     });
     expect(view.success.title).toBe("CHALLENGE RECEIVED");
     expect(view.success.again).toBe("SEND ANOTHER");
     expect(view.success.comm).toBe(view.after.comm);
+  });
+
+  it("carries the email-app copy for the no-endpoint path", () => {
+    expect(view.mailto).toEqual({
+      note: "YOUR EMAIL APP SHOULD OPEN WITH THE MESSAGE READY. PRESS SEND THERE.",
+      copy: "COPY MESSAGE",
+      copied: "MESSAGE COPIED ✓",
+    });
   });
 
   it("splits the fixture strip into parts that read as the same board line", () => {

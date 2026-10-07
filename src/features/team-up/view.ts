@@ -1,4 +1,4 @@
-import type { Content, UiCopy } from "@/content";
+import { getCardStat, type Content, type UiCopy } from "@/content";
 import type { IconName } from "@/design-system";
 import type { Format } from "./form";
 
@@ -21,6 +21,8 @@ export interface TeamUpView {
   sending: string;
   /** Shown when sending failed (the visitor's text is still in the form). */
   error: string;
+  /** Shown once the visitor's email app has been asked to open (no form service): nothing is sent until they press send there. */
+  mailto: { note: string; copy: string; copied: string };
   /** The label of the honeypot field. */
   honeypot: string;
   /** The address challenges are mailed to. */
@@ -28,7 +30,7 @@ export interface TeamUpView {
   orEmail: { label: string; href: string };
   skip: string;
   channels: ChannelView[];
-  after: { label: string; comm: string; text: string; board: string };
+  after: { label: string; comm: string; text: string; board: string; end: string };
   success: {
     title: string;
     again: string;
@@ -42,12 +44,6 @@ export interface TeamUpView {
 function handleOf(url: string): string {
   const { hostname, pathname } = new URL(url);
   return `${hostname.replace(/^www\./, "")}${pathname.replace(/\/+$/, "")}`;
-}
-
-function problemsSolved(c: Content): string {
-  const stat = c.player.cardStats.find((s) => s.label === "PROBLEMS");
-  if (!stat) throw new Error('content.player.cardStats needs a "PROBLEMS" entry');
-  return stat.value;
 }
 
 /** The Team Up page, as plain strings. Pure: no React, no DOM. */
@@ -76,6 +72,7 @@ export function buildTeamUpView(c: Content, copy: UiCopy): TeamUpView {
     send: t.send,
     sending: t.sending,
     error: t.error,
+    mailto: { ...t.mailto },
     honeypot: t.honeypot,
     address: contact.email,
     orEmail: { label: `${t.orEmail} ${contact.email}`, href: mailto },
@@ -100,11 +97,11 @@ export function buildTeamUpView(c: Content, copy: UiCopy): TeamUpView {
         id: "coding",
         icon: "terminal",
         title: t.channels.coding,
-        sub: t.channels.codingSub.replace("{solved}", problemsSolved(c)),
+        sub: t.channels.codingSub.replace("{solved}", getCardStat(c, "problems").value),
         href: contact.leetcode,
       },
     ],
-    after: { ...t.after },
+    after: { ...t.after, end: copy.glyph.period },
     success: {
       title: t.success.title,
       again: t.success.again,

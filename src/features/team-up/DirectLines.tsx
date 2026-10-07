@@ -34,7 +34,7 @@ export function DirectLines({ view }: { view: TeamUpView }) {
           <Text variant="mono-inline" tone="primary">
             {view.after.board}
           </Text>
-          .
+          {view.after.end}
         </Text>
       </DashedPanel>
     </section>

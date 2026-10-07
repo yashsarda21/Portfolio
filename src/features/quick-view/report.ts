@@ -2,6 +2,7 @@ import {
   experienceSince,
   formatSpan,
   getAttributeGroups,
+  getCardStat,
   getCareerRows,
   getHighlights,
   getResumeAction,
@@ -110,11 +111,7 @@ function city(location: string): string {
   return location.split(",")[0]!.trim();
 }
 
-function problemsValue(c: Content): string {
-  const stat = c.player.cardStats.find((s) => s.label === "PROBLEMS");
-  if (!stat) throw new Error('content.player.cardStats needs a "PROBLEMS" entry');
-  return stat.value;
-}
+const problemsValue = (c: Content): string => getCardStat(c, "problems").value;
 
 export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES): ScoutReport {
   const s = copy.scout;

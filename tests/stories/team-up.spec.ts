@@ -31,6 +31,14 @@ const STATES: {
     ready: (page) => page.getByRole("button", { name: "SENDING…" }).waitFor(),
   },
   {
+    id: "features-teamup--mailto-opened",
+    name: "MailtoOpened",
+    ready: (page) =>
+      page
+        .getByText("YOUR EMAIL APP SHOULD OPEN WITH THE MESSAGE READY. PRESS SEND THERE.")
+        .waitFor(),
+  },
+  {
     id: "features-teamup--success",
     name: "Success",
     ready: (page) => page.getByRole("heading", { level: 2, name: "CHALLENGE RECEIVED" }).waitFor(),

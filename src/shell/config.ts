@@ -14,7 +14,11 @@ export function parseEndpoint(raw: string | undefined): string | null {
   }
 }
 
-/** The Team Up form endpoint from `VITE_FORM_ENDPOINT`, or null when unset or unsafe. */
+/**
+ * The Team Up form endpoint from `VITE_FORM_ENDPOINT`, or null when unset or unsafe. The form posts to it the
+ * way Formspree takes a post (JSON with `Accept: application/json`, honeypot field `_gotcha`); a service that
+ * needs extra fields in the body (Web3Forms wants an `access_key`) is not supported as is.
+ */
 export const formEndpoint: string | null = parseEndpoint(import.meta.env.VITE_FORM_ENDPOINT);
 
 /**
