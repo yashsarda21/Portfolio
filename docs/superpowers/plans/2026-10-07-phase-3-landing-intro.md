@@ -14,12 +14,13 @@
   - the stadium flashes, WELCOME TO MY ARENA rises, ENTER THE ARENA → pulses, COMM "The player has entered the arena."
   - afterwards he breathes, and a light sweep crosses him every 6 s
   - REPLAY and SKIP INTRO in the top right
-- **Intro on tablet and phone (derived):** the phone-style scoreboard with your rest-pose portrait, the name locking in and the CTA — 4 s on tablet, 2 s on phone.
+- **Intro on tablet:** the same full desktop intro (owner ruling 2026-10-07), on the scaled stage.
+- **Intro on phone (derived):** the phone-style scoreboard with your rest-pose portrait, the name locking in and the CTA, in 2 s.
 - **Reduced motion:** everything is simply there. No head-turn frames are even downloaded.
 - **Speed:** GSAP (the animation library) leaves the first-load bundle and loads only when needed; the head-turn frames (~2.1 MB) load in the background after the landing has painted.
 
 **Goal:** `/` and `/intro` match `Main@1440x900`, `Mobile-Landing@390x844` and `Intro@1440x900` (end states) within 2 %, with only logged deviations masked:
-- the intro is one GSAP timeline factory with labels (desktop / tablet / mobile tiers + reduced motion), unit-tested
+- the intro is one GSAP timeline factory with labels (desktop and mobile tiers + reduced motion; tablets get the desktop tier), unit-tested
 - skip, replay, keyboard and no-JS paths work
 - Lighthouse: landing text visible < 1.5 s
 - axe clean, `pnpm verify` green
@@ -31,7 +32,7 @@
   - It plays from the first paint without waiting for JavaScript, and works with JS off.
 - **Intro = one GSAP timeline factory.**
   - `createIntroTimeline(gsap, refs, { tier, onBeat })` in `src/features/intro/timeline.ts` is built from **labels** in an `INTRO_BEATS` table per tier, not hard-coded seconds inside tweens.
-  - A track whose ref is missing is skipped, so tablet and phone reuse the factory with fewer tracks.
+  - A track whose ref is missing is skipped, so the phone reuses the factory with fewer tracks.
   - Pure helpers (`createPixels`, `createLetters`, `frameAt`) reproduce the artboard's seeded maths and are unit-tested.
   - `gsap.matchMedia()` picks the tier, and reverts on resize and unmount.
 - **Before the timeline runs**, the intro's animated parts are hidden by CSS under `.js` (so no flash of the end state). A CSS fallback reveals them at 8 s if the script never runs. Without JS, the end state shows.
@@ -88,13 +89,13 @@
 
 | # | Decision | Why | Easy to flip? |
 |---|---|---|---|
-| L1 | **Tablet (768–1199 px):** Landing and Intro use the **phone-style layout, centred and wider** (max 640 px column, one size step up), not the shrunken 1440×900 stage. | A scaled stage at 1024 px puts the 11 px labels at ~7.8 px, and at ~5.9 px on a portrait iPad (breaks A2). | Medium |
+| L1 | **Tablet (768–1199 px):** the **Landing** uses the phone-style layout, centred and wider (max 640 px column, one size step up). The **Intro plays the same full desktop intro** on the scaled stage (owner, 2026-10-07), with the L2 label floor so its small labels stay ≥ 11 px. | A scaled landing at 1024 px puts the 11 px labels at ~7.8 px; the owner wants the full intro on tablets. | Medium |
 | L2 | **Laptop screens (stage scaled below 100 %, e.g. 1280×720, 1366×768):** the small mono labels inside the stage keep a **real 11 px minimum** (they grow slightly in the design space). At 1440×900 nothing changes. | A2 holds on every desktop, not only at 1440×900. | Yes |
 | L3 | **Landing boot is CSS, not GSAP.** It starts at the very first paint, works with JS off, and costs no JavaScript. The Intro is GSAP (30+ tracks, replay, sprite chaining). | Spec §7 lists the landing boot under GSAP. CSS gives the same artboard timings with better first paint, so it is logged as a deviation. | Yes |
 | L4 | **Return visit:** from the second visit on, the landing boot is a ~1.5 s cut-down (Opening board), via a flag saved in the browser. **Ticket gate:** no separate screen. ENTER THE ARENA unlocks sound (spec §12, as today). | Opening board: "RETURN VISIT → 1.5s CUT-DOWN". | Yes |
-| L5 | **Phone landing as drawn:** static (the board has no animation), SOUND OFF toggle, no COMM, no keyboard hint, no SKIP INTRO. **Phones start muted** unless the visitor turned sound on before; desktop starts on. | Mobile-Landing board + README matrix ("2s… sound off"). | Yes |
-| L6 | **Intro on phone and tablet (derived; no board exists):** the Mobile-Landing frame with intro content.<br>• The board header reads LIVE · PLAYER INTRODUCTION.<br>• Your **rest-pose portrait** (68 KB, no head-turn frames) sits in the board, and the name locks in letter by letter.<br>• Then SOFTWARE ENGINEER, the tagline, a two-cell footer (RECORD 99 – 1, STATUS UNDEFEATED), WELCOME TO MY ARENA and a full-width ENTER THE ARENA →.<br>• REPLAY + SKIP INTRO sit in the top row.<br>• Timing: **2 s on phones** (lights + name + CTA, README), **4 s on tablets** (adds the portrait slide-in and the tagline tick). | README §9 matrix; spec §12 "mobile intro (2s)". | Medium |
-| L7 | **Slow connection on the intro:**<br>• The lights and silhouette play while the head-turn frames load.<br>• If they aren't ready when the head turn is due, the timeline **waits up to 1.5 s** at that beat, then carries on with the rest pose (no head turn). It never stays dark.<br>• On desktop, the landing quietly preloads the frames after it has painted and the browser is idle. It skips this for reduced motion, data saver, or phone/tablet. | Spec §7 / §13 / §14: frames load after first paint; never block. | Yes |
+| L5 | **Phone landing as drawn:** static (the board has no animation), the SOUND toggle, no COMM, no keyboard hint, no SKIP INTRO. **Phones start with sound on, like desktop** (owner, 2026-10-07); the toggle reads SOUND ON where the board draws SOUND OFF (masked, logged). | Mobile-Landing board; owner ruling over the README matrix. | Yes |
+| L6 | **Intro on phone (derived; no board exists):** the Mobile-Landing frame with intro content.<br>• The board header reads LIVE · PLAYER INTRODUCTION.<br>• Your **rest-pose portrait** (68 KB, no head-turn frames) sits in the board, and the name locks in letter by letter.<br>• Then SOFTWARE ENGINEER, the tagline, a two-cell footer (RECORD 99 – 1, STATUS UNDEFEATED), WELCOME TO MY ARENA and a full-width ENTER THE ARENA →.<br>• REPLAY + SKIP INTRO sit in the top row.<br>• Timing: **2 s** (lights + name + CTA, README). Tablets get the full desktop intro (L1). | README §9 matrix; spec §12 "mobile intro (2s)". | Medium |
+| L7 | **Slow connection on the intro:**<br>• The lights and silhouette play while the head-turn frames load.<br>• If they aren't ready when the head turn is due, the timeline **waits up to 1.5 s** at that beat, then carries on with the rest pose (no head turn). It never stays dark.<br>• On desktop and tablet, the landing quietly preloads the frames after it has painted and the browser is idle. It skips this for reduced motion, data saver, or phones. | Spec §7 / §13 / §14: frames load after first paint; never block. | Yes |
 | L8 | **SKIP INTRO** goes to the Arena Hub on both pages (as now). **REPLAY** restarts the intro from the dark stadium, and is hidden under reduced motion (nothing to replay). The intro never auto-advances; the visitor presses ENTER THE ARENA →. | Audit §6.5: no auto-advance; skip → Hub. | Yes |
 | L9 | **Keyboard shortcuts (A8):** on the desktop Landing only, **Enter** = ENTER THE ARENA and **Q** = Quick View. They are ignored while focus is on any link, button or field (so Enter keeps its normal meaning there), with Ctrl / Alt / Cmd held, and on phones. They exist only while the Landing is on screen. | Spec A8; WCAG 2.1.4. | Yes |
 | L10 | **SOFTWARE ENGINEER keeps its wide .42 em tracking** at the end of the boot. The Main board's frozen end state collapses it to .02 em, a side-effect of its keyframe (audit risk #11). The parity test keeps masking that box, logged. | Intent beats a keyframe accident (the Intro board draws it wide too). | Yes |
@@ -420,7 +421,7 @@ it("frame 15 of 16 is the strip's end (-8400px at 560px frames = 100%)", () => {
   - `LANDING_BEATS` (seconds, from Main): `crowd .3, coneL 1.0, coneR 1.5, sky 2.2, field 2.4, pitch 2.6, boardHeader 2.7, scan 2.7, name 3.0, title 3.6, boardFooter 4.0, ctas 4.5, comm 5.2, hint 5.2`; banks `.6 / 1.1 / 1.6 / 2.0`.
   - `buildLandingView(content, ui, routes)` → `{ heading, title, header: {live, player}, footer: [...], challenge, enter: {label, sub, subPhone, to}, view: {label, sub, to}, hint, comm, skip: {label, to}, audio }`.
   - `useScreenShortcuts(map: Record<string, () => void>, { enabled })` in shell, reused by the Hub in Phase 4. Keys are matched on `event.key` lowercased. It is ignored when `event.defaultPrevented`, when any of `ctrlKey` / `metaKey` / `altKey` is held, when `event.target` is `input, textarea, select, [contenteditable], a, button, [role=button], [role=tab]`, or when `enabled` is false. Listeners attach on mount and detach on unmount.
-  - `prefetchRig(urls)`: after `load`, then idle. It runs only when `matchMedia("(min-width: 1200px)")` matches, reduced motion is off and `navigator.connection?.saveData` isn't true. It creates `Image()` objects (nothing appended); idempotent across calls.
+  - `prefetchRig(urls)`: after `load`, then idle. It runs only when `matchMedia("(min-width: 768px)")` matches (desktop and tablet play the full intro), reduced motion is off and `navigator.connection?.saveData` isn't true. It creates `Image()` objects (nothing appended); idempotent across calls.
 
 - [ ] **Step 1: Failing tests.**
   - `view.test.ts`: every string comes from `content` / `ui`. `enter.to === ROUTES.intro`, `view.to === ROUTES.scout`, `skip.to === ROUTES.arena`, and `comm === content.commentary.entrance[0]`.
@@ -467,23 +468,19 @@ it("frame 15 of 16 is the strip's end (-8400px at 560px frames = 100%)", () => {
 ## Task 4: Landing phone and tablet layout
 
 **Files:**
-- Modify: `src/features/landing/{LandingPage.tsx,view.ts,Landing.stories.tsx}`, `src/design-system/broadcast/AudioToggle.tsx` (if the phone label needs a prop), `src/shell/audio.tsx` (L5 default), `src/content/ui-copy.ts`
-- Test: `tests/e2e/landing.spec.ts` (phone + tablet blocks), `src/shell/audio.test.tsx`
+- Modify: `src/features/landing/{LandingPage.tsx,view.ts,Landing.stories.tsx}`, `src/design-system/broadcast/AudioToggle.tsx` (if the phone label needs a prop), `src/content/ui-copy.ts`
+- Test: `tests/e2e/landing.spec.ts` (phone + tablet blocks)
 
 **Interfaces:**
 - Consumes: `Scoreboard size="compact"`, `FloodlightBank size="mobile"`, `Button` (full-width unskewed: check the existing `skew` variant; `skew: "desktop"` already unskews below md, so tablet needs `lg`-aware skew: add `skew: "lg"`, i.e. skewed from `lg` up, only if no variant fits).
 - Produces: the phone / tablet half of `LandingPage` (`lg:hidden`). Its own `<h1>` is the stacked name; the desktop one is `max-lg:hidden`. Exactly one rendered.
 
 - [ ] **Step 1: Failing tests.**
-  - `audio.test.tsx`:
-    - no saved choice + phone `matchMedia` → `enabled` false after mount
-    - no saved choice + desktop → true
-    - saved "on" on a phone → true
   - e2e (mobile project 390×844):
-    - `Mobile-Landing` parity ≤ 2 %; masks only for A2 (header and footer labels at 11 px instead of 10 px: mask those label boxes, sized to them)
+    - `Mobile-Landing` parity ≤ 2 %; masks only for A2 (header and footer labels at 11 px instead of 10 px: mask those label boxes, sized to them) and L5 (the toggle's state word: ON where the board draws OFF)
     - one rendered h1
     - no horizontal scroll
-    - SOUND OFF toggle has `aria-pressed="false"`
+    - the SOUND toggle starts `aria-pressed="true"` (L5: phones start with sound on, as desktop)
     - ENTER sub-line reads `ui.landing.enterSubPhone`
     - no COMM, no hint, no SKIP INTRO
   - e2e viewport loop (Review Focus 5) over 1199×800, 1024×768, 768×1024, 390×844, 375×667, 360×640, checking:
@@ -502,9 +499,9 @@ it("frame 15 of 16 is the strip's end (-8400px at 560px frames = 100%)", () => {
   - **Tablet (md–lg):** the same column centred, `max-w-160`, the recipes' `md:` steps.
   - **Static:** no boot classes on phone / tablet (as drawn).
 
-- [ ] **Step 3: L5** in `AudioProvider`: after mount, if nothing is saved and `matchMedia("(max-width: 767px)")` matches, `enabled` becomes false (not saved, so a later desktop visit is on). Comment why.
+- [ ] **Step 3:** `AudioProvider` is unchanged (L5: phones start with sound on, like desktop).
 
-- [ ] **Step 4:** Story `Phone` (fixture) + parity story test vs `Mobile-Landing@390x844`. Run tests. Commit `feat(landing): phone layout as drawn, tablet column, phones start muted`.
+- [ ] **Step 4:** Story `Phone` (fixture) + parity story test vs `Mobile-Landing@390x844`. Run tests. Commit `feat(landing): phone layout as drawn, tablet column`.
 
 ---
 
@@ -515,7 +512,7 @@ it("frame 15 of 16 is the strip's end (-8400px at 560px frames = 100%)", () => {
 
 **Interfaces:**
 - Produces:
-  - `type IntroTier = "desktop" | "tablet" | "mobile"`.
+  - `type IntroTier = "desktop" | "mobile"`. Desktop is the stage intro and plays on tablets too (L1); mobile is the phone column (L6).
   - `INTRO_BEATS: Record<IntroTier, Partial<Record<Beat, number>>>`. Seconds, desktop from the Intro board:
 ```ts
 export const INTRO_BEATS = {
@@ -523,10 +520,8 @@ export const INTRO_BEATS = {
              entrance: .95, ghostGap: .07, field: 1.2, backlight: 1.5, performance: 1.85, impact: 1.88,
              look: 2.78, pixels: 2.85, name: 3.1, letterGap: .055, idle: 3.9, title: 3.95, tagline: 4.3,
              taglineGap: .06, strip: 4.6, flash: 5.0, welcome: 5.4, cta: 5.7, comm: 5.9, ctaGlow: 6.5 },
-  tablet:  { banks: .1, bankGap: .15, boardOn: .4, boardHeader: .45, entrance: .6, name: 1.5, letterGap: .04,
-             title: 2.2, tagline: 2.5, taglineGap: .05, strip: 2.7, welcome: 3.0, cta: 3.3, comm: 3.5, ctaGlow: 4.0 },
   mobile:  { banks: .05, bankGap: .2, boardOn: .3, boardHeader: .3, name: .6, letterGap: .03,
-             title: 1.1, strip: 1.2, welcome: 1.3, cta: 1.5, comm: 1.7, ctaGlow: 2.0 },
+             title: 1.1, tagline: 1.2, taglineGap: 0, strip: 1.2, welcome: 1.3, cta: 1.5, comm: 1.7, ctaGlow: 2.0 },
 } as const;
 ```
   - `createPixels(seed = 7)` → exactly the artboard's 90 pixels (code in audit §6.5), with colours as **token names** (`"volt" | "led" | "warm"`), not hex.
@@ -579,15 +574,14 @@ describe("createLetters", () => {
 });
 describe("createIntroTimeline", () => {
   const ready = Promise.resolve("ready" as const);
-  it.each(["desktop", "tablet", "mobile"] as const)("%s: every beat is a label at its table time", (tier) => {
+  it.each(["desktop", "mobile"] as const)("%s: every beat is a label at its table time", (tier) => {
     const tl = createIntroTimeline(gsap, fullRefs(), { tier, rig: ready });
     for (const [beat, t] of Object.entries(INTRO_BEATS[tier])) if (!beat.endsWith("Gap")) expect(tl.labels[beat]).toBeCloseTo(t, 3);
     tl.kill();
   });
-  it("lengths: desktop ~6.4s, tablet ~4s, mobile ~2s", () => {
-    const d = (tier: "desktop" | "tablet" | "mobile") => createIntroTimeline(gsap, fullRefs(), { tier, rig: ready }).duration();
+  it("lengths: desktop ~6.4s, mobile ~2s", () => {
+    const d = (tier: "desktop" | "mobile") => createIntroTimeline(gsap, fullRefs(), { tier, rig: ready }).duration();
     expect(d("desktop")).toBeGreaterThan(6.0); expect(d("desktop")).toBeLessThan(6.6);
-    expect(d("tablet")).toBeGreaterThan(3.6); expect(d("tablet")).toBeLessThan(4.2);
     expect(d("mobile")).toBeGreaterThan(1.8); expect(d("mobile")).toBeLessThan(2.2);
   });
   it("skips tracks whose refs are missing (phone: no mover, strips, pixels)", () => {
@@ -640,13 +634,13 @@ Fill in the elided bodies; no placeholders may remain in the committed tests. Ru
   - `buildIntroView(content, ui, routes)`.
   - `useIntroTimeline(rootRef, refs, { onComm })` → `{ replay(): void, state: "pending" | "playing" | "done" }`. It:
     1. loads GSAP
-    2. creates `gsap.matchMedia()` with `{ desktop: "(min-width: 1200px) and (prefers-reduced-motion: no-preference)", tablet: "(min-width: 768px) and (max-width: 1199px) and (prefers-reduced-motion: no-preference)", mobile: "(max-width: 767px) and (prefers-reduced-motion: no-preference)", reduce: "(prefers-reduced-motion: reduce)" }`
-    3. in each branch, builds the tier's timeline with the refs of the layout that is visible (desktop refs vs the fluid layout's refs, Task 7)
+    2. creates `gsap.matchMedia()` with `{ desktop: "(min-width: 768px) and (prefers-reduced-motion: no-preference)", mobile: "(max-width: 767px) and (prefers-reduced-motion: no-preference)", reduce: "(prefers-reduced-motion: reduce)" }`
+    3. in each branch, builds the tier's timeline with the refs of the layout that is visible (the stage's refs from 768 px up, the phone column's refs below, Task 7)
     4. under `reduce`, calls `showIntroEndState` and **never calls `loadRig`**
     5. sets `data-intro` on the root: `pending` → `playing` → `done`
     
     Replay = `tl.restart()`, plus removing the loop classes; a replay while playing restarts. It cleans up with `mm.revert()` on unmount. `onComm` calls `say(content.commentary.intro[0])`; `onBeat("bank")` calls `audio.play("floodlight")` (silent until files exist).
-  - **Rig loading** starts only in the desktop branch: `loadRig([turn0, turn1, turn2], { timeoutMs: 1500 + time-to-performance })`.
+  - **Rig loading** starts only in the desktop branch (desktop and tablet): `loadRig([turn0, turn1, turn2], { timeoutMs: 1500 + time-to-performance })`.
 
 - [ ] **Step 1: Failing tests.**
   - `view.test.ts`: all copy from content / ui; `enter.to === ROUTES.arena`; `skip.to === ROUTES.arena`; the tagline is 4 words with 3 volt separators; the record comes from `ui.record.career`.
@@ -659,10 +653,11 @@ Fill in the elided bodies; no placeholders may remain in the committed tests. Ru
     - **Reduced motion:** `done` (or the end state) at 0.3 s, no request to `turn_`, REPLAY not visible.
     - **No JS:** the name heading, ENTER THE ARENA → (`href="/arena"`) and SKIP visible; `data-intro="pending"` parts visible (`.js` absent).
     - **JS error fallback:** `addInitScript` that makes `import("gsap")` fail (route the gsap chunk to 404) → the parts are visible by 8.5 s.
+    - **Tablet (L1):** at 1024×768 and 768×1024 the stage intro plays to `done` with the strips requested; rendered mono ≥ 11 px (L2 floor) and no mono text overflows its box (HUD buttons, board header, footer cells: `scrollWidth <= clientWidth`); one rendered `<h1>`.
     - Focus after arriving from `/` by ENTER THE ARENA lands on the `<h1>` (the name).
     - axe clean at `done`.
 
-- [ ] **Step 2: `IntroPage({ view, refs })`.** Inside `<Stage from="lg" backdrop={<ArenaBackdrop layout="intro" bleed />}>`, the board at left 100 top 96 1240×540 with:
+- [ ] **Step 2: `IntroPage({ view, refs })`.** Inside `<Stage from="md" backdrop={<ArenaBackdrop layout="intro" bleed />}>` (desktop **and tablet**, L1), the board at left 100 top 96 1240×540 with:
   - header (LIVE · PLAYER INTRODUCTION / THE ARENA · MATCHDAY)
   - backlight (`data-part="backlight"`)
   - scan bar
@@ -688,33 +683,32 @@ Fill in the elided bodies; no placeholders may remain in the committed tests. Ru
 
 ---
 
-## Task 7: Intro on tablet and phone (derived, L6)
+## Task 7: Intro on phone (derived, L6)
 
 **Files:**
 - Modify: `src/features/intro/{IntroPage.tsx,IntroScreen.tsx,Intro.stories.tsx}`, `tests/e2e/intro.spec.ts`
 
 **Interfaces:**
-- Consumes: Task 4's phone / tablet landing column pattern (top row, `mobile` banks, `Scoreboard size="compact"`, full-width CTA), Task 5 tiers `tablet` / `mobile`, `src/assets/portrait-rest.webp`.
-- Produces: the `lg:hidden` half of `IntroPage`, with its own ref set handed to `useIntroTimeline` (tablet / mobile branches).
+- Consumes: Task 4's phone landing column pattern (top row, `mobile` banks, `Scoreboard size="compact"`, full-width CTA), Task 5 tier `mobile`, `src/assets/portrait-rest.webp`.
+- Produces: the `md:hidden` half of `IntroPage`, with its own ref set handed to `useIntroTimeline` (mobile branch).
 
-- [ ] **Step 1: Failing e2e** (mobile project 390×844 + a tablet block at 1024×768 and 768×1024):
-  - `done` within 2.6 s (phone) or 4.6 s (tablet)
+- [ ] **Step 1: Failing e2e** (mobile project 390×844, plus 375×667 and 360×640):
+  - `done` within 2.6 s
   - one rendered h1 (the name)
   - REPLAY + SKIP INTRO ≥ 44 px
   - ENTER THE ARENA → full width, focusable after `done`
-  - no `turn_` requests on phone or tablet
+  - no `turn_` requests on phones
   - the Review Focus 5 viewport loop (no horizontal scroll, CTA inside the document, mono ≥ 11 px)
-  - resizing from 1440 to 900 wide mid-play → the tablet layout reaches `done`, no console errors (Review Focus 2)
+  - resizing from 1024 to 390 wide mid-play (stage → phone column) → the phone layout reaches `done`, no console errors (Review Focus 2)
 
 - [ ] **Step 2: Implement the column.**
   - **Top row:** mark + REPLAY + SKIP INTRO.
   - **Banks:** two `mobile` banks.
-  - **Compact board:** header LIVE · PLAYER INTRODUCTION / 01 / 01; body = the rest portrait (`<img>` with width / height attributes, `decoding="async"`, `PortraitFrame` if it fits, else a plain `img` with the `portrait-fade` mask) above the stacked name with letter spans + title + tagline (tablet only; phones hide it per L6); footer RECORD 99 – 1 / STATUS UNDEFEATED.
+  - **Compact board:** header LIVE · PLAYER INTRODUCTION / 01 / 01; body = the rest portrait (`<img>` with width / height attributes, `decoding="async"`, `PortraitFrame` if it fits, else a plain `img` with the `portrait-fade` mask) above the stacked name with letter spans + title + tagline; footer RECORD 99 – 1 / STATUS UNDEFEATED.
   - **Bottom:** WELCOME TO MY ARENA (phone step of its recipe) + ENTER THE ARENA →.
-  - **Tablet:** the centred `max-w-160` column, portrait slide-in from the right via the `mover` ref.
-  - **Phone:** no mover, portrait fades.
+  - **Phone:** no mover, the portrait fades in.
 
-- [ ] **Step 3: Stories.** `Phone` and `Tablet` end states (no artboard: eyeball stories, flagged derived). Run tests. Commit `feat(intro): tablet and phone introductions (4s / 2s) with the rest-pose portrait`.
+- [ ] **Step 3: Stories.** `Phone` end state (no artboard: an eyeball story, flagged derived). Run tests. Commit `feat(intro): phone introduction (2s) with the rest-pose portrait`.
 
 ---
 
@@ -751,7 +745,7 @@ Sequential, one Sonnet 5.5 builder per task (1 → 8): the tasks share the scene
 ## Self-review notes (orchestrator)
 
 - **Spec coverage:**
-  - phase 3 row: flicker + boot + CTAs + audio gate (Tasks 2–4), intro + rig (5–6), tablet / mobile / reduced (4, 6, 7), skip / replay (6)
+  - phase 3 row: flicker + boot + CTAs + audio gate (Tasks 2–4), intro + rig (5–6), tablet / mobile / reduced (4, 6 incl. tablet, 7), skip / replay (6)
   - exit checks: end-state visual diffs (3, 4, 6), timeline unit tests (5), FCP (8)
 - **Carry-over rows:** all assigned above.
 - **Placeholders:** the two test bodies marked "fill in" in Task 5 are instructions to compute literals from the audit code; the reviewer rejects a commit that leaves them empty.
