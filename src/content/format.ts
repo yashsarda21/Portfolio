@@ -1,5 +1,20 @@
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+const MONTHS_LONG = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 function parseYm(ym: string): { year: number; month: number } {
   const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(ym);
   if (!match) throw new Error(`Expected YYYY-MM, got "${ym}"`);
@@ -10,6 +25,12 @@ function parseYm(ym: string): { year: number; month: number } {
 export function formatMonth(ym: string): string {
   const { year, month } = parseYm(ym);
   return `${MONTHS[month - 1]} ${year}`;
+}
+
+/** "2024-07" → "July 2024" */
+export function formatMonthLong(ym: string): string {
+  const { year, month } = parseYm(ym);
+  return `${MONTHS_LONG[month - 1]} ${year}`;
 }
 
 /** "2024-07", null → "Jul 2024 – now"; same year → "Jun – Jul 2023". */

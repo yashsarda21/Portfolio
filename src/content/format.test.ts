@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { experienceSince, formatMonth, formatSpan, formatYearSpan, monthsBetween } from "./format";
+import {
+  experienceSince,
+  formatMonth,
+  formatMonthLong,
+  formatSpan,
+  formatYearSpan,
+  monthsBetween,
+} from "./format";
 
 describe("formatters", () => {
   it("formats a year-month", () => {
@@ -43,5 +50,15 @@ describe("formatters", () => {
 
   it("throws on malformed input", () => {
     expect(() => formatMonth("2024-7")).toThrow(/YYYY-MM/);
+  });
+
+  it("formats a long month", () => {
+    expect(formatMonthLong("2024-07")).toBe("July 2024");
+    expect(formatMonthLong("2023-12")).toBe("December 2023");
+  });
+
+  it("rejects malformed input in the long format too", () => {
+    expect(() => formatMonthLong("2024-7")).toThrow(/YYYY-MM/);
+    expect(() => formatMonthLong("2024-13")).toThrow(/YYYY-MM/);
   });
 });
