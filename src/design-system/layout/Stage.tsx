@@ -39,7 +39,7 @@ export function Stage({
       <SkyGlow data-part="letterbox-sky" className={skyClassName} style={skyStyle} />
       <div
         data-stage
-        className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-mono-min:calc(11px/var(--stage-scale,1))]"
+        className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-body-min:calc(14px/var(--stage-scale,1))] [--stage-mono-min:calc(11px/var(--stage-scale,1))]"
       >
         {backdrop ? <div className="absolute inset-0">{backdrop}</div> : null}
         <div className="relative h-full w-full">{children}</div>

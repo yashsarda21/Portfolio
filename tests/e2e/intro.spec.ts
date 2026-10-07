@@ -53,6 +53,21 @@ async function expectLettersShown(page: Page) {
   expect(letters.every((v) => v === "visible")).toBe(true);
 }
 
+/** The commentary line's text: its rendered size (design size x stage scale), and whether it sits on one line. */
+async function commText(page: Page) {
+  const line = page.locator("[data-commentary-bar] > span").last();
+  await expect(line).toBeVisible();
+  return line.evaluate((el) => {
+    const scale = Number(
+      getComputedStyle(document.documentElement).getPropertyValue("--stage-scale"),
+    );
+    const design = parseFloat(getComputedStyle(el).fontSize);
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return { design, rendered: design * scale, lines: range.getClientRects().length };
+  });
+}
+
 /** The head-turn frames the browser has been asked for. */
 function trackStrips(page: Page) {
   const urls = new Set<string>();
@@ -329,6 +344,18 @@ test.describe("desktop", () => {
     await expect(part(page, "rest")).toBeVisible();
   });
 
+  test("the commentary line is exactly its recipe's 16px at 1440x900, and at least 14px rendered at 1280x720", async ({
+    page,
+  }) => {
+    await page.goto("/intro");
+    await done(page);
+    expect((await commText(page)).design).toBe(16);
+    await page.setViewportSize({ width: 1280, height: 720 });
+    const small = await commText(page);
+    expect(small.rendered).toBeGreaterThanOrEqual(13.99);
+    expect(small.lines).toBe(1);
+  });
+
   test("arriving from the Landing by ENTER THE ARENA puts focus on the name", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("arena:landing-seen", "1"));
     await page.goto("/");
@@ -404,6 +431,20 @@ test.describe("tablet (L1): the same stage intro on the scaled stage", () => {
           .filter((m) => m.px < 10.99);
       });
       expect(mono, "mono text rendered under 11px").toEqual([]);
+
+      // The commentary line (body text) holds the 14px floor too, on one line.
+      const comm = await commText(page);
+      expect(comm.rendered, "commentary rendered size").toBeGreaterThanOrEqual(13.99);
+      expect(comm.lines, "commentary lines").toBe(1);
+
+      // The tagline wraps inside the name column and never runs into the portrait.
+      const clash = await page.evaluate(() => {
+        const fig = document.querySelector('[data-part="fig"]')!.getBoundingClientRect();
+        return [...document.querySelectorAll('[data-part="tagline"]')]
+          .map((el) => el.getBoundingClientRect())
+          .filter((r) => r.right > fig.left + 1 && r.left < fig.right && r.bottom > fig.top).length;
+      });
+      expect(clash, "tagline parts inside the portrait's box").toBe(0);
 
       // No mono text runs out of its box: the HUD buttons, the board header's spans, the footer cells.
       const overflowing = await page.evaluate(() => {

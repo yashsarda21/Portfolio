@@ -305,6 +305,9 @@
  * script sets --stage-scale on <html>), so the label grows slightly in the design space and stays 11px on
  * screen. At scale 1 (1440x900) the minimum is 11px and no size changes. Outside a stage the var is unset
  * (0px), so the max() is the recipe's own size: nothing else on the site changes.
+ * Body text follows the same idea with a 14px floor (--stage-body-min, set beside --stage-mono-min): the one
+ * body recipe of 16px or less that is drawn inside a stage is type-comm (the commentary line); the Landing's
+ * and Intro's other body text (type-challenge) is 22px or more.
  */
 @utility type-mono-lg {
   font-family: var(--font-mono);
@@ -419,7 +422,7 @@
   font-family: var(--font-body);
   font-weight: 400;
   font-style: italic;
-  font-size: 16px;
+  font-size: max(16px, var(--stage-body-min, 0px));
   line-height: 1.3;
 }
 @utility type-challenge {

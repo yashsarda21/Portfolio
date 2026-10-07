@@ -35,6 +35,12 @@ describe("Stage", () => {
     const sky = container.querySelector("[data-transition-scene] > .scene-sky");
     expect(sky).toHaveAttribute("data-part", "letterbox-sky");
   });
+  it("sets the 14px body floor on the stage", () => {
+    const { container } = render(<Stage>x</Stage>);
+    expect(container.querySelector("[data-stage]")).toHaveClass(
+      "[--stage-body-min:calc(14px/var(--stage-scale,1))]",
+    );
+  });
   it("sets the 11px mono floor on the stage", () => {
     const { container } = render(<Stage>x</Stage>);
     expect(container.querySelector("[data-stage]")).toHaveClass(

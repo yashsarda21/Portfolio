@@ -254,7 +254,8 @@ export function IntroPage({
                 className="invisible absolute -top-1 left-0 h-11.5 w-1 bg-led shadow-[0_0_16px] shadow-volt"
               />
             </div>
-            <p className="flex items-center gap-3">
+            {/* max-w-140 (560): the name column ends before the portrait (x 644 on the board); the 12px gap is the row gap too, so the 11px floor on a tablet wraps the tagline instead of running into the figure. */}
+            <p className="flex max-w-140 flex-wrap items-center gap-3">
               {view.tagline.map((part, i) => (
                 <Text
                   key={i}
@@ -263,7 +264,7 @@ export function IntroPage({
                   tone={TAGLINE_TONE[part.tone]}
                   aria-hidden={part.kind === "sep" ? true : undefined}
                   data-part="tagline"
-                  className="intro-part"
+                  className="intro-part whitespace-nowrap"
                 >
                   {part.text}
                 </Text>
