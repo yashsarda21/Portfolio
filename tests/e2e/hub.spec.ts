@@ -330,6 +330,58 @@ test.describe("desktop hub", () => {
       for (const s of [...sizes.tags, ...sizes.meta]) expect(s).toBeGreaterThanOrEqual(11 - 0.01);
     });
 
+    // A floored mono label keeps its drawn width: its letters grow to 11px and its tracking shrinks (L2).
+    for (const [width, height] of [
+      [1280, 720],
+      [1200, 800],
+    ] as const) {
+      test(`${width}x${height}: the mono lines stay on one line at 11px or more`, async ({
+        page,
+      }) => {
+        await seed(page, ARTBOARD);
+        await page.setViewportSize({ width, height });
+        await page.goto("/arena");
+        await waitForHydration(page);
+        await expect(
+          card(page, "CRICKET GROUND").getByRole("link", { name: "REMATCH" }),
+        ).toBeVisible();
+        const lines = await page.evaluate(
+          ({ labels }) => {
+            const stage = document.querySelector("[data-stage]")!.getBoundingClientRect();
+            const scale = stage.width / 1440;
+            const measure = (name: string, el: Element) => {
+              const style = getComputedStyle(el);
+              const size = parseFloat(style.fontSize);
+              const lineHeight =
+                style.lineHeight === "normal" ? size * 1.3 : parseFloat(style.lineHeight);
+              return {
+                name,
+                lines: Math.round(el.getBoundingClientRect().height / lineHeight),
+                rendered: size * scale,
+              };
+            };
+            const leaf = (text: string, root: ParentNode) =>
+              [...root.querySelectorAll("*")].find(
+                (e) => e.children.length === 0 && e.textContent?.trim().startsWith(text),
+              )!;
+            const out = [...document.querySelectorAll("main article")].flatMap((a, i) => [
+              measure(`card ${i + 1} reveals`, leaf("REVEALS", a)),
+              measure(`card ${i + 1} meta row`, leaf("VENUE", a).parentElement!),
+            ]);
+            const aside = document.querySelector("aside")!;
+            for (const text of labels) out.push(measure(text, leaf(text, aside)));
+            return out;
+          },
+          { labels: [hub.matchday.label, hub.index.title, hub.achievements.label] },
+        );
+        expect(lines).toHaveLength(9);
+        for (const row of lines) {
+          expect(row.lines, `${row.name} on one line`).toBe(1);
+          expect(row.rendered, `${row.name} rendered size`).toBeGreaterThanOrEqual(11 - 0.01);
+        }
+      });
+    }
+
     for (const [width, height] of [
       [1200, 800],
       [1280, 720],

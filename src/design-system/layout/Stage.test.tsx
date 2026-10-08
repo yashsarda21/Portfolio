@@ -47,4 +47,10 @@ describe("Stage", () => {
       "[--stage-mono-min:calc(11px/var(--stage-scale,1))]",
     );
   });
+  it("hands the scale to the mono fit, on the stage only", () => {
+    const { container } = render(<Stage>x</Stage>);
+    expect(container.querySelector("[data-stage]")).toHaveClass(
+      "[--stage-fit:var(--stage-scale,1)]",
+    );
+  });
 });
