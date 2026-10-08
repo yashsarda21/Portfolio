@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { join } from "node:path";
 import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
 import { expectMatchesArtboard } from "../support/visual";
@@ -431,6 +432,180 @@ test.describe("desktop hub", () => {
         expect(result.past).toEqual([]);
       });
     }
+  });
+
+  test.describe("motion (H9)", () => {
+    const plate = (page: Page) => page.locator("[data-orbit]");
+    const transform = (page: Page) => plate(page).evaluate((el) => getComputedStyle(el).transform);
+    /** The first child of a card is its picture: a place to press that is not a link. */
+    const art = (page: Page, name: string) => card(page, name).locator("> div").first();
+    const SHOTS = join(process.cwd(), ".superpowers/sdd/2026-10-08-phase-4-hub/shots");
+
+    /** On the Hub with the motion running (it starts a beat after hydration, once the stage knows it is wide) and the cards showing. */
+    async function swaying(page: Page) {
+      await page.goto("/arena");
+      await waitForHydration(page);
+      await expect(plate(page)).toHaveAttribute("data-orbit", "sway");
+      // The cards stay hidden until the saved match record has loaded (H5): nothing can be pressed before.
+      await expect(playLinks(page).first()).toBeVisible();
+    }
+
+    test("the arc sways by itself", async ({ page }) => {
+      await swaying(page);
+      await page.waitForTimeout(1000);
+      const first = await transform(page);
+      expect(first).not.toBe("none");
+      await page.waitForTimeout(500);
+      expect(await transform(page)).not.toBe(first);
+    });
+
+    test("every card stays under the pointer across its whole width while the arc sways", async ({
+      page,
+    }) => {
+      await swaying(page);
+      for (const name of ["CRICKET GROUND", "CENTRE COURT", "BADMINTON HALL"]) {
+        const box = (await card(page, name).boundingBox())!;
+        for (const across of [0.1, 0.5, 0.9]) {
+          const hit = await page.evaluate(
+            ([x, y]) =>
+              document.elementFromPoint(x!, y!)?.closest("article")?.querySelector("h2")
+                ?.textContent,
+            [box.x + box.width * across, box.y + box.height / 2],
+          );
+          expect(hit, `${name} at ${across}`).toBe(name);
+        }
+      }
+    });
+
+    test.describe("reduced motion", () => {
+      test.use({ reducedMotion: "reduce" });
+      test("nothing moves", async ({ page }) => {
+        await page.goto("/arena");
+        await waitForHydration(page);
+        await page.waitForTimeout(2000);
+        await expect(plate(page)).toHaveAttribute("data-orbit", "rest");
+        expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(await transform(page));
+        // The card still straightens on focus, and the tilt stays off.
+        await page.mouse.move(1000, 400);
+        await page.waitForTimeout(500);
+        expect(await transform(page)).toBe("none");
+      });
+    });
+
+    test("the mouse over a card tilts it toward the pointer", async ({ page }) => {
+      await swaying(page);
+      const box = (await card(page, "CENTRE COURT").boundingBox())!;
+      await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.5, { steps: 6 });
+      await expect
+        .poll(() => card(page, "CENTRE COURT").evaluate((el) => getComputedStyle(el).transform))
+        .not.toBe("none");
+      await page.waitForTimeout(700);
+      await page.screenshot({ path: join(SHOTS, "task5-hover-tilt.png") });
+    });
+
+    test("a drag on the picture turns the arc and opens nothing", async ({ page }) => {
+      await swaying(page);
+      const box = (await art(page, "CRICKET GROUND").boundingBox())!;
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + 150, y, { steps: 10 });
+      await page.mouse.move(x + 300, y, { steps: 10 });
+      await expect(plate(page)).toHaveAttribute("data-orbit", "drag");
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: join(SHOTS, "task5-drag.png") });
+      await page.mouse.up();
+      await expect(plate(page)).toHaveAttribute("data-orbit", "rest");
+      await page.waitForTimeout(500);
+      await expect(page).toHaveURL("/arena");
+    });
+
+    test("a drag that begins on a link does not open it", async ({ page }) => {
+      await swaying(page);
+      const link = card(page, "CENTRE COURT").getByRole("link", { name: "PLAY" });
+      const box = (await link.boundingBox())!;
+      await page.mouse.move(box.x + 10, box.y + 10);
+      await page.mouse.down();
+      await page.mouse.move(box.x + 60, box.y + 12, { steps: 6 });
+      await page.mouse.up();
+      await page.waitForTimeout(600);
+      await expect(page).toHaveURL("/arena");
+    });
+
+    test("a plain click on PLAY still opens the venue", async ({ page }) => {
+      await swaying(page);
+      const play = card(page, "CENTRE COURT").getByRole("link", { name: "PLAY" });
+      // Like a visitor: arrive over the link first, let the card lift and the arc hold still, then press.
+      // (force: the swaying arc never holds still long enough for the "stable" check.)
+      await play.hover({ force: true });
+      await page.waitForTimeout(700);
+      await play.click();
+      await expect(page).toHaveURL("/arena/tennis");
+    });
+
+    test("keyboard focus straightens the card and lifts it", async ({ page }) => {
+      await swaying(page);
+      await card(page, "CRICKET GROUND")
+        .getByRole("link", { name: /PLAY|REMATCH/ })
+        .focus();
+      await expect
+        .poll(() =>
+          card(page, "CRICKET GROUND").evaluate((el) => {
+            const m = new DOMMatrix(getComputedStyle(el.parentElement!).transform);
+            return [Math.abs(m.m13) < 1e-6 && Math.abs(m.m31) < 1e-6, m.m42];
+          }),
+        )
+        .toEqual([true, -8]);
+    });
+
+    test("resizing mid-sway raises no errors", async ({ page }) => {
+      const errors = watchErrors(page);
+      await page.goto("/arena");
+      await waitForHydration(page);
+      await expect(plate(page)).toHaveAttribute("data-orbit", "sway");
+      for (const [width, height] of [
+        [1024, 768],
+        [1440, 900],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await page.waitForTimeout(400);
+      }
+      await expect(plate(page)).toHaveAttribute("data-orbit", "sway");
+      expect(errors).toEqual([]);
+    });
+
+    // An iPad Pro held wide: a finger, no mouse, and the desktop stage.
+    test.describe("with a finger", () => {
+      test.use({ hasTouch: true, isMobile: false, viewport: { width: 1366, height: 1024 } });
+
+      /** A touch pointer event on the element (`page.touchscreen` can only tap). */
+      const touch = (page: Page, name: string, type: string, dx = 0) =>
+        art(page, name).dispatchEvent(type, {
+          pointerType: "touch",
+          pointerId: 7,
+          isPrimary: true,
+          buttons: type === "pointerup" ? 0 : 1,
+          clientX: 300 + dx,
+          clientY: 400,
+          bubbles: true,
+        });
+
+      test("the arc sways, a finger drag turns it without opening anything, a tap opens the venue", async ({
+        page,
+      }) => {
+        await swaying(page);
+        await touch(page, "CRICKET GROUND", "pointerdown");
+        await touch(page, "CRICKET GROUND", "pointermove", 40);
+        await touch(page, "CRICKET GROUND", "pointermove", 160);
+        await expect(plate(page)).toHaveAttribute("data-orbit", "drag");
+        await touch(page, "CRICKET GROUND", "pointerup", 160);
+        await page.waitForTimeout(500);
+        await expect(page).toHaveURL("/arena");
+        await card(page, "CENTRE COURT").getByRole("link", { name: "PLAY" }).tap({ force: true });
+        await expect(page).toHaveURL("/arena/tennis");
+      });
+    });
   });
 
   for (const [name, state] of [

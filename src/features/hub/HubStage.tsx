@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { useRef, type ComponentProps, type MouseEvent } from "react";
 import {
   ArenaBackdrop,
   AudioToggle,
@@ -12,13 +12,20 @@ import {
   RecordChip,
   Stage,
   VenueCard,
+  useOrbit,
+  useTilt,
 } from "@/design-system";
+import { cn } from "@/lib/cn";
+import { MEDIA } from "@/lib/breakpoints";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import { HubIndex } from "./HubIndex";
 import type { HubView } from "./view";
+
+type Venue = HubView["venues"][number];
 
 /** PLAY and REMATCH push into the venue (spec §4.6); every other link takes the wipe. */
 function TunnelLink(props: ComponentProps<typeof ArenaLink>) {
@@ -29,6 +36,68 @@ function TunnelLink(props: ComponentProps<typeof ArenaLink>) {
 const ARC = ["[--arc-ry:10deg]", "[--arc-y:-14px]", "[--arc-ry:-10deg]"] as const;
 
 /**
+ * One card on the arc: it leans up to 6° toward the pointer, or toward a finger while one presses it (the slot's CSS
+ * does the lift, so the tilt adds none). A drag that ends on a link, or that turned the arc, never opens it.
+ */
+function ArcCard({
+  venue,
+  arc,
+  live,
+  swallowedByOrbit,
+}: {
+  venue: Venue;
+  arc: string;
+  live: boolean;
+  swallowedByOrbit: () => boolean;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const tilt = useTilt(ref, { max: 6, lift: 0, touch: true });
+  // Both are asked, so neither keeps a stale drag for the next click.
+  const cancelDrag = (e: MouseEvent) => {
+    const turned = swallowedByOrbit();
+    const dragged = tilt.consumeDrag();
+    if (turned || dragged) e.preventDefault();
+  };
+  const handlers = live
+    ? {
+        onPointerDown: tilt.onPointerDown,
+        onPointerMove: tilt.onPointerMove,
+        onPointerUp: tilt.onPointerUp,
+        onPointerCancel: tilt.onPointerCancel,
+        onPointerLeave: tilt.onPointerLeave,
+      }
+    : {};
+  return (
+    <VenueCard
+      tiltRef={ref}
+      scene={venue.scene}
+      played={venue.played}
+      number={venue.number}
+      name={venue.name}
+      status={venue.status}
+      blurb={venue.blurb}
+      reveals={venue.reveals}
+      play={{
+        label: venue.play.label,
+        as: TunnelLink,
+        to: venue.play.to,
+        onClick: cancelDrag,
+        draggable: false,
+      }}
+      skip={{
+        label: venue.skip.label,
+        as: ArenaLink,
+        to: venue.skip.to,
+        onClick: cancelDrag,
+        draggable: false,
+      }}
+      slotClassName={cn("pointer-events-auto perspective-card", arc)}
+      {...handlers}
+    />
+  );
+}
+
+/**
  * The desktop Hub, from 1200px: every part at its place on the 1440×900 artboard. `ready` is false until the
  * saved match record has loaded; the parts that depend on it are hidden until then (H5), so a returning
  * visitor never sees the fresh state flash by.
@@ -36,6 +105,9 @@ const ARC = ["[--arc-ry:10deg]", "[--arc-y:-14px]", "[--arc-ry:-10deg]"] as cons
 export function HubStage({ view, ready }: { view: HubView; ready: boolean }) {
   const audio = useAudio();
   const pending = ready ? {} : { "data-record-pending": "" };
+  const live = useMediaQuery(MEDIA.lg);
+  const plate = useRef<HTMLDivElement>(null);
+  const { consumeDrag, ...orbitHandlers } = useOrbit(plate, { enabled: live });
 
   return (
     <Stage from="lg" backdrop={<ArenaBackdrop layout="hub" bleed />}>
@@ -82,26 +154,29 @@ export function HubStage({ view, ready }: { view: HubView; ready: boolean }) {
           {view.heading}
         </Heading>
       </div>
+      {/* The arc stands in a still frame that takes the pointer; inside it the plate turns. The plate lets every press
+          fall through to the cards (it shares their 3D space, and its own flat box would otherwise cut across the
+          turned cards and steal their clicks). */}
       <div
-        data-orbit="rest"
-        {...pending}
-        className="absolute top-51.5 right-9 left-76 grid h-110 grid-cols-3 gap-7 perspective-arc"
+        {...(live ? orbitHandlers : {})}
+        className="absolute top-51.5 right-9 left-76 h-110 touch-pan-y select-none perspective-arc"
       >
-        {view.venues.map((venue, i) => (
-          <VenueCard
-            key={venue.key}
-            scene={venue.scene}
-            played={venue.played}
-            number={venue.number}
-            name={venue.name}
-            status={venue.status}
-            blurb={venue.blurb}
-            reveals={venue.reveals}
-            play={{ label: venue.play.label, as: TunnelLink, to: venue.play.to }}
-            skip={{ label: venue.skip.label, as: ArenaLink, to: venue.skip.to }}
-            slotClassName={ARC[i]}
-          />
-        ))}
+        <div
+          ref={plate}
+          data-orbit="rest"
+          {...pending}
+          className="pointer-events-none grid size-full grid-cols-3 gap-7 transform-3d"
+        >
+          {view.venues.map((venue, i) => (
+            <ArcCard
+              key={venue.key}
+              venue={venue}
+              arc={ARC[i] ?? ""}
+              live={live}
+              swallowedByOrbit={consumeDrag}
+            />
+          ))}
+        </div>
       </div>
       <div className="absolute top-168 right-9 left-76 grid grid-cols-4 gap-4">
         {view.facilities.map((facility) => (

@@ -60,7 +60,7 @@ export function VenueCard({
         data-state={played ? "played" : "unplayed"}
         ref={tiltRef}
         className={cn(
-          "flex h-full flex-col overflow-hidden transition-colors duration-(--dur-hover) group-hover/venue:border-volt-a60 group-has-focus-visible/venue:border-volt-a60",
+          "flex h-full flex-col overflow-hidden transition-colors duration-(--dur-hover) group-hover/venue:border-volt-a60 group-has-focus-visible/venue:border-volt-a60 data-pressed:border-volt-a60",
           className,
         )}
         {...rest}

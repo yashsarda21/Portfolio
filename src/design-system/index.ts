@@ -42,6 +42,8 @@ export { PlayerCard } from "./broadcast/PlayerCard";
 export { ActionRow } from "./broadcast/ActionRow";
 export { ChannelCard } from "./broadcast/ChannelCard";
 export { useTilt } from "./lib/useTilt";
+export { useOrbit } from "./lib/useOrbit";
+export { orbitAngle } from "./lib/orbit";
 export { Breadcrumb } from "./broadcast/Breadcrumb";
 export { MobileTabBar } from "./broadcast/MobileTabBar";
 export { BallByBall } from "./broadcast/BallByBall";

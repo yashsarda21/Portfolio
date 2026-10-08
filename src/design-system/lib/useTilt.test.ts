@@ -19,19 +19,21 @@ function media({ fine, reduced }: { fine: boolean; reduced: boolean }) {
 }
 
 /** A pointer event over a 400x640 card at the origin. */
-const at = (clientX: number, clientY: number, buttons = 0) =>
+const at = (clientX: number, clientY: number, buttons = 0, pointerType = "mouse") =>
   ({
     clientX,
     clientY,
     buttons,
+    pointerType,
     currentTarget: {
       getBoundingClientRect: () => ({ left: 0, top: 0, width: 400, height: 640 }),
     },
   }) as unknown as ReactPointerEvent<HTMLElement>;
 
-function setup() {
+function setup(touch = false) {
   const el = document.createElement("div");
-  return renderHook(() => useTilt({ current: el }, { max: 6, lift: 8 }));
+  const hook = renderHook(() => useTilt({ current: el }, { max: 6, lift: 8, touch }));
+  return { ...hook, el };
 }
 
 describe("useTilt", () => {
@@ -134,5 +136,76 @@ describe("useTilt", () => {
     act(() => result.current.onPointerMove(at(300, 300)));
     // ...and a click that comes with no press (Enter on the focused button) is a real click.
     expect(result.current.consumeDrag()).toBe(false);
+  });
+
+  describe("touch: true", () => {
+    const finger = (x: number, y: number, buttons = 1) => at(x, y, buttons, "touch");
+
+    it("a finger press tilts toward the finger, marks the card pressed, and eases back on release", async () => {
+      media({ fine: false, reduced: false });
+      const { result, el } = setup(true);
+      act(() => result.current.onPointerDown(finger(400, 320)));
+      await waitFor(() => expect(setters.rotationY).toHaveBeenCalledWith(6));
+      expect(el.hasAttribute("data-pressed")).toBe(true);
+      act(() => result.current.onPointerUp());
+      await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(0));
+      expect(el.hasAttribute("data-pressed")).toBe(false);
+    });
+
+    it("a finger that moves while pressed keeps tilting, and a drag swallows the click once", async () => {
+      media({ fine: false, reduced: false });
+      const { result } = setup(true);
+      act(() => {
+        result.current.onPointerDown(finger(200, 320));
+        result.current.onPointerMove(finger(0, 320));
+      });
+      await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(-6));
+      act(() => result.current.onPointerUp());
+      expect(result.current.consumeDrag()).toBe(true);
+      expect(result.current.consumeDrag()).toBe(false);
+    });
+
+    it("pointercancel (a scroll took over) settles to 0 and leaves no drag behind", async () => {
+      media({ fine: false, reduced: false });
+      const { result, el } = setup(true);
+      act(() => {
+        result.current.onPointerDown(finger(200, 100));
+        result.current.onPointerMove(finger(200, 300));
+      });
+      await waitFor(() => expect(setters.rotationX).toHaveBeenCalled());
+      act(() => result.current.onPointerCancel());
+      await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(0));
+      expect(setters.rotationX).toHaveBeenLastCalledWith(0);
+      expect(el.hasAttribute("data-pressed")).toBe(false);
+      expect(result.current.consumeDrag()).toBe(false);
+    });
+
+    it("a finger that is not pressing does not tilt", async () => {
+      media({ fine: false, reduced: false });
+      const { result } = setup(true);
+      act(() => result.current.onPointerMove(finger(300, 300, 0)));
+      await Promise.resolve();
+      expect(quickTo).not.toHaveBeenCalled();
+    });
+
+    it("does nothing under reduced motion", async () => {
+      media({ fine: false, reduced: true });
+      const { result } = setup(true);
+      act(() => result.current.onPointerDown(finger(300, 300)));
+      await Promise.resolve();
+      expect(quickTo).not.toHaveBeenCalled();
+    });
+
+    it("without the option a finger press does nothing", async () => {
+      media({ fine: false, reduced: false });
+      const { result, el } = setup(false);
+      act(() => {
+        result.current.onPointerDown(finger(100, 100));
+        result.current.onPointerMove(finger(300, 300));
+      });
+      await Promise.resolve();
+      expect(quickTo).not.toHaveBeenCalled();
+      expect(el.hasAttribute("data-pressed")).toBe(false);
+    });
   });
 });
