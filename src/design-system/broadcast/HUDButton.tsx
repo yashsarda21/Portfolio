@@ -5,20 +5,22 @@ import type { PolymorphicProps } from "../lib/polymorphic";
 import { Icon } from "../primitives/Icon";
 import type { IconName } from "../primitives/icons";
 
+// The pieces the tones share, each written once. The chip is `hud-chip` (base.css): 12px gutters, 11px type.
+const GLASS = "glass text-floodlight hover:bg-white-a10";
+const REGULAR = "px-4 type-mono-md leading-auto";
+
 export const hudButtonVariants = cva(
-  "inline-flex h-11 cursor-pointer items-center gap-2.5 px-4 type-mono-md leading-auto transition-colors duration-(--dur-snap) ease-snap",
+  "inline-flex h-11 cursor-pointer items-center gap-2.5 transition-colors duration-(--dur-snap) ease-snap",
   {
     variants: {
       tone: {
-        glass: "glass text-floodlight hover:bg-white-a10",
-        // Glass from 768 up; on the phone artboards the control is a plain bordered chip (12px gutters, 11px type).
-        "glass-line":
-          "glass text-floodlight hover:bg-white-a10 max-md:border-line-strong max-md:bg-transparent max-md:px-3 max-md:type-mono-xs",
-        // The phone landing's chip (Mobile-Landing): glass at every width, 12px gutters, 11px type, no icon.
-        "glass-compact": "glass text-floodlight hover:bg-white-a10 px-3 type-mono-xs",
+        glass: `${GLASS} ${REGULAR}`,
+        // Glass from 768 up; on the phone artboards the control is a plain bordered chip.
+        "glass-line": `${GLASS} ${REGULAR} max-md:border-line-strong max-md:bg-transparent max-md:hud-chip`,
+        // The phone landing's chip (Mobile-Landing): glass at every width, the chip's gutters and type, no icon.
+        "glass-compact": `${GLASS} hud-chip`,
         // The artboard's border is content-box (+2px): 46px with the border, vs the glass 44px.
-        "volt-outline":
-          "h-11.5 border border-volt bg-transparent text-volt hover:border-volt-hover hover:text-volt-hover",
+        "volt-outline": `${REGULAR} h-11.5 border border-volt bg-transparent text-volt hover:border-volt-hover hover:text-volt-hover`,
       },
     },
     defaultVariants: { tone: "glass" },

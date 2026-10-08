@@ -60,4 +60,22 @@ describe("cn", () => {
     expect(cn("type-body", "leading-auto")).toBe("type-body leading-auto");
     expect(cn("leading-auto", "type-body")).toBe("type-body");
   });
+
+  it("lets the sized recipes of one face replace each other (the face is shared in base.css, the class is not)", () => {
+    expect(cn("type-btn-heavy", "type-btn-2xl")).toBe("type-btn-2xl");
+    expect(cn("type-btn-bar-lg", "type-btn-lg")).toBe("type-btn-lg");
+    expect(cn("type-hero", "type-hero-sm")).toBe("type-hero-sm");
+    expect(cn("type-score-lg", "type-score-md")).toBe("type-score-md");
+    expect(cn("type-sub", "type-sub-lg")).toBe("type-sub-lg");
+    expect(cn("type-d2", "type-welcome")).toBe("type-welcome");
+    expect(cn("font-mono tracking-wide", "type-btn-2xl")).toBe("type-btn-2xl");
+  });
+
+  it("knows the glow and blur tokens: one shadow, one blur", () => {
+    expect(cn("shadow-glow-volt-sm", "shadow-glow-volt-lg")).toBe("shadow-glow-volt-lg");
+    expect(cn("blur-beam", "blur-soft")).toBe("blur-soft");
+    expect(cn("shadow-glow-volt-md", "shadow-volt-a35")).toBe(
+      "shadow-glow-volt-md shadow-volt-a35",
+    );
+  });
 });

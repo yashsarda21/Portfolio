@@ -136,6 +136,47 @@ describe("Scoreboard sizes", () => {
     expect(screen.getByText("ONE").closest(".grid")).toHaveAttribute("data-part", "board-strip");
   });
 
+  it("FooterCells draws one cell per entry, in order, with each cell's tone and alignment", () => {
+    render(
+      <Scoreboard size="compact">
+        <Scoreboard.Footer>
+          <Scoreboard.FooterCells
+            cells={[
+              { label: "A", value: "ONE", tone: "volt", align: "start" },
+              { label: "B", value: "TWO", tone: "label", align: "end" },
+            ]}
+          />
+        </Scoreboard.Footer>
+      </Scoreboard>,
+    );
+    const footer = screen.getByText("ONE").closest(".grid")!;
+    expect([...footer.children].map((c) => c.textContent)).toEqual(["AONE", "BTWO"]);
+    expect(screen.getByText("ONE")).toHaveClass("text-volt");
+    expect(screen.getByText("TWO")).toHaveClass("text-scout");
+    expect(screen.getByText("ONE").parentElement).toHaveClass("border-r");
+  });
+
+  it("hideEndBelow drops the header's last cell below its breakpoint, and only when asked", () => {
+    const { rerender } = render(
+      <Scoreboard size="compact">
+        <Scoreboard.Header hideEndBelow="xs">
+          <span>LEFT</span>
+          <span>RIGHT</span>
+        </Scoreboard.Header>
+      </Scoreboard>,
+    );
+    expect(screen.getByText("LEFT").parentElement).toHaveClass("max-xs:[&>:last-child]:hidden");
+    rerender(
+      <Scoreboard size="compact">
+        <Scoreboard.Header>
+          <span>LEFT</span>
+          <span>RIGHT</span>
+        </Scoreboard.Header>
+      </Scoreboard>,
+    );
+    expect(screen.getByText("LEFT").parentElement).not.toHaveClass("max-xs:[&>:last-child]:hidden");
+  });
+
   it("a board without Power has no ring layers (the resting ring is its own shadow)", () => {
     const { container } = board();
     expect(container.querySelector('[data-part="board-on"], [data-part="board-hit"]')).toBeNull();

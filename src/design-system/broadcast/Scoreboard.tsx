@@ -59,7 +59,19 @@ const HEADER: Record<ScoreboardSize, string> = {
   compact: "h-9.75 px-3.5 type-mono-label",
 };
 
-function Header({ className, style, "data-part": part, children }: PartProps) {
+/** Below this width the header's last cell is dropped: the first one then has the row to itself. */
+const HIDE_END_BELOW = { xs: "max-xs:[&>:last-child]:hidden" } as const;
+
+function Header({
+  hideEndBelow,
+  className,
+  style,
+  "data-part": part,
+  children,
+}: PartProps & {
+  /** Hide the last cell below this breakpoint (xs: a 360px phone has no room for it beside the first). */
+  hideEndBelow?: keyof typeof HIDE_END_BELOW;
+}) {
   return (
     <div
       style={style}
@@ -67,6 +79,7 @@ function Header({ className, style, "data-part": part, children }: PartProps) {
       className={cn(
         "flex shrink-0 items-center justify-between border-b border-board-line text-scout",
         HEADER[useContext(SizeContext)],
+        hideEndBelow && HIDE_END_BELOW[hideEndBelow],
         className,
       )}
     >
@@ -175,19 +188,21 @@ const ALIGN = wideOr<Record<"start" | "center" | "end", string>>(
   },
 );
 
+/** One footer cell as data: what a page's view hands to `Scoreboard.FooterCells`. */
+export interface ScoreboardCell {
+  label: string;
+  value: string;
+  tone?: keyof typeof VALUE_TONE;
+  align?: "start" | "center" | "end";
+}
+
 function FooterCell({
   label,
   value,
   tone = "primary",
   align = "start",
   className,
-}: {
-  className?: string;
-  label: string;
-  value: ReactNode;
-  tone?: keyof typeof VALUE_TONE;
-  align?: "start" | "center" | "end";
-}) {
+}: ScoreboardCell & { className?: string }) {
   const size = useContext(SizeContext);
   return (
     <div className={cn("flex items-center", ALIGN[size][align], className)}>
@@ -197,6 +212,11 @@ function FooterCell({
       <span className={cn(VALUE_TYPE[size], VALUE_TONE[tone])}>{value}</span>
     </div>
   );
+}
+
+/** The footer's cells from data, one per entry (label is the key): the way a page fills the strip. */
+function FooterCells({ cells }: { cells: readonly ScoreboardCell[] }) {
+  return cells.map((cell) => <FooterCell key={cell.label} {...cell} />);
 }
 
 /**
@@ -260,6 +280,7 @@ export const Scoreboard = Object.assign(Root, {
   Subtitle,
   Footer,
   FooterCell,
+  FooterCells,
   Scan,
   Power,
 });

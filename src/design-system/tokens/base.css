@@ -59,6 +59,11 @@
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
+/* The compact chip of a HUD control (Mobile-Landing): 12px gutters, 11px mono. Defined once; a control wears it
+   always (`hud-chip`) or on the phone only (`max-md:hud-chip`). */
+@utility hud-chip {
+  @apply px-3 type-mono-xs;
+}
 @utility glass-solid {
   background-color: var(--surface-glass-solid);
   border-width: 1px;
@@ -74,23 +79,52 @@
 }
 
 /* ---------- type recipes (audit §2.4 consolidated scale) ---------- */
-/* display: the competitor */
-@utility type-hero {
+/* Faces. A family of recipes that differ only by size (and leading, where noted) shares one face, defined once
+   here; each sized recipe applies it and sets what is its own. A face has no size, so it is never used in
+   markup (catalog.test.ts checks), and a sized recipe is the `type-*` class a page uses (cn() treats every
+   `type-*` as one conflict group). */
+@utility face-btn {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+@utility face-btn-heavy {
+  @apply face-btn;
+  font-weight: 900;
+}
+@utility face-hero {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 156px;
-  line-height: 0.86;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
+@utility face-score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+@utility face-sub {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* display: the competitor */
+@utility type-hero {
+  @apply face-hero;
+  font-size: 156px;
+  line-height: 0.86;
+}
 /* The name on the Intro board: 132px at .85 (type-hero is the Landing's 156px at .86). */
 @utility type-hero-sm {
-  font-family: var(--font-display);
-  font-weight: 900;
+  @apply face-hero;
   font-size: 132px;
   line-height: 0.85;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
 /* The name stacked on two lines on the narrow board (Mobile-Landing): 96px at .82, untracked; 120px from the tablet. */
 @utility type-hero-stack {
@@ -157,17 +191,13 @@
   line-height: 0.9;
   text-transform: uppercase;
 }
-/* WELCOME TO MY ARENA (Intro): type-d2's 60px at .9, tracked .06em. The phone's intro (derived, no board) steps
+/* WELCOME TO MY ARENA (Intro): type-d2 (60px at .9), tracked .06em. The phone's intro (derived, no board) steps
    it down to 32px so the line holds a 360px screen on one line, above the full-width call to action. */
 @utility type-welcome {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 32px;
-  line-height: 0.9;
+  @apply type-d2;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
-  @media (width >= 48rem) {
-    font-size: 60px;
+  @media (width < 48rem) {
+    font-size: 32px;
   }
 }
 @utility type-d2s {
@@ -219,39 +249,24 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
-/* The Intro's call to action: type-btn-heavy's face at 28px (340x74 button). */
+/* Buttons: the heavy face (900) at 20, 22, 24 and 28px, the plain face (800) at 20 and 26px. */
+/* The Intro's call to action (340x74 button). */
 @utility type-btn-2xl {
-  font-family: var(--font-display);
-  font-weight: 900;
+  @apply face-btn-heavy;
   font-size: 28px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 @utility type-btn-xl {
-  font-family: var(--font-display);
-  font-weight: 800;
+  @apply face-btn;
   font-size: 26px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
-/* The form's send button: type-btn-heavy's weight and tracking at 24px (Team-Up). */
+/* The form's send button (Team-Up). */
 @utility type-btn-lg {
-  font-family: var(--font-display);
-  font-weight: 900;
+  @apply face-btn-heavy;
   font-size: 24px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 @utility type-btn {
-  font-family: var(--font-display);
-  font-weight: 800;
+  @apply face-btn;
   font-size: 20px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 @utility type-d5 {
   font-family: var(--font-display);
@@ -273,30 +288,24 @@
   }
 }
 @utility type-sub {
-  font-family: var(--font-display);
-  font-weight: 700;
+  @apply face-sub;
   font-size: 30px;
   line-height: 1;
   letter-spacing: 0.42em;
-  text-transform: uppercase;
 }
 /* The subtitle on the Intro board: 34px at .4em on the font's own line box (type-sub is the Landing's 30px at .42em, line-height 1). */
 @utility type-sub-lg {
-  font-family: var(--font-display);
-  font-weight: 700;
+  @apply face-sub;
   font-size: 34px;
   line-height: normal;
   letter-spacing: 0.4em;
-  text-transform: uppercase;
 }
 /* The subtitle on the narrow board (Mobile-Landing): 18px at .38em, on the font's own line box; 22px from the tablet (one size step up, L1). */
 @utility type-sub-sm {
-  font-family: var(--font-display);
-  font-weight: 700;
+  @apply face-sub;
   font-size: 18px;
   line-height: normal;
   letter-spacing: 0.38em;
-  text-transform: uppercase;
   @media (width >= 48rem) {
     font-size: 22px;
   }
@@ -445,23 +454,13 @@
   text-transform: uppercase;
 }
 @utility type-score-lg {
-  font-family: var(--font-display);
-  font-weight: 800;
+  @apply face-score;
   font-size: 24px;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  text-transform: uppercase;
 }
 /* The Intro board's footer values: type-score-lg's face at 22px. */
 @utility type-score-md {
-  font-family: var(--font-display);
-  font-weight: 800;
+  @apply face-score;
   font-size: 22px;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  text-transform: uppercase;
 }
 /* Score-bug digits: same face as type-score-lg, but untracked (Cricket-Play artboard). */
 @utility type-score-num {
@@ -554,29 +553,19 @@
   text-transform: uppercase;
 }
 @utility type-btn-heavy {
-  font-family: var(--font-display);
-  font-weight: 900;
+  @apply face-btn-heavy;
   font-size: 20px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
-/* The phone landing's call to action (Mobile-Landing): type-btn-heavy's face at 22px, on the 64px bar. */
+/* The phone landing's call to action (Mobile-Landing): the heavy face at 22px, on the 64px bar. */
 @utility type-btn-bar-lg {
-  font-family: var(--font-display);
-  font-weight: 900;
+  @apply face-btn-heavy;
   font-size: 22px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
+/* The bar button's small step: the heavy face at 17px, tracked a little tighter (.12em) to hold the bar. */
 @utility type-btn-bar {
-  font-family: var(--font-display);
-  font-weight: 900;
+  @apply face-btn-heavy;
   font-size: 17px;
-  line-height: 1;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 @utility type-mono-nav {
   font-family: var(--font-mono);

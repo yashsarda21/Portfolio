@@ -88,6 +88,16 @@ const RAW_STYLE_LITERALS = [
     message: "Use type-* recipes, not arbitrary type sizes (spec §4.2).",
   },
   {
+    selector: "Literal[value=/\\b(shadow|blur|drop-shadow)-\\[\\d/]",
+    message:
+      "Use the shadow-* and blur-* tokens (theme.css), not arbitrary shadow or blur geometry (spec §4.2).",
+  },
+  {
+    selector: "TemplateElement[value.raw=/\\b(shadow|blur|drop-shadow)-\\[\\d/]",
+    message:
+      "Use the shadow-* and blur-* tokens (theme.css), not arbitrary shadow or blur geometry (spec §4.2).",
+  },
+  {
     selector: "Literal[value=/\\btext-(line-3|line-hover|seg-empty|mast|fixture)\\b/]",
     message: "Decoration colour used as text fails contrast (spec A1).",
   },

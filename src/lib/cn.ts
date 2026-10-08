@@ -15,13 +15,16 @@ const twMerge = extendTailwindMerge<"type-recipe" | "surface">({
         "glow-ring",
         "glow-cta",
         "glow-cursor",
+        "glow-volt-sm",
+        "glow-volt-md",
+        "glow-volt-lg",
         "bank-lg",
         "bank-sm",
         "bank-mini",
         "inset-cabinet",
       ],
       ease: ["follow", "snap", "swing", "entrance", "standard", "absorb"],
-      blur: ["beam", "glass"],
+      blur: ["beam", "glass", "soft"],
     },
     classGroups: {
       // Each `type-*` utility sets a full type recipe, so two of them always conflict.

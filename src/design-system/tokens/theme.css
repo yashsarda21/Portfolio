@@ -17,6 +17,7 @@
   --perspective-*: initial;
   --breakpoint-*: initial;
 
+  --breakpoint-xs: 23rem; /* 368: a 360px phone is below it */
   --breakpoint-md: 48rem; /* 768 */
   --breakpoint-lg: 75rem; /* 1200 */
   --breakpoint-xl: 90rem; /* 1440 */
@@ -154,6 +155,10 @@
   --shadow-glow-ring: 0 0 18px rgb(var(--rgb-volt) / 0.6);
   --shadow-glow-cta: 0 0 40px rgb(var(--rgb-volt) / 0.25);
   --shadow-glow-cursor: 0 0 12px rgb(var(--rgb-white) / 0.9);
+  /* a volt glow around a small light, by strength (the intro's specks, trails, title bar and shock line) */
+  --shadow-glow-volt-sm: 0 0 10px rgb(var(--rgb-volt));
+  --shadow-glow-volt-md: 0 0 16px rgb(var(--rgb-volt));
+  --shadow-glow-volt-lg: 0 0 30px rgb(var(--rgb-volt));
   --shadow-bank-lg:
     0 0 40px 12px rgb(var(--rgb-bulb) / 0.45), 0 0 220px 80px rgb(var(--rgb-halo) / 0.14);
   --shadow-bank-sm:
@@ -165,4 +170,6 @@
   --shadow-inset-cabinet: inset 0 0 120px rgb(0 0 0 / 0.8);
 
   --blur-glass: var(--glass-blur);
+  /* a streak of light softened by a couple of pixels (the intro's white trail) */
+  --blur-soft: 2px;
 }

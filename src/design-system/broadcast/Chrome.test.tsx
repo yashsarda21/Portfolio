@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -64,7 +65,7 @@ describe("broadcast chrome", () => {
     expect(btn).toHaveAttribute("aria-pressed", "true");
     expect(btn).toHaveTextContent("SOUND ON");
     expect(btn.querySelector("svg")).toBeNull();
-    expect(btn).toHaveClass("h-11", "px-3", "type-mono-xs");
+    expect(btn).toHaveClass("h-11", "hud-chip");
     expect(btn).not.toHaveClass("type-mono-md", "px-4");
   });
 
@@ -116,5 +117,29 @@ describe("broadcast chrome", () => {
     expect(btn).not.toHaveClass("glass");
     expect(btn).toHaveClass("border-volt", "text-volt", "bg-transparent", "h-11.5");
     expect(btn).not.toHaveClass("h-11");
+  });
+
+  it("the compact chip is one class: always on glass-compact, phone only on glass-line", () => {
+    const { rerender } = render(<HUDButton tone="glass-compact">SKIP</HUDButton>);
+    const compact = screen.getByRole("button");
+    expect(compact).toHaveClass("glass", "hud-chip");
+    expect(compact).not.toHaveClass("px-4", "type-mono-md", "leading-auto");
+    rerender(<HUDButton tone="glass-line">QUICK VIEW</HUDButton>);
+    const line = screen.getByRole("button");
+    expect(line).toHaveClass(
+      "glass",
+      "px-4",
+      "type-mono-md",
+      "max-md:hud-chip",
+      "max-md:bg-transparent",
+    );
+    expect(line).not.toHaveClass("hud-chip");
+    // The chip's gutters and type are written once, in base.css.
+    expect(readFileSync("src/design-system/tokens/base.css", "utf8")).toMatch(
+      /@utility hud-chip \{\s*@apply px-3 type-mono-xs;\s*\}/,
+    );
+    expect(readFileSync("src/design-system/broadcast/HUDButton.tsx", "utf8")).not.toMatch(
+      /px-3|type-mono-xs/,
+    );
   });
 });
