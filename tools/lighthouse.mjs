@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Lighthouse budget for the pages that carry a promise: the recruiter page (/scout), the Landing (/) and the
-// Player Intro (/intro). Not part of `pnpm verify` (slow): run it at a phase exit.
+// Lighthouse budget for the pages that carry a promise: the recruiter page (/scout), the Landing (/), the
+// Player Intro (/intro) and the Arena Hub (/arena). Not part of `pnpm verify` (slow): run it at a phase exit.
 // Usage: pnpm build && pnpm lighthouse
 //
 // Serves build/client on port 4174 (the user's `pnpm preview` on 4173 is left alone), drives Playwright's
@@ -62,6 +62,11 @@ const PAGES = [
   {
     path: "/intro",
     variants: [{ ...DESKTOP, gate: { accessibility: 1, "best-practices": 0.9, seo: 0.9 } }, MOBILE],
+  },
+  {
+    // The Hub (spec 11.12, H15): a calm page with no long reveal, so desktop is gated in full.
+    path: "/arena",
+    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE],
   },
 ];
 
