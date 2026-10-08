@@ -1,4 +1,4 @@
-/** Which of the two intros plays: the stage (desktop and tablet, L1) or the phone column (L6). */
+/** Which of the two intros plays: the stage (desktop, from 1200px, L1) or the column (phones and tablets, L6). */
 export type IntroTier = "desktop" | "mobile";
 
 const DESKTOP = {

@@ -14,12 +14,12 @@ import { createIntroTimeline, showIntroEndState } from "./timeline";
 type IntroState = "pending" | "playing" | "done";
 
 /**
- * Which intro this screen gets. The stage (desktop AND tablet, L1) plays the full show; the phone column
- * plays its own three-second cut (L6, D-6); reduced motion gets the end state at once, whatever the width.
+ * Which intro this screen gets. The stage (from 1200px, L1) plays the full show; the column (phones and
+ * tablets, below 1200px) plays its own three-second cut (L6, D-6); reduced motion gets the end state at once, whatever the width.
  */
 const TIERS = {
-  desktop: `${MEDIA.md} and (prefers-reduced-motion: no-preference)`,
-  mobile: `${MEDIA.belowMd} and (prefers-reduced-motion: no-preference)`,
+  desktop: `${MEDIA.lg} and (prefers-reduced-motion: no-preference)`,
+  mobile: `${MEDIA.belowLg} and (prefers-reduced-motion: no-preference)`,
   reduce: "(prefers-reduced-motion: reduce)",
 } as const;
 
@@ -53,8 +53,8 @@ function fallbackFired(root: HTMLElement): boolean {
  * reduced motion it shows the end state and never touches the rig. If GSAP cannot load, the state stays pending
  * and the CSS fallback shows the parts after 8 s. Leaving the page reverts everything (`mm.revert()`).
  *
- * Phone width plays the column's cut: no rig (it never loads, so no head-turn frame is ever requested) and
- * no commentary (L11). Resizing across 768px mid-play reverts one branch and builds the other.
+ * Below 1200px plays the column's cut: no rig (it never loads, so no head-turn frame is ever requested) and
+ * no commentary (L11). Resizing across 1200px mid-play reverts one branch and builds the other.
  * `replay()` restarts the timeline from the dark stadium; replaying while playing restarts again.
  * `canReplay` is whether there is a timeline to restart (REPLAY is disabled until there is). It changes when a
  * timeline is built or dropped, not at every beat, so the page does not re-render as the show goes on.

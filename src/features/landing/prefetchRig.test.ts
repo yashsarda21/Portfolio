@@ -16,7 +16,7 @@ function setup(opts: { wide?: boolean; reduced?: boolean; saveData?: boolean } =
     },
   );
   vi.stubGlobal("matchMedia", (q: string) => ({
-    matches: q.includes("reduce") ? reduced : q.includes("min-width: 768px") ? wide : false,
+    matches: q.includes("reduce") ? reduced : q.includes("min-width: 1200px") ? wide : false,
   }));
   vi.stubGlobal("requestIdleCallback", (cb: () => void) => cb());
   Object.defineProperty(navigator, "connection", { value: { saveData }, configurable: true });
@@ -45,7 +45,7 @@ describe("prefetchRig", () => {
     expect(document.body.innerHTML).toBe(before);
   });
 
-  it("does nothing below the tablet width (phones)", async () => {
+  it("does nothing below the desktop width (phones and tablets play the column intro)", async () => {
     const made = setup({ wide: false });
     (await load())(URLS);
     expect(made).toHaveLength(0);

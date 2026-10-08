@@ -10,12 +10,12 @@ interface NetworkInformation {
 
 /**
  * Warm the intro's head-turn frames (L7): once the page has loaded and the browser is idle, request each
- * strip with an Image() (nothing is added to the page). Desktop and tablet only (they play the full intro),
+ * strip with an Image() (nothing is added to the page). Desktop only, from 1200px (phones and tablets play the column intro, which has no strips),
  * never under reduced motion or data saver. Each URL is asked for once.
  */
 export function prefetchRig(urls: readonly string[]): void {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-  if (!window.matchMedia(MEDIA.md).matches) return;
+  if (!window.matchMedia(MEDIA.lg).matches) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
   if (connection?.saveData) return;

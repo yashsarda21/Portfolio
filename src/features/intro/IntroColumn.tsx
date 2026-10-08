@@ -15,7 +15,7 @@ import type { IntroView } from "./view";
 const PORTRAIT = { width: 700, height: 564 } as const;
 
 /**
- * The Player Introduction below 768px (L6): the phone's three-second cut, derived from the Mobile-Landing frame
+ * The Player Introduction below 1200px (L6, phones and tablets): the three-second cut, derived from the Mobile-Landing frame
  * since no board exists for it. A ScreenColumn, so a short phone scrolls instead of clipping. The rest portrait
  * fades in above the stacked name (no mover, no head turn, so no strips are ever requested); the page is
  * silent (L11): no commentary, no dust. `data-part` names are the stage's, so one timeline factory serves both.
@@ -31,7 +31,7 @@ export function IntroColumn({
 }) {
   return (
     <ScreenColumn
-      until="md"
+      until="lg"
       data-intro-layout="column"
       backdrop={<ArenaBackdrop layout="column" layerClassName="hold-part" />}
       top={

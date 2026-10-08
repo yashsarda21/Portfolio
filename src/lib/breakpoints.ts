@@ -4,9 +4,10 @@
  */
 export const BREAKPOINT = { md: 768, lg: 1200 } as const;
 
-/** The same breakpoints as media queries. `belowMd` is the phone: one pixel under `md`. */
+/** The same breakpoints as media queries. `belowMd` is the phone, `belowLg` the phone and tablet: one pixel under `md` / `lg`. */
 export const MEDIA = {
   md: `(min-width: ${BREAKPOINT.md}px)`,
   belowMd: `(max-width: ${BREAKPOINT.md - 1}px)`,
   lg: `(min-width: ${BREAKPOINT.lg}px)`,
+  belowLg: `(max-width: ${BREAKPOINT.lg - 1}px)`,
 } as const;

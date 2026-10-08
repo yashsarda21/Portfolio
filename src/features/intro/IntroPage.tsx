@@ -15,9 +15,9 @@ import { createLetters } from "./letters";
 import type { IntroView } from "./view";
 
 /**
- * The Player Introduction. From 768px up (desktop and tablet, L1) the 1440x900 stage plays the intro: a
+ * The Player Introduction. From 1200px up (desktop, L1) the 1440x900 stage plays the intro: a
  * timeline (useIntroTimeline) lights the scene, swings the silhouette in, locks the name in and finishes with
- * the call to action. Below 768px the phone's column plays its own three-second cut (IntroColumn, L6, D-6). Each
+ * the call to action. Below 1200px (phones and tablets) the column plays its own three-second cut (IntroColumn, L6, D-6). Each
  * layout is marked `data-intro-layout`, so the timeline collects the parts of the one on show only.
  *
  * `data-hold` on the root says where the show is (pending, playing, done). While it is pending, every part the
@@ -41,7 +41,7 @@ export function IntroPage({
       {/* No box of its own: it only names the stage's parts, so the hook never reaches into the phone column. */}
       <div data-intro-layout="stage" className="contents">
         <Stage
-          from="md"
+          from="lg"
           backdrop={<ArenaBackdrop layout="intro" bleed dust layerClassName="hold-part" />}
           skyClassName="hold-part"
         >

@@ -182,8 +182,7 @@ test.describe("stage: the banks hang under the HUD, over the board (D-5)", () =>
   for (const [width, height] of [
     [1440, 900],
     [1280, 720],
-    [1024, 768],
-    [768, 1024],
+    [1200, 800],
   ] as const) {
     test(`${width}x${height}: every bank is at least 8px under the logo, REPLAY and SKIP INTRO and ends above the board; the board stays clear of WELCOME and the CTA`, async ({
       page,
@@ -590,12 +589,13 @@ test.describe("desktop", () => {
     await expectNoA11yViolations(page);
   });
 
-  test("exactly one h1 is rendered from 768px up (the stage's); the phone column's is the one below", async ({
+  test("exactly one h1 is rendered at every width: the stage's from 1200px, the column's below", async ({
     page,
   }) => {
     for (const [width, height] of [
       [1440, 900],
       [1200, 800],
+      [1199, 800],
       [768, 1024],
     ] as const) {
       await page.setViewportSize({ width, height });
@@ -606,70 +606,42 @@ test.describe("desktop", () => {
   });
 });
 
-test.describe("tablet (L1): the same stage intro on the scaled stage", () => {
-  test.skip(({ hasTouch }) => hasTouch, "driven from the desktop project");
+test.describe("tablet (L1): the phone's column intro, centred", () => {
+  test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
 
   for (const [width, height] of [
     [1024, 768],
     [768, 1024],
+    [1199, 800],
   ] as const) {
-    test(`${width}x${height}: plays to done with the frames requested; mono stays readable and inside its box`, async ({
+    test(`${width}x${height}: the column plays to done in about 3 s, no head-turn frames, the stage stays hidden, nothing clipped sideways`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
       const strips = trackStrips(page);
       const show = await startShow(page);
-      await rigIs(page, "ready");
-      await show.finish();
-      await done(page);
-      expect(strips.size, "the head-turn frames are requested").toBe(3);
+      await show.to(3.2);
+      await done(page, 1000);
+      await expect(page.locator("[data-stage]")).toBeHidden();
+      await expect(page.locator('[data-intro-layout="column"]')).toBeVisible();
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(name(page)).toBeVisible();
       await expect(enter(page)).toBeVisible();
-
-      // Rendered size = the stage's design size x its scale (L2: nothing under 11px).
-      const mono = await page.evaluate(() => {
-        const scale = Number(
-          getComputedStyle(document.documentElement).getPropertyValue("--stage-scale"),
-        );
-        return [...document.querySelectorAll<HTMLElement>('[data-stage] [class*="type-mono"]')]
+      await expectLettersShown(page, "column");
+      expect([...strips], "head-turn frames requested on a tablet").toEqual([]);
+      await expectNoHorizontalOverflow(page, [width], height);
+      // The tablet treatment: the column is centred and at most 640px wide.
+      const board = (await part(page, "board-header", "column").locator("..").boundingBox())!;
+      expect(board.width).toBeLessThanOrEqual(640);
+      expect(Math.abs(board.x + board.width / 2 - width / 2)).toBeLessThan(2);
+      await expectLightsBelowTopRow(page, page.locator('[data-intro-layout="column"]'));
+      const small = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[class*="type-mono"]')]
           .filter((el) => el.getClientRects().length > 0)
-          .map((el) => ({
-            text: el.textContent,
-            px: parseFloat(getComputedStyle(el).fontSize) * scale,
-          }))
-          .filter((m) => m.px < 10.99);
-      });
-      expect(mono, "mono text rendered under 11px").toEqual([]);
-
-      // The commentary line (body text) holds the 14px floor too, on one line.
-      const comm = await commText(page);
-      expect(comm.rendered, "commentary rendered size").toBeGreaterThanOrEqual(13.99);
-      expect(comm.lines, "commentary lines").toBe(1);
-
-      // The tagline wraps inside the name column and never runs into the portrait.
-      const clash = await page.evaluate(() => {
-        const fig = document.querySelector('[data-part="fig"]')!.getBoundingClientRect();
-        return [...document.querySelectorAll('[data-part="tagline"]')]
-          .map((el) => el.getBoundingClientRect())
-          .filter((r) => r.right > fig.left + 1 && r.left < fig.right && r.bottom > fig.top).length;
-      });
-      expect(clash, "tagline parts inside the portrait's box").toBe(0);
-
-      // No mono text runs out of its box: the HUD buttons, the board header's spans, the footer cells.
-      const overflowing = await page.evaluate(() => {
-        const boxes = [
-          ...document.querySelectorAll<HTMLElement>(
-            "[data-stage] header a, [data-stage] header button",
-          ),
-          ...document.querySelectorAll<HTMLElement>('[data-part="board-header"] > span'),
-          ...document.querySelectorAll<HTMLElement>('[data-part="board-strip"] > div'),
-        ];
-        return boxes
-          .filter((el) => el.scrollWidth > el.clientWidth)
-          .map((el) => `${el.textContent}: ${el.scrollWidth} > ${el.clientWidth}`);
-      });
-      expect(overflowing).toEqual([]);
+          .map((el) => parseFloat(getComputedStyle(el).fontSize))
+          .filter((px) => px < 10.99),
+      );
+      expect(small, "mono text under 11px").toEqual([]);
     });
   }
 });
@@ -839,10 +811,10 @@ test.describe("phone (L6): the column's three-second cut (D-6)", () => {
     await expect(enter(page)).toBeVisible();
   });
 
-  test("resizing from the stage to the phone width mid-play (and back) reaches done with no errors", async ({
+  test("resizing from the stage to the column mid-play (and back) reaches done with no errors", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.setViewportSize({ width: 1280, height: 800 });
     const stage = await startShow(page);
     await stage.to(0.7);
     await page.setViewportSize({ width: 390, height: 844 });
@@ -858,7 +830,7 @@ test.describe("phone (L6): the column's three-second cut (D-6)", () => {
     await playing(page);
     const again = showClock(page);
     await again.to(0.5);
-    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.setViewportSize({ width: 1280, height: 800 });
     await playing(page);
     await showClock(page).finish();
     await done(page);

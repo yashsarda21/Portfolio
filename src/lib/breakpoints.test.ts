@@ -16,6 +16,7 @@ describe("breakpoints", () => {
     expect(MEDIA).toEqual({
       md: "(min-width: 768px)",
       belowMd: "(max-width: 767px)",
+      belowLg: "(max-width: 1199px)",
       lg: "(min-width: 1200px)",
     });
   });

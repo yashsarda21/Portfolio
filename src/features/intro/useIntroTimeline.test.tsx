@@ -23,8 +23,8 @@ vi.mock("@/lib/motion", async (importOriginal) => ({
 const view = buildIntroView(content, ui, ROUTES);
 
 const QUERY = {
-  desktop: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
-  mobile: "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+  desktop: "(min-width: 1200px) and (prefers-reduced-motion: no-preference)",
+  mobile: "(max-width: 1199px) and (prefers-reduced-motion: no-preference)",
   reduce: "(prefers-reduced-motion: reduce)",
 } as const;
 
@@ -115,7 +115,7 @@ const replayButtons = (root: HTMLElement) =>
   );
 
 describe("useIntroTimeline", () => {
-  it("desktop (and tablet): loads the rig, plays, and marks the root playing", async () => {
+  it("desktop (1200px and up): loads the rig, plays, and marks the root playing", async () => {
     situation("desktop");
     const { root } = await mount();
     expect(loadRig).toHaveBeenCalledTimes(1);
