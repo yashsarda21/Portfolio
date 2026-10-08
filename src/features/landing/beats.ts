@@ -29,10 +29,12 @@ export function bootDelay(beat: number): CSSProperties {
 }
 
 /**
- * How fast this visit plays, as a multiplier on every beat: 1 the first time, .25 on a return visit (the head
- * script marks the page), 0 under reduced motion (everything is already at its end state).
+ * How fast this visit plays, as a multiplier on every beat: the page's `--pace` (1 the first time, the return
+ * visit's pace from pace.css), 0 under reduced motion (everything is already at its end state). Read from the
+ * computed style, so the number lives in the CSS only.
  */
 export function landingPace(): number {
   if (prefersReducedMotion()) return 0;
-  return document.documentElement.hasAttribute("data-return-visit") ? 0.25 : 1;
+  const pace = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pace"));
+  return Number.isFinite(pace) ? pace : 1;
 }

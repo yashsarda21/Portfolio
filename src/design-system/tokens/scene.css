@@ -443,16 +443,16 @@
   filter: brightness(0.25) sepia(1) saturate(5) hue-rotate(-10deg);
 }
 
-/* The head-turn strips (and the ghosts' copy of the first): hidden unless the intro is playing, and then
-   only as visible as their parent (a timeline's own autoAlpha overrides both). The image is drawn only when
-   the page has chosen to play the head turn: its root carries data-rig (SpriteStrip `deferred` holds the
+/* The head-turn strips: hidden until the page's hold lets go (data-hold is anything but "pending"), and then
+   only as visible as their parent (a timeline's own autoAlpha has the last word). The image is drawn only when
+   the page has chosen to play the head turn: an ancestor carries data-sprites (SpriteStrip `deferred` holds the
    image in --sprite). A page that never plays (reduced motion, no script) never downloads the frames. */
 @utility intro-turn {
   visibility: hidden;
-  :root.js [data-intro="playing"] & {
+  :root.js [data-hold]:not([data-hold="pending"]) & {
     visibility: inherit;
   }
-  :root.js [data-rig] & {
+  :root.js [data-sprites] & {
     background-image: var(--sprite);
   }
 }

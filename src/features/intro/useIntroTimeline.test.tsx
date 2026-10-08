@@ -124,8 +124,8 @@ describe("useIntroTimeline", () => {
     expect(urls.map((u: string) => u.match(/turn_(\d)/)![1])).toEqual(["0", "1", "2"]);
     // up to the performance beat, plus the 1.5 s the timeline will wait there
     expect(opts).toEqual({ timeoutMs: INTRO_BEATS.desktop.performance * 1000 + RIG_WAIT_MS });
-    expect(root).toHaveAttribute("data-intro", "playing");
-    expect(root).toHaveAttribute("data-rig", "ready");
+    expect(root).toHaveAttribute("data-hold", "playing");
+    expect(root).toHaveAttribute("data-sprites", "ready");
     expect(timelines()).toHaveLength(1);
   });
 
@@ -136,7 +136,7 @@ describe("useIntroTimeline", () => {
     tl.pause();
     act(() => void tl.progress(1));
     expect(onComm).toHaveBeenCalledTimes(1);
-    expect(root).toHaveAttribute("data-intro", "done");
+    expect(root).toHaveAttribute("data-hold", "done");
   });
 
   it("REPLAY restarts the same show, playing again, and only one timeline exists", async () => {
@@ -145,9 +145,9 @@ describe("useIntroTimeline", () => {
     const tl = timelines()[0] as gsap.core.Timeline;
     tl.pause();
     act(() => void tl.progress(1));
-    expect(root).toHaveAttribute("data-intro", "done");
+    expect(root).toHaveAttribute("data-hold", "done");
     act(() => api.replay());
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).toHaveAttribute("data-hold", "playing");
     expect(tl.time()).toBeLessThan(0.5);
     for (let i = 0; i < 5; i++) act(() => api.replay());
     expect(timelines()).toHaveLength(1);
@@ -158,8 +158,8 @@ describe("useIntroTimeline", () => {
     situation("reduce");
     const { root } = await mount();
     expect(loadRig).not.toHaveBeenCalled();
-    expect(root).not.toHaveAttribute("data-rig");
-    expect(root).toHaveAttribute("data-intro", "done");
+    expect(root).not.toHaveAttribute("data-sprites");
+    expect(root).toHaveAttribute("data-hold", "done");
     expect(timelines()).toHaveLength(0);
     const letters = root.querySelectorAll('[data-part="letter"]');
     expect([...letters].every((l) => l.getAttribute("data-lit") === "done")).toBe(true);
@@ -187,14 +187,14 @@ describe("useIntroTimeline", () => {
     situation("mobile");
     const { root } = await mount();
     expect(loadRig).not.toHaveBeenCalled();
-    expect(root).not.toHaveAttribute("data-rig");
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).not.toHaveAttribute("data-sprites");
+    expect(root).toHaveAttribute("data-hold", "playing");
     expect(timelines()).toHaveLength(1);
     const tl = timelines()[0] as gsap.core.Timeline;
     tl.pause();
     act(() => void tl.progress(1));
     expect(onComm).not.toHaveBeenCalled();
-    expect(root).toHaveAttribute("data-intro", "done");
+    expect(root).toHaveAttribute("data-hold", "done");
   });
 
   it("each layout's timeline touches its own parts only: the same data-part names, two layouts", async () => {
@@ -228,9 +228,9 @@ describe("useIntroTimeline", () => {
     const tl = timelines()[0] as gsap.core.Timeline;
     tl.pause();
     act(() => void tl.progress(1));
-    expect(root).toHaveAttribute("data-intro", "done");
+    expect(root).toHaveAttribute("data-hold", "done");
     act(() => api.replay());
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).toHaveAttribute("data-hold", "playing");
     expect(tl.time()).toBeLessThan(0.5);
     for (let i = 0; i < 5; i++) act(() => api.replay());
     expect(timelines()).toHaveLength(1);
@@ -241,11 +241,11 @@ describe("useIntroTimeline", () => {
     const { root } = await mount();
     const stageTl = timelines()[0] as gsap.core.Timeline;
     stageTl.time(1);
-    expect(root).toHaveAttribute("data-rig");
+    expect(root).toHaveAttribute("data-sprites");
 
     await changeTo("mobile");
-    expect(root).not.toHaveAttribute("data-rig");
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).not.toHaveAttribute("data-sprites");
+    expect(root).toHaveAttribute("data-hold", "playing");
     expect(timelines()).toHaveLength(1);
     expect(timelines()[0]).not.toBe(stageTl);
     expect(
@@ -254,13 +254,13 @@ describe("useIntroTimeline", () => {
     const tl = timelines()[0] as gsap.core.Timeline;
     tl.pause();
     act(() => void tl.progress(1));
-    expect(root).toHaveAttribute("data-intro", "done");
+    expect(root).toHaveAttribute("data-hold", "done");
 
     // and back again
     await changeTo("desktop");
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).toHaveAttribute("data-hold", "playing");
     expect(timelines()).toHaveLength(1);
-    expect(root).toHaveAttribute("data-rig");
+    expect(root).toHaveAttribute("data-sprites");
   });
 
   it("leaving the page reverts the show: no tween is left on the unmounted nodes", async () => {
@@ -270,31 +270,31 @@ describe("useIntroTimeline", () => {
     const root = document.querySelector("main#main")!;
     unmount();
     expect(timelines()).toHaveLength(0);
-    expect(root).not.toHaveAttribute("data-rig");
+    expect(root).not.toHaveAttribute("data-sprites");
   });
   it("REPLAY is disabled until the timeline exists, and live once the show plays", async () => {
     situation("desktop");
     let release: () => void = () => {};
     held.gsap = new Promise((resolve) => (release = () => resolve(gsap)));
     const { root } = await mount();
-    expect(root).toHaveAttribute("data-intro", "pending");
+    expect(root).toHaveAttribute("data-hold", "pending");
     const buttons = replayButtons(root);
     expect(buttons).toHaveLength(2);
     for (const b of buttons) expect(b).toHaveAttribute("aria-disabled", "true");
     // inert: a click does nothing (there is nothing to restart)
     act(() => buttons[0]!.click());
     expect(timelines()).toHaveLength(0);
-    expect(root).toHaveAttribute("data-intro", "pending");
+    expect(root).toHaveAttribute("data-hold", "pending");
 
     held.gsap = null;
     await act(async () => release());
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).toHaveAttribute("data-hold", "playing");
     for (const b of replayButtons(root)) expect(b).not.toHaveAttribute("aria-disabled");
     const tl = timelines()[0] as gsap.core.Timeline;
     tl.pause();
     act(() => void tl.progress(1));
     act(() => replayButtons(root)[0]!.click());
-    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(root).toHaveAttribute("data-hold", "playing");
     expect(tl.time()).toBeLessThan(0.5);
   });
 
@@ -303,7 +303,7 @@ describe("useIntroTimeline", () => {
     held.gsap = Promise.reject(new Error("offline"));
     held.gsap.catch(() => {});
     const { root } = await mount();
-    expect(root).toHaveAttribute("data-intro", "pending");
+    expect(root).toHaveAttribute("data-hold", "pending");
     for (const b of replayButtons(root)) expect(b).toHaveAttribute("aria-disabled", "true");
   });
 
@@ -321,7 +321,7 @@ describe("useIntroTimeline", () => {
   describe("GSAP arriving after the 8 s CSS fallback has shown the parts (M8)", () => {
     const withFallback = (playState: "finished" | "running") => {
       (Element.prototype as unknown as { getAnimations: () => unknown[] }).getAnimations = () => [
-        { animationName: "intro-fallback", playState },
+        { animationName: "hold-fallback", playState },
       ];
     };
 
@@ -329,10 +329,10 @@ describe("useIntroTimeline", () => {
       situation("desktop");
       withFallback("finished");
       const { root } = await mount();
-      expect(root).toHaveAttribute("data-intro", "done");
+      expect(root).toHaveAttribute("data-hold", "done");
       expect(timelines()).toHaveLength(0);
       expect(loadRig).not.toHaveBeenCalled();
-      expect(root).not.toHaveAttribute("data-rig");
+      expect(root).not.toHaveAttribute("data-sprites");
       const stage = root.querySelector('[data-intro-layout="stage"]')!;
       const letters = stage.querySelectorAll('[data-part="letter"]');
       expect([...letters].every((l) => l.getAttribute("data-lit") === "done")).toBe(true);
@@ -348,7 +348,7 @@ describe("useIntroTimeline", () => {
       situation("desktop");
       withFallback("running");
       const { root } = await mount();
-      expect(root).toHaveAttribute("data-intro", "playing");
+      expect(root).toHaveAttribute("data-hold", "playing");
       expect(timelines()).toHaveLength(1);
     });
 
@@ -356,7 +356,7 @@ describe("useIntroTimeline", () => {
       situation("mobile");
       withFallback("finished");
       const { root } = await mount();
-      expect(root).toHaveAttribute("data-intro", "done");
+      expect(root).toHaveAttribute("data-hold", "done");
       expect(timelines()).toHaveLength(0);
     });
   });

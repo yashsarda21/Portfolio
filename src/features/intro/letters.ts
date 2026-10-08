@@ -1,3 +1,5 @@
+import { seeded } from "@/lib/seeded";
+
 /** The three ways a letter locks in: la drops from above, lb rises from below, lc zooms in. */
 export type LetterKind = "la" | "lb" | "lc";
 
@@ -18,11 +20,7 @@ const BOARD_ORDER = [3, 0, 7, 5, 1, 9, 2, 8, 6, 4];
 
 /** A Fisher-Yates shuffle of 0..n-1 with the artboard's generator (seed 7). */
 function permutation(n: number): number[] {
-  let state = 7;
-  const rnd = () => {
-    state = (state * 9301 + 49297) % 233280;
-    return state / 233280;
-  };
+  const rnd = seeded(7);
   const order = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));

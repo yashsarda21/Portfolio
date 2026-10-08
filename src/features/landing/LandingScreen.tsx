@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo } from "react";
 import { content, ui } from "@/content";
+import { MEDIA } from "@/lib/breakpoints";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { prefetchGsap } from "@/lib/motion";
 import { safeStorage } from "@/lib/storage";
@@ -9,9 +10,7 @@ import { LANDING_SEEN_KEY } from "@/shell/headFlags";
 import { ROUTES } from "@/shell/routes";
 import { useArenaTransition } from "@/shell/transition";
 import { useScreenShortcuts } from "@/shell/useScreenShortcuts";
-import turn0 from "@/assets/rig/turn_0.webp?url";
-import turn1 from "@/assets/rig/turn_1.webp?url";
-import turn2 from "@/assets/rig/turn_2.webp?url";
+import { RIG_STRIPS } from "@/assets/rig";
 import { LANDING_BEATS, landingPace } from "./beats";
 import { LandingPage } from "./LandingPage";
 import { prefetchRig } from "./prefetchRig";
@@ -31,7 +30,7 @@ export function LandingScreen() {
   const { say } = useCommentary();
   const audio = useAudio();
   const { go } = useArenaTransition();
-  const desktop = useMediaQuery("(min-width: 1200px)");
+  const desktop = useMediaQuery(MEDIA.lg);
 
   // Before paint, so the animations start at the quick pace (the head script only knows about earlier visits).
   useLayoutEffect(() => {
@@ -42,7 +41,7 @@ export function LandingScreen() {
   useEffect(() => {
     // Seen: the next visit plays the cut-down (the head script reads this before first paint).
     safeStorage.set(LANDING_SEEN_KEY, "1");
-    prefetchRig([turn0, turn1, turn2]);
+    prefetchRig(RIG_STRIPS);
     prefetchGsap();
   }, []);
 

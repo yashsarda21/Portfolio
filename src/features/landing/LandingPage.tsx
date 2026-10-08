@@ -32,7 +32,7 @@ export function LandingPage({ view }: { view: LandingView }) {
     <main id="main">
       <Stage
         from="lg"
-        backdrop={<ArenaBackdrop bleed boot={beat} />}
+        backdrop={<ArenaBackdrop bleed dust boot={beat} />}
         skyClassName="animate-boot-fade"
         skyStyle={bootDelay(beat.sky)}
       >
@@ -79,15 +79,7 @@ export function LandingPage({ view }: { view: LandingView }) {
             </Scoreboard.Subtitle>
           </Scoreboard.Body>
           <Scoreboard.Footer className="animate-boot-fade" style={bootDelay(beat.boardFooter)}>
-            {view.footer.map((cell) => (
-              <Scoreboard.FooterCell
-                key={cell.label}
-                label={cell.label}
-                value={cell.value}
-                tone={cell.tone}
-                align={cell.align}
-              />
-            ))}
+            <Scoreboard.FooterCells cells={view.footer} />
           </Scoreboard.Footer>
         </Scoreboard>
         {/* top-138 not 139: Main's challenge line box is 32px, the type-challenge recipe's is 36px, so the CTAs land on y=618 */}

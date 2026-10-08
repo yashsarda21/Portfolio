@@ -33,7 +33,7 @@ for (const [, path] of entries) {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     // The Intro plays for 6.5 s, and axe judges a page at rest.
     if (path === ROUTES.intro)
-      await expect(page.locator("main#main")).toHaveAttribute("data-intro", "done", {
+      await expect(page.locator("main#main")).toHaveAttribute("data-hold", "done", {
         timeout: 15_000,
       });
     await expectNoA11yViolations(page);

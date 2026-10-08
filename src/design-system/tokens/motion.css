@@ -91,15 +91,12 @@
 }
 
 /* ---------- the boot (Landing) ----------
-   Main's per-part entrances. --d is a part's turn in seconds; --pace is the page's speed: 1 on a first visit,
-   .25 on a return visit (the head script sets data-return-visit before first paint). Both multiply into the
-   delay, and --pace into the duration, so a return visit is the same show in a quarter of the time. The global
-   reduced-motion rule (base.css) ends all of these at once, on their last frame. */
+   Main's per-part entrances. --d is a part's turn in seconds; --pace is the page's speed: 1 unless the page sets
+   another (the Landing sets .25 for a return visit, features/landing/pace.css). Both multiply into the delay,
+   and --pace into the duration, so a quicker page is the same show in less time. The global reduced-motion rule
+   (base.css) ends all of these at once, on their last frame. */
 :root {
   --pace: 1;
-}
-:root[data-return-visit] {
-  --pace: 0.25;
 }
 
 /* The name's lock-in: blur and wide tracking settle into the element's own tracking (no `to` letter-spacing,
@@ -149,21 +146,23 @@
   animation-delay: calc(var(--d, 0s) * var(--pace, 1));
 }
 
-/* ---------- the intro ---------- */
-/* Parts an intro timeline reveals: hidden only when JS is on (no flash of the end state before GSAP starts);
-   if the timeline never runs (script error), they appear at 8s. Without JS, or with reduced motion, they are just there. */
-@keyframes intro-fallback {
+/* ---------- held parts ----------
+   A page that reveals parts with a script puts data-hold on an ancestor ("pending" until the script is running,
+   then "playing" and "done"). A hold-part is hidden only while it is pending and the page has JS (no flash of
+   the end state before the script starts); if the script never runs, the parts appear at 8s. Without JS, or
+   with reduced motion, they are just there. */
+@keyframes hold-fallback {
   to {
     visibility: visible;
   }
 }
-@utility intro-part {
-  :root.js [data-intro="pending"] & {
+@utility hold-part {
+  :root.js [data-hold="pending"] & {
     visibility: hidden;
-    animation: intro-fallback 0s 8s forwards;
+    animation: hold-fallback 0s 8s forwards;
   }
   @media (prefers-reduced-motion: reduce) {
-    :root.js [data-intro="pending"] & {
+    :root.js [data-hold="pending"] & {
       visibility: visible;
       animation: none;
     }

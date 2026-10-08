@@ -1,18 +1,13 @@
 import type { Content, UiCopy } from "@/content";
+import type { ScoreboardCell, TextTone } from "@/design-system";
 import type { ROUTES } from "@/shell/routes";
 
 /** One piece of the tagline: a word, or the volt bullet between two words. */
 export interface TaglinePart {
   kind: "word" | "sep";
   text: string;
-  tone: "primary" | "secondary" | "volt";
-}
-
-export interface IntroFooterCell {
-  label: string;
-  value: string;
-  tone: "primary" | "volt" | "label";
-  align: "start" | "center" | "end";
+  /** Read by the Text that draws it, so it is a Text tone. */
+  tone: TextTone;
 }
 
 export interface IntroView {
@@ -25,9 +20,9 @@ export interface IntroView {
   /** `count` is the phone board's right-hand cell ("01 / 01"); the wide board shows `matchday` instead. */
   header: { live: string; matchday: string; count: string };
   tagline: TaglinePart[];
-  footer: IntroFooterCell[];
+  footer: ScoreboardCell[];
   /** The phone board's two cells: the wide board's INTRODUCING cell is not drawn there. */
-  footerPhone: IntroFooterCell[];
+  footerPhone: ScoreboardCell[];
   welcome: string;
   enter: { label: string; to: string };
   skip: { label: string; to: string };

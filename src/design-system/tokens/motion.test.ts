@@ -49,8 +49,9 @@ describe("boot presets run on the page's pace", () => {
     },
   );
 
-  it("a return visit runs at a quarter of the time", () => {
-    expect(motion).toMatch(/:root\[data-return-visit\]\s*\{\s*--pace:\s*0?\.25;/);
+  it("the design system sets the default pace only: a page's own pace is not its business", () => {
+    expect(motion).toMatch(/:root\s*\{\s*--pace:\s*1;/);
+    expect(motion).not.toContain("data-return-visit");
   });
 
   it("the bank flicker keeps one definition and reads --d and --pace", () => {

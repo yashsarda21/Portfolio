@@ -30,8 +30,8 @@ const test = base.extend<{ tolerate: (pattern: RegExp) => void }>({
 
 const root = (page: Page) => page.locator("main#main");
 const done = (page: Page, timeout = 15_000) =>
-  expect(root(page)).toHaveAttribute("data-intro", "done", { timeout });
-const playing = (page: Page) => expect(root(page)).toHaveAttribute("data-intro", "playing");
+  expect(root(page)).toHaveAttribute("data-hold", "done", { timeout });
+const playing = (page: Page) => expect(root(page)).toHaveAttribute("data-hold", "playing");
 const name = (page: Page) => page.getByRole("heading", { level: 1, name: ui.routes.home.heading });
 const enter = (page: Page) => page.getByRole("link", { name: ui.intro.enter });
 const skip = (page: Page) => page.getByRole("link", { name: ui.hud.skipIntro });
@@ -46,7 +46,7 @@ const M = INTRO_BEATS.mobile;
  * GSAP's ticker runs on requestAnimationFrame and the clock's `Date`, so it follows it: `showClock` steps the
  * timeline to a moment in seconds from the first frame of the show (give or take one 16 ms frame, so test at
  * least 50 ms either side of a beat). What the clock does not move: network and image decoding (real time:
- * wait for them with `rigIs`), and CSS animations (the 8 s fallback of `intro-part` is real time).
+ * wait for them with `rigIs`), and CSS animations (the 8 s fallback of `hold-part` is real time).
  */
 const START = new Date("2026-01-01T00:00:00Z").getTime();
 async function pauseClock(page: Page) {
@@ -89,7 +89,7 @@ async function follow(page: Page, link: Locator, path: string) {
 const resumeClock = (page: Page) => page.clock.resume();
 /** How loading the head-turn frames went (real time: the clock does not move the network). */
 const rigIs = (page: Page, result: "ready" | "timeout" | "error") =>
-  expect(root(page)).toHaveAttribute("data-rig", result, { timeout: 15_000 });
+  expect(root(page)).toHaveAttribute("data-sprites", result, { timeout: 15_000 });
 /** Hold the head-turn frames until `release()`. */
 async function holdStrips(page: Page) {
   let release: () => void = () => {};
@@ -221,7 +221,7 @@ test.describe("desktop", () => {
       });
     await pauseClock(page);
     await page.goto("/intro");
-    await expect(root(page)).toHaveAttribute("data-intro", "pending");
+    await expect(root(page)).toHaveAttribute("data-hold", "pending");
     for (const p of [
       "sky",
       "letterbox-sky",
@@ -291,10 +291,10 @@ test.describe("desktop", () => {
       const w = window as unknown as { __ends: number };
       w.__ends = 0;
       new MutationObserver(() => {
-        if (document.querySelector("main#main")!.getAttribute("data-intro") === "done") w.__ends++;
+        if (document.querySelector("main#main")!.getAttribute("data-hold") === "done") w.__ends++;
       }).observe(document.querySelector("main#main")!, {
         attributes: true,
-        attributeFilter: ["data-intro"],
+        attributeFilter: ["data-hold"],
       });
     });
     for (let i = 0; i < 5; i++) await replay(page).click({ delay: 0 });
@@ -469,7 +469,7 @@ test.describe("desktop", () => {
       await expect(enter(page)).toHaveAttribute("href", "/arena");
       await expect(skip(page)).toBeVisible();
       await expect(skip(page)).toHaveAttribute("href", "/arena");
-      await expect(root(page)).toHaveAttribute("data-intro", "pending");
+      await expect(root(page)).toHaveAttribute("data-hold", "pending");
       await expect(page.locator("html.js")).toHaveCount(0);
       for (const p of ["crowd", "board-header", "mover", "title", "board-strip", "welcome"])
         expect((await style(page, p)).visibility, p).toBe("visible");
@@ -489,7 +489,7 @@ test.describe("desktop", () => {
       await page.route(`**/assets/${chunk}`, (route) => route.fulfill({ status: 404 }));
     await page.goto("/intro");
     expect((await style(page, "cta")).visibility).toBe("hidden");
-    await expect(root(page)).toHaveAttribute("data-intro", "pending");
+    await expect(root(page)).toHaveAttribute("data-hold", "pending");
     // The fallback is a CSS animation (8 s on the page's own animation clock, which the virtual clock does not move).
     await expect(enter(page)).toBeVisible({ timeout: 10_000 });
     for (const p of ["crowd", "board-header", "mover", "title", "welcome"])
@@ -510,7 +510,7 @@ test.describe("desktop", () => {
         await route.continue();
       });
     await page.goto("/intro");
-    await expect(root(page)).toHaveAttribute("data-intro", "pending");
+    await expect(root(page)).toHaveAttribute("data-hold", "pending");
     // The fallback (real time) has let go of the hold.
     await expect(enter(page)).toBeVisible({ timeout: 12_000 });
     // From here on, a part that is hidden at any frame is a flash of the show restarting.
@@ -528,7 +528,7 @@ test.describe("desktop", () => {
     });
     release();
     await done(page, 10_000);
-    await expect(root(page)).not.toHaveAttribute("data-rig");
+    await expect(root(page)).not.toHaveAttribute("data-sprites");
     await expect(replay(page)).toHaveAttribute("aria-disabled", "true");
     await expect(enter(page)).toBeVisible();
     await expect(part(page, "rest")).toBeVisible();
@@ -841,7 +841,7 @@ test.describe("phone (L6): the column's two-second cut", () => {
       await expect(enter(page)).toBeVisible();
       await expect(enter(page)).toHaveAttribute("href", "/arena");
       await expect(skip(page)).toBeVisible();
-      await expect(root(page)).toHaveAttribute("data-intro", "pending");
+      await expect(root(page)).toHaveAttribute("data-hold", "pending");
       for (const p of ["board-header", "portrait", "title", "board-strip", "welcome", "bank-1"])
         expect((await style(page, p, "column")).visibility, p).toBe("visible");
       await expectLettersShown(page, "column");

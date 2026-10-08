@@ -1,8 +1,9 @@
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LANDING_BEATS, bootDelay, landingPace } from "./beats";
 
 afterEach(() => {
-  document.documentElement.removeAttribute("data-return-visit");
+  document.documentElement.style.removeProperty("--pace");
   vi.unstubAllGlobals();
 });
 
@@ -42,14 +43,21 @@ describe("landingPace", () => {
     motion(false);
     expect(landingPace()).toBe(1);
   });
-  it("is .25 on a return visit", () => {
+  it("is the page's --pace (.25 on a return visit)", () => {
     motion(false);
-    document.documentElement.setAttribute("data-return-visit", "");
+    document.documentElement.style.setProperty("--pace", "0.25");
     expect(landingPace()).toBe(0.25);
   });
   it("is 0 under reduced motion, even on a return visit", () => {
     motion(true);
-    document.documentElement.setAttribute("data-return-visit", "");
+    document.documentElement.style.setProperty("--pace", "0.25");
     expect(landingPace()).toBe(0);
+  });
+});
+
+describe("the return visit's pace", () => {
+  it("is set by the Landing's own CSS (pace.css), not by the design system", () => {
+    const css = readFileSync("src/features/landing/pace.css", "utf8");
+    expect(css).toMatch(/:root\[data-return-visit\]\s*\{\s*--pace:\s*0?\.25;/);
   });
 });

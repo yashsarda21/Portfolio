@@ -1,3 +1,5 @@
+import { seeded } from "@/lib/seeded";
+
 /** The colours the flying pixels use, as design tokens (never raw colours). */
 export type PixelColor = "volt" | "led" | "warm";
 
@@ -23,11 +25,7 @@ const COLORS: readonly PixelColor[] = ["volt", "volt", "led", "warm"];
  * by token: its two volt entries, one led (near white) and one warm (amber).
  */
 export function createPixels(seed = 7): IntroPixel[] {
-  let state = seed;
-  const rnd = () => {
-    state = (state * 9301 + 49297) % 233280;
-    return state / 233280;
-  };
+  const rnd = seeded(seed);
   return Array.from({ length: 90 }, () => {
     const x = Math.round(60 + rnd() * 560);
     const y = Math.round(162 + rnd() * 100);

@@ -1,3 +1,5 @@
+import { MEDIA } from "@/lib/breakpoints";
+
 const asked = new Set<string>();
 // The Images are kept so the browser does not drop the requests before they finish.
 const held: HTMLImageElement[] = [];
@@ -13,7 +15,7 @@ interface NetworkInformation {
  */
 export function prefetchRig(urls: readonly string[]): void {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-  if (!window.matchMedia("(min-width: 768px)").matches) return;
+  if (!window.matchMedia(MEDIA.md).matches) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
   if (connection?.saveData) return;

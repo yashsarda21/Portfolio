@@ -86,14 +86,20 @@ test.describe("desktop", () => {
         );
       await seekBoot(page, 500);
       // Only the crowd (.3 s) has begun; the sky, field and pitch wait until 2.2 s and later.
-      for (const part of ["sky", "field", "pitch", "cone-left", "cone-right"])
+      for (const part of ["sky", "field", "pitch", "cone-left", "cone-right", "dust"])
         expect(await opacity(part), part).toBeLessThan(0.1);
       expect(await letterbox()).toBeLessThan(0.1);
       // The crowd is mid-fade at 0.5 s (.3 s delay, 1.8 s ease-out).
       expect(await opacity("crowd")).toBeLessThan(0.5);
+      // The dust drifts in the beams (L12): it comes up with the left cone (1 s), not before it.
+      await seekBoot(page, 1700);
+      const cone = await opacity("cone-left");
+      expect(cone).toBeGreaterThan(0);
+      expect(cone).toBeLessThan(1);
+      expect(await opacity("dust")).toBe(cone);
       // At 6 s every layer has finished.
       await seekBoot(page, 6000);
-      for (const part of ["sky", "field", "pitch", "cone-left", "cone-right", "crowd"])
+      for (const part of ["sky", "field", "pitch", "cone-left", "cone-right", "crowd", "dust"])
         expect(await opacity(part), part).toBe(1);
       expect(await letterbox()).toBe(1);
     });
@@ -177,13 +183,20 @@ test.describe("desktop", () => {
       await expect(page).toHaveURL("/scout");
     });
 
-    test("Ctrl+Q does nothing", async ({ page }) => {
+    test("Ctrl+Q and Alt+Enter do nothing: only the plain Enter that follows goes anywhere", async ({
+      page,
+    }) => {
       await page.goto("/");
       await waitForHydration(page);
+      const visited: string[] = [];
+      page.on("framenavigated", (frame) => visited.push(new URL(frame.url()).pathname));
       await page.keyboard.press("Control+q");
       await page.keyboard.press("Alt+Enter");
-      await page.waitForTimeout(600);
-      await expect(page).toHaveURL("/");
+      // The control: a plain Enter plays. If either chord above had gone anywhere first (to Quick View or
+      // the intro), the page would have been seen there before, or this Enter would have been swallowed.
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL("/intro");
+      expect(visited).toEqual(["/intro"]);
     });
 
     test("Enter on VIEW PORTFOLIO is that link's own action, once", async ({ page }) => {
@@ -235,10 +248,28 @@ test.describe("desktop", () => {
   });
 
   test("the intro's head-turn frames are fetched after the page has loaded", async ({ page }) => {
-    const strips = new Set<string>();
-    page.on("request", (r) => /turn_[012][^/]*\.webp/.test(r.url()) && strips.add(r.url()));
     await page.goto("/");
-    await expect.poll(() => strips.size, { timeout: 8000 }).toBe(3);
+    // The browser's own record: every strip's request starts, and the page's load event.
+    const strips = () =>
+      page.evaluate(() =>
+        performance
+          .getEntriesByType("resource")
+          .filter((e) => /turn_[012][^/]*\.webp/.test(e.name))
+          .map((e) => ({ name: e.name, start: e.startTime })),
+      );
+    await expect.poll(async () => (await strips()).length, { timeout: 8000 }).toBe(3);
+    const loadStart = await page.evaluate(
+      () =>
+        (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming)
+          .loadEventStart,
+    );
+    expect(loadStart).toBeGreaterThan(0);
+    for (const strip of await strips()) {
+      expect(
+        strip.start,
+        `${strip.name} was requested after the load event began`,
+      ).toBeGreaterThanOrEqual(loadStart);
+    }
   });
 
   test("exactly one h1 is rendered at every width", async ({ page }) => {
@@ -376,7 +407,7 @@ test.describe("tablet", () => {
     await page.goto("/");
     await expect(name(page)).toBeVisible();
     const board = (await column(page).locator("[data-part='board']").boundingBox())!;
-    for (const side of ["bank-left", "bank-right"]) {
+    for (const side of ["bank-1", "bank-2"]) {
       const bank = (await column(page).locator(`[data-part='${side}']`).boundingBox())!;
       const centre = bank.x + bank.width / 2;
       expect(centre, side).toBeGreaterThanOrEqual(board.x - 40);

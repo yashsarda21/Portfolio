@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CommentaryBar } from "@/design-system";
+import { MEDIA } from "@/lib/breakpoints";
 import { cn } from "@/lib/cn";
 
 const HOLD_MS = 4000; // --dur-comm-hold
 const EXIT_MS = 300;
 
 /** Phones show no commentary, so they announce none either (L11): screen readers hear what is on screen. */
-const isPhone = () =>
-  typeof window !== "undefined" && !!window.matchMedia?.("(max-width: 767px)").matches;
+const isPhone = () => typeof window !== "undefined" && !!window.matchMedia?.(MEDIA.belowMd).matches;
 
 type Current = { line: string; state: "in" | "out" } | null;
 

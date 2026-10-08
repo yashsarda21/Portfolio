@@ -14,7 +14,10 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The two inline scripts below run before React does and set attributes on <html> (STAGE_SCALE_SCRIPT: the
+    // `--stage-scale` style; HEAD_FLAGS_SCRIPT: the `js` class and `data-return-visit`). React 19 would warn in
+    // development that the server markup differs, so this one element is told to expect it.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

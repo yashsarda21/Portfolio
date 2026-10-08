@@ -1,3 +1,4 @@
+import type { ScoreboardCell } from "@/design-system";
 import { getPlayerFirstName, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
 
@@ -7,14 +8,9 @@ export interface LandingView {
   title: { name: string; role: string };
   brand: { mark: string; label: string };
   header: { live: string; player: string; playerShort: string };
-  footer: {
-    label: string;
-    value: string;
-    tone: "primary" | "volt" | "label";
-    align: "start" | "center" | "end";
-  }[];
+  footer: ScoreboardCell[];
   /** The phone board's two cells (the wide board's HOME is not drawn there). */
-  footerPhone: LandingView["footer"];
+  footerPhone: ScoreboardCell[];
   challenge: string;
   enter: { label: string; sub: string; subPhone: string; to: string };
   view: { label: string; sub: string; to: string };

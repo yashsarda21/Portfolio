@@ -1,17 +1,16 @@
 import type { gsap as Gsap } from "gsap";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { MEDIA } from "@/lib/breakpoints";
 import { loadGsap } from "@/lib/motion";
 import { useAudio } from "@/shell/audio";
-import turn0 from "@/assets/rig/turn_0.webp?url";
-import turn1 from "@/assets/rig/turn_1.webp?url";
-import turn2 from "@/assets/rig/turn_2.webp?url";
+import { RIG_STRIPS } from "@/assets/rig";
 import { INTRO_BEATS } from "./beats";
 import { collectIntroRefs } from "./refs";
 import { loadRig } from "./rig";
 import { RIG_WAIT_MS } from "./rigGate";
 import { createIntroTimeline, showIntroEndState } from "./timeline";
 
-/** Where the show is. The page's root carries it as `data-intro`; CSS holds the parts back while it is pending. */
+/** Where the show is. The page's root carries it as `data-hold`; CSS holds the parts back while it is pending. */
 type IntroState = "pending" | "playing" | "done";
 
 /**
@@ -19,8 +18,8 @@ type IntroState = "pending" | "playing" | "done";
  * plays its own two-second cut (L6); reduced motion gets the end state at once, whatever the width.
  */
 const TIERS = {
-  desktop: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
-  mobile: "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+  desktop: `${MEDIA.md} and (prefers-reduced-motion: no-preference)`,
+  mobile: `${MEDIA.belowMd} and (prefers-reduced-motion: no-preference)`,
   reduce: "(prefers-reduced-motion: reduce)",
 } as const;
 
@@ -32,11 +31,8 @@ const LAYOUT = { desktop: "stage", mobile: "column" } as const;
 const layoutOf = (root: HTMLElement, tier: keyof typeof LAYOUT) =>
   root.querySelector<HTMLElement>(`[data-intro-layout="${LAYOUT[tier]}"]`);
 
-/** The head-turn strips, in play order. Only the desktop branch ever asks for them. */
-const RIG_URLS = [turn0, turn1, turn2];
-
-/** The CSS hold lets go by itself at 8 s (`intro-fallback`, motion.css); once it has, the parts are already on show. */
-const FALLBACK_ANIMATION = "intro-fallback";
+/** The CSS hold lets go by itself at 8 s (`hold-fallback`, motion.css); once it has, the parts are already on show. */
+const FALLBACK_ANIMATION = "hold-fallback";
 function fallbackFired(root: HTMLElement): boolean {
   if (typeof root.getAnimations !== "function") return false;
   return root
@@ -52,8 +48,8 @@ function fallbackFired(root: HTMLElement): boolean {
  * Plays the Player Introduction on the page under `rootRef`, and reports where it is.
  *
  * Loads GSAP on demand, then `gsap.matchMedia()` picks the tier (above) and builds the timeline from the refs
- * on the page (`collectIntroRefs`, by `data-part`). The root's `data-intro` goes pending, playing, done, and its
- * `data-rig` says how loading the head-turn frames went (empty while loading, then ready, timeout or error). Under
+ * on the page (`collectIntroRefs`, by `data-part`). The root's `data-hold` goes pending, playing, done, and its
+ * `data-sprites` says how loading the head-turn frames went (empty while loading, then ready, timeout or error). Under
  * reduced motion it shows the end state and never touches the rig. If GSAP cannot load, the state stays pending
  * and the CSS fallback shows the parts after 8 s. Leaving the page reverts everything (`mm.revert()`).
  *
@@ -80,7 +76,7 @@ export function useIntroTimeline(
   });
 
   const mark = useCallback(
-    (next: IntroState) => rootRef.current?.setAttribute("data-intro", next),
+    (next: IntroState) => rootRef.current?.setAttribute("data-hold", next),
     [rootRef],
   );
 
@@ -131,13 +127,13 @@ export function useIntroTimeline(
             };
           }
           // The page may draw the head-turn frames now (CSS keys off this); reduced motion and the phone never do.
-          root.setAttribute("data-rig", "");
-          const rig = loadRig(RIG_URLS, {
+          root.setAttribute("data-sprites", "");
+          const rig = loadRig(RIG_STRIPS, {
             timeoutMs: INTRO_BEATS.desktop.performance * 1000 + RIG_WAIT_MS,
           });
           // Say how loading went: "" while it loads, then ready, timeout or error (CSS only needs the attribute).
           void rig.then((result) => {
-            if (root.hasAttribute("data-rig")) root.setAttribute("data-rig", result);
+            if (root.hasAttribute("data-sprites")) root.setAttribute("data-sprites", result);
           });
           const tl = createIntroTimeline(gsap, refs, {
             tier: "desktop",
@@ -155,7 +151,7 @@ export function useIntroTimeline(
           return () => {
             timeline.current = null;
             setCanReplay(false);
-            root.removeAttribute("data-rig");
+            root.removeAttribute("data-sprites");
           };
         });
       },

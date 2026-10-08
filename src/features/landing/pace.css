@@ -1,0 +1,6 @@
+/* The Landing's pace. The design system's boot presets run at --pace (motion.css, 1 unless a page says otherwise);
+   a return visit plays the same show in a quarter of the time. The head script (shell/headFlags.ts) marks the
+   page before first paint, and the Landing marks it too when the boot has played in this session. */
+:root[data-return-visit] {
+  --pace: 0.25;
+}

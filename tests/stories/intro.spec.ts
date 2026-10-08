@@ -13,7 +13,7 @@ const CONE_MASKS: Rect[] = [
 test("Intro end state matches the Intro artboard (artboard copy)", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Intro is a 1440x900 board");
   await page.goto(story("features-intro--artboard-parity"));
-  await page.locator('#storybook-root main[data-intro="done"]').waitFor();
+  await page.locator('#storybook-root main[data-hold="done"]').waitFor();
   const ratio = await expectMatchesArtboard(page, "Intro", {
     maxDiffRatio: 0.02,
     maskRects: [
@@ -22,4 +22,21 @@ test("Intro end state matches the Intro artboard (artboard copy)", async ({ page
     ],
   });
   expect(ratio).toBeLessThanOrEqual(0.02);
+});
+
+test("Intro Phone story is the column, not the stage (390px)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "the phone is the mobile project's 390x844");
+  await page.goto(story("features-intro--phone"));
+  await page.locator('#storybook-root main[data-hold="done"]').waitFor();
+  await expect(page.locator('[data-intro-layout="column"]')).toBeVisible();
+  await expect(page.locator('[data-intro-layout="stage"] [data-stage]')).toBeHidden();
+  await expect(page.getByRole("link", { name: /ENTER THE ARENA/ })).toBeVisible();
+});
+
+test("Intro Desktop story is the stage with the page's own copy", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the stage is the desktop project's 1440x900");
+  await page.goto(story("features-intro--desktop"));
+  await page.locator('#storybook-root main[data-hold="done"]').waitFor();
+  await expect(page.locator('[data-intro-layout="stage"] [data-stage]')).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("Yash Sarda");
 });

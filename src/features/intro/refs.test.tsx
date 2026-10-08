@@ -86,8 +86,8 @@ describe("IntroPage: what the timeline can reach", () => {
 
   it("every part a timeline reveals is held back while the show is pending", () => {
     const { root, refs } = page();
-    expect(root).toHaveAttribute("data-intro", "pending");
-    const held = (el: HTMLElement | undefined) => el!.classList.contains("intro-part");
+    expect(root).toHaveAttribute("data-hold", "pending");
+    const held = (el: HTMLElement | undefined) => el!.classList.contains("hold-part");
     for (const el of [
       ...refs.banks!,
       ...refs.cones!,
@@ -286,7 +286,7 @@ describe("IntroColumn: the phone's parts", () => {
       ...refs.letters!,
       ...refs.tagline!,
     ])
-      expect(el!.classList.contains("intro-part"), el!.getAttribute("data-part") ?? "").toBe(true);
+      expect(el!.classList.contains("hold-part"), el!.getAttribute("data-part") ?? "").toBe(true);
   });
 
   it("the portrait is the rest pose: decorative (the h1 names him), sized by attributes, decoded off the main thread", () => {
