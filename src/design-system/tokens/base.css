@@ -941,9 +941,9 @@
 }
 
 /* H5: a returning visitor's record-bound parts wait for the saved record (one frame after scripts run).
-   The fallback (hold-fallback, motion.css, ends visible) shows them after 3s if scripts never run.
+   The head script drops data-record itself after 3s (headFlags.ts), so scripts that never finish never hold
+   them; it is a timer, not a CSS delay, which the global reduced-motion rule would cut to 0.
    First visits (no data-record) are never hidden. */
 :root.js[data-record] [data-record-pending] {
   visibility: hidden;
-  animation: hold-fallback 0s 3s forwards;
 }

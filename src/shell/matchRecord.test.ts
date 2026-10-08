@@ -1,6 +1,12 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sanitizeRecord, useMatchRecord, useRecordReady, VENUES } from "./matchRecord";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  MATCH_RECORD_KEY,
+  sanitizeRecord,
+  useMatchRecord,
+  useRecordReady,
+  VENUES,
+} from "./matchRecord";
 
 describe("match record", () => {
   beforeEach(() => useMatchRecord.getState().reset());
@@ -110,5 +116,24 @@ describe("useRecordReady", () => {
       await useMatchRecord.persist.rehydrate();
     });
     expect(result.current).toBe(true);
+  });
+});
+
+describe("a malformed saved record", () => {
+  afterEach(() => {
+    localStorage.removeItem(MATCH_RECORD_KEY);
+    useMatchRecord.getState().reset();
+  });
+  it("still finishes loading: a fresh visitor, ready, and the bad value is dropped", async () => {
+    localStorage.setItem(MATCH_RECORD_KEY, "{not json");
+    const { result } = renderHook(() => useRecordReady());
+    await act(async () => {
+      await useMatchRecord.persist.rehydrate();
+    });
+    expect(useMatchRecord.persist.hasHydrated()).toBe(true);
+    expect(result.current).toBe(true);
+    expect(useMatchRecord.getState().venuesPlayed).toEqual([]);
+    expect(useMatchRecord.getState().record).toEqual({ yash: 0, you: 0 });
+    expect(localStorage.getItem(MATCH_RECORD_KEY)).toBeNull();
   });
 });

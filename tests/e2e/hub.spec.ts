@@ -146,12 +146,25 @@ test.describe("desktop hub", () => {
         await seed(page, value);
         await page.goto("/arena");
         await waitForHydration(page);
-        await expect(rail(page).getByText("0 OF 3 VENUES")).toBeVisible();
+        // Ready well before the 3 s CSS fallback could do it: every record-bound part has been released, and the
+        // desktop has said its line.
+        await expect(page.locator("[data-record-pending]")).toHaveCount(0, { timeout: 1500 });
+        await expect(rail(page).getByText("0 OF 3 VENUES")).toBeVisible({ timeout: 1500 });
         await expect(playLinks(page)).toHaveCount(3);
-        await expect(recordChip(page)).toBeVisible();
+        await expect(recordChip(page)).toBeVisible({ timeout: 1500 });
+        await expect(bar(page)).toContainText(hub.comm.none, { timeout: 1500 });
         expect(errors).toEqual([]);
       });
     }
+
+    test("a malformed record still lets a section be marked SEEN", async ({ page }) => {
+      await seed(page, "{not json");
+      await page.goto("/highlights");
+      await waitForHydration(page);
+      await expect
+        .poll(() => page.evaluate(() => localStorage.getItem("arena:v1")), { timeout: 1500 })
+        .toContain("highlights");
+    });
 
     test("blocked storage", async ({ page }) => {
       const errors = watchErrors(page);
@@ -171,7 +184,7 @@ test.describe("desktop hub", () => {
   });
 
   test.describe("first paint of a returning visitor (H5)", () => {
-    test("with scripts held back the record parts stay hidden, and the CSS shows them at 3 s", async ({
+    test("with scripts held back the record parts stay hidden, and the head script lets them go at 3 s", async ({
       page,
     }) => {
       await seed(page, ARTBOARD);
@@ -186,6 +199,55 @@ test.describe("desktop hub", () => {
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await page.waitForTimeout(3200);
       expect(new Set(await visibilities())).toEqual(new Set(["visible"]));
+    });
+
+    // The 3 s release is a timer in the head script, not a CSS delay: a reduced-motion setting must not shorten it.
+    test.describe("reduced motion", () => {
+      test.use({ reducedMotion: "reduce" });
+      test("with scripts held back the record parts stay hidden at 200 ms and show by 3.2 s; cricket never reads PLAY meanwhile", async ({
+        page,
+      }) => {
+        await seed(page, ARTBOARD);
+        await page.addInitScript(() => {
+          const w = window as unknown as { __sawPlayEarly: boolean; __frames: number };
+          w.__sawPlayEarly = false;
+          w.__frames = 0;
+          const frame = () => {
+            const link = document.querySelector<HTMLElement>(
+              "main article a[href='/arena/cricket']",
+            );
+            if (link) {
+              w.__frames++;
+              if (
+                performance.now() < 2500 &&
+                getComputedStyle(link).visibility === "visible" &&
+                link.textContent?.trim() === "PLAY"
+              )
+                w.__sawPlayEarly = true;
+            }
+            requestAnimationFrame(frame);
+          };
+          requestAnimationFrame(frame);
+        });
+        await page.route("**/*.js", (route) => route.abort());
+        await page.goto("/arena", { waitUntil: "domcontentloaded" });
+        const pending = page.locator("[data-stage] [data-record-pending]");
+        expect(await pending.count()).toBeGreaterThan(0);
+        const visibilities = () =>
+          pending.evaluateAll((els) => els.map((el) => getComputedStyle(el).visibility));
+        await page.waitForTimeout(200);
+        expect(new Set(await visibilities())).toEqual(new Set(["hidden"]));
+        await page.waitForTimeout(2200);
+        expect(new Set(await visibilities())).toEqual(new Set(["hidden"]));
+        await page.waitForTimeout(800);
+        expect(new Set(await visibilities())).toEqual(new Set(["visible"]));
+        const seen = await page.evaluate(() => {
+          const w = window as unknown as { __sawPlayEarly: boolean; __frames: number };
+          return { sawPlayEarly: w.__sawPlayEarly, frames: w.__frames };
+        });
+        expect(seen.frames, "the probe saw frames with the card in them").toBeGreaterThan(0);
+        expect(seen.sawPlayEarly).toBe(false);
+      });
     });
 
     test("with scripts running, cricket never shows PLAY before REMATCH", async ({ page }) => {

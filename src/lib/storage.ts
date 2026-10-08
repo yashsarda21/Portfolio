@@ -31,9 +31,23 @@ export const safeStorage = {
   },
 };
 
-/** Zustand persist-compatible storage on top of safeStorage. */
+/**
+ * Zustand persist-compatible storage on top of safeStorage. `getItem` hands back only text that parses as JSON:
+ * a malformed value is dropped and read as "nothing saved", so the store still finishes loading (a throw here
+ * would leave it waiting forever).
+ */
 export const safeJSONStorage = {
-  getItem: (name: string) => safeStorage.get(name),
+  getItem: (name: string) => {
+    const raw = safeStorage.get(name);
+    if (raw === null) return null;
+    try {
+      JSON.parse(raw);
+      return raw;
+    } catch {
+      safeStorage.remove(name);
+      return null;
+    }
+  },
   setItem: (name: string, value: string) => safeStorage.set(name, value),
   removeItem: (name: string) => safeStorage.remove(name),
 };
