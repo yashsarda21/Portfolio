@@ -1,11 +1,28 @@
 import { expect, test, type Page } from "@playwright/test";
 import { join } from "node:path";
 import { ui } from "../../src/content/ui-copy";
+import { waitForFiniteAnimations } from "../support/animations";
 import { expectNoA11yViolations } from "../support/a11y";
 import { expectMatchesArtboard } from "../support/visual";
 import { waitForHydration } from "./support/contentPage";
 
 const hub = ui.hub;
+
+/** A touch pointer event on an element (`page.touchscreen` can only tap). */
+const touchEvent = (
+  target: ReturnType<Page["locator"]>,
+  type: string,
+  at: { x: number; y: number },
+) =>
+  target.dispatchEvent(type, {
+    pointerType: "touch",
+    pointerId: 7,
+    isPrimary: true,
+    buttons: type === "pointerdown" || type === "pointermove" ? 1 : 0,
+    clientX: at.x,
+    clientY: at.y,
+    bubbles: true,
+  });
 
 /** Writes the saved match record before the page's own scripts run. A string is stored as it is (a broken record). */
 async function seed(page: Page, state: object | string) {
@@ -373,29 +390,37 @@ test.describe("desktop hub", () => {
   });
 
   test.describe("small text on laptop screens (H13)", () => {
-    test("at 1280x720 the rail tags and the card meta render at 11px or more", async ({ page }) => {
-      await seed(page, ARTBOARD);
-      await page.setViewportSize({ width: 1280, height: 720 });
-      await page.goto("/arena");
-      await waitForHydration(page);
-      await expect(
-        card(page, "CRICKET GROUND").getByRole("link", { name: "REMATCH" }),
-      ).toBeVisible();
-      const sizes = await page.evaluate(() => {
-        const stage = document.querySelector("[data-stage]")!.getBoundingClientRect();
-        const scale = stage.width / 1440;
-        const size = (el: Element) => parseFloat(getComputedStyle(el).fontSize) * scale;
-        const tags = [...document.querySelectorAll("aside nav a > span:last-child")].map(size);
-        const meta = [...document.querySelectorAll("[data-stage] article")].flatMap((a) =>
-          [...a.querySelectorAll("div.justify-between > span")].map(size),
-        );
-        return { scale, tags, meta };
+    for (const [width, height] of [
+      [1280, 720],
+      [1366, 768],
+    ] as const) {
+      test(`at ${width}x${height} the rail tags and the card meta render at 11px or more`, async ({
+        page,
+      }) => {
+        await seed(page, ARTBOARD);
+        await page.setViewportSize({ width, height });
+        await page.goto("/arena");
+        await waitForHydration(page);
+        await expect(
+          card(page, "CRICKET GROUND").getByRole("link", { name: "REMATCH" }),
+        ).toBeVisible();
+        const sizes = await page.evaluate(() => {
+          const stage = document.querySelector("[data-stage]")!.getBoundingClientRect();
+          const scale = stage.width / 1440;
+          const size = (el: Element) => parseFloat(getComputedStyle(el).fontSize) * scale;
+          const tags = [...document.querySelectorAll("aside nav a > span:last-child")].map(size);
+          const meta = [...document.querySelectorAll("[data-stage] article")].flatMap((a) =>
+            [...a.querySelectorAll("div.justify-between > span")].map(size),
+          );
+          return { scale, tags, meta };
+        });
+        // The stage fits the window: by its height on a wide laptop (the 16:10 board).
+        expect(sizes.scale).toBeCloseTo(Math.min(width / 1440, height / 900), 2);
+        expect(sizes.tags.length).toBeGreaterThanOrEqual(8);
+        expect(sizes.meta).toHaveLength(6);
+        for (const s of [...sizes.tags, ...sizes.meta]) expect(s).toBeGreaterThanOrEqual(11 - 0.01);
       });
-      expect(sizes.scale).toBeCloseTo(0.8, 2);
-      expect(sizes.tags.length).toBeGreaterThanOrEqual(8);
-      expect(sizes.meta).toHaveLength(6);
-      for (const s of [...sizes.tags, ...sizes.meta]) expect(s).toBeGreaterThanOrEqual(11 - 0.01);
-    });
+    }
 
     // A floored mono label keeps its drawn width: its letters grow to 11px and its tracking shrinks (L2).
     for (const [width, height] of [
@@ -503,6 +528,12 @@ test.describe("desktop hub", () => {
   test.describe("motion (H9)", () => {
     const plate = (page: Page) => page.locator("[data-orbit]");
     const transform = (page: Page) => plate(page).evaluate((el) => getComputedStyle(el).transform);
+    /** How far the plate is turned about its upright axis, in degrees. */
+    const turn = (page: Page) =>
+      plate(page).evaluate((el) => {
+        const m = new DOMMatrix(getComputedStyle(el).transform);
+        return (Math.atan2(m.m13, m.m11) * 180) / Math.PI;
+      });
     /** The first child of a card is its picture: a place to press that is not a link. */
     const art = (page: Page, name: string) => card(page, name).locator("> div").first();
     const SHOTS = join(process.cwd(), ".superpowers/sdd/2026-10-08-phase-4-hub/shots");
@@ -558,6 +589,60 @@ test.describe("desktop hub", () => {
       });
     });
 
+    test.describe("the hint says only what works", () => {
+      const hint = (page: Page) => page.locator("[data-stage] p").filter({ hasText: /VENUE$/ });
+      test("a mouse with motion on: both", async ({ page }) => {
+        await page.goto("/arena");
+        await waitForHydration(page);
+        await expect(hint(page)).toHaveText(`${hub.hint.drag} · ${hub.hint.keys}`);
+      });
+      test.describe("reduced motion", () => {
+        test.use({ reducedMotion: "reduce" });
+        test("the keys only", async ({ page }) => {
+          await page.goto("/arena");
+          await waitForHydration(page);
+          await expect(hint(page)).toHaveText(hub.hint.keys);
+        });
+      });
+      test.describe("a touch-only screen", () => {
+        test.use({ hasTouch: true, isMobile: true, viewport: { width: 1366, height: 1024 } });
+        test("the drag only", async ({ page }) => {
+          await page.goto("/arena");
+          await waitForHydration(page);
+          await expect(page.locator("[data-stage]")).toBeVisible();
+          await expect(
+            page.locator("[data-stage] p").filter({ hasText: hub.hint.drag }),
+          ).toHaveText(hub.hint.drag);
+        });
+      });
+    });
+
+    test.describe("the lift does not move the card out from under the pointer", () => {
+      // Reduced motion freezes the sway, so the card sits where it is measured; the CSS lift still happens.
+      test.use({ reducedMotion: "reduce" });
+      test("with the pointer in a card's bottom edge it stays lifted, no bobbing", async ({
+        page,
+      }) => {
+        await seed(page, ARTBOARD);
+        await page.goto("/arena");
+        await waitForHydration(page);
+        const cricket = card(page, "CRICKET GROUND");
+        await expect(cricket.getByRole("link", { name: "REMATCH" })).toBeVisible();
+        const box = (await cricket.boundingBox())!;
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height - 3, { steps: 4 });
+        const lifts: number[] = [];
+        for (let i = 0; i < 12; i++) {
+          await page.waitForTimeout(100);
+          lifts.push(
+            await cricket.evaluate(
+              (el) => new DOMMatrix(getComputedStyle(el.parentElement!).transform).m42,
+            ),
+          );
+        }
+        expect(new Set(lifts)).toEqual(new Set([-8]));
+      });
+    });
+
     test("the mouse over a card tilts it toward the pointer", async ({ page }) => {
       await swaying(page);
       const box = (await card(page, "CENTRE COURT").boundingBox())!;
@@ -581,10 +666,40 @@ test.describe("desktop hub", () => {
       await expect(plate(page)).toHaveAttribute("data-orbit", "drag");
       await page.waitForTimeout(600);
       await page.screenshot({ path: join(SHOTS, "task5-drag.png") });
+      // The plate itself turned, and past the idle sway's 6 degrees: 300px of an 1100px arc is 8 degrees.
+      const held = await turn(page);
+      expect(Math.abs(held), "the plate follows the drag").toBeGreaterThan(6.5);
+      await page.waitForTimeout(300);
+      expect(await turn(page), "and holds still, the sway is off").toBeCloseTo(held, 1);
       await page.mouse.up();
       await expect(plate(page)).toHaveAttribute("data-orbit", "rest");
       await page.waitForTimeout(500);
       await expect(page).toHaveURL("/arena");
+    });
+
+    test("a drag that leaves the arc and lets go outside it ends there: the plate settles back and nothing opens", async ({
+      page,
+    }) => {
+      await swaying(page);
+      const frame = (await plate(page).locator("..").boundingBox())!;
+      const box = (await art(page, "CRICKET GROUND").boundingBox())!;
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + 200, y, { steps: 10 });
+      await expect(plate(page)).toHaveAttribute("data-orbit", "drag");
+      expect(Math.abs(await turn(page))).toBeGreaterThan(4);
+      // Out of the frame, over the index rail, and let go there.
+      await page.mouse.move(frame.x - 120, y, { steps: 8 });
+      await page.mouse.up();
+      await expect(plate(page)).not.toHaveAttribute("data-orbit", "drag");
+      await expect.poll(() => turn(page).then(Math.abs), { timeout: 3000 }).toBeLessThan(0.5);
+      await expect(page).toHaveURL("/arena");
+      // The press is not stuck: a plain move pauses the sway again, and it comes back after 4 s.
+      await page.mouse.move(x, y, { steps: 4 });
+      await expect(plate(page)).toHaveAttribute("data-orbit", "rest");
+      await expect(plate(page)).toHaveAttribute("data-orbit", "sway", { timeout: 6000 });
     });
 
     test("a drag that begins on a link does not open it", async ({ page }) => {
@@ -645,17 +760,9 @@ test.describe("desktop hub", () => {
     test.describe("with a finger", () => {
       test.use({ hasTouch: true, isMobile: false, viewport: { width: 1366, height: 1024 } });
 
-      /** A touch pointer event on the element (`page.touchscreen` can only tap). */
+      /** A finger event on a card's picture, `dx` px along from where it went down. */
       const touch = (page: Page, name: string, type: string, dx = 0) =>
-        art(page, name).dispatchEvent(type, {
-          pointerType: "touch",
-          pointerId: 7,
-          isPrimary: true,
-          buttons: type === "pointerup" ? 0 : 1,
-          clientX: 300 + dx,
-          clientY: 400,
-          bubbles: true,
-        });
+        touchEvent(art(page, name), type, { x: 300 + dx, y: 400 });
 
       test("the arc sways, a finger drag turns it without opening anything, a tap opens the venue", async ({
         page,
@@ -702,31 +809,7 @@ const horizontalOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
 /** Resolves once the column's entrances are over (axe and the press tests look at a part at rest). */
-const risen = (page: Page) =>
-  column(page).evaluate((el) =>
-    Promise.all(
-      el
-        .getAnimations({ subtree: true })
-        .filter((a) => a.effect?.getTiming().iterations !== Infinity)
-        .map((a) => a.finished),
-    ),
-  );
-
-/** A touch pointer event on an element (`page.touchscreen` can only tap). */
-const touchEvent = (
-  target: ReturnType<Page["locator"]>,
-  type: string,
-  at: { x: number; y: number },
-) =>
-  target.dispatchEvent(type, {
-    pointerType: "touch",
-    pointerId: 9,
-    isPrimary: true,
-    buttons: type === "pointerdown" || type === "pointermove" ? 1 : 0,
-    clientX: at.x,
-    clientY: at.y,
-    bubbles: true,
-  });
+const risen = (page: Page) => waitForFiniteAnimations(page, { root: "[data-hub-column]" });
 
 test.describe("phone hub", () => {
   test.beforeEach(({ page: _page }, testInfo) => {
@@ -1003,6 +1086,20 @@ for (const [project, size] of [
       await page.mouse.wheel(0, 300);
       await page.waitForTimeout(300);
       expect(await page.evaluate(() => document.scrollingElement!.scrollTop)).toBe(0);
+    });
+
+    test("a drawer left open when the window grows into the stage stays shut when it shrinks back", async ({
+      page,
+    }) => {
+      await indexButton(page).click();
+      await expect(drawer(page)).toBeVisible();
+      await page.setViewportSize({ width: 1300, height: size.height });
+      await expect(drawer(page)).toBeHidden();
+      await page.setViewportSize(size);
+      await expect(indexButton(page)).toBeVisible();
+      await page.waitForTimeout(400);
+      await expect(drawer(page)).toBeHidden();
+      await expect(indexButton(page)).toHaveAttribute("aria-expanded", "false");
     });
 
     test("choosing Player Card goes there and the drawer is gone", async ({ page }) => {

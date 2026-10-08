@@ -3,13 +3,15 @@ import { cn } from "@/lib/cn";
 import type { SceneLayerProps } from "./layer";
 
 // Bulb radius/grid and glow per size (Main.dc.html floodlight banks): the bulbs, once.
+const MINI_BULBS =
+  "shadow-bank-mini [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]";
 const BULBS = {
   lg: "shadow-bank-lg [--bulb-r1:2.6px] [--bulb-r2:3.6px] [--bulb-gx:12px] [--bulb-gy:11px]",
   sm: "shadow-bank-sm [--bulb-r1:2.4px] [--bulb-r2:3.4px] [--bulb-gx:12px] [--bulb-gy:11px]",
-  mini: "shadow-bank-mini [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]",
+  mini: MINI_BULBS,
   mobile: "shadow-bank-mini [--bulb-r1:1.8px] [--bulb-r2:2.8px] [--bulb-gx:9px] [--bulb-gy:8px]",
   // The Hub's venue pictures (Hub.dc.html): the mini bulbs, 40 and 50px wide.
-  card: "shadow-bank-mini [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]",
+  card: MINI_BULBS,
   "card-wide":
     "shadow-bank-card-wide [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]",
 } as const;

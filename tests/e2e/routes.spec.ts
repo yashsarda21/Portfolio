@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
+import { waitForFiniteAnimations } from "../support/animations";
 import { expectNoA11yViolations } from "../support/a11y";
 import { expectMatchesArtboard } from "../support/visual";
 
@@ -37,16 +38,7 @@ for (const [, path] of entries) {
         timeout: 15_000,
       });
     // The Hub's fixtures rise in one after another: axe cannot judge a part still fading in.
-    if (path === ROUTES.arena)
-      await page.evaluate(() =>
-        Promise.all(
-          document
-            .querySelector("[data-hub-column]")!
-            .getAnimations({ subtree: true })
-            .filter((a) => a.effect?.getTiming().iterations !== Infinity)
-            .map((a) => a.finished),
-        ),
-      );
+    if (path === ROUTES.arena) await waitForFiniteAnimations(page, { root: "[data-hub-column]" });
     await expectNoA11yViolations(page);
   });
 }

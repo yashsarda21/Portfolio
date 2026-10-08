@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { waitForFiniteAnimations } from "../support/animations";
 import { expectNoA11yViolations } from "../support/a11y";
 
 interface IndexEntry {
@@ -36,21 +37,7 @@ for (const story of entries.filter((e) => !PLAYS_LIVE.has(e.id))) {
     await page.locator("#storybook-root > *").first().waitFor({ state: "attached" });
     await page.evaluate(() => document.fonts.ready);
     // axe cannot judge a part still fading in (a list that rises one after another): let the short entrances end.
-    await page.evaluate(() =>
-      Promise.all(
-        document
-          .getAnimations()
-          .filter((a) => {
-            const timing = a.effect?.getTiming();
-            return (
-              !!timing &&
-              timing.iterations !== Infinity &&
-              Number(timing.delay) + Number(timing.duration) < 2000
-            );
-          })
-          .map((a) => a.finished.catch(() => undefined)),
-      ),
-    );
+    await waitForFiniteAnimations(page, { maxMs: 2000 });
     await expectNoA11yViolations(page);
   });
 }
