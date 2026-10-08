@@ -72,6 +72,47 @@ test.describe("Hub.dc.html (1440 x 900)", () => {
   });
 });
 
+test("the index rail's label and tag never overlap, also at the stage mono floor", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the rail is a desktop part");
+  await page.goto(story("broadcast-hub--index-rail-fidelity"));
+  const rail = page.getByTestId("index-rail");
+  await rail.waitFor();
+  // 13.75px is what --stage-mono-min raises the 11px mono to inside a scaled stage (1280x720 and smaller).
+  for (const floor of ["0px", "13.75px"]) {
+    await page.evaluate(
+      (v) => document.documentElement.style.setProperty("--stage-mono-min", v),
+      floor,
+    );
+    const gaps = await rail.locator("nav a").evaluateAll((links) =>
+      links.map((a) => {
+        const [label, tag] = Array.from(a.children).map((c) => c.getBoundingClientRect());
+        return { name: a.textContent, gap: tag!.left - label!.right };
+      }),
+    );
+    for (const row of gaps)
+      expect(row.gap, `${row.name} at floor ${floor}`).toBeGreaterThanOrEqual(8);
+  }
+});
+
+test("the drawer slides out when it closes instead of vanishing", async ({ page }) => {
+  await page.goto(story("broadcast-hub--drawer-open"));
+  const dialog = page.getByRole("dialog", { name: "Portfolio index" });
+  await dialog.waitFor();
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toHaveAttribute("open", "");
+  // Still on screen, part-way out, in the first moments after closing...
+  const during = await dialog.evaluate((el) => ({
+    display: getComputedStyle(el).display,
+    x: el.getBoundingClientRect().x,
+  }));
+  expect(during.display).not.toBe("none");
+  // ...and gone once the transition has run.
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("button", { name: "INDEX" })).toBeFocused();
+});
+
 test.describe("Mobile-Hub.dc.html (390 x 844)", () => {
   test.beforeEach(({ page: _page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "Mobile-Hub is a 390×844 board");

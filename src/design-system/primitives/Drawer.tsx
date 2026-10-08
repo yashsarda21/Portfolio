@@ -6,8 +6,14 @@ import { IconButton } from "./IconButton";
 // The dialog is the panel's box and nothing more, so a click that lands on the dialog itself is a click on its
 // backdrop. Class strings stay literal so Tailwind sees them.
 const SIDES = {
-  left: { dialog: "mr-auto starting:open:-translate-x-full", panel: "border-l-0" },
-  right: { dialog: "ml-auto starting:open:translate-x-full", panel: "border-r-0" },
+  left: {
+    dialog: "mr-auto -translate-x-full open:translate-x-0 starting:open:-translate-x-full",
+    panel: "border-l-0",
+  },
+  right: {
+    dialog: "ml-auto translate-x-full open:translate-x-0 starting:open:translate-x-full",
+    panel: "border-r-0",
+  },
 } as const;
 
 interface DrawerProps {
@@ -23,9 +29,9 @@ interface DrawerProps {
 }
 
 /**
- * A panel that slides in from the edge over a dimmed page: a native modal `<dialog>`, so focus is held inside it
+ * A panel that slides in from the edge over a dimmed page, and back out when it closes: a native modal `<dialog>`, so focus is held inside it
  * and the page behind is inert. Esc, the close button or a tap outside calls `onClose`; focus then returns to what
- * had it before the drawer opened. Reduced motion shows it with no slide.
+ * had it before the drawer opened. The slide is a CSS transition on the dialog (allow-discrete, so `display` and the top layer wait for it); the `open` attribute still flips at once. Reduced motion has no slide (base.css zeroes transitions).
  */
 export function Drawer({
   open,
@@ -69,7 +75,7 @@ export function Drawer({
         if (event.target === event.currentTarget) onClose();
       }}
       className={cn(
-        "m-0 h-dvh max-h-none w-80 max-w-[85vw] bg-transparent p-0 text-floodlight transition-transform duration-(--dur-glide) ease-follow backdrop:bg-ground/70",
+        "m-0 h-dvh max-h-none w-80 max-w-[85vw] bg-transparent p-0 text-floodlight transition-[transform,overlay,display] transition-discrete duration-(--dur-glide) ease-follow backdrop:bg-ground/0 backdrop:transition-[background-color,overlay,display] backdrop:transition-discrete backdrop:duration-(--dur-glide) open:backdrop:bg-ground/70 starting:open:backdrop:bg-ground/0",
         SIDES[side].dialog,
       )}
     >

@@ -50,13 +50,16 @@ export function IndexRail({ label, title, links, header, footer, className }: In
           return (
             <Comp
               key={key}
-              className="flex min-h-11 items-center justify-between px-2.5 type-body-md whitespace-nowrap text-floodlight transition-colors duration-(--dur-snap) ease-snap hover:bg-white-a05"
+              className="flex min-h-11 items-center justify-between gap-2 px-2.5 type-body-md text-floodlight transition-colors duration-(--dur-snap) ease-snap hover:bg-white-a05"
               {...attrs}
             >
-              <span>{text}</span>
+              <span className="min-w-0">{text}</span>
               <span
                 {...(seen ? { "data-seen": "" } : {})}
-                className={cn("type-mono-note", seen ? "text-volt" : "text-dim")}
+                className={cn(
+                  "shrink-0 type-mono-note whitespace-nowrap",
+                  seen ? "text-volt" : "text-dim",
+                )}
               >
                 {tag}
               </span>
