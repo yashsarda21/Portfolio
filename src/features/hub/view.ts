@@ -68,7 +68,8 @@ export interface HubView {
   facilitiesPhone: HubFacility[];
   comm: string;
   commTag: string;
-  hint: string;
+  /** The stage's hint, in parts: the page shows only what works for this visitor (`hubHint`). */
+  hint: { drag: string; keys: string; sep: string };
   quickView: string;
   drawer: { open: string; close: string };
   audio: UiCopy["audio"];
@@ -135,7 +136,7 @@ export function buildHubView(
           ? `${hub.venue.played} ${sep} ${score}`
           : hub.venue.played
         : hub.venue.unplayed,
-      statusPhone: played ? (score ?? hub.venue.played) : copy.duration,
+      statusPhone: played ? score || hub.venue.played : copy.duration,
       play: { label: played ? ui.hud.rematch : hub.venue.play, to: routes[key] },
       skip: {
         label: hub.venue.skip,
@@ -206,9 +207,24 @@ export function buildHubView(
         ? (content.commentary.visitorWins[0] ?? hub.comm.all)
         : (comms[done] ?? hub.comm.none),
     commTag: ui.comm.tag,
-    hint: hub.hint,
+    hint: { drag: hub.hint.drag, keys: hub.hint.keys, sep },
     quickView: ui.hud.quickView,
     drawer: { open: hub.drawer.open, close: hub.drawer.close },
     audio: ui.audio,
   };
+}
+
+/**
+ * The hint for what this visitor can do: dragging needs motion (off under reduced motion); the number keys need a
+ * keyboard (a touch-only screen has none). Both when nothing is known yet, so the prerender is the artboard's line.
+ * Empty when neither works.
+ */
+export function hubHint(
+  hint: HubView["hint"],
+  { reducedMotion, touchOnly }: { reducedMotion: boolean; touchOnly: boolean },
+): string {
+  const parts = [];
+  if (!reducedMotion) parts.push(hint.drag);
+  if (!touchOnly) parts.push(hint.keys);
+  return parts.join(` ${hint.sep} `);
 }

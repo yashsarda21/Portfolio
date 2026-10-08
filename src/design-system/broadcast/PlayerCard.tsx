@@ -119,10 +119,7 @@ export function PlayerCard({
       {...rest}
       data-player-card=""
       data-flipped={flipped}
-      onPointerDown={tilt.onPointerDown}
-      onPointerMove={tilt.onPointerMove}
-      onPointerUp={tilt.onPointerUp}
-      onPointerLeave={tilt.onPointerLeave}
+      {...tilt.handlers}
       className={cn(
         // The drawn 402x642 box. On the phone it is as wide as the column allows (never wider than drawn) and keeps
         // its proportions, so the text inside stays at full size.

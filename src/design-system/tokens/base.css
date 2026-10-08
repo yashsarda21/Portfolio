@@ -78,10 +78,20 @@
   background-color: var(--surface-bar);
 }
 /* A Hub venue card's slot. The page places the card on its arc through --arc-y and --arc-ry (the slot does not
-   know where it sits); hover or keyboard focus straightens the card and lifts it 8px (H9); so does a finger pressing the card (the tilt hook marks it data-pressed). Motion is CSS only. */
+   know where it sits); hover or keyboard focus straightens the card and lifts it 8px (H9); so does a finger pressing
+   the card (the tilt hook marks it data-pressed). Motion is CSS only. While hovered, the slot reaches 8px below its
+   lifted foot, so a pointer resting in the card's bottom edge stays over it instead of making it bob. */
 @utility venue-slot {
+  position: relative;
   transform: translateY(var(--arc-y, 0)) rotateY(var(--arc-ry, 0deg));
   transition: transform var(--dur-glide) var(--ease-follow);
+  &:hover::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 8px;
+  }
   &:hover,
   &:has(:focus-visible),
   &:has([data-pressed]) {

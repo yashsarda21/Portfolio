@@ -23,16 +23,20 @@ import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import { HubIndex } from "./HubIndex";
-import type { HubView } from "./view";
+import { hubHint, type HubView } from "./view";
 
 type Venue = HubView["venues"][number];
+
+/** Read after the page loads; until then both are false, so the prerendered hint shows everything (as the artboard). */
+const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+const TOUCH_ONLY = "(pointer: coarse) and (not (any-pointer: fine))";
 
 /** Where each card sits on the arc, left to right: the outer two turn in, the middle one stands 14px higher. */
 const ARC = ["[--arc-ry:10deg]", "[--arc-y:-14px]", "[--arc-ry:-10deg]"] as const;
 
 /**
  * One card on the arc: it leans up to 6° toward the pointer, or toward a finger while one presses it (the slot's CSS
- * does the lift, so the tilt adds none). A drag that ends on a link, or that turned the arc, never opens it.
+ * does the lift, so the tilt adds none). The pointer is read on the slot, not on the card that turns. A drag that ends on a link, or that turned the arc, never opens it.
  */
 function ArcCard({
   venue,
@@ -53,15 +57,6 @@ function ArcCard({
     const dragged = tilt.consumeDrag();
     if (turned || dragged) e.preventDefault();
   };
-  const handlers = live
-    ? {
-        onPointerDown: tilt.onPointerDown,
-        onPointerMove: tilt.onPointerMove,
-        onPointerUp: tilt.onPointerUp,
-        onPointerCancel: tilt.onPointerCancel,
-        onPointerLeave: tilt.onPointerLeave,
-      }
-    : {};
   return (
     <VenueCard
       tiltRef={ref}
@@ -87,7 +82,7 @@ function ArcCard({
         draggable: false,
       }}
       slotClassName={cn("pointer-events-auto perspective-card", arc)}
-      {...handlers}
+      slotProps={live ? tilt.handlers : {}}
     />
   );
 }
@@ -103,6 +98,10 @@ export function HubStage({ view, ready }: { view: HubView; ready: boolean }) {
   const live = useMediaQuery(MEDIA.lg);
   const plate = useRef<HTMLDivElement>(null);
   const { consumeDrag, ...orbitHandlers } = useOrbit(plate, { enabled: live });
+  const hint = hubHint(view.hint, {
+    reducedMotion: useMediaQuery(REDUCED_MOTION),
+    touchOnly: useMediaQuery(TOUCH_ONLY),
+  });
 
   return (
     <Stage from="lg" backdrop={<ArenaBackdrop layout="hub" bleed />}>
@@ -187,7 +186,7 @@ export function HubStage({ view, ready }: { view: HubView; ready: boolean }) {
         ))}
       </div>
       <CommentarySlot tag={view.commTag} className="absolute bottom-9 left-76" />
-      <KeyboardHint className="absolute right-9 bottom-12">{view.hint}</KeyboardHint>
+      {hint ? <KeyboardHint className="absolute right-9 bottom-12">{hint}</KeyboardHint> : null}
     </Stage>
   );
 }

@@ -442,7 +442,8 @@ export const ui = {
       two: "Two down. One venue left. Still undefeated.",
       all: "Full matchday. Still undefeated.",
     },
-    hint: "DRAG TO ORBIT · 1 2 3 TO PICK A VENUE",
+    // Shown joined by the separator glyph, each part only where it works (drag: a mouse or finger with motion on; keys: a keyboard).
+    hint: { drag: "DRAG TO ORBIT", keys: "1 2 3 TO PICK A VENUE" },
     drawer: { open: "INDEX", close: "Close the index" },
   },
   // Shared by every screen. Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one, and says so.

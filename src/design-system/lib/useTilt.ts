@@ -14,8 +14,8 @@ const clamp = (n: number) => Math.max(-1, Math.min(1, n));
 const fingerLike = (e: PointerEvent) => e.pointerType === "touch" || e.pointerType === "pen";
 
 /**
- * Pointer tilt for a 3D card. Put the handlers on a still element (it measures itself) and `ref` on the
- * layer that tilts. Only for a fine pointer and without reduced motion; GSAP loads on the first move.
+ * Pointer tilt for a 3D card. Spread `handlers` on a still element (it measures that element, so the box does not
+ * turn under the pointer) and put `ref` on the layer that tilts. Only for a fine pointer and without reduced motion; GSAP loads on the first move.
  * A press that travels more than 4px is a drag: `consumeDrag()` tells the click handler to ignore the
  * click that follows. A drag stays a drag if the pointer leaves the card and comes back with the button
  * still held; it is forgotten at the next press, or at the first move with no button down.
@@ -93,9 +93,7 @@ export function useTilt(
     [],
   );
 
-  return {
-    /** True once if the press that just ended was a drag (call it from the click handler). */
-    consumeDrag: () => press.consumeDrag(),
+  const handlers = {
     onPointerDown(e: PointerEvent<HTMLElement>) {
       if (!allowed(e)) return;
       press.begin(e.clientX, e.clientY);
@@ -132,5 +130,12 @@ export function useTilt(
       setPressed(false);
       settle();
     },
+  };
+
+  return {
+    /** True once if the press that just ended was a drag (call it from the click handler). */
+    consumeDrag: () => press.consumeDrag(),
+    /** The five pointer handlers, to spread onto the still element. */
+    handlers,
   };
 }

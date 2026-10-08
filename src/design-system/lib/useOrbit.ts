@@ -26,7 +26,7 @@ interface Options {
  * `data-orbit="sway" | "drag" | "rest"`. Runs whenever motion is allowed, with a mouse or a finger. GSAP loads on mount.
  * A pointer move (or a touch) pauses the sway; it resumes `resumeAfter` s after the last one. A press that travels
  * past 4px, on anything but a link or button, turns the plate by that distance (at most `drag` degrees) and it eases
- * back on release. `consumeDrag()` tells a click handler to ignore the click that follows such a drag.
+ * back on release; so does losing the pointer (capture lost, or leaving the plate with no capture) mid-drag. `consumeDrag()` tells a click handler to ignore the click that follows such a drag.
  */
 export function useOrbit(
   plateRef: RefObject<HTMLElement | null>,
@@ -50,7 +50,7 @@ export function useOrbit(
     const tween = gsap.fromTo(
       plate,
       { rotationY: -sway },
-      { rotationY: sway, duration: period / 2, ease: "sine.inOut", yoyo: true, repeat: -1 },
+      { rotationY: sway, duration: period / 2, ease: EASE.swing, yoyo: true, repeat: -1 },
     );
     tween.progress(0.5); // the middle of the swing: straight
     swayTween.current = tween;
@@ -128,6 +128,7 @@ export function useOrbit(
       }
       gsapRef.current = null;
       swayTween.current = null;
+      press.forget();
       turn.current = null;
       held.current = false;
       recentre.current = false;
@@ -167,7 +168,7 @@ export function useOrbit(
           clearTimeout(timer.current);
           gsap.killTweensOf(plate);
           recentre.current = true;
-          turn.current = gsap.quickTo(plate, "rotationY", { duration: 0.3, ease: "power3.out" });
+          turn.current = gsap.quickTo(plate, "rotationY", { duration: 0.3, ease: EASE.follow });
           setMode("drag");
           // A mouse keeps hold of the drag when it leaves the plate. A finger already has the touch.
           if (e.pointerType !== "touch") e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -183,6 +184,11 @@ export function useOrbit(
     },
     onPointerCancel() {
       press.forget();
+      finish();
+    },
+    /** The mouse was taken from the plate without a pointer-up (the stage went away, the window lost it): end the drag. */
+    onLostPointerCapture() {
+      if (!press.active && turn.current === null) return; // the usual one, after a pointer-up has already ended it
       finish();
     },
     onPointerLeave(e: PointerEvent<HTMLElement>) {

@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { FacilityTile } from "./FacilityTile";
 import { IndexRail, RailSection } from "./IndexRail";
@@ -73,6 +73,23 @@ describe("VenueCard", () => {
     expect(screen.getByRole("heading", { level: 3 })).toBeVisible();
     expect(container.firstElementChild).toHaveClass("venue-slot", "[--arc-y:-14px]");
     expect(tilted).toBe(screen.getByRole("article"));
+  });
+
+  it("takes the pointer handlers on the slot, not on the card that tilts", () => {
+    let on: EventTarget | null = null;
+    const { container } = render(
+      <VenueCard
+        {...card}
+        played={false}
+        slotProps={{
+          onPointerDown: (e) => {
+            on = e.currentTarget;
+          },
+        }}
+      />,
+    );
+    fireEvent.pointerDown(screen.getByRole("article"));
+    expect(on).toBe(container.firstElementChild);
   });
 });
 

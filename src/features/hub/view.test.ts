@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
-import { buildHubView, type HubRecord } from "./view";
+import { buildHubView, hubHint, type HubRecord } from "./view";
 
 const fresh: HubRecord = {
   venuesPlayed: [],
@@ -81,6 +81,19 @@ describe("buildHubView", () => {
   it("a played venue with no saved score just says PLAYED", () => {
     const v = view({ ...fresh, venuesPlayed: ["tennis"] });
     expect(v.venues[1]).toMatchObject({ status: "PLAYED", statusPhone: "PLAYED" });
+  });
+  it("a played venue with an empty saved score reads PLAYED on the phone too", () => {
+    const v = view({ ...fresh, venuesPlayed: ["tennis"], lastScores: { tennis: "" } });
+    expect(v.venues[1]).toMatchObject({ status: "PLAYED", statusPhone: "PLAYED" });
+  });
+  it("the hint shows only what works: drag needs motion, the keys need a keyboard", () => {
+    const { hint } = view(fresh);
+    const show = (reducedMotion: boolean, touchOnly: boolean) =>
+      hubHint(hint, { reducedMotion, touchOnly });
+    expect(show(false, false)).toBe("DRAG TO ORBIT · 1 2 3 TO PICK A VENUE");
+    expect(show(true, false)).toBe("1 2 3 TO PICK A VENUE");
+    expect(show(false, true)).toBe("DRAG TO ORBIT");
+    expect(show(true, true)).toBe("");
   });
   it("after a visitor win: the Locker Room joins the index and the line changes", () => {
     const v = view({

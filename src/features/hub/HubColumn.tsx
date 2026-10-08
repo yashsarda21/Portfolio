@@ -1,4 +1,11 @@
-import { useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   BrandLockup,
   Drawer,
@@ -25,13 +32,18 @@ function Rise({
   at,
   className,
   children,
+  ...rest
 }: {
   at: number;
   className?: string;
   children: ReactNode;
-}) {
+} & Omit<ComponentPropsWithoutRef<"div">, "className" | "children" | "style">) {
   return (
-    <div className={cn("animate-rise-stagger", className)} style={{ "--i": at } as CSSProperties}>
+    <div
+      {...rest}
+      className={cn("animate-rise-stagger", className)}
+      style={{ "--i": at } as CSSProperties}
+    >
       {children}
     </div>
   );
@@ -50,7 +62,7 @@ function Fixture({ venue, at }: { venue: Venue; at: number }) {
     if (tilt.consumeDrag()) e.preventDefault();
   };
   return (
-    <Rise at={at} className="fixture-press perspective-card">
+    <Rise at={at} className="fixture-press perspective-card" {...tilt.handlers}>
       <VenueFixture
         tiltRef={ref}
         scene={venue.scene}
@@ -73,11 +85,6 @@ function Fixture({ venue, at }: { venue: Venue; at: number }) {
           draggable: false,
         }}
         className="touch-pan-y"
-        onPointerDown={tilt.onPointerDown}
-        onPointerMove={tilt.onPointerMove}
-        onPointerUp={tilt.onPointerUp}
-        onPointerCancel={tilt.onPointerCancel}
-        onPointerLeave={tilt.onPointerLeave}
       />
     </Rise>
   );
@@ -95,6 +102,12 @@ export function HubColumn({ view, ready }: { view: HubView; ready: boolean }) {
   // The stage takes over from 1200px: a drawer left open is closed with it, so the stage is never held inert.
   const onStage = useMediaQuery(MEDIA.lg);
   const pending = ready ? {} : { "data-record-pending": "" };
+  // Growing into the stage closes the drawer for good: shrinking back must not open it again by itself.
+  const [wasOnStage, setWasOnStage] = useState(onStage);
+  if (onStage !== wasOnStage) {
+    setWasOnStage(onStage);
+    if (onStage) setOpen(false);
+  }
 
   return (
     <div data-hub-column="" className="relative min-h-dvh bg-night lg:hidden">
@@ -115,8 +128,8 @@ export function HubColumn({ view, ready }: { view: HubView; ready: boolean }) {
             <QuickViewChip tone="glass-line" />
           </div>
         </div>
-        <div {...pending} className="mt-5 flex flex-col gap-1">
-          <MonoLabel variant="mono-label" tone="volt" leading="font">
+        <div className="mt-5 flex flex-col gap-1">
+          <MonoLabel variant="mono-label" tone="volt" leading="font" {...pending}>
             {view.fixtures}
           </MonoLabel>
           <Heading level={1}>{view.heading}</Heading>

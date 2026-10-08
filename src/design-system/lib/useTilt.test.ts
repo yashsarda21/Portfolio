@@ -47,8 +47,8 @@ describe("useTilt", () => {
     media({ fine: false, reduced: false });
     const { result } = setup();
     act(() => {
-      result.current.onPointerDown(at(100, 100, 1));
-      result.current.onPointerMove(at(300, 300, 1));
+      result.current.handlers.onPointerDown(at(100, 100, 1));
+      result.current.handlers.onPointerMove(at(300, 300, 1));
     });
     await Promise.resolve();
     expect(quickTo).not.toHaveBeenCalled();
@@ -58,8 +58,8 @@ describe("useTilt", () => {
     media({ fine: true, reduced: true });
     const { result } = setup();
     act(() => {
-      result.current.onPointerDown(at(100, 100, 1));
-      result.current.onPointerMove(at(300, 300, 1));
+      result.current.handlers.onPointerDown(at(100, 100, 1));
+      result.current.handlers.onPointerMove(at(300, 300, 1));
     });
     await Promise.resolve();
     expect(quickTo).not.toHaveBeenCalled();
@@ -68,11 +68,11 @@ describe("useTilt", () => {
   it("tilts toward the pointer (at most max degrees), lifts, and settles on leave", async () => {
     media({ fine: true, reduced: false });
     const { result } = setup();
-    act(() => result.current.onPointerMove(at(400, 320)));
+    act(() => result.current.handlers.onPointerMove(at(400, 320)));
     await waitFor(() => expect(setters.rotationY).toHaveBeenCalledWith(6));
     expect(setters.rotationX).toHaveBeenCalledWith(-0);
     expect(setters.y).toHaveBeenCalledWith(-8);
-    act(() => result.current.onPointerLeave());
+    act(() => result.current.handlers.onPointerLeave());
     await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(0));
     expect(setters.y).toHaveBeenLastCalledWith(0);
   });
@@ -81,8 +81,8 @@ describe("useTilt", () => {
     media({ fine: true, reduced: false });
     const { result } = setup();
     act(() => {
-      result.current.onPointerDown(at(100, 100, 1));
-      result.current.onPointerMove(at(103, 102, 1));
+      result.current.handlers.onPointerDown(at(100, 100, 1));
+      result.current.handlers.onPointerMove(at(103, 102, 1));
     });
     expect(result.current.consumeDrag()).toBe(false);
   });
@@ -91,8 +91,8 @@ describe("useTilt", () => {
     media({ fine: true, reduced: false });
     const { result } = setup();
     act(() => {
-      result.current.onPointerDown(at(100, 100, 1));
-      result.current.onPointerMove(at(110, 100, 1));
+      result.current.handlers.onPointerDown(at(100, 100, 1));
+      result.current.handlers.onPointerMove(at(110, 100, 1));
     });
     expect(result.current.consumeDrag()).toBe(true);
     expect(result.current.consumeDrag()).toBe(false);
@@ -101,7 +101,7 @@ describe("useTilt", () => {
   it("moving without a press never counts as a drag", () => {
     media({ fine: true, reduced: false });
     const { result } = setup();
-    act(() => result.current.onPointerMove(at(300, 300)));
+    act(() => result.current.handlers.onPointerMove(at(300, 300)));
     expect(result.current.consumeDrag()).toBe(false);
   });
 
@@ -110,15 +110,15 @@ describe("useTilt", () => {
     vi.useFakeTimers();
     const { result } = setup();
     act(() => {
-      result.current.onPointerDown(at(100, 100, 1));
-      result.current.onPointerMove(at(160, 100, 1));
-      result.current.onPointerLeave();
+      result.current.handlers.onPointerDown(at(100, 100, 1));
+      result.current.handlers.onPointerMove(at(160, 100, 1));
+      result.current.handlers.onPointerLeave();
     });
     // The leave's own timers run; the visitor drags back over the card and lets go.
     act(() => vi.advanceTimersByTime(10));
     act(() => {
-      result.current.onPointerMove(at(120, 100, 1));
-      result.current.onPointerUp();
+      result.current.handlers.onPointerMove(at(120, 100, 1));
+      result.current.handlers.onPointerUp();
     });
     expect(result.current.consumeDrag()).toBe(true);
     vi.useRealTimers();
@@ -128,12 +128,12 @@ describe("useTilt", () => {
     media({ fine: true, reduced: false });
     const { result } = setup();
     act(() => {
-      result.current.onPointerDown(at(100, 100, 1));
-      result.current.onPointerMove(at(160, 100, 1));
-      result.current.onPointerLeave();
+      result.current.handlers.onPointerDown(at(100, 100, 1));
+      result.current.handlers.onPointerMove(at(160, 100, 1));
+      result.current.handlers.onPointerLeave();
     });
     // The button was released elsewhere. Hovering over the card again (no button) forgets the press...
-    act(() => result.current.onPointerMove(at(300, 300)));
+    act(() => result.current.handlers.onPointerMove(at(300, 300)));
     // ...and a click that comes with no press (Enter on the focused button) is a real click.
     expect(result.current.consumeDrag()).toBe(false);
   });
@@ -144,10 +144,10 @@ describe("useTilt", () => {
     it("a finger press tilts toward the finger, marks the card pressed, and eases back on release", async () => {
       media({ fine: false, reduced: false });
       const { result, el } = setup(true);
-      act(() => result.current.onPointerDown(finger(400, 320)));
+      act(() => result.current.handlers.onPointerDown(finger(400, 320)));
       await waitFor(() => expect(setters.rotationY).toHaveBeenCalledWith(6));
       expect(el.hasAttribute("data-pressed")).toBe(true);
-      act(() => result.current.onPointerUp());
+      act(() => result.current.handlers.onPointerUp());
       await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(0));
       expect(el.hasAttribute("data-pressed")).toBe(false);
     });
@@ -156,11 +156,11 @@ describe("useTilt", () => {
       media({ fine: false, reduced: false });
       const { result } = setup(true);
       act(() => {
-        result.current.onPointerDown(finger(200, 320));
-        result.current.onPointerMove(finger(0, 320));
+        result.current.handlers.onPointerDown(finger(200, 320));
+        result.current.handlers.onPointerMove(finger(0, 320));
       });
       await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(-6));
-      act(() => result.current.onPointerUp());
+      act(() => result.current.handlers.onPointerUp());
       expect(result.current.consumeDrag()).toBe(true);
       expect(result.current.consumeDrag()).toBe(false);
     });
@@ -169,11 +169,11 @@ describe("useTilt", () => {
       media({ fine: false, reduced: false });
       const { result, el } = setup(true);
       act(() => {
-        result.current.onPointerDown(finger(200, 100));
-        result.current.onPointerMove(finger(200, 300));
+        result.current.handlers.onPointerDown(finger(200, 100));
+        result.current.handlers.onPointerMove(finger(200, 300));
       });
       await waitFor(() => expect(setters.rotationX).toHaveBeenCalled());
-      act(() => result.current.onPointerCancel());
+      act(() => result.current.handlers.onPointerCancel());
       await waitFor(() => expect(setters.rotationY).toHaveBeenLastCalledWith(0));
       expect(setters.rotationX).toHaveBeenLastCalledWith(0);
       expect(el.hasAttribute("data-pressed")).toBe(false);
@@ -183,7 +183,7 @@ describe("useTilt", () => {
     it("a finger that is not pressing does not tilt", async () => {
       media({ fine: false, reduced: false });
       const { result } = setup(true);
-      act(() => result.current.onPointerMove(finger(300, 300, 0)));
+      act(() => result.current.handlers.onPointerMove(finger(300, 300, 0)));
       await Promise.resolve();
       expect(quickTo).not.toHaveBeenCalled();
     });
@@ -191,7 +191,7 @@ describe("useTilt", () => {
     it("does nothing under reduced motion", async () => {
       media({ fine: false, reduced: true });
       const { result } = setup(true);
-      act(() => result.current.onPointerDown(finger(300, 300)));
+      act(() => result.current.handlers.onPointerDown(finger(300, 300)));
       await Promise.resolve();
       expect(quickTo).not.toHaveBeenCalled();
     });
@@ -200,8 +200,8 @@ describe("useTilt", () => {
       media({ fine: false, reduced: false });
       const { result, el } = setup(false);
       act(() => {
-        result.current.onPointerDown(finger(100, 100));
-        result.current.onPointerMove(finger(300, 300));
+        result.current.handlers.onPointerDown(finger(100, 100));
+        result.current.handlers.onPointerMove(finger(300, 300));
       });
       await Promise.resolve();
       expect(quickTo).not.toHaveBeenCalled();

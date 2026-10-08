@@ -24,7 +24,7 @@ const { tweens, setAngle, fake, loadGsap } = vi.hoisted(() => {
   };
   return { tweens, setAngle, fake, loadGsap: vi.fn(() => Promise.resolve(fake)) };
 });
-vi.mock("@/lib/motion", () => ({ loadGsap, EASE: { follow: "follow" } }));
+vi.mock("@/lib/motion", () => ({ loadGsap, EASE: { follow: "follow", swing: "swing" } }));
 
 import { useOrbit } from "./useOrbit";
 
@@ -207,6 +207,58 @@ describe("useOrbit", () => {
     expect(result.current.consumeDrag()).toBe(false);
     act(() => vi.advanceTimersByTime(4100));
     expect(orbit(plate)).toBe("sway");
+  });
+
+  it("losing the pointer capture mid-drag ends the drag: it eases back, the press is forgotten, the sway resumes", async () => {
+    media();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { plate, result } = setup({ resumeAfter: 4 });
+    await waitFor(() => expect(orbit(plate)).toBe("sway"));
+    act(() => {
+      result.current.onPointerDown(ev(100, { buttons: 1 }));
+      result.current.onPointerMove(ev(300, { buttons: 1 }));
+    });
+    expect(orbit(plate)).toBe("drag");
+    fake.to.mockClear();
+    act(() => result.current.onLostPointerCapture());
+    expect(fake.to).toHaveBeenCalledWith(plate, expect.objectContaining({ rotationY: 0 }));
+    expect(orbit(plate)).toBe("rest");
+    act(() => vi.advanceTimersByTime(4100));
+    expect(orbit(plate)).toBe("sway");
+    // A plain move pauses the sway again: the press is not stuck.
+    act(() => result.current.onPointerMove(ev(500)));
+    expect(orbit(plate)).toBe("rest");
+  });
+
+  it("the lost-capture that follows a normal release changes nothing", async () => {
+    media();
+    const { plate, result } = setup();
+    await waitFor(() => expect(orbit(plate)).toBe("sway"));
+    act(() => {
+      result.current.onPointerDown(ev(100, { buttons: 1 }));
+      result.current.onPointerMove(ev(300, { buttons: 1 }));
+      result.current.onPointerUp();
+    });
+    fake.to.mockClear();
+    act(() => result.current.onLostPointerCapture());
+    expect(fake.to).not.toHaveBeenCalled();
+  });
+
+  it("leaving the plate mid-drag ends it when the pointer is not captured, and not when it is", async () => {
+    media();
+    const { plate, result } = setup();
+    await waitFor(() => expect(orbit(plate)).toBe("sway"));
+    act(() => {
+      result.current.onPointerDown(ev(100, { buttons: 1 }));
+      result.current.onPointerMove(ev(300, { buttons: 1 }));
+    });
+    const captured = ev(300, { buttons: 1 });
+    (captured.currentTarget as HTMLElement).hasPointerCapture = () => true;
+    act(() => result.current.onPointerLeave(captured));
+    expect(orbit(plate)).toBe("drag");
+    act(() => result.current.onPointerLeave(ev(300, { buttons: 1 })));
+    expect(orbit(plate)).toBe("rest");
+    expect(fake.to).toHaveBeenCalledWith(plate, expect.objectContaining({ rotationY: 0 }));
   });
 
   it("unmounting kills every tween and clears the timers", async () => {

@@ -30,11 +30,14 @@ interface VenueCardProps extends VenueSurfaceProps {
   headingLevel?: 2 | 3;
   /** The arc: the page sets --arc-y and --arc-ry here (the card does not know where it sits). */
   slotClassName?: string;
+  /** Props for the slot (the pointer tilt's handlers go here: the slot has no tilt of its own, so the pointer is read on a steady box). */
+  slotProps?: ComponentPropsWithoutRef<"div">;
 }
 
 /**
  * A Hub venue card: the venue's picture, what it is, and PLAY / SKIP. The slot holds the page's arc transform and
- * lifts on hover or keyboard focus; the card inside takes the pointer tilt. Every word is a prop.
+ * lifts on hover or keyboard focus and takes the pointer (`slotProps`), so the lifted card never leaves its hit
+ * area; the card inside takes the pointer tilt. Every word is a prop.
  */
 export function VenueCard({
   scene,
@@ -49,11 +52,12 @@ export function VenueCard({
   headingLevel = 2,
   className,
   slotClassName,
+  slotProps,
   tiltRef,
   ...rest
 }: VenueCardProps) {
   return (
-    <div className={cn("group/venue h-full venue-slot", slotClassName)}>
+    <div {...slotProps} className={cn("group/venue venue-slot h-full", slotClassName)}>
       <Glass
         as="article"
         edge={played ? "volt-soft" : "none"}
