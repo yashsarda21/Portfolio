@@ -181,7 +181,7 @@ export const IntroLoops: StoryObj = {
         <img src={portraitRest} alt="" className="size-full object-contain" />
         <div
           aria-hidden="true"
-          className="absolute inset-0 animate-face-sweep"
+          className="animate-face-sweep absolute inset-0"
           style={{ "--mask": `url(${portraitRest})` } as React.CSSProperties}
         />
       </div>
