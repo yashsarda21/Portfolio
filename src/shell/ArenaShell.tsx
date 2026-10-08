@@ -3,6 +3,7 @@ import { AudioProvider } from "./audio";
 import { CommentaryProvider } from "./commentary";
 import { MatchRecordHydrator } from "./matchRecord";
 import { RouteAnnouncer } from "./RouteAnnouncer";
+import { SeenTracker } from "./sections";
 import { TransitionProvider } from "./transition";
 
 /**
@@ -22,6 +23,7 @@ export function ArenaShell({ children }: { children: ReactNode }) {
       <CommentaryProvider>
         <TransitionProvider>
           <MatchRecordHydrator />
+          <SeenTracker />
           <RouteAnnouncer />
           {children}
         </TransitionProvider>

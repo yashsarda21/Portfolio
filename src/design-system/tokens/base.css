@@ -817,3 +817,11 @@
 @utility glow-volt {
   text-shadow: 0 0 18px rgb(var(--rgb-volt) / 0.45);
 }
+
+/* H5: a returning visitor's record-bound parts wait for the saved record (one frame after scripts run).
+   The fallback (hold-fallback, motion.css, ends visible) shows them after 3s if scripts never run.
+   First visits (no data-record) are never hidden. */
+:root.js[data-record] [data-record-pending] {
+  visibility: hidden;
+  animation: hold-fallback 0s 3s forwards;
+}

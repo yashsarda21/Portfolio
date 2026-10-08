@@ -1,11 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { safeJSONStorage } from "@/lib/storage";
+import { MATCH_RECORD_KEY } from "./storageKeys";
 
-export type Venue = "cricket" | "tennis" | "badminton";
+export const VENUES = ["cricket", "tennis", "badminton"] as const;
+export type Venue = (typeof VENUES)[number];
+export { MATCH_RECORD_KEY };
 
-interface MatchRecordData {
+export interface MatchRecordData {
   venuesPlayed: Venue[];
   lastScores: Partial<Record<Venue, string>>;
   sectionsSeen: string[];
@@ -30,6 +33,37 @@ const initial: MatchRecordData = {
   lockerRoomUnlocked: false,
   teamUpPrefill: null,
 };
+
+const isVenue = (v: unknown): v is Venue => VENUES.includes(v as Venue);
+const strings = (v: unknown) =>
+  Array.isArray(v) ? v.filter((s): s is string => typeof s === "string") : [];
+const count = (v: unknown) =>
+  typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+
+/** Whatever storage held, as a record the site can trust: unreadable parts fall back to a fresh visitor's. */
+export function sanitizeRecord(raw: unknown): MatchRecordData {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ...initial };
+  const r = raw as Record<string, unknown>;
+  const scores = (r.lastScores && typeof r.lastScores === "object" ? r.lastScores : {}) as Record<
+    string,
+    unknown
+  >;
+  const tally = (r.record && typeof r.record === "object" ? r.record : {}) as Record<
+    string,
+    unknown
+  >;
+  return {
+    venuesPlayed: [...new Set(strings(r.venuesPlayed).filter(isVenue))],
+    lastScores: Object.fromEntries(
+      Object.entries(scores).filter(([k, v]) => isVenue(k) && typeof v === "string"),
+    ) as MatchRecordData["lastScores"],
+    sectionsSeen: [...new Set(strings(r.sectionsSeen))],
+    record: { yash: count(tally.yash), you: count(tally.you) },
+    achievements: [...new Set(strings(r.achievements))],
+    lockerRoomUnlocked: r.lockerRoomUnlocked === true,
+    teamUpPrefill: typeof r.teamUpPrefill === "string" ? r.teamUpPrefill : null,
+  };
+}
 
 /** The visitor's saved progress (spec §4.6). Works without storage; just doesn't persist. */
 export const useMatchRecord = create<MatchRecordData & MatchRecordActions>()(
@@ -60,8 +94,11 @@ export const useMatchRecord = create<MatchRecordData & MatchRecordActions>()(
       reset: () => set({ ...initial }),
     }),
     {
-      name: "arena:v1",
+      name: MATCH_RECORD_KEY,
       version: 1,
+      merge: (persisted, current) => ({ ...current, ...sanitizeRecord(persisted) }),
+      // A future version bump lands here.
+      migrate: (persisted) => sanitizeRecord(persisted),
       storage: createJSONStorage(() => safeJSONStorage),
       skipHydration: true,
     },
@@ -74,4 +111,13 @@ export function MatchRecordHydrator() {
     void useMatchRecord.persist.rehydrate();
   }, []);
   return null;
+}
+
+/** True once the saved record has been read (or there is none to read). Record-bound UI waits for it (H5). */
+export function useRecordReady(): boolean {
+  return useSyncExternalStore(
+    (cb) => useMatchRecord.persist.onFinishHydration(cb),
+    () => useMatchRecord.persist.hasHydrated(),
+    () => false,
+  );
 }
