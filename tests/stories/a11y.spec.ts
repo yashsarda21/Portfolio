@@ -35,6 +35,22 @@ for (const story of entries.filter((e) => !PLAYS_LIVE.has(e.id))) {
     // "attached", not visible: desktop-only stories (Stage) are display:none on the mobile project.
     await page.locator("#storybook-root > *").first().waitFor({ state: "attached" });
     await page.evaluate(() => document.fonts.ready);
+    // axe cannot judge a part still fading in (a list that rises one after another): let the short entrances end.
+    await page.evaluate(() =>
+      Promise.all(
+        document
+          .getAnimations()
+          .filter((a) => {
+            const timing = a.effect?.getTiming();
+            return (
+              !!timing &&
+              timing.iterations !== Infinity &&
+              Number(timing.delay) + Number(timing.duration) < 2000
+            );
+          })
+          .map((a) => a.finished.catch(() => undefined)),
+      ),
+    );
     await expectNoA11yViolations(page);
   });
 }

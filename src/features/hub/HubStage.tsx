@@ -1,4 +1,4 @@
-import { useRef, type ComponentProps, type MouseEvent } from "react";
+import { useRef, type MouseEvent } from "react";
 import {
   ArenaBackdrop,
   AudioToggle,
@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/cn";
 import { MEDIA } from "@/lib/breakpoints";
 import { useMediaQuery } from "@/lib/useMediaQuery";
-import { ArenaLink } from "@/shell/ArenaLink";
+import { ArenaLink, TunnelLink } from "@/shell/ArenaLink";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
 import { QuickViewChip } from "@/shell/QuickViewChip";
@@ -26,11 +26,6 @@ import { HubIndex } from "./HubIndex";
 import type { HubView } from "./view";
 
 type Venue = HubView["venues"][number];
-
-/** PLAY and REMATCH push into the venue (spec §4.6); every other link takes the wipe. */
-function TunnelLink(props: ComponentProps<typeof ArenaLink>) {
-  return <ArenaLink {...props} transition="tunnel" />;
-}
 
 /** Where each card sits on the arc, left to right: the outer two turn in, the middle one stands 14px higher. */
 const ARC = ["[--arc-ry:10deg]", "[--arc-y:-14px]", "[--arc-ry:-10deg]"] as const;

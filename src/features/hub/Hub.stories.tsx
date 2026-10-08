@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useLayoutEffect, type ReactNode } from "react";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { withShell } from "@/shell/storyDecorators";
@@ -89,5 +89,36 @@ export const Pending: StoryObj = {
     const hidden = canvasElement.querySelectorAll("[data-record-pending]");
     await expect(hidden.length).toBeGreaterThan(0);
     for (const el of hidden) await expect(getComputedStyle(el).visibility).toBe("hidden");
+  },
+};
+
+/** The phone's Hub (390×844) with the artboard's record, standing on /arena so the ARENA tab is current. */
+export const Phone: StoryObj = {
+  parameters: { route: ROUTES.arena },
+  render: () => <HubPage view={artboardHubView} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole("article")).toHaveLength(6);
+    await expect(canvas.getByRole("link", { name: "ARENA" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  },
+};
+
+/** A first-time visitor on a phone: nothing played, the duration where the score would be. */
+export const PhoneFresh: StoryObj = {
+  parameters: { route: ROUTES.arena },
+  render: () => <HubPage view={fresh} />,
+};
+
+/** The index drawer open on a phone: the record chip, the matchday card, the full index, the achievements. */
+export const PhoneDrawerOpen: StoryObj = {
+  parameters: { route: ROUTES.arena },
+  render: () => <HubPage view={artboardHubView} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: ui.hub.drawer.open }));
+    await expect(canvas.getByRole("dialog", { name: ui.hub.index.label })).toBeVisible();
   },
 };

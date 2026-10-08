@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { ComponentProps, MouseEvent } from "react";
 import { Link, useLocation, useResolvedPath, type LinkProps } from "react-router";
 import { useArenaTransition } from "./transition";
 
@@ -47,4 +47,9 @@ export function ArenaLink({
       {...rest}
     />
   );
+}
+
+/** An ArenaLink that pushes into the venue instead of wiping (spec §4.6: PLAY and REMATCH). */
+export function TunnelLink(props: ComponentProps<typeof ArenaLink>) {
+  return <ArenaLink {...props} transition="tunnel" />;
 }

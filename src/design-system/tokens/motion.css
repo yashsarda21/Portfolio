@@ -85,6 +85,15 @@
   animation: rise-in 0.9s var(--ease-follow) both;
   animation-delay: var(--d, 0s);
 }
+/* A list's entrance, one part after another: stagger with --i (0, 1, 2 ... = 60ms apart). Reduced motion removes
+   the animation, so the part is simply there. */
+@utility animate-rise-stagger {
+  animation: rise-in 0.6s var(--ease-follow) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
 @utility animate-pop {
   animation: pop-in var(--dur-pop) var(--ease-follow) both;
   animation-delay: var(--d, 0s);

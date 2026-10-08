@@ -89,7 +89,7 @@ test.describe("Hub page (1440 x 900)", () => {
     const ratio = await expectMatchesArtboard(page, "Hub", {
       maxDiffRatio: 0.02,
       // The chip says YOUR RECORD (spec §11.2 #11, H3): the artboard's says RECORD, so ours is wider.
-      mask: [page.getByText("YOUR RECORD", { exact: true }).locator("..")],
+      mask: [page.locator("[data-stage]").getByText("YOUR RECORD", { exact: true }).locator("..")],
       maskRects: [
         // The index adds QUICK VIEW (spec §11.3, H6), a row the artboard does not draw.
         { x: 55, y: 566, width: 198, height: 46 },
@@ -170,4 +170,31 @@ test.describe("Mobile-Hub.dc.html (390 x 844)", () => {
       expect(ratio).toBeLessThanOrEqual(0.02);
     });
   }
+
+  // The page is compared whole. What differs on purpose is masked and each box logged:
+  //  - INDEX (H2): the artboard has no such button, so its box (it sits left of QUICK VIEW, which stays put)
+  //  - the three meta rows, 10px drawn and 11px shown (A2, H14), as in the fixtures above
+  // The tab labels (9px drawn) and the tiles' labels (10px) are also shown at 11px, and stay under the limit unmasked.
+  test("the Hub phone matches the artboard (artboard copy)", async ({ page }) => {
+    await page.goto(story("features-hub--phone"));
+    await page.locator("#storybook-root [data-hub-column]").waitFor();
+    const column = page.locator("[data-hub-column]");
+    const masks = {
+      "INDEX button": column.getByRole("button", { name: "INDEX" }),
+      "meta rows": column.locator("article > div:first-child > div:first-child"),
+    };
+    const boxes: Locator[] = [];
+    for (const [name, locator] of Object.entries(masks)) {
+      for (const [i, one] of (await locator.all()).entries()) {
+        console.log(`[mask] ${name} ${i} ${JSON.stringify(await one.boundingBox())}`);
+        boxes.push(one);
+      }
+    }
+    const ratio = await expectMatchesArtboard(page, "Mobile-Hub", {
+      maxDiffRatio: 0.02,
+      mask: boxes,
+    });
+    console.log(`[ratio] Mobile-Hub story ${ratio}`);
+    expect(ratio).toBeLessThanOrEqual(0.02);
+  });
 });

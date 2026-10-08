@@ -125,8 +125,8 @@ export function ContentLayout({
       <div
         className={cn(
           "mx-auto flex min-h-dvh max-w-360 flex-col",
-          // Clear the fixed tab bar: its 76px + 1px border + home-indicator inset, plus 16px of air.
-          tabBar && "max-md:pb-[calc(93px+env(safe-area-inset-bottom))]",
+          // Clear the fixed tab bar (base.css).
+          tabBar && "tabbar-clearance",
         )}
       >
         <div className="max-md:pt-4">{header}</div>

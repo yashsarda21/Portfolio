@@ -29,10 +29,10 @@ export function HubScreen() {
   const desktop = useMediaQuery(MEDIA.lg);
   const view = useMemo(() => buildHubView(content, ui, ROUTES, record), [record]);
 
-  // Once the record is in: the line for it, and again only when it changes (a win).
+  // Once the record is in: the line for it, and again only when it changes (a win). Only the stage speaks (L11).
   useEffect(() => {
-    if (ready) say(view.comm, { interrupt: true });
-  }, [ready, view.comm, say]);
+    if (ready && desktop) say(view.comm, { interrupt: true });
+  }, [ready, desktop, view.comm, say]);
 
   const shortcuts = useMemo(
     () =>

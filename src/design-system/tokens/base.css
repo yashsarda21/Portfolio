@@ -100,6 +100,22 @@
     rgb(var(--rgb-stand) / 0.8) 60%
   );
 }
+/* A phone fixture under a finger: the tilt hook marks the pressed card `data-pressed`, and the layer around it
+   settles in a touch (.98, not the spec's .97: it is full width, so each side moves further for the same scale).
+   The CSS `scale` property on the outer layer: the tilt takes the card's own `scale` over (GSAP bakes it into the transform). */
+@utility fixture-press {
+  transition: scale var(--dur-snap) var(--ease-snap);
+  &:has([data-pressed]) {
+    scale: 0.98;
+  }
+}
+/* Room under a page's end for the fixed phone tab bar: its 76px + 1px border + the home-indicator inset, plus
+   16px of air. From the tablet up there is no bar. */
+@utility tabbar-clearance {
+  @media (width < 48rem) {
+    padding-bottom: calc(93px + env(safe-area-inset-bottom));
+  }
+}
 /* An anchor target stops this far under the page top: clear of the sticky header, with a little air. */
 @utility scroll-mt-header {
   scroll-margin-top: calc(var(--header-h) + 20px);

@@ -24,6 +24,8 @@ interface DrawerProps {
   /** The close button's accessible name. */
   closeLabel: string;
   side?: "left" | "right";
+  /** The dialog's id, for the control that opens it (`aria-controls`). */
+  id?: string;
   children: ReactNode;
   className?: string;
 }
@@ -39,6 +41,7 @@ export function Drawer({
   label,
   closeLabel,
   side = "left",
+  id,
   children,
   className,
 }: DrawerProps) {
@@ -64,6 +67,7 @@ export function Drawer({
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <dialog
       ref={dialog}
+      id={id}
       data-drawer=""
       aria-label={label}
       onCancel={(event) => {

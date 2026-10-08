@@ -6,15 +6,10 @@ import { expectMatchesArtboard } from "../support/visual";
 
 const entries = Object.entries(ROUTES) as [keyof typeof ROUTES, string][];
 
-/** The Hub's phone and tablet column is Phase 4 Task 6: until it lands, below 1200px /arena shows only its hidden stage. */
-const hubColumnPending = (path: string, project: string) =>
-  path === ROUTES.arena && project === "mobile";
-
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
   for (const [key, path] of entries) {
-    test(`renders without JavaScript: ${path}`, async ({ page }, testInfo) => {
-      test.skip(hubColumnPending(path, testInfo.project.name), "the Hub column arrives in Task 6");
+    test(`renders without JavaScript: ${path}`, async ({ page }) => {
       await page.goto(path);
       // The card page is "PLAYER CARD" in the trail and the title, and "PLAYER PROFILE" on the board's h1.
       // The Intro's h1 is the name, on the stage and in the phone's column alike.
@@ -33,8 +28,7 @@ test.describe("without JavaScript", () => {
 });
 
 for (const [, path] of entries) {
-  test(`a11y: ${path}`, async ({ page }, testInfo) => {
-    test.skip(hubColumnPending(path, testInfo.project.name), "the Hub column arrives in Task 6");
+  test(`a11y: ${path}`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     // The Intro plays for 6.5 s, and axe judges a page at rest.
@@ -42,6 +36,17 @@ for (const [, path] of entries) {
       await expect(page.locator("main#main")).toHaveAttribute("data-hold", "done", {
         timeout: 15_000,
       });
+    // The Hub's fixtures rise in one after another: axe cannot judge a part still fading in.
+    if (path === ROUTES.arena)
+      await page.evaluate(() =>
+        Promise.all(
+          document
+            .querySelector("[data-hub-column]")!
+            .getAnimations({ subtree: true })
+            .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+            .map((a) => a.finished),
+        ),
+      );
     await expectNoA11yViolations(page);
   });
 }
