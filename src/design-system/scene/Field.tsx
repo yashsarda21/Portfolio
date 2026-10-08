@@ -1,5 +1,12 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
+import type { SceneLayerProps } from "./layer";
+
+interface FieldProps extends SceneLayerProps {
+  tilt?: number;
+  /** The oval's size: 1240x760 by default (`h-190 w-310`); the Intro's is 1300x700. */
+  ovalClassName?: string;
+}
 
 /** Turf oval in perspective (Landing/Intro). Position the wrapper with className. */
 export function Field({
@@ -8,14 +15,7 @@ export function Field({
   "data-part": part,
   className,
   style,
-}: {
-  tilt?: number;
-  /** The oval's size: 1240x760 by default (`h-190 w-310`); the Intro's is 1300x700. */
-  ovalClassName?: string;
-  "data-part"?: string;
-  className?: string;
-  style?: CSSProperties;
-}) {
+}: FieldProps) {
   return (
     <div
       aria-hidden="true"

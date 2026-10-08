@@ -27,8 +27,20 @@ describe("scene", () => {
     expect(tier.style.getPropertyValue("--crowd-a")).toBe("0.5");
   });
 
+  it("CrowdTier shape: a stand by default, curved along its top edge, or the phone's flat band", () => {
+    const shapeOf = (shape?: "stand" | "curved" | "flat") => {
+      const { container } = render(<CrowdTier shape={shape} />);
+      return container.firstElementChild as HTMLElement;
+    };
+    expect(shapeOf()).toHaveClass("scene-crowd");
+    expect(shapeOf()).not.toHaveClass("[border-radius:50%_50%_0_0/60%_60%_0_0]");
+    expect(shapeOf("curved")).toHaveClass("scene-crowd", "[border-radius:50%_50%_0_0/60%_60%_0_0]");
+    expect(shapeOf("flat")).toHaveClass("scene-crowd-flat");
+    expect(shapeOf("flat")).not.toHaveClass("scene-crowd");
+  });
+
   it("CrowdTier flat is the phone's band: its own dot grid and fade, not the stand's", () => {
-    const { container } = render(<CrowdTier flat alpha={0.22} />);
+    const { container } = render(<CrowdTier shape="flat" alpha={0.22} />);
     const tier = container.firstElementChild!;
     expect(tier).toHaveClass("scene-crowd-flat");
     expect(tier).not.toHaveClass("scene-crowd");
@@ -102,9 +114,9 @@ describe("ArenaBackdrop layouts", () => {
   });
 
   it("layerClassName reaches the sky, crowd, field, pitch, both cones and every bank (not the masts)", () => {
-    const { container } = render(<ArenaBackdrop layerClassName="intro-part" bleed />);
+    const { container } = render(<ArenaBackdrop layerClassName="hold-part" bleed />);
     const root = container.firstElementChild as HTMLElement;
-    const marked = [...root.querySelectorAll(".intro-part")].map((el) =>
+    const marked = [...root.querySelectorAll(".hold-part")].map((el) =>
       el.getAttribute("data-part"),
     );
     expect(marked.sort()).toEqual(
@@ -121,12 +133,61 @@ describe("ArenaBackdrop layouts", () => {
         "sky",
       ].sort(),
     );
-    expect(root).not.toHaveClass("intro-part");
+    expect(root).not.toHaveClass("hold-part");
+  });
+
+  it("column is the phone's frame: a glow, a flat crowd and two small banks, nothing of the stage", () => {
+    const { container } = render(<ArenaBackdrop layout="column" layerClassName="hold-part" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveAttribute("data-layout", "column");
+    expect(root).toHaveClass("absolute", "inset-0", "overflow-hidden");
+    for (const name of ["field", "pitch", "cone-left", "cone-right", "mast-left", "dust"])
+      expect(part(root, name), name).toHaveLength(0);
+    const banks = [1, 2].map((n) => part(root, `bank-${n}`)[0] as HTMLElement);
+    expect(banks[0]).toHaveClass("h-5.5", "w-15", "top-14", "left-7.5");
+    expect(banks[1]).toHaveClass("h-5.5", "w-15", "top-14", "right-7.5");
+    // The banks hang in a box as wide as the column (640px at most, centred), not the screen.
+    expect(banks[0]!.parentElement).toHaveClass("relative", "mx-auto", "h-full", "max-w-160");
+    const crowd = root.querySelector(".scene-crowd-flat") as HTMLElement;
+    expect(crowd).toHaveStyle("--crowd-a: 0.22");
+    expect(root.querySelector(".scene-venue-glow")).not.toBeNull();
+    // Only the banks enter (a screen holds them back); the washes are just there.
+    expect([...root.querySelectorAll(".hold-part")]).toEqual(banks);
+    expect(root.querySelector(".scene-sky")).not.toHaveAttribute("data-part");
+  });
+
+  it("dust fades in with the left cone, and holds back with the rest of the scene", () => {
+    const boot = {
+      crowd: 0.3,
+      coneL: 1,
+      coneR: 1.5,
+      sky: 2.2,
+      field: 2.4,
+      pitch: 2.6,
+      banks: [0.6, 1.1, 1.6, 2],
+    } as const;
+    const { container, rerender } = render(
+      <ArenaBackdrop dust boot={boot} layerClassName="hold-part" />,
+    );
+    const dust = container.querySelector('[data-part="dust"]') as HTMLElement;
+    expect(dust).toHaveClass("animate-boot-fade", "hold-part");
+    expect(dust.style.getPropertyValue("--d")).toBe("1s");
+    expect(dust.style.getPropertyValue("--d")).toBe(
+      (container.querySelector('[data-part="cone-left"]') as HTMLElement).style.getPropertyValue(
+        "--d",
+      ),
+    );
+    rerender(<ArenaBackdrop dust />);
+    const still = container.querySelector('[data-part="dust"]') as HTMLElement;
+    expect(still).not.toHaveClass("animate-boot-fade");
+    expect(still.style.getPropertyValue("--d")).toBe("");
+    rerender(<ArenaBackdrop />);
+    expect(container.querySelector('[data-part="dust"]')).toBeNull();
   });
 
   it("no layerClassName, no extra classes (the Landing draws as before)", () => {
     const { container } = render(<ArenaBackdrop />);
-    expect(container.querySelector(".intro-part")).toBeNull();
+    expect(container.querySelector(".hold-part")).toBeNull();
   });
 
   it("each cone's classes draw the box cones.ts names (the source of the geometry)", () => {
@@ -196,12 +257,31 @@ describe("ArenaBackdrop layouts", () => {
 
 describe("FloodlightBank", () => {
   it("draws the flare only on request, and not on a bank that is off", () => {
-    const { container, rerender } = render(<FloodlightBank size="lg-flat" />);
+    const { container, rerender } = render(<FloodlightBank size="lg" flat />);
     expect(container.querySelector('[data-part="flare"]')).toBeNull();
-    rerender(<FloodlightBank size="lg-flat" flare />);
+    rerender(<FloodlightBank size="lg" flat flare />);
     expect(container.querySelector('[data-part="flare"]')).not.toBeNull();
-    rerender(<FloodlightBank size="sm-flat" flare on={false} />);
+    rerender(<FloodlightBank size="sm" flat flare on={false} />);
     expect(container.querySelector('[data-part="flare"]')).toBeNull();
+  });
+
+  it("a bank is a bulb preset in a housing: flat only lowers the housing, the bulbs and glow stay", () => {
+    const bank = (props: { size?: "lg" | "sm" | "mini" | "mobile"; flat?: boolean }) => {
+      const { container } = render(<FloodlightBank {...props} />);
+      return container.firstElementChild as HTMLElement;
+    };
+    const tall = bank({ size: "lg" });
+    const flat = bank({ size: "lg", flat: true });
+    expect(tall).toHaveClass("h-12", "w-28");
+    expect(flat).toHaveClass("h-11", "w-28");
+    expect(flat).not.toHaveClass("h-12");
+    for (const cls of ["shadow-bank-lg", "[--bulb-r1:2.6px]", "[--bulb-gx:12px]"]) {
+      expect(tall).toHaveClass(cls);
+      expect(flat).toHaveClass(cls);
+    }
+    expect(bank({ size: "sm", flat: true })).toHaveClass("h-8", "w-21", "shadow-bank-sm");
+    // The small phone banks have one height: flat changes nothing.
+    expect(bank({ size: "mobile", flat: true })).toHaveClass("h-5.5", "w-15");
   });
 });
 

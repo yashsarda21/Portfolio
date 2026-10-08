@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
+import { MEDIA } from "@/lib/breakpoints";
 import { cn } from "@/lib/cn";
 import type { Polygon } from "./cones";
+import type { SceneLayerProps } from "./layer";
 
 const REDUCED = "(prefers-reduced-motion: reduce)";
 /** Dust is for the desktop stage: lg (1200px) and up (L12). */
-const WIDE = "(min-width: 75rem)";
+const WIDE = MEDIA.lg;
 const SPECK_ALPHA = 0.15;
 
 interface Speck {
@@ -47,11 +49,12 @@ function pointIn(regions: readonly Polygon[]): [number, number] {
 export function Dust({
   count = 60,
   regions,
+  "data-part": part = "dust",
   className,
-}: {
+  style,
+}: SceneLayerProps & {
   count?: number;
   regions: readonly Polygon[];
-  className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -133,8 +136,9 @@ export function Dust({
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      data-part="dust"
+      data-part={part}
       className={cn("pointer-events-none absolute inset-0 size-full text-led", className)}
+      style={style}
     />
   );
 }

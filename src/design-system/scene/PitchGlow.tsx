@@ -1,15 +1,7 @@
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
+import type { SceneLayerProps } from "./layer";
 
-export function PitchGlow({
-  "data-part": part,
-  className,
-  style,
-}: {
-  "data-part"?: string;
-  className?: string;
-  style?: CSSProperties;
-}) {
+export function PitchGlow({ "data-part": part, className, style }: SceneLayerProps) {
   return (
     <div
       aria-hidden="true"

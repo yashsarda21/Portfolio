@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MEDIA } from "@/lib/breakpoints";
 import { Dust } from "./Dust";
 
 const REGION = [
@@ -35,7 +36,7 @@ function mockMedia(answers: Record<string, boolean>) {
 }
 
 const REDUCE = "(prefers-reduced-motion: reduce)";
-const LG = "(min-width: 75rem)";
+const LG = MEDIA.lg;
 
 describe("Dust", () => {
   let raf: ReturnType<typeof vi.fn>;

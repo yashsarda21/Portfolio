@@ -111,8 +111,8 @@ export const DustAlone: StoryObj = {
 export const FlatBanksWithFlare: StoryObj = {
   render: () => (
     <div className="relative h-60 w-160 overflow-hidden bg-night [&_[data-part=flare]]:opacity-100">
-      <FloodlightBank size="lg-flat" flare className="top-12 left-20" />
-      <FloodlightBank size="sm-flat" flare className="top-12 left-80" />
+      <FloodlightBank size="lg" flat flare className="top-12 left-20" />
+      <FloodlightBank size="sm" flat flare className="top-12 left-80" />
     </div>
   ),
 };

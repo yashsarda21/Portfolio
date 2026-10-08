@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
+import type { SceneLayerProps } from "./layer";
 
 const SIDE = {
   left: "scene-cone-left",
@@ -7,19 +8,18 @@ const SIDE = {
   down: "scene-cone-down",
 } as const;
 
+interface LightConeProps extends SceneLayerProps {
+  side: keyof typeof SIDE;
+  alpha?: number;
+}
+
 export function LightCone({
   side,
   alpha = 0.16,
   "data-part": part,
   className,
   style,
-}: {
-  side: keyof typeof SIDE;
-  alpha?: number;
-  "data-part"?: string;
-  className?: string;
-  style?: CSSProperties;
-}) {
+}: LightConeProps) {
   return (
     <div
       aria-hidden="true"

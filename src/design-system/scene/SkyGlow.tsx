@@ -1,18 +1,10 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
+import type { GlowLayerProps } from "./layer";
 
-interface GlowProps {
-  x?: string;
-  y?: string;
-  w?: string;
-  h?: string;
-  alpha?: number;
+interface SkyGlowProps extends GlowLayerProps {
   /** "sky" (default): the cool sky blue. "venue": the venue's own light (the hall's warm white), read from `data-venue`. */
   tone?: "sky" | "venue";
-  "data-part"?: string;
-  className?: string;
-  /** Extra custom properties (e.g. the boot's --d), merged over the glow's own. */
-  style?: CSSProperties;
 }
 
 export function SkyGlow({
@@ -25,7 +17,7 @@ export function SkyGlow({
   "data-part": part,
   className,
   style: extra,
-}: GlowProps) {
+}: SkyGlowProps) {
   const style = {
     "--sky-x": x,
     "--sky-y": y,
