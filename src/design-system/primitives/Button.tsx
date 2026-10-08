@@ -21,6 +21,8 @@ export const buttonVariants = cva(
       },
       size: {
         // One line, never squeezed. On the phone it is the full-width bar (type-btn-bar, 54px), the look of `bar`.
+        // The Hub venue card's button: 46px, 18px label.
+        card: "h-11.5 px-6.5 type-btn-sm whitespace-nowrap",
         s: "h-13 shrink-0 px-6.5 type-btn whitespace-nowrap max-md:h-13.5 max-md:w-full max-md:px-4 max-md:type-btn-bar",
         m: "h-15.5 px-10 type-btn",
         l: "h-18.5 px-10 type-btn-xl",
@@ -73,7 +75,7 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "panel";
 
 export type ButtonOwnProps = {
   variant?: Variant;
-  size?: "s" | "m" | "l" | "ml" | "xl" | "2xl" | "cta" | "bar" | "bar-lg";
+  size?: "card" | "s" | "m" | "l" | "ml" | "xl" | "2xl" | "cta" | "bar" | "bar-lg";
   /** true = always skewed, false = never, "desktop" = skewed from 768px up (default). */
   skew?: boolean | "desktop";
   /** Second line under the label (XL CTAs). */

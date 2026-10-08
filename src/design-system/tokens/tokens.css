@@ -158,6 +158,7 @@
   --dur-hover: 300ms;
   --dur-pop: 450ms;
   --dur-wipe: 480ms;
+  --dur-glide: 500ms; /* a card lifts, a drawer slides in */
   --dur-follow: 900ms;
   --dur-count: 900ms;
   --dur-comm-hold: 4000ms;

@@ -8,7 +8,7 @@ interface IconDef {
 
 const SPEAKER = <path d="M4 9v6h4l5 4V5L8 9H4z" />;
 
-/** Stroke icons copied from the artboards (24×24, round caps). `check` and `external` are derived. */
+/** Stroke icons copied from the artboards (24×24, round caps). `check`, `close` and `external` are derived. */
 export const ICONS = {
   speaker: {
     sw: 1.6,
@@ -116,6 +116,7 @@ export const ICONS = {
     ),
   },
   check: { sw: 1.8, body: <path d="M5 12l5 5L20 7" /> },
+  close: { sw: 1.8, body: <path d="M6 6l12 12M18 6L6 18" /> },
   external: { sw: 1.8, body: <path d="M7 17L17 7M9 7h8v8" /> },
 } satisfies Record<string, IconDef>;
 

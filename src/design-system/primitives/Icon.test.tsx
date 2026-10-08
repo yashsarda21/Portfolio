@@ -31,6 +31,7 @@ describe("Icon", () => {
         "arena",
         "arrow-right",
         "check",
+        "close",
         "code",
         "copy",
         "download",

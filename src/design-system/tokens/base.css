@@ -29,6 +29,10 @@
       scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
     }
   }
+  /* An open drawer holds the page still behind it. */
+  :root:has(dialog[data-drawer][open]) {
+    overflow: hidden;
+  }
   /* RouteAnnouncer focuses the new <h1> by script; it isn't interactive, so no ring. */
   h1[tabindex="-1"]:focus {
     outline: none;
@@ -72,6 +76,28 @@
 }
 @utility bar {
   background-color: var(--surface-bar);
+}
+/* A Hub venue card's slot. The page places the card on its arc through --arc-y and --arc-ry (the slot does not
+   know where it sits); hover or keyboard focus straightens the card and lifts it 8px (H9). Motion is CSS only. */
+@utility venue-slot {
+  transform: translateY(var(--arc-y, 0)) rotateY(var(--arc-ry, 0deg));
+  transition: transform var(--dur-glide) var(--ease-follow);
+  &:hover,
+  &:has(:focus-visible) {
+    transform: translateY(-8px) rotateY(0deg);
+  }
+}
+/* A phone fixture's wash: its venue's colour fading to the stand across the card. The hall's is a little stronger. */
+@utility fixture-wash {
+  --fixture-a: 45%;
+  &[data-venue="hall"] {
+    --fixture-a: 50%;
+  }
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--venue-mid) var(--fixture-a), transparent),
+    rgb(var(--rgb-stand) / 0.8) 60%
+  );
 }
 /* An anchor target stops this far under the page top: clear of the sticky header, with a little air. */
 @utility scroll-mt-header {
@@ -267,6 +293,15 @@
 @utility type-btn {
   @apply face-btn;
   font-size: 20px;
+}
+/* The Hub's venue card button (PLAY, REMATCH): 18px. The phone fixture's action cell is 16px. */
+@utility type-btn-sm {
+  @apply face-btn;
+  font-size: 18px;
+}
+@utility type-btn-xs {
+  @apply face-btn;
+  font-size: 16px;
 }
 @utility type-d5 {
   font-family: var(--font-display);
@@ -712,6 +747,30 @@
   );
 }
 /* The Trophy Room and Attributes pages (artboards Trophy-Room, Badminton-Attributes). */
+/* A venue's name on the phone fixture (Mobile-Hub): 28px at the same weight on every width (type-title steps down). */
+@utility type-title-fixture {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 28px;
+  line-height: normal;
+  text-transform: uppercase;
+}
+/* The matchday card's count on the Hub rail ("1 OF 3 VENUES"): 30px at line 1 (type-d3s is .95: 1.5px shorter). */
+@utility type-title-matchday {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 30px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+/* A facility tile's name on the phone (Mobile-Hub): 18px, untracked (type-d5 is tracked .08em). */
+@utility type-title-tile {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: normal;
+  text-transform: uppercase;
+}
 /* A panel title: 36px at .95 (type-d3 is 34px, type-title-detail 40px). */
 @utility type-title-panel {
   font-family: var(--font-display);
