@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test as base, type Page } from "@playwright/test";
+import { expect, test as base, type Locator, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
+import { INTRO_BEATS } from "../../src/features/intro/beats";
 import { expectNoA11yViolations } from "../support/a11y";
 import { expectMatchesArtboard, type Rect } from "../support/visual";
 import { expectNoHorizontalOverflow, waitForHydration } from "./support/contentPage";
@@ -35,6 +36,70 @@ const name = (page: Page) => page.getByRole("heading", { level: 1, name: ui.rout
 const enter = (page: Page) => page.getByRole("link", { name: ui.intro.enter });
 const skip = (page: Page) => page.getByRole("link", { name: ui.hud.skipIntro });
 const replay = (page: Page) => page.getByRole("button", { name: ui.hud.replay });
+
+const D = INTRO_BEATS.desktop;
+const M = INTRO_BEATS.mobile;
+
+/*
+ * The show runs on a virtual clock, never on sleeps. `pauseClock` is called before the page loads: from then
+ * on, time in the page (timers, requestAnimationFrame, Date, performance.now) moves only when the test says so.
+ * GSAP's ticker runs on requestAnimationFrame and the clock's `Date`, so it follows it: `showClock` steps the
+ * timeline to a moment in seconds from the first frame of the show (give or take one 16 ms frame, so test at
+ * least 50 ms either side of a beat). What the clock does not move: network and image decoding (real time:
+ * wait for them with `rigIs`), and CSS animations (the 8 s fallback of `intro-part` is real time).
+ */
+const START = new Date("2026-01-01T00:00:00Z").getTime();
+async function pauseClock(page: Page) {
+  await page.clock.install({ time: START });
+  await page.clock.pauseAt(START + 1000);
+}
+function showClock(page: Page) {
+  let at = 0;
+  return {
+    /** Run the page's clock up to `seconds` into the show. */
+    async to(seconds: number) {
+      if (seconds < at) throw new Error(`the show is already at ${at} s, not before ${seconds} s`);
+      await page.clock.runFor(Math.round((seconds - at) * 1000));
+      at = seconds;
+    },
+    /** Run the clock past the end of the longest show (the stage's is 6.5 s). */
+    async finish() {
+      await this.to(at + 9);
+    },
+  };
+}
+/** Load the page on a paused clock and start the show's clock when it is playing. */
+async function startShow(page: Page, url = "/intro") {
+  await pauseClock(page);
+  await page.goto(url);
+  await playing(page);
+  return showClock(page);
+}
+/** Click a link and run the page's clock until the route has changed (the wipe between routes is on it too). */
+async function follow(page: Page, link: Locator, path: string) {
+  await link.click();
+  await expect
+    .poll(async () => {
+      await page.clock.runFor(100);
+      return new URL(page.url()).pathname;
+    })
+    .toBe(path);
+}
+/** The clock ticks again from here on: for tools that wait on timers of their own (axe). */
+const resumeClock = (page: Page) => page.clock.resume();
+/** How loading the head-turn frames went (real time: the clock does not move the network). */
+const rigIs = (page: Page, result: "ready" | "timeout" | "error") =>
+  expect(root(page)).toHaveAttribute("data-rig", result, { timeout: 15_000 });
+/** Hold the head-turn frames until `release()`. */
+async function holdStrips(page: Page) {
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/turn_*.webp", async (route) => {
+    await gate;
+    await route.continue().catch(() => {});
+  });
+  return release;
+}
 /** The page draws the stage and the phone column with the same part names: say which one (the stage by default). */
 type Layout = "stage" | "column";
 const part = (page: Page, p: string, layout: Layout = "stage") =>
@@ -132,8 +197,8 @@ test.describe("desktop", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 1200, "the 1440x900 stage");
 
   test("the end state matches the Intro artboard", async ({ page }) => {
-    await page.goto("/intro");
-    await waitForHydration(page);
+    const show = await startShow(page);
+    await show.finish();
     await done(page);
     // animations: "disabled" in the compare ends every finite animation and drops the loops (breathing, glow, sweep).
     const ratio = await expectMatchesArtboard(page, "Intro", {
@@ -146,12 +211,15 @@ test.describe("desktop", () => {
   test("nothing shows lit before the show starts: the scenery, the board's parts and the CTA are held back", async ({
     page,
   }) => {
-    // Hold the GSAP chunk back so the page stays in its pending state long enough to look at it.
+    // Hold the GSAP chunk back so the page stays in its pending state as long as the test wants.
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
     for (const chunk of gsapChunks())
       await page.route(`**/assets/${chunk}`, async (route) => {
-        await new Promise((r) => setTimeout(r, 3000));
+        await gate;
         await route.continue();
       });
+    await pauseClock(page);
     await page.goto("/intro");
     await expect(root(page)).toHaveAttribute("data-intro", "pending");
     for (const p of [
@@ -174,23 +242,30 @@ test.describe("desktop", () => {
       "cta",
     ])
       expect((await style(page, p)).visibility, p).toBe("hidden");
-    // the page's own controls are there from the first frame
+    // the page's own controls are there from the first frame; REPLAY has nothing to replay yet
     await expect(skip(page)).toBeVisible();
     await expect(replay(page)).toBeVisible();
+    await expect(replay(page)).toHaveAttribute("aria-disabled", "true");
     await expect(name(page)).toBeAttached();
+    release();
+    await playing(page);
+    await expect(replay(page)).not.toHaveAttribute("aria-disabled", "true");
+    await showClock(page).finish();
     await done(page);
   });
 
   test("the CTA is hidden, and out of the Tab order, until its beat; focusable once done", async ({
     page,
   }) => {
-    await page.goto("/intro");
-    await playing(page);
-    await page.waitForTimeout(3000);
+    const show = await startShow(page);
+    await show.to(D.cta - 0.1);
     expect((await style(page, "cta")).visibility).toBe("hidden");
     const stops = await tabStops(page, 4);
     expect(stops.join(" | ")).toContain(ui.hud.skipIntro);
     expect(stops.join(" | ")).not.toContain(ui.intro.enter);
+    await show.to(D.cta + 0.1);
+    expect((await style(page, "cta")).visibility).toBe("visible");
+    await show.finish();
     await done(page);
     await enter(page).focus();
     await expect(enter(page)).toBeFocused();
@@ -198,19 +273,18 @@ test.describe("desktop", () => {
   });
 
   test("SKIP INTRO works half a second in: the hub, no errors", async ({ page }) => {
-    await page.goto("/intro");
-    await playing(page);
-    await page.waitForTimeout(500);
-    await skip(page).click();
-    await expect(page).toHaveURL("/arena");
-    await page.waitForTimeout(500);
+    const show = await startShow(page);
+    await show.to(0.5);
+    await follow(page, skip(page), "/arena");
+    await page.clock.runFor(500);
   });
 
   test("REPLAY five times quickly: one more show, one end, the letters all there", async ({
     page,
   }) => {
-    await page.goto("/intro");
+    const show = await startShow(page);
     await waitForHydration(page);
+    await show.finish();
     await done(page);
     // Count how often the root becomes done from now on.
     await page.evaluate(() => {
@@ -225,8 +299,9 @@ test.describe("desktop", () => {
     });
     for (let i = 0; i < 5; i++) await replay(page).click({ delay: 0 });
     await playing(page);
+    await showClock(page).finish();
     await done(page);
-    await page.waitForTimeout(800);
+    await page.clock.runFor(800);
     expect(await page.evaluate(() => (window as unknown as { __ends: number }).__ends)).toBe(1);
     const letters = await part(page, "letter").evaluateAll((els) =>
       els.map((el) => ({
@@ -240,49 +315,124 @@ test.describe("desktop", () => {
     await expect(enter(page)).toBeVisible();
   });
 
-  test.describe("a slow rig", () => {
-    test("frames that take 5 s: the show still ends, on the rest pose, with no head turn", async ({
+  test("at the end nothing is filtered and the idle loops move only transform and opacity (L14)", async ({
+    page,
+  }) => {
+    const show = await startShow(page);
+    await show.finish();
+    await done(page);
+    const report = await page.evaluate(() => {
+      const q = (p: string) =>
+        document.querySelector<HTMLElement>(`[data-intro-layout="stage"] [data-part="${p}"]`)!;
+      const fig = q("fig");
+      // The figure and everything above it, up to the document.
+      const chain: HTMLElement[] = [];
+      for (let el: HTMLElement | null = fig; el; el = el.parentElement) chain.push(el);
+      const filters = chain.map((el) => getComputedStyle(el).filter).filter((f) => f !== "none");
+      const props = new Set<string>();
+      const names = new Set<string>();
+      for (const a of fig.getAnimations({ subtree: true })) {
+        names.add((a as CSSAnimation).animationName);
+        for (const kf of (a.effect as KeyframeEffect).getKeyframes())
+          for (const key of Object.keys(kf))
+            if (!["offset", "easing", "composite", "computedOffset"].includes(key)) props.add(key);
+      }
+      return {
+        filters,
+        shade: getComputedStyle(q("shade")).visibility,
+        props: [...props].sort(),
+        names: [...names].sort(),
+      };
+    });
+    expect(report.filters, "figure and ancestors with a filter").toEqual([]);
+    expect(report.shade).toBe("hidden");
+    // The loops are really running (so the check above is not vacuous), and they animate transform and opacity only.
+    expect(report.names).toEqual(
+      expect.arrayContaining(["breathe", "face-sweep", "face-sweep-band"]),
+    );
+    expect(report.props).toEqual(["opacity", "transform"]);
+  });
+
+  test.describe("the head-turn frames", () => {
+    test("late (held past the end of the show): the silhouette stands from the entrance, the show runs on, and it ends on the rest pose", async ({
       page,
       tolerate,
     }) => {
       tolerate(/ERR_ABORTED|Failed to load/);
-      await page.route("**/turn_*.webp", (route) => setTimeout(() => void route.continue(), 5000));
-      await page.goto("/intro");
-      await playing(page);
-      const start = Date.now();
-      // 6.5 s of show, plus the 1.5 s it waits for the frames at the performance beat, plus slack.
-      await done(page, 10_000);
-      expect(Date.now() - start).toBeLessThan(8500);
-      await expect(part(page, "rest")).toBeVisible();
+      const release = await holdStrips(page);
+      const show = await startShow(page);
+
+      // The silhouette is on show with the mover while the frames load: the rest pose, with its image in.
+      await show.to(D.entrance + 0.5);
+      const rest = part(page, "rest");
+      await expect(rest).toBeVisible();
+      expect(await rest.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+      expect(await rest.evaluate((img) => !!img.closest('[data-part="mover"]'))).toBe(true);
+      expect((await style(page, "mover")).visibility).toBe("visible");
+      expect((await style(page, "shade")).visibility).toBe("visible");
+
+      // The show does not stop at the performance beat: the scan bar, the trails and the ghosts finish.
+      await show.to(D.performance + 0.6);
+      for (const p of ["scan", "trails", "ghost"])
+        expect((await style(page, p)).visibility, p).toBe("hidden");
+      await expect(rest).toBeVisible();
+
+      await show.finish();
+      await done(page);
+      await rigIs(page, "timeout");
+      await expect(rest).toBeVisible();
       for (const strip of await part(page, "turn").all()) await expect(strip).toBeHidden();
       await expect(enter(page)).toBeVisible();
+      release();
     });
 
-    test("frames that fail: rest pose, strips hidden, the show ends on time", async ({
-      page,
-      tolerate,
-    }) => {
+    test("failing: the rest pose, the strips hidden, the show ends", async ({ page, tolerate }) => {
       tolerate(/ERR_FAILED|Failed to load/);
       await page.route("**/turn_*.webp", (route) => route.abort());
-      await page.goto("/intro");
-      await playing(page);
-      const start = Date.now();
-      await done(page, 10_000);
-      expect(Date.now() - start).toBeLessThan(8500);
+      const show = await startShow(page);
+      await rigIs(page, "error");
+      await show.finish();
+      await done(page);
       await expect(part(page, "rest")).toBeVisible();
       for (const strip of await part(page, "turn").all()) await expect(strip).toBeHidden();
     });
 
-    test("with the frames on time, the head turn plays and the rest pose waits", async ({
-      page,
-    }) => {
+    test("on time: the head turn plays and the rest pose steps aside", async ({ page }) => {
       const strips = trackStrips(page);
-      await page.goto("/intro");
+      const show = await startShow(page);
+      await rigIs(page, "ready");
+      // still the silhouette until the beat
+      await show.to(D.performance - 0.1);
+      await expect(part(page, "rest")).toBeVisible();
+      await show.to(D.performance + 0.3);
+      await expect(part(page, "rest")).toBeHidden();
+      await expect(part(page, "turn").nth(0)).toBeVisible();
+      await show.finish();
       await done(page);
       expect(strips.size).toBe(3);
       await expect(part(page, "rest")).toBeHidden();
       // the last strip is left on its final frame
       await expect(part(page, "turn").nth(2)).toBeVisible();
+    });
+
+    test("late but inside the wait: the head turn starts when they arrive, from its first frame", async ({
+      page,
+    }) => {
+      const release = await holdStrips(page);
+      const show = await startShow(page);
+      await show.to(D.performance + 0.3);
+      await expect(part(page, "rest")).toBeVisible();
+      // still waiting: the rest pose stands, the show has gone on
+      expect((await style(page, "scan")).visibility).toBe("hidden");
+      release();
+      await rigIs(page, "ready");
+      await show.to(D.performance + 0.3 + 0.3);
+      await expect(part(page, "rest")).toBeHidden();
+      await expect(part(page, "turn").nth(0)).toBeVisible();
+      await show.finish();
+      await done(page);
+      await expect(part(page, "turn").nth(2)).toBeVisible();
+      await expect(part(page, "rest")).toBeHidden();
     });
   });
 
@@ -290,8 +440,9 @@ test.describe("desktop", () => {
     test.use({ reducedMotion: "reduce" });
     test("the end state at once, no frames requested, REPLAY gone", async ({ page }) => {
       const strips = trackStrips(page);
+      await pauseClock(page);
       await page.goto("/intro", { waitUntil: "commit" });
-      await page.waitForTimeout(300);
+      await part(page, "cta").waitFor({ state: "attached" });
       // Everything is already in place (CSS), before any script has run.
       for (const p of ["welcome", "cta", "board-strip"])
         expect((await style(page, p)).visibility, p).toBe("visible");
@@ -301,7 +452,7 @@ test.describe("desktop", () => {
       await expect(replay(page)).toBeHidden();
       await expect(skip(page)).toBeVisible();
       await expect(part(page, "rest")).toBeVisible();
-      await page.waitForTimeout(2500);
+      await page.clock.runFor(2500);
       expect([...strips]).toEqual([]);
     });
   });
@@ -324,7 +475,7 @@ test.describe("desktop", () => {
         expect((await style(page, p)).visibility, p).toBe("visible");
       await expectLettersShown(page);
       await expect(part(page, "rest")).toBeVisible();
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState("load");
       expect([...strips]).toEqual([]);
     });
   });
@@ -337,20 +488,61 @@ test.describe("desktop", () => {
     for (const chunk of gsapChunks())
       await page.route(`**/assets/${chunk}`, (route) => route.fulfill({ status: 404 }));
     await page.goto("/intro");
-    await page.waitForTimeout(2000);
     expect((await style(page, "cta")).visibility).toBe("hidden");
     await expect(root(page)).toHaveAttribute("data-intro", "pending");
-    await expect(enter(page)).toBeVisible({ timeout: 6500 });
+    // The fallback is a CSS animation (8 s on the page's own animation clock, which the virtual clock does not move).
+    await expect(enter(page)).toBeVisible({ timeout: 10_000 });
     for (const p of ["crowd", "board-header", "mover", "title", "welcome"])
       expect((await style(page, p)).visibility, p).toBe("visible");
     await expectLettersShown(page);
     await expect(part(page, "rest")).toBeVisible();
   });
 
+  test("GSAP arriving after the 8 s fallback shows the end state: nothing is hidden again, nothing replays, REPLAY stays disabled", async ({
+    page,
+  }) => {
+    test.slow();
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    for (const chunk of gsapChunks())
+      await page.route(`**/assets/${chunk}`, async (route) => {
+        await gate;
+        await route.continue();
+      });
+    await page.goto("/intro");
+    await expect(root(page)).toHaveAttribute("data-intro", "pending");
+    // The fallback (real time) has let go of the hold.
+    await expect(enter(page)).toBeVisible({ timeout: 12_000 });
+    // From here on, a part that is hidden at any frame is a flash of the show restarting.
+    await page.evaluate(() => {
+      const w = window as unknown as { __hidden: string[] };
+      w.__hidden = [];
+      const watch = () => {
+        for (const el of document.querySelectorAll<HTMLElement>(
+          '[data-intro-layout="stage"] [data-part="cta"], [data-intro-layout="stage"] [data-part="mover"], [data-intro-layout="stage"] [data-part="letter"]',
+        ))
+          if (getComputedStyle(el).visibility === "hidden") w.__hidden.push(el.dataset.part!);
+        requestAnimationFrame(watch);
+      };
+      watch();
+    });
+    release();
+    await done(page, 10_000);
+    await expect(root(page)).not.toHaveAttribute("data-rig");
+    await expect(replay(page)).toHaveAttribute("aria-disabled", "true");
+    await expect(enter(page)).toBeVisible();
+    await expect(part(page, "rest")).toBeVisible();
+    await expectLettersShown(page);
+    expect(
+      await page.evaluate(() => (window as unknown as { __hidden: string[] }).__hidden),
+    ).toEqual([]);
+  });
+
   test("the commentary line is exactly its recipe's 16px at 1440x900, and at least 14px rendered at 1280x720", async ({
     page,
   }) => {
-    await page.goto("/intro");
+    const show = await startShow(page);
+    await show.finish();
     await done(page);
     expect((await commText(page)).design).toBe(16);
     await page.setViewportSize({ width: 1280, height: 720 });
@@ -379,8 +571,10 @@ test.describe("desktop", () => {
   });
 
   test("has no accessibility violations once the show is done", async ({ page }) => {
-    await page.goto("/intro");
+    const show = await startShow(page);
+    await show.finish();
     await done(page);
+    await resumeClock(page);
     await expectNoA11yViolations(page);
   });
 
@@ -412,8 +606,9 @@ test.describe("tablet (L1): the same stage intro on the scaled stage", () => {
     }) => {
       await page.setViewportSize({ width, height });
       const strips = trackStrips(page);
-      await page.goto("/intro");
-      await playing(page);
+      const show = await startShow(page);
+      await rigIs(page, "ready");
+      await show.finish();
       await done(page);
       expect(strips.size, "the head-turn frames are requested").toBe(3);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -467,30 +662,6 @@ test.describe("tablet (L1): the same stage intro on the scaled stage", () => {
   }
 });
 
-/** The page's own clock for the show: when the root became playing, and when it first became done after that. */
-async function watchShow(page: Page) {
-  await page.addInitScript(() => {
-    const w = window as unknown as { __show: { playing?: number; done?: number } };
-    w.__show = {};
-    document.addEventListener("DOMContentLoaded", () => {
-      const main = document.querySelector("main#main")!;
-      new MutationObserver(() => {
-        const state = main.getAttribute("data-intro");
-        if (state === "playing" && w.__show.playing === undefined)
-          w.__show.playing = performance.now();
-        else if (state === "done" && w.__show.playing !== undefined && w.__show.done === undefined)
-          w.__show.done = performance.now();
-      }).observe(main, { attributes: true, attributeFilter: ["data-intro"] });
-    });
-  });
-}
-const showSeconds = (page: Page) =>
-  page.evaluate(() => {
-    const { playing, done } = (window as unknown as { __show: { playing: number; done: number } })
-      .__show;
-    return (done - playing) / 1000;
-  });
-
 /** Every request for the rest portrait (the phone and the stage draw the same file). */
 function trackPortrait(page: Page) {
   const urls: string[] = [];
@@ -512,12 +683,11 @@ test.describe("phone (L6): the column's two-second cut", () => {
       await page.setViewportSize({ width, height });
       const strips = trackStrips(page);
       const portrait = trackPortrait(page);
-      await watchShow(page);
-      await page.goto("/intro");
-      await playing(page);
-      await done(page);
-      expect(await showSeconds(page), "seconds from playing to done").toBeLessThanOrEqual(2.6);
-      await page.waitForTimeout(400);
+      const show = await startShow(page);
+      // The cut is done within 2.6 s of its first frame (nothing is left to wait for).
+      await show.to(2.6);
+      await done(page, 1000);
+      await show.to(3);
 
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(name(page)).toBeVisible();
@@ -566,12 +736,15 @@ test.describe("phone (L6): the column's two-second cut", () => {
   test("the CTA is hidden, and out of the Tab order, until its beat; the name's letters lock in", async ({
     page,
   }) => {
-    await page.goto("/intro");
-    await playing(page);
+    const show = await startShow(page);
+    await show.to(M.cta - 0.1);
     expect((await style(page, "cta", "column")).visibility).toBe("hidden");
     const stops = await tabStops(page, 3);
     expect(stops.join(" | ")).toContain(ui.hud.skipIntro);
     expect(stops.join(" | ")).not.toContain(ui.intro.enter);
+    await show.to(M.cta + 0.1);
+    expect((await style(page, "cta", "column")).visibility).toBe("visible");
+    await show.finish();
     await done(page);
     await expectLettersShown(page, "column");
     await enter(page).focus();
@@ -581,25 +754,27 @@ test.describe("phone (L6): the column's two-second cut", () => {
   test("silent: no commentary line (not even in the hidden stage) and no dust", async ({
     page,
   }) => {
-    await page.goto("/intro");
+    const show = await startShow(page);
+    await show.finish();
     await done(page);
     // The line mounts only when said, and phones say nothing (L11): not even in the hidden stage.
-    await page.waitForTimeout(500);
+    await page.clock.runFor(500);
     await expect(page.locator("[data-commentary-bar]")).toHaveCount(0);
     await expect(page.locator("canvas:visible")).toHaveCount(0);
   });
 
   test("SKIP INTRO works half a second in; REPLAY plays the same cut again", async ({ page }) => {
-    await page.goto("/intro");
-    await playing(page);
-    await page.waitForTimeout(500);
-    await skip(page).click();
-    await expect(page).toHaveURL("/arena");
+    const first = await startShow(page);
+    await first.to(0.5);
+    await follow(page, skip(page), "/arena");
 
     await page.goto("/intro");
+    await playing(page);
+    await showClock(page).finish();
     await done(page);
     await replay(page).click();
     await playing(page);
+    await showClock(page).finish();
     await done(page);
     await expectLettersShown(page, "column");
     await expect(enter(page)).toBeVisible();
@@ -609,10 +784,11 @@ test.describe("phone (L6): the column's two-second cut", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto("/intro");
-    await playing(page);
-    await page.waitForTimeout(700);
+    const stage = await startShow(page);
+    await stage.to(0.7);
     await page.setViewportSize({ width: 390, height: 844 });
+    await playing(page);
+    await showClock(page).finish();
     await done(page);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(name(page)).toBeVisible();
@@ -621,8 +797,11 @@ test.describe("phone (L6): the column's two-second cut", () => {
 
     await replay(page).click();
     await playing(page);
-    await page.waitForTimeout(500);
+    const again = showClock(page);
+    await again.to(0.5);
     await page.setViewportSize({ width: 1024, height: 768 });
+    await playing(page);
+    await showClock(page).finish();
     await done(page);
     await expect(name(page)).toBeVisible();
     await expect(enter(page)).toBeVisible();
@@ -630,8 +809,10 @@ test.describe("phone (L6): the column's two-second cut", () => {
   });
 
   test("has no accessibility violations once the show is done", async ({ page }) => {
-    await page.goto("/intro");
+    const show = await startShow(page);
+    await show.finish();
     await done(page);
+    await resumeClock(page);
     await expectNoA11yViolations(page);
   });
 

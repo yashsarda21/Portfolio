@@ -52,7 +52,8 @@ function fallbackFired(root: HTMLElement): boolean {
  * Plays the Player Introduction on the page under `rootRef`, and reports where it is.
  *
  * Loads GSAP on demand, then `gsap.matchMedia()` picks the tier (above) and builds the timeline from the refs
- * on the page (`collectIntroRefs`, by `data-part`). The root's `data-intro` goes pending, playing, done. Under
+ * on the page (`collectIntroRefs`, by `data-part`). The root's `data-intro` goes pending, playing, done, and its
+ * `data-rig` says how loading the head-turn frames went (empty while loading, then ready, timeout or error). Under
  * reduced motion it shows the end state and never touches the rig. If GSAP cannot load, the state stays pending
  * and the CSS fallback shows the parts after 8 s. Leaving the page reverts everything (`mm.revert()`).
  *
@@ -133,6 +134,10 @@ export function useIntroTimeline(
           root.setAttribute("data-rig", "");
           const rig = loadRig(RIG_URLS, {
             timeoutMs: INTRO_BEATS.desktop.performance * 1000 + RIG_WAIT_MS,
+          });
+          // Say how loading went: "" while it loads, then ready, timeout or error (CSS only needs the attribute).
+          void rig.then((result) => {
+            if (root.hasAttribute("data-rig")) root.setAttribute("data-rig", result);
           });
           const tl = createIntroTimeline(gsap, refs, {
             tier: "desktop",

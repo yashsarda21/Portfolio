@@ -125,7 +125,7 @@ describe("useIntroTimeline", () => {
     // up to the performance beat, plus the 1.5 s the timeline will wait there
     expect(opts).toEqual({ timeoutMs: INTRO_BEATS.desktop.performance * 1000 + RIG_WAIT_MS });
     expect(root).toHaveAttribute("data-intro", "playing");
-    expect(root).toHaveAttribute("data-rig");
+    expect(root).toHaveAttribute("data-rig", "ready");
     expect(timelines()).toHaveLength(1);
   });
 

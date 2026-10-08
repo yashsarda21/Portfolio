@@ -33,7 +33,8 @@ function EndState() {
       live = false;
     };
   }, []);
-  return <IntroPage view={artboardIntroView} rootRef={rootRef} />;
+  // The artboard draws REPLAY as a live button; a story has no show to replay, so it gets a handler that does nothing.
+  return <IntroPage view={artboardIntroView} rootRef={rootRef} onReplay={() => {}} />;
 }
 
 /** The artboard's own copy, at the end of the show. */
@@ -91,8 +92,14 @@ const withScript: Decorator = (Story) => (
 
 function Live() {
   const rootRef = useRef<HTMLElement>(null);
-  const { replay } = useIntroTimeline(rootRef, { onComm: () => {} });
-  return <IntroPage view={artboardIntroView} rootRef={rootRef} onReplay={replay} />;
+  const { replay, canReplay } = useIntroTimeline(rootRef, { onComm: () => {} });
+  return (
+    <IntroPage
+      view={artboardIntroView}
+      rootRef={rootRef}
+      onReplay={canReplay ? replay : undefined}
+    />
+  );
 }
 
 /** The real hook, for eyeballing: plays on load, REPLAY plays it again. Not axe-checked (see tests/stories/a11y.spec.ts); the route's e2e checks the end. */
