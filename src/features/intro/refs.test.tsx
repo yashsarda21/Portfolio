@@ -123,14 +123,55 @@ describe("IntroPage: what the timeline can reach", () => {
 
   it("the strips fetch nothing until the show plays (the image waits in --sprite)", () => {
     const { refs } = page();
-    for (const strip of [
-      ...refs.strips!,
-      ...refs.ghosts!.map((g) => g.firstElementChild as HTMLElement),
-    ]) {
+    for (const strip of refs.strips!) {
       expect(strip.style.backgroundImage).toBe("");
       expect(strip.style.getPropertyValue("--sprite")).toMatch(/turn_[012]/);
       expect(strip).toHaveClass("intro-turn");
     }
+  });
+
+  it("the ghosts draw the rest pose, so the swing-in never waits on a head-turn strip", () => {
+    const { refs } = page();
+    expect(refs.ghosts).toHaveLength(2);
+    for (const ghost of refs.ghosts!) {
+      const image = ghost.querySelector("img")!;
+      expect(image.getAttribute("src")).toBe(refs.rest!.getAttribute("src"));
+      expect(ghost.querySelector("[style*='--sprite']")).toBeNull();
+    }
+  });
+
+  it("the rest pose is under the strips (strip A paints over it), and the shade is over them", () => {
+    const { refs } = page();
+    const before = (a: HTMLElement, b: HTMLElement) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    for (const strip of refs.strips!) {
+      expect(before(refs.rest!, strip)).toBe(true);
+      expect(before(strip, refs.shade!)).toBe(true);
+    }
+    expect(refs.shade).toHaveClass("intro-shade");
+    expect(refs.shade!.getAttribute("src")).toBe(refs.rest!.getAttribute("src"));
+    // the lit figure carries no filter of its own (L14)
+    expect(refs.fig!.className).not.toMatch(/intro-fig/);
+  });
+
+  it("REPLAY is disabled (aria-disabled, no handler) until the page is given something to replay", () => {
+    const off = page();
+    const replay = (root: HTMLElement) =>
+      [...root.querySelectorAll("button")].filter((b) => b.textContent === view.replay);
+    expect(replay(off.root)).toHaveLength(2);
+    for (const b of replay(off.root)) expect(b).toHaveAttribute("aria-disabled", "true");
+    document.body.innerHTML = "";
+    const onReplay = vi.fn();
+    const { container } = render(
+      <WithShell>
+        <IntroPage view={view} onReplay={onReplay} />
+      </WithShell>,
+    );
+    for (const b of replay(container)) {
+      expect(b).not.toHaveAttribute("aria-disabled");
+      b.click();
+    }
+    expect(onReplay).toHaveBeenCalledTimes(2);
   });
 
   it("ENTER THE ARENA and SKIP INTRO link to the hub; REPLAY is hidden under reduced motion", () => {

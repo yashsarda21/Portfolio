@@ -7,14 +7,17 @@ import { ROUTES } from "@/shell/routes";
 import { WithShell } from "@/shell/storyDecorators";
 import { INTRO_BEATS } from "./beats";
 import { IntroPage } from "./IntroPage";
+import { RIG_WAIT_MS } from "./rigGate";
 import { useIntroTimeline } from "./useIntroTimeline";
 import { buildIntroView } from "./view";
 
 const loadRig = vi.hoisted(() => vi.fn());
+/** A test can hold GSAP back (as a slow network would) by putting a promise here. */
+const held = vi.hoisted(() => ({ gsap: null as Promise<unknown> | null }));
 vi.mock("./rig", () => ({ loadRig }));
 vi.mock("@/lib/motion", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/motion")>()),
-  loadGsap: () => Promise.resolve(gsap),
+  loadGsap: () => held.gsap ?? Promise.resolve(gsap),
 }));
 
 const view = buildIntroView(content, ui, ROUTES);
@@ -59,19 +62,24 @@ const seen: { api?: ReturnType<typeof useIntroTimeline> } = {};
 /** The hook's latest answer. */
 const api = {
   replay: () => seen.api!.replay(),
-  get state() {
-    return seen.api!.state;
+  get canReplay() {
+    return seen.api!.canReplay;
   },
 };
+/** How often the page rendered: the hook must not re-render it at every beat. */
+let renders = 0;
 const onComm = vi.fn();
 
 function Harness() {
   const root = useRef<HTMLElement>(null);
   const hook = useIntroTimeline(root, { onComm });
+  renders++;
   useEffect(() => {
     seen.api = hook;
   });
-  return <IntroPage view={view} rootRef={root} onReplay={hook.replay} />;
+  return (
+    <IntroPage view={view} rootRef={root} onReplay={hook.canReplay ? hook.replay : undefined} />
+  );
 }
 
 async function mount() {
@@ -90,13 +98,21 @@ const timelines = () => gsap.globalTimeline.getChildren(false, false, true);
 beforeEach(() => {
   // The dust canvas has no 2D context in jsdom; it is not what these tests look at.
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  renders = 0;
   loadRig.mockReset();
   loadRig.mockReturnValue(Promise.resolve("ready"));
   onComm.mockReset();
 });
 afterEach(() => {
   gsap.globalTimeline.clear();
+  held.gsap = null;
+  delete (Element.prototype as Partial<Element>).getAnimations;
 });
+
+const replayButtons = (root: HTMLElement) =>
+  [...root.querySelectorAll<HTMLButtonElement>("button")].filter(
+    (b) => b.textContent === view.replay,
+  );
 
 describe("useIntroTimeline", () => {
   it("desktop (and tablet): loads the rig, plays, and marks the root playing", async () => {
@@ -107,10 +123,9 @@ describe("useIntroTimeline", () => {
     expect(urls).toHaveLength(3);
     expect(urls.map((u: string) => u.match(/turn_(\d)/)![1])).toEqual(["0", "1", "2"]);
     // up to the performance beat, plus the 1.5 s the timeline will wait there
-    expect(opts).toEqual({ timeoutMs: (INTRO_BEATS.desktop.performance + 1.5) * 1000 });
+    expect(opts).toEqual({ timeoutMs: INTRO_BEATS.desktop.performance * 1000 + RIG_WAIT_MS });
     expect(root).toHaveAttribute("data-intro", "playing");
     expect(root).toHaveAttribute("data-rig");
-    expect(api.state).toBe("playing");
     expect(timelines()).toHaveLength(1);
   });
 
@@ -122,7 +137,6 @@ describe("useIntroTimeline", () => {
     act(() => void tl.progress(1));
     expect(onComm).toHaveBeenCalledTimes(1);
     expect(root).toHaveAttribute("data-intro", "done");
-    expect(api.state).toBe("done");
   });
 
   it("REPLAY restarts the same show, playing again, and only one timeline exists", async () => {
@@ -181,7 +195,6 @@ describe("useIntroTimeline", () => {
     act(() => void tl.progress(1));
     expect(onComm).not.toHaveBeenCalled();
     expect(root).toHaveAttribute("data-intro", "done");
-    expect(api.state).toBe("done");
   });
 
   it("each layout's timeline touches its own parts only: the same data-part names, two layouts", async () => {
@@ -258,5 +271,93 @@ describe("useIntroTimeline", () => {
     unmount();
     expect(timelines()).toHaveLength(0);
     expect(root).not.toHaveAttribute("data-rig");
+  });
+  it("REPLAY is disabled until the timeline exists, and live once the show plays", async () => {
+    situation("desktop");
+    let release: () => void = () => {};
+    held.gsap = new Promise((resolve) => (release = () => resolve(gsap)));
+    const { root } = await mount();
+    expect(root).toHaveAttribute("data-intro", "pending");
+    const buttons = replayButtons(root);
+    expect(buttons).toHaveLength(2);
+    for (const b of buttons) expect(b).toHaveAttribute("aria-disabled", "true");
+    // inert: a click does nothing (there is nothing to restart)
+    act(() => buttons[0]!.click());
+    expect(timelines()).toHaveLength(0);
+    expect(root).toHaveAttribute("data-intro", "pending");
+
+    held.gsap = null;
+    await act(async () => release());
+    expect(root).toHaveAttribute("data-intro", "playing");
+    for (const b of replayButtons(root)) expect(b).not.toHaveAttribute("aria-disabled");
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    act(() => void tl.progress(1));
+    act(() => replayButtons(root)[0]!.click());
+    expect(root).toHaveAttribute("data-intro", "playing");
+    expect(tl.time()).toBeLessThan(0.5);
+  });
+
+  it("REPLAY stays disabled when GSAP never arrives", async () => {
+    situation("desktop");
+    held.gsap = Promise.reject(new Error("offline"));
+    held.gsap.catch(() => {});
+    const { root } = await mount();
+    expect(root).toHaveAttribute("data-intro", "pending");
+    for (const b of replayButtons(root)) expect(b).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("the page is not re-rendered at every beat of the show", async () => {
+    situation("desktop");
+    await mount();
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    const before = renders;
+    act(() => void tl.progress(1));
+    act(() => api.replay());
+    expect(renders).toBe(before);
+  });
+
+  describe("GSAP arriving after the 8 s CSS fallback has shown the parts (M8)", () => {
+    const withFallback = (playState: "finished" | "running") => {
+      (Element.prototype as unknown as { getAnimations: () => unknown[] }).getAnimations = () => [
+        { animationName: "intro-fallback", playState },
+      ];
+    };
+
+    it("shows the end state at once instead of hiding the parts and replaying them", async () => {
+      situation("desktop");
+      withFallback("finished");
+      const { root } = await mount();
+      expect(root).toHaveAttribute("data-intro", "done");
+      expect(timelines()).toHaveLength(0);
+      expect(loadRig).not.toHaveBeenCalled();
+      expect(root).not.toHaveAttribute("data-rig");
+      const stage = root.querySelector('[data-intro-layout="stage"]')!;
+      const letters = stage.querySelectorAll('[data-part="letter"]');
+      expect([...letters].every((l) => l.getAttribute("data-lit") === "done")).toBe(true);
+      for (const part of ["cta", "welcome", "mover", "rest", "board-strip"])
+        expect(
+          stage.querySelector<HTMLElement>(`[data-part="${part}"]`)!.style.visibility,
+        ).not.toBe("hidden");
+      // nothing to replay: the button says so
+      for (const b of replayButtons(root)) expect(b).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("an animation still waiting for its 8 s does not count: the show plays", async () => {
+      situation("desktop");
+      withFallback("running");
+      const { root } = await mount();
+      expect(root).toHaveAttribute("data-intro", "playing");
+      expect(timelines()).toHaveLength(1);
+    });
+
+    it("the phone's column is treated the same", async () => {
+      situation("mobile");
+      withFallback("finished");
+      const { root } = await mount();
+      expect(root).toHaveAttribute("data-intro", "done");
+      expect(timelines()).toHaveLength(0);
+    });
   });
 });

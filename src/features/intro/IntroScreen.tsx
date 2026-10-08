@@ -13,7 +13,7 @@ export function IntroScreen() {
   const { say } = useCommentary();
   const rootRef = useRef<HTMLElement>(null);
   const onComm = useCallback(() => say(view.comm, { interrupt: true }), [say]);
-  const { replay } = useIntroTimeline(rootRef, { onComm });
+  const { replay, canReplay } = useIntroTimeline(rootRef, { onComm });
 
-  return <IntroPage view={view} rootRef={rootRef} onReplay={replay} />;
+  return <IntroPage view={view} rootRef={rootRef} onReplay={canReplay ? replay : undefined} />;
 }

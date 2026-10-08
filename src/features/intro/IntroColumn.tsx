@@ -81,7 +81,12 @@ export function IntroColumn({
         <div className="flex items-center justify-between gap-2">
           <BrandLockup mark={view.brand.mark} size="sm" />
           <div className="flex items-center gap-2">
-            <HUDButton tone="glass-compact" onClick={onReplay} className="motion-reduce:hidden">
+            <HUDButton
+              tone="glass-compact"
+              onClick={onReplay}
+              aria-disabled={onReplay ? undefined : true}
+              className="aria-disabled:opacity-50 motion-reduce:hidden"
+            >
               {view.replay}
             </HUDButton>
             <HUDButton tone="glass-compact" as={ArenaLink} to={view.skip.to}>

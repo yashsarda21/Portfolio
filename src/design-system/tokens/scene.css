@@ -426,14 +426,13 @@
   mask-image: linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
 }
 
-/* The figure is lit through --lit (0 = backlit silhouette, 1 = lit; the timeline tweens it): dark and
-   desaturated with a volt rim at 0, untouched at 1. Unset, it is lit, so a page that never plays is the end state. */
-@utility intro-fig {
-  filter: brightness(calc(0.07 + 0.93 * var(--lit, 1))) saturate(calc(0.2 + 0.8 * var(--lit, 1)))
-    drop-shadow(calc(-2px * (1 - var(--lit, 1))) 0 0 rgb(var(--rgb-volt) / calc(1 - var(--lit, 1))))
-    drop-shadow(
-      0 0 calc(16px * (1 - var(--lit, 1))) rgb(var(--rgb-volt) / calc(0.6 * (1 - var(--lit, 1))))
-    );
+/* The backlit look of the figure before the lights come up: a dark, desaturated copy of the rest pose with a volt
+   rim, laid over the lit figure. The timeline fades its opacity from 1 to 0 (nothing animates a filter). It is
+   hidden until the timeline starts, so a page that never plays is the lit end state. */
+@utility intro-shade {
+  visibility: hidden;
+  filter: brightness(0.07) saturate(0.2) drop-shadow(-2px 0 0 rgb(var(--rgb-volt)))
+    drop-shadow(0 0 16px rgb(var(--rgb-volt) / 0.6));
 }
 
 /* The two after-images behind the figure: one tinted volt, one warm. */

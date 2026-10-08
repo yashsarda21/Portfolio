@@ -8,10 +8,11 @@ import turn2 from "@/assets/rig/turn_2.webp?url";
 import { INTRO_BEATS } from "./beats";
 import { collectIntroRefs } from "./refs";
 import { loadRig } from "./rig";
+import { RIG_WAIT_MS } from "./rigGate";
 import { createIntroTimeline, showIntroEndState } from "./timeline";
 
 /** Where the show is. The page's root carries it as `data-intro`; CSS holds the parts back while it is pending. */
-export type IntroState = "pending" | "playing" | "done";
+type IntroState = "pending" | "playing" | "done";
 
 /**
  * Which intro this screen gets. The stage (desktop AND tablet, L1) plays the full show; the phone column
@@ -33,8 +34,19 @@ const layoutOf = (root: HTMLElement, tier: keyof typeof LAYOUT) =>
 
 /** The head-turn strips, in play order. Only the desktop branch ever asks for them. */
 const RIG_URLS = [turn0, turn1, turn2];
-/** What the timeline will wait for the strips at the performance beat (L7); the loader gives up then too. */
-const RIG_WAIT_SECONDS = 1.5;
+
+/** The CSS hold lets go by itself at 8 s (`intro-fallback`, motion.css); once it has, the parts are already on show. */
+const FALLBACK_ANIMATION = "intro-fallback";
+function fallbackFired(root: HTMLElement): boolean {
+  if (typeof root.getAnimations !== "function") return false;
+  return root
+    .getAnimations({ subtree: true })
+    .some(
+      (a) =>
+        (a as Partial<CSSAnimation>).animationName === FALLBACK_ANIMATION &&
+        a.playState === "finished",
+    );
+}
 
 /**
  * Plays the Player Introduction on the page under `rootRef`, and reports where it is.
@@ -47,13 +59,18 @@ const RIG_WAIT_SECONDS = 1.5;
  * Phone width plays the column's cut: no rig (it never loads, so no head-turn frame is ever requested) and
  * no commentary (L11). Resizing across 768px mid-play reverts one branch and builds the other.
  * `replay()` restarts the timeline from the dark stadium; replaying while playing restarts again.
+ * `canReplay` is whether there is a timeline to restart (REPLAY is disabled until there is). It changes when a
+ * timeline is built or dropped, not at every beat, so the page does not re-render as the show goes on.
+ *
+ * If GSAP only arrives after the 8 s CSS fallback has already shown the parts, the page shows the end state
+ * instead of hiding everything again to play a show nobody has seen the start of (and there is no timeline).
  */
 export function useIntroTimeline(
   rootRef: RefObject<HTMLElement | null>,
   { onComm }: { onComm: () => void },
-): { replay: () => void; state: IntroState } {
+): { replay: () => void; canReplay: boolean } {
   const audio = useAudio();
-  const [state, setState] = useState<IntroState>("pending");
+  const [canReplay, setCanReplay] = useState(false);
   const timeline = useRef<{ restart: () => unknown } | null>(null);
   // What the timeline's beats call is read at the beat, so a new callback never rebuilds the show.
   const latest = useRef({ onComm, play: audio.play });
@@ -62,10 +79,7 @@ export function useIntroTimeline(
   });
 
   const mark = useCallback(
-    (next: IntroState) => {
-      rootRef.current?.setAttribute("data-intro", next);
-      setState(next);
-    },
+    (next: IntroState) => rootRef.current?.setAttribute("data-intro", next),
     [rootRef],
   );
 
@@ -81,7 +95,7 @@ export function useIntroTimeline(
         mm = gsap.matchMedia();
         mm.add(TIERS, (context) => {
           const { desktop, reduce } = context.conditions as Record<keyof typeof TIERS, boolean>;
-          if (reduce) {
+          if (reduce || fallbackFired(root)) {
             // Whichever layout is on show (the width can change without this branch running again).
             for (const tier of ["desktop", "mobile"] as const) {
               const layout = layoutOf(root, tier);
@@ -108,15 +122,17 @@ export function useIntroTimeline(
               },
             });
             timeline.current = tl;
+            setCanReplay(true);
             mark("playing");
             return () => {
               timeline.current = null;
+              setCanReplay(false);
             };
           }
           // The page may draw the head-turn frames now (CSS keys off this); reduced motion and the phone never do.
           root.setAttribute("data-rig", "");
           const rig = loadRig(RIG_URLS, {
-            timeoutMs: (INTRO_BEATS.desktop.performance + RIG_WAIT_SECONDS) * 1000,
+            timeoutMs: INTRO_BEATS.desktop.performance * 1000 + RIG_WAIT_MS,
           });
           const tl = createIntroTimeline(gsap, refs, {
             tier: "desktop",
@@ -128,10 +144,12 @@ export function useIntroTimeline(
             },
           });
           timeline.current = tl;
+          setCanReplay(true);
           // After the timeline has hidden what it will reveal, so the CSS hold can let go without a flash.
           mark("playing");
           return () => {
             timeline.current = null;
+            setCanReplay(false);
             root.removeAttribute("data-rig");
           };
         });
@@ -155,5 +173,5 @@ export function useIntroTimeline(
     tl.restart();
   }, [mark]);
 
-  return { replay, state };
+  return { replay, canReplay };
 }

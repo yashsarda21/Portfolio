@@ -4,7 +4,21 @@ import { frameAt, framePosition } from "@/lib/sprite";
 import { INTRO_BEATS, INTRO_TEMPO, isGap, type Beat, type IntroTier } from "./beats";
 import { planLetters, type LetterKind } from "./letters";
 import { createPixels } from "./pixels";
+import {
+  BANK_FLICKER,
+  BAR_TRAVEL,
+  GLITCH,
+  LINEAR,
+  LOCK,
+  LOCK_GLOW_AT,
+  LOCK_SECONDS,
+  OUT,
+  STRIP_AT,
+  STRIP_FRAMES,
+  STRIP_SECONDS,
+} from "./keyframes";
 import type { RigResult } from "./rig";
+import { gateHeadTurn, type HeadTurnGate } from "./rigGate";
 
 /*
  * The Player Introduction as one GSAP timeline, built from the beat table (beats.ts), never from seconds typed
@@ -15,8 +29,9 @@ import type { RigResult } from "./rig";
  *  - Letters carry `data-lit`: "in" while a letter drops in (volt), "glow" from 55% of its lock-in (volt with a
  *    glow), "done" once it has locked in (LED white). The factory never tweens colours; the screen styles
  *    `[data-lit="..."]` with tokens (a CSS transition between the states gives the artboard's volt-to-white fade).
- *  - `fig` is lit through the custom property `--lit` (0 = silhouette, 1 = lit). The screen's CSS reads it for
- *    `filter: brightness(...) saturate(...)` and the volt rim, so the rim's colour stays a token.
+ *  - `shade` is the figure's backlit silhouette: a dark copy of the rest pose with the volt rim, laid over the lit
+ *    figure. The timeline fades its opacity 1 to 0 as the lights come up; nothing animates a filter, and the
+ *    figure carries none at the end (L14).
  *  - The idle loops are the CSS classes animate-cta-glow (cta), animate-breathe (idle) and animate-face-sweep
  *    (sweep); the timeline only adds them, at their beats, and removes them when it starts over.
  *
@@ -31,12 +46,6 @@ type Frames = Record<number, gsap.TweenVars>;
 
 export type IntroBeatName = "comm" | "bank" | "done";
 
-/** One flying pixel: `anchor` is the zero-size point that scales away, `dot` the coloured square inside it. */
-export interface IntroPixelRef {
-  anchor: HTMLElement;
-  dot: HTMLElement;
-}
-
 /** Everything the timeline may move. Every ref is optional: a track whose ref is missing is skipped. */
 export interface IntroRefs {
   root?: HTMLElement;
@@ -45,6 +54,8 @@ export interface IntroRefs {
   flares?: HTMLElement[];
   /** [left, right]. */
   cones?: HTMLElement[];
+  /** The dust in the beams: it comes up with the left cone. */
+  dust?: HTMLElement;
   crowd?: HTMLElement;
   /** The scene's sky glow and the Stage's letterbox sky fade in together, so this may be several layers. */
   sky?: HTMLElement | HTMLElement[];
@@ -60,18 +71,21 @@ export interface IntroRefs {
   mover?: HTMLElement;
   ghosts?: HTMLElement[];
   trails?: HTMLElement;
-  /** The figure inside the mover: lit through `--lit`, glitched at the impact. */
+  /** The figure inside the mover: glitched at the impact. */
   fig?: HTMLElement;
+  /** The silhouette treatment over the lit figure; its opacity goes 1 to 0 as the lights come up. */
+  shade?: HTMLElement;
   /** The three head-turn strips, in order. */
   strips?: HTMLElement[];
-  /** The still pose shown when the head turn cannot play. */
+  /** The still pose: the silhouette from the entrance, and what stands when the head turn cannot play. */
   rest?: HTMLElement;
   /** The phone's portrait: there is no mover or head turn there, so the rest pose fades in with the board. */
   portrait?: HTMLElement;
   shock?: HTMLElement;
   streak?: HTMLElement;
   glints?: HTMLElement[];
-  pixels?: IntroPixelRef[];
+  /** The 90 flying pixels: each is the zero-size point that scales away (the coloured square sits inside it). */
+  pixels?: HTMLElement[];
   letters?: HTMLElement[];
   title?: HTMLElement;
   /** The white bar that leads the title wipe. */
@@ -95,69 +109,17 @@ export interface IntroOptions {
   onBeat?: (beat: IntroBeatName) => void;
 }
 
-const OUT = "power1.out";
-const LINEAR = "none";
-
-/** The head turn: three strips of 16 frames, each .667 s, one after another (README §6, §8). */
-const STRIP_FRAMES = 16;
-const STRIP_SECONDS = 0.667;
-const STRIP_AT = [0, 0.667, 1.333] as const;
-/** The wait for the strips at the performance beat (L7). */
-const RIG_WAIT_MS = 1500;
-/** Parts that depend on the rig's answer start just after the pause that waits for it. */
-const AFTER_GATE = 0.001;
-/** How far the title's leading bar travels on the stage (design px). */
-const BAR_TRAVEL = 560;
-
-/** The artboard's bank flicker (keyframes `bank`). */
-const BANK_FLICKER = {
-  "0%": { opacity: 0.04 },
-  "15%": { opacity: 0.04 },
-  "20%": { opacity: 1 },
-  "24%": { opacity: 0.2 },
-  "30%": { opacity: 1 },
-  "100%": { opacity: 1 },
-  easeEach: OUT,
-};
-
-/** The impact glitch (keyframes `impact`, steps(1)): each state holds for 20% of .32 s. */
-const GLITCH = [
-  { at: 0, x: 0, clipPath: "inset(0% 0% 0% 0%)" },
-  { at: 0.064, x: -16, clipPath: "inset(18% 0% 60% 0%)" },
-  { at: 0.128, x: 12, clipPath: "inset(55% 0% 15% 0%)" },
-  { at: 0.192, x: -5, clipPath: "inset(0% 0% 0% 0%)" },
-  { at: 0.256, x: 0, clipPath: "none" },
-] as const;
-
-/** How the three kinds of letter enter (keyframes la / lb / lc). `side` is the sideways nudge at 70%. */
-const LOCK: Record<
-  LetterKind,
-  { from: gsap.TweenVars; to: gsap.TweenVars; blur: number; side: number; move: number }
-> = {
-  la: { from: { y: -60, scaleY: 1.9 }, to: { y: 0, scaleY: 1 }, blur: 12, side: 5, move: 0.7 },
-  lb: { from: { y: 70, scaleX: 1.6 }, to: { y: 0, scaleX: 1 }, blur: 12, side: -5, move: 0.7 },
-  lc: { from: { scale: 2.4 }, to: { scale: 1 }, blur: 16, side: 0, move: 1 },
-};
-const LOCK_SECONDS = 0.7;
-const LOCK_GLOW_AT = 0.55;
-
-/** Whether the head turn plays, learned from the rig promise. */
-interface RigWatch {
-  result: RigResult | null;
-  /** The decision is made once (at the performance beat) and kept for every replay. */
-  decided: boolean;
-  useStrips: boolean;
-}
-
 interface Ctx {
+  gsap: typeof Gsap;
   tier: IntroTier;
   tl: Timeline;
   refs: IntroRefs;
   beats: Partial<Record<Beat, number>>;
   /** How long reveals run, as a multiple of the board's (INTRO_TEMPO). */
   k: number;
-  rig: RigWatch;
-  rigPromise: Promise<RigResult>;
+  rig: Promise<RigResult>;
+  /** Set once the head turn is built; the show calls its `reset` each time it starts over. */
+  gate?: HeadTurnGate;
   onBeat?: (beat: IntroBeatName) => void;
 }
 
@@ -250,6 +212,7 @@ function addLights(c: Ctx): void {
   });
   fade(c, c.refs.crowd, "crowd", 1);
   fade(c, c.refs.cones?.[0], "coneL", 1);
+  fade(c, c.refs.dust, "coneL", 1);
   fade(c, c.refs.cones?.[1], "coneR", 1);
   fade(c, c.refs.sky, "sky", 1);
   fade(c, c.refs.field, "field", 1);
@@ -305,6 +268,12 @@ function swing(c: Ctx, target: HTMLElement, pos: Pos): void {
     } as gsap.TweenVars,
     pos.label,
   );
+  // A filter left on at rest would be repainted with every frame of the idle loops (L14).
+  c.tl.to(
+    target,
+    { clearProps: "filter", duration: 0, immediateRender: false },
+    `${pos.label}+=0.95`,
+  );
 }
 
 /** The silhouette swings in with two fading ghosts, a light trail, and a shockwave where it lands. */
@@ -317,6 +286,10 @@ function addEntrance(c: Ctx): void {
     show(c, refs.mover, entrance);
     swing(c, refs.mover, entrance);
   }
+  // The still pose is the silhouette from the entrance, so the swing-in is never an empty box while the head-turn
+  // frames load (L7). It steps aside only if the head turn plays.
+  hide(c, refs.rest);
+  show(c, refs.rest, entrance);
   list(refs.ghosts).forEach((ghost, i) => {
     const pos = at(c, "entrance", (i + 1) * gap(c, "ghostGap"))!;
     appear(c, ghost, pos, 1.05, LINEAR, {
@@ -344,22 +317,23 @@ function addEntrance(c: Ctx): void {
 }
 
 /**
- * The impact (glitch slices on the figure) and the head turn. The strips need the rig, so the timeline pauses
- * at the performance beat until it is known (L7); the parts that depend on the answer start just after it.
+ * The impact (glitch slices on the figure), the lights coming up over the silhouette, and the head turn. The head
+ * turn needs the rig, so it is a child timeline that waits for it (rigGate.ts); the rest of the show runs on.
  */
 function addPerformance(c: Ctx): void {
   const { refs, tl } = c;
   const performance = at(c, "performance");
   if (performance === undefined) return;
-  addRigGate(c, performance);
 
-  if (refs.fig) {
+  if (refs.shade) {
     tl.fromTo(
-      refs.fig,
-      { "--lit": 0 },
-      { "--lit": 1, duration: 0.8, ease: EASE.standard },
+      refs.shade,
+      { autoAlpha: 1 },
+      { autoAlpha: 0, duration: 0.8, ease: EASE.standard },
       performance.label,
     );
+  }
+  if (refs.fig) {
     const impact = at(c, "impact");
     if (impact) {
       for (const state of GLITCH) {
@@ -367,95 +341,51 @@ function addPerformance(c: Ctx): void {
       }
     }
   }
-  addStrips(c);
+  addHeadTurn(c, performance);
 }
 
-/** Pause at the performance beat; carry on at once if the rig is known, else when it is, or after 1.5 s. */
-function addRigGate(c: Ctx, performance: Pos): void {
-  const { tl, rig } = c;
-  const decide = () => {
-    rig.decided = true;
-    rig.useStrips = rig.result === "ready";
-  };
-  const resume = () => {
-    // A timeline killed meanwhile has no parent; one that already ran to its end is left as it is.
-    if (tl.parent && tl.paused() && tl.progress() < 1) tl.resume();
-  };
-  tl.addPause(performance.label, () => {
-    if (tl.time() < performance.seconds - 1e-6) return;
-    if (!rig.decided && rig.result !== null) decide();
-    if (rig.decided) {
-      // Not from inside this render: resuming here makes GSAP drop the callbacks of a jump past the beat.
-      queueMicrotask(resume);
-      return;
-    }
-    // Natural playback has paused here already; a jump past the beat has not.
-    tl.pause();
-    const release = () => {
-      clearTimeout(timer);
-      if (rig.decided) return;
-      decide();
-      resume();
+/** Strip A, B, C play in turn and the rest pose steps aside; with no frames none of that happens. */
+function addHeadTurn(c: Ctx, performance: Pos): void {
+  const { refs, tl } = c;
+  const strips = list(refs.strips).slice(0, STRIP_AT.length);
+  if (strips.length === 0) return;
+  const turn = c.gsap.timeline();
+  strips.forEach((strip, i) => {
+    const proxy = { p: 0 };
+    const setFrame = () => {
+      strip.style.backgroundPosition = framePosition(frameAt(proxy.p, STRIP_FRAMES), STRIP_FRAMES);
     };
-    const timer = setTimeout(release, RIG_WAIT_MS);
-    c.rigPromise.then(release, release);
-  });
-}
-
-/** Strip A, B, C play in turn; the rest pose takes over when there are no frames. */
-function addStrips(c: Ctx): void {
-  const { refs, tl, rig } = c;
-  const playing = () => (rig.decided ? rig.useStrips : rig.result === "ready");
-  list(refs.strips)
-    .slice(0, STRIP_AT.length)
-    .forEach((strip, i) => {
-      const proxy = { p: 0 };
-      const setFrame = () => {
-        strip.style.backgroundPosition = framePosition(
-          frameAt(proxy.p, STRIP_FRAMES),
-          STRIP_FRAMES,
-        );
-      };
-      const start = at(c, "performance", STRIP_AT[i]!)!;
-      if (i > 0) hide(c, strip);
-      // Strip A is on show since the entrance; with no frames none of them is. Decided after the gate.
-      const turn = at(c, "performance", STRIP_AT[i]! + AFTER_GATE)!;
-      tl.to(
-        strip,
-        { autoAlpha: () => (playing() ? 1 : 0), duration: 0, immediateRender: false },
-        turn.label,
-      );
-      tl.to(
-        proxy,
-        {
-          p: 1,
-          duration: STRIP_SECONDS,
-          ease: LINEAR,
-          onUpdate: setFrame,
-          // A jump over the whole strip may skip onUpdate; the last frame must still land.
-          onComplete: setFrame,
-        },
-        start.label,
-      );
-      // The next strip takes over at its own start.
-      const next = STRIP_AT[i + 1];
-      if (next !== undefined) {
-        tl.to(
-          strip,
-          { autoAlpha: 0, duration: 0, immediateRender: false },
-          at(c, "performance", next)!.label,
-        );
-      }
-    });
-  if (refs.rest) {
-    hide(c, refs.rest);
-    const pos = at(c, "performance", AFTER_GATE)!;
-    tl.to(
-      refs.rest,
-      { autoAlpha: () => (playing() ? 0 : 1), duration: 0, immediateRender: false },
-      pos.label,
+    // Strip A is on show since the entrance (CSS); B and C wait for their turn.
+    if (i > 0) hide(c, strip);
+    turn.to(strip, { autoAlpha: 1, duration: 0, immediateRender: false }, STRIP_AT[i]);
+    turn.to(
+      proxy,
+      {
+        p: 1,
+        duration: STRIP_SECONDS,
+        ease: LINEAR,
+        onUpdate: setFrame,
+        // A jump over the whole strip may skip onUpdate; the last frame must still land.
+        onComplete: setFrame,
+      },
+      STRIP_AT[i],
     );
-  }
+    // The next strip takes over at its own start.
+    const next = STRIP_AT[i + 1];
+    if (next !== undefined) {
+      turn.to(strip, { autoAlpha: 0, duration: 0, immediateRender: false }, next);
+    }
+  });
+  if (refs.rest) turn.to(refs.rest, { autoAlpha: 0, duration: 0, immediateRender: false }, 0);
+
+  c.gate = gateHeadTurn({
+    tl,
+    turn,
+    seconds: performance.seconds,
+    rig: c.rig,
+    stand: () => c.gsap.set(strips, { autoAlpha: 0 }),
+  });
+  tl.add(turn, performance.label);
 }
 
 /** The eye-line flare and two glints, as he looks into the camera. */
@@ -488,12 +418,9 @@ function addPixels(c: Ctx): void {
   const base = c.beats.pixels;
   const refs = list(c.refs.pixels);
   if (base === undefined || refs.length === 0) return;
-  hide(
-    c,
-    refs.map((p) => p.anchor),
-  );
+  hide(c, refs);
   createPixels().forEach((pixel, i) => {
-    const anchor = refs[i]?.anchor;
+    const anchor = refs[i];
     if (!anchor) return;
     const pos = at(c, "pixels", Number((pixel.delay - base).toFixed(3)))!;
     c.tl.fromTo(anchor, { scale: 1 }, { scale: 0.02, duration: 0.8, ease: EASE.absorb }, pos.label);
@@ -667,15 +594,6 @@ function resetHandSetState(refs: IntroRefs): void {
   );
 }
 
-function watchRig(rig: Promise<RigResult>): RigWatch {
-  const watch: RigWatch = { result: null, decided: false, useStrips: false };
-  rig.then(
-    (result) => (watch.result = result),
-    () => (watch.result = "error"),
-  );
-  return watch;
-}
-
 /**
  * Build the Player Introduction for a tier. It plays at once; the caller owns it (pause, restart, kill or
  * revert it). `onBeat("bank")` fires as each floodlight bank flickers on, "comm" at the commentary beat and
@@ -689,13 +607,13 @@ export function createIntroTimeline(
   const beats: Partial<Record<Beat, number>> = INTRO_BEATS[opts.tier];
   const tl = gsap.timeline();
   const c: Ctx = {
+    gsap,
     tier: opts.tier,
     tl,
     refs,
     beats,
     k: INTRO_TEMPO[opts.tier],
-    rig: watchRig(opts.rig),
-    rigPromise: opts.rig,
+    rig: opts.rig,
     onBeat: opts.onBeat,
   };
   for (const [beat, seconds] of Object.entries(beats)) {
@@ -712,7 +630,10 @@ export function createIntroTimeline(
   addFinale(c);
   addIdle(c);
   call(c, { label: "+=0", seconds: tl.duration() }, () => opts.onBeat?.("done"));
-  tl.eventCallback("onStart", () => resetHandSetState(refs));
+  tl.eventCallback("onStart", () => {
+    resetHandSetState(refs);
+    c.gate?.reset();
+  });
   return tl;
 }
 
@@ -734,6 +655,7 @@ export function showIntroEndState(gsap: typeof Gsap, refs: IntroRefs): void {
       refs.mover,
       refs.rest,
       refs.portrait,
+      refs.dust,
       refs.title,
       refs.strip,
       refs.welcome,
@@ -748,6 +670,7 @@ export function showIntroEndState(gsap: typeof Gsap, refs: IntroRefs): void {
   gsap.set(
     defined([
       refs.boardHit,
+      refs.shade,
       refs.scan,
       refs.trails,
       refs.shock,
@@ -758,10 +681,10 @@ export function showIntroEndState(gsap: typeof Gsap, refs: IntroRefs): void {
       ...list(refs.ghosts),
       ...list(refs.glints),
       ...list(refs.flares),
-      ...list(refs.pixels).map((p) => p.anchor),
+      ...list(refs.pixels),
     ]),
     { autoAlpha: 0 },
   );
-  if (refs.fig) gsap.set(refs.fig, { "--lit": 1, clipPath: "none", clearProps: "transform" });
+  if (refs.fig) gsap.set(refs.fig, { clipPath: "none", clearProps: "transform" });
   list(refs.letters).forEach((letter) => letter.setAttribute("data-lit", "done"));
 }

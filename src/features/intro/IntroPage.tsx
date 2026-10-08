@@ -78,6 +78,7 @@ export function IntroPage({
 }: {
   view: IntroView;
   rootRef?: Ref<HTMLElement>;
+  /** Plays the show again. Leave it out until there is a show to replay: REPLAY is then disabled. */
   onReplay?: () => void;
 }) {
   const audio = useAudio();
@@ -97,7 +98,11 @@ export function IntroPage({
             left={<BrandLockup mark={view.brand.mark} />}
             right={
               <>
-                <HUDButton onClick={onReplay} className="motion-reduce:hidden">
+                <HUDButton
+                  onClick={onReplay}
+                  aria-disabled={onReplay ? undefined : true}
+                  className="aria-disabled:opacity-50 motion-reduce:hidden"
+                >
                   {view.replay}
                 </HUDButton>
                 <HUDButton as={ArenaLink} to={view.skip.to}>
@@ -133,7 +138,14 @@ export function IntroPage({
                 data-part="ghost"
                 className="pointer-events-none invisible absolute right-9 bottom-16 z-1 h-112.75 w-140"
               >
-                <SpriteStrip deferred src={turn0} className={cn("intro-turn size-full", tint)} />
+                {/* The rest pose, not the head turn's first frame: it is already on its way, so the ghosts never wait on the strips (L7). */}
+                <img
+                  src={portraitRest}
+                  alt=""
+                  aria-hidden="true"
+                  decoding="async"
+                  className={cn("size-full", tint)}
+                />
               </div>
             ))}
 
@@ -161,9 +173,17 @@ export function IntroPage({
                 data-part="fig"
                 role="img"
                 aria-label={view.portraitAlt}
-                className="absolute inset-0 intro-edge-mask intro-fig"
+                className="absolute inset-0 intro-edge-mask"
               >
                 <div data-part="idle" className="absolute inset-0">
+                  {/* The silhouette from the entrance, under strip A; it steps aside only if the head turn plays. */}
+                  <img
+                    data-part="rest"
+                    src={portraitRest}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 size-full"
+                  />
                   {STRIPS.map((src) => (
                     <SpriteStrip
                       key={src}
@@ -174,13 +194,13 @@ export function IntroPage({
                       className="intro-turn absolute inset-0"
                     />
                   ))}
-                  {/* The pose the head turn rests on, and what stands when it cannot play. */}
+                  {/* The backlit look over the lit figure; its opacity fades out as the lights come up. */}
                   <img
-                    data-part="rest"
+                    data-part="shade"
                     src={portraitRest}
                     alt=""
                     aria-hidden="true"
-                    className="absolute inset-0 size-full"
+                    className="intro-shade absolute inset-0 size-full"
                   />
                   <div
                     aria-hidden="true"
@@ -226,7 +246,6 @@ export function IntroPage({
                 style={{ left: pixel.x, top: pixel.y }}
               >
                 <span
-                  data-part="pixel-dot"
                   className={cn("absolute", PIXEL_CLASS[pixel.color])}
                   style={{ left: pixel.dx, top: pixel.dy, width: pixel.size, height: pixel.size }}
                 />

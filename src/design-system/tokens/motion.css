@@ -216,20 +216,27 @@
 }
 @keyframes face-sweep {
   0% {
-    background-position: 150% 0;
     opacity: 0;
   }
   10% {
     opacity: 1;
   }
   60% {
-    background-position: -50% 0;
     opacity: 1;
   }
   61%,
   100% {
-    background-position: -50% 0;
     opacity: 0;
+  }
+}
+/* The band moves by transform (300% as wide as the face, so -100% is fully left of it and 33.3% fully right). */
+@keyframes face-sweep-band {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(33.333%);
   }
 }
 @utility animate-breathe {
@@ -240,17 +247,11 @@
     animation: none;
   }
 }
-/* The sweep is a light band 300% as wide as the face. The shape it lights comes from --mask (a url(), set by
-   the screen: the rest portrait), so only the face is lit. */
+/* The sweep is a light band 300% as wide as the face, drawn by ::before and moved with transform (opacity and
+   transform only, so the loop never repaints). The shape it lights comes from --mask (a url(), set by the screen:
+   the rest portrait), so only the face is lit. */
 @utility animate-face-sweep {
-  background: linear-gradient(
-      100deg,
-      rgb(var(--rgb-white) / 0) 42%,
-      rgb(var(--rgb-white) / 0.38) 50%,
-      rgb(var(--rgb-volt) / 0.18) 54%,
-      rgb(var(--rgb-white) / 0) 62%
-    )
-    0 0 / 300% 100% no-repeat;
+  overflow: hidden;
   opacity: 0;
   -webkit-mask-image: var(--mask);
   mask-image: var(--mask);
@@ -258,8 +259,28 @@
   mask-size: 100% 100%;
   animation: face-sweep 6s ease-in-out infinite;
   animation-delay: var(--d, 0s);
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 300%;
+    background: linear-gradient(
+      100deg,
+      rgb(var(--rgb-white) / 0) 42%,
+      rgb(var(--rgb-white) / 0.38) 50%,
+      rgb(var(--rgb-volt) / 0.18) 54%,
+      rgb(var(--rgb-white) / 0) 62%
+    );
+    transform: translateX(-100%);
+    animation: face-sweep-band 6s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+  }
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+    &::before {
+      animation: none;
+    }
   }
 }
 

@@ -21,6 +21,7 @@ function fullRefs(): Full {
     banks: many(4),
     flares: many(4),
     cones: many(2),
+    dust: el(),
     crowd: el(),
     sky: el(),
     field: el(),
@@ -33,13 +34,14 @@ function fullRefs(): Full {
     ghosts: many(2),
     trails: el(),
     fig: el(),
+    shade: el(),
     strips: many(3),
     rest: el(),
     portrait: el(),
     shock: el(),
     streak: el(),
     glints: many(2),
-    pixels: Array.from({ length: 90 }, () => ({ anchor: el(), dot: el() })),
+    pixels: many(90),
     letters,
     title: el(),
     titleBar: el(),
@@ -54,6 +56,7 @@ function fullRefs(): Full {
 }
 
 const D = INTRO_BEATS.desktop;
+const P0 = D.performance;
 const M = INTRO_BEATS.mobile;
 const ready = Promise.resolve("ready" as RigResult);
 /** The factory reads the rig through a promise callback; one microtask lets it see a settled promise. */
@@ -81,7 +84,6 @@ const shown = (e: HTMLElement) => e.style.visibility !== "hidden";
 const flat = (r: IntroRefs): HTMLElement[] =>
   Object.values(r)
     .flat()
-    .flatMap((v) => (v && "anchor" in v ? [v.anchor, v.dot] : [v]))
     .filter((v): v is HTMLElement => v instanceof HTMLElement);
 
 describe("createIntroTimeline: beats and lengths", () => {
@@ -134,7 +136,7 @@ describe("createIntroTimeline: beats and lengths", () => {
     ]) {
       expect(part.style.visibility).toBe("");
     }
-    expect(refs.pixels.every((p) => p.anchor.style.visibility === "")).toBe(true);
+    expect(refs.pixels.every((p) => p.style.visibility === "")).toBe(true);
   });
 });
 
@@ -144,6 +146,7 @@ describe("createIntroTimeline: nothing invisible is reachable", () => {
     make(refs);
     const later: HTMLElement[] = [
       refs.crowd,
+      refs.dust,
       refs.sky,
       refs.field,
       refs.backlight,
@@ -170,7 +173,7 @@ describe("createIntroTimeline: nothing invisible is reachable", () => {
       ...refs.flares,
       ...refs.letters,
       ...refs.tagline,
-      ...refs.pixels.map((p) => p.anchor),
+      ...refs.pixels,
     ];
     expect(later.filter(shown)).toEqual([]);
   });
@@ -267,7 +270,7 @@ describe("createIntroTimeline: lights, board and entrance", () => {
     expect(gsap.getProperty(refs.mover, "rotationY")).toBeGreaterThan(28);
     tl.time(D.entrance + 0.95);
     expect(gsap.getProperty(refs.mover, "x")).toBeCloseTo(0, 3);
-    expect(refs.mover.style.filter).toBe("blur(0px)");
+    expect(refs.mover.style.filter).toBe("");
   });
 
   it("the ghosts trail the mover by one ghost gap each, then fade", () => {
@@ -296,12 +299,48 @@ describe("createIntroTimeline: lights, board and entrance", () => {
     expect(hidden(refs.scan)).toBe(true);
   });
 
-  it("the lights go on over the silhouette: --lit runs 0 to 1 from the performance beat", () => {
+  it("the lights go on over the silhouette: the shade over the figure fades out over .8 s from the performance beat, by opacity alone", () => {
     const refs = fullRefs();
     const tl = make(refs);
-    expect(refs.fig.style.getPropertyValue("--lit")).toBe("0");
-    tl.time(D.performance + 0.8);
-    expect(refs.fig.style.getPropertyValue("--lit")).toBe("1");
+    // The backlit look is on from the start; no custom property or filter is tweened.
+    expect(shown(refs.shade)).toBe(true);
+    expect(refs.shade.style.opacity).toBe("1");
+    tl.time(P0 + 0.4);
+    const mid = Number(refs.shade.style.opacity);
+    expect(mid).toBeGreaterThan(0.1);
+    expect(mid).toBeLessThan(0.9);
+    tl.time(P0 + 0.8);
+    expect(refs.shade.style.opacity).toBe("0");
+    expect(hidden(refs.shade)).toBe(true);
+    for (const el of [refs.fig, refs.shade, refs.mover]) {
+      expect(el.style.getPropertyValue("--lit")).toBe("");
+    }
+    expect(refs.fig.style.filter).toBe("");
+    expect(refs.shade.style.filter).toBe("");
+  });
+
+  it("the swing's blur is gone at the end: the silhouette carries no filter once it has landed (L14)", () => {
+    const refs = fullRefs();
+    const tl = make(refs);
+    tl.time(D.entrance + 0.4);
+    expect(refs.mover.style.filter).toContain("blur(");
+    tl.time(D.entrance + 0.95);
+    expect(refs.mover.style.filter).toBe("");
+    tl.progress(1);
+    for (const el of [refs.mover, refs.fig, refs.idle, refs.rest]) expect(el.style.filter).toBe("");
+  });
+
+  it("the dust comes up with the left cone", () => {
+    const refs = fullRefs();
+    const tl = make(refs);
+    expect(hidden(refs.dust)).toBe(true);
+    tl.time(D.coneL - 0.01);
+    expect(hidden(refs.dust)).toBe(true);
+    tl.time(D.coneL + 0.5);
+    expect(shown(refs.dust)).toBe(true);
+    expect(Number(refs.dust.style.opacity)).toBeGreaterThan(0);
+    tl.progress(1);
+    expect(refs.dust.style.opacity).toBe("1");
   });
 
   it("the impact glitch slices the figure in five 64 ms holds, then clears", () => {
@@ -344,30 +383,44 @@ describe("createIntroTimeline: the head turn and the rig", () => {
   const strip = (refs: Full, i: number) => refs.strips[i]!;
   /** jsdom writes a bare 0 in a position as 0px. */
   const framePos = (frame: number) => framePosition(frame, 16).replace(/ 0$/, " 0px");
+  /** The head turn is a child timeline of the show, placed at the performance beat. */
+  const turnOf = (tl: gsap.core.Timeline, refs: Full) =>
+    (tl.getChildren(false, false, true) as gsap.core.Timeline[]).find((child) =>
+      (child.getChildren(false, true, false) as gsap.core.Tween[]).some((tw) =>
+        tw.targets().includes(refs.strips[0]!),
+      ),
+    )!;
+  /** A rig the test settles by hand. */
+  const pending = () => {
+    let settle: (r: RigResult) => void = () => {};
+    const rig = new Promise<RigResult>((r) => (settle = r));
+    return { rig, settle };
+  };
+  const P = D.performance;
 
   it("plays the three strips in turn, 16 frames each, swapping at 2.517 s and 3.183 s", async () => {
     const refs = fullRefs();
     const tl = make(refs);
     await settled();
-    tl.time(D.performance + 0.01);
+    tl.time(P + 0.01);
     expect(shown(strip(refs, 0))).toBe(true);
     expect(hidden(strip(refs, 1))).toBe(true);
     expect(strip(refs, 0).style.backgroundPosition).toBe(framePos(0));
     // Half way through strip A: frame 8 of 16.
-    tl.time(D.performance + 0.667 / 2);
+    tl.time(P + 0.667 / 2);
     expect(strip(refs, 0).style.backgroundPosition).toBe(framePos(frameAt(0.5, 16)));
     // Strip B has taken over from A.
-    tl.time(D.performance + 0.667 + 0.05);
+    tl.time(P + 0.667 + 0.05);
     expect(hidden(strip(refs, 0))).toBe(true);
     expect(shown(strip(refs, 1))).toBe(true);
     expect(hidden(strip(refs, 2))).toBe(true);
     // Strip C has taken over from B.
-    tl.time(D.performance + 1.333 + 0.05);
+    tl.time(P + 1.333 + 0.05);
     expect(hidden(strip(refs, 1))).toBe(true);
     expect(shown(strip(refs, 2))).toBe(true);
   });
 
-  it("ends on the last frame of strip C, with the rest pose still hidden", async () => {
+  it("ends on the last frame of strip C, with the rest pose hidden", async () => {
     const refs = fullRefs();
     const tl = make(refs);
     await settled();
@@ -378,15 +431,29 @@ describe("createIntroTimeline: the head turn and the rig", () => {
     expect(hidden(refs.rest)).toBe(true);
   });
 
+  it("the rest pose is the silhouette from the entrance, under strip A, and steps aside only when the head turn plays", async () => {
+    const refs = fullRefs();
+    const tl = make(refs);
+    await settled();
+    tl.time(D.entrance - 0.01);
+    expect(hidden(refs.rest)).toBe(true);
+    tl.time(D.entrance + 0.01);
+    expect(shown(refs.rest)).toBe(true);
+    tl.time(P - 0.01);
+    expect(shown(refs.rest)).toBe(true);
+    tl.time(P + 0.01);
+    expect(hidden(refs.rest)).toBe(true);
+  });
+
   it.each(["timeout", "error"] as const)(
-    "rig %s: no strip frames, rest pose shown at the performance beat",
+    "rig %s: the rest pose stays on show from the entrance and the strips never appear",
     async (result) => {
       const refs = fullRefs();
       const tl = make(refs, "desktop", Promise.resolve(result));
       await settled();
-      tl.time(D.performance - 0.01);
-      expect(hidden(refs.rest)).toBe(true);
-      tl.time(D.performance + 0.01);
+      tl.time(D.entrance + 0.5);
+      expect(shown(refs.rest)).toBe(true);
+      tl.time(P + 0.01);
       expect(shown(refs.rest)).toBe(true);
       expect(refs.strips.every(hidden)).toBe(true);
       tl.progress(1);
@@ -395,44 +462,84 @@ describe("createIntroTimeline: the head turn and the rig", () => {
     },
   );
 
-  it("holds at the performance beat while the rig is still loading, and goes on when it is ready", async () => {
-    let settle: (r: RigResult) => void = () => {};
+  it("goes straight on when the rig is already known: the head turn is not held", async () => {
     const refs = fullRefs();
-    const tl = make(refs, "desktop", new Promise<RigResult>((r) => (settle = r)));
-    tl.seek(D.performance - 0.1).play();
-    tl.time(D.performance + 0.01);
-    expect(tl.paused()).toBe(true);
-    settle("ready");
+    const tl = make(refs);
     await settled();
-    expect(tl.paused()).toBe(false);
-    tl.progress(1);
-    expect(shown(refs.strips[2]!)).toBe(true);
-    expect(hidden(refs.rest)).toBe(true);
+    tl.time(P + 0.01);
+    expect(turnOf(tl, refs).paused()).toBe(false);
   });
 
-  it("holds for at most 1.5 s, then carries on with the rest pose", () => {
+  it("while the rig is unknown the show runs on: nothing is frozen mid-flight, only the head turn waits", () => {
+    const refs = fullRefs();
+    const { rig } = pending();
+    const tl = make(refs, "desktop", rig);
+    tl.seek(P - 0.1).play();
+    tl.time(P + 0.01);
+    // The scan bar, the trails and the second ghost were all still on show at the beat.
+    expect(tl.paused()).toBe(false);
+    expect(turnOf(tl, refs).paused()).toBe(true);
+    tl.time(P + 0.6);
+    expect(tl.time()).toBeCloseTo(P + 0.6, 3);
+    for (const part of [refs.scan, refs.trails, ...refs.ghosts]) {
+      expect(hidden(part)).toBe(true);
+      expect(part.style.opacity).toBe("0");
+    }
+    // the head turn has not started: the strips are not drawn and the rest pose stands in
+    expect(refs.strips.slice(1).every(hidden)).toBe(true);
+    expect(shown(refs.rest)).toBe(true);
+    // and the show goes on to its end
+    tl.progress(1);
+    expect(shown(refs.cta)).toBe(true);
+  });
+
+  it("a rig that is ready late plays the head turn from its start, when it arrives", async () => {
+    const refs = fullRefs();
+    const { rig, settle } = pending();
+    const tl = make(refs, "desktop", rig);
+    tl.time(P + 0.01);
+    tl.time(P + 0.8);
+    settle("ready");
+    await settled();
+    await settled();
+    const turn = turnOf(tl, refs);
+    expect(turn.paused()).toBe(false);
+    expect(turn.startTime()).toBeCloseTo(P + 0.8, 2);
+    expect(hidden(refs.rest)).toBe(false);
+    tl.time(P + 0.8 + 0.01);
+    expect(shown(strip(refs, 0))).toBe(true);
+    expect(strip(refs, 0).style.backgroundPosition).toBe(framePos(0));
+    expect(hidden(refs.rest)).toBe(true);
+    tl.time(P + 0.8 + 0.667 / 2);
+    expect(strip(refs, 0).style.backgroundPosition).toBe(framePos(frameAt(0.5, 16)));
+    tl.time(P + 0.8 + 1.333 + 0.05);
+    expect(shown(strip(refs, 2))).toBe(true);
+    tl.progress(1);
+    expect(strip(refs, 2).style.backgroundPosition).toBe(framePos(15));
+  });
+
+  it("holds the head turn for at most 1.5 s, then the rest pose stays and the strips stay hidden", () => {
     vi.useFakeTimers();
     const refs = fullRefs();
     const tl = make(refs, "desktop", new Promise<RigResult>(() => {}));
-    tl.seek(D.performance - 0.1).play();
-    tl.time(D.performance + 0.01);
-    expect(tl.paused()).toBe(true);
+    tl.time(P + 0.01);
+    expect(turnOf(tl, refs).paused()).toBe(true);
     vi.advanceTimersByTime(1499);
-    expect(tl.paused()).toBe(true);
+    expect(refs.strips.every(hidden)).toBe(false);
     vi.advanceTimersByTime(1);
-    expect(tl.paused()).toBe(false);
+    expect(refs.strips.every(hidden)).toBe(true);
     tl.progress(1);
     expect(refs.strips.every(hidden)).toBe(true);
     expect(shown(refs.rest)).toBe(true);
+    expect(turnOf(tl, refs).paused()).toBe(true);
   });
 
   it("a rig that is ready too late does not bring the head turn back", async () => {
     vi.useFakeTimers();
-    let settle: (r: RigResult) => void = () => {};
     const refs = fullRefs();
-    const tl = make(refs, "desktop", new Promise<RigResult>((r) => (settle = r)));
-    tl.seek(D.performance - 0.1).play();
-    tl.time(D.performance + 0.01);
+    const { rig, settle } = pending();
+    const tl = make(refs, "desktop", rig);
+    tl.time(P + 0.01);
     vi.advanceTimersByTime(1500);
     settle("ready");
     await vi.advanceTimersByTimeAsync(0);
@@ -443,33 +550,78 @@ describe("createIntroTimeline: the head turn and the rig", () => {
 
   it("does not wait again when it is played again", () => {
     vi.useFakeTimers();
-    const tl = make(fullRefs(), "desktop", new Promise<RigResult>(() => {}));
-    tl.seek(D.performance - 0.1).play();
-    tl.time(D.performance + 0.01);
+    const refs = fullRefs();
+    const tl = make(refs, "desktop", new Promise<RigResult>(() => {}));
+    tl.time(P + 0.01);
     vi.advanceTimersByTime(1500);
-    expect(tl.paused()).toBe(false);
     tl.restart();
-    tl.time(D.performance + 0.01);
-    expect(tl.paused()).toBe(false);
+    tl.pause();
+    expect(vi.getTimerCount()).toBe(0);
+    tl.time(P + 0.01);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(refs.strips.every(hidden)).toBe(true);
+    expect(shown(refs.rest)).toBe(true);
   });
 
-  it("goes straight on when the rig is already known", async () => {
-    const tl = make(fullRefs());
+  it("a late head turn is back in its place when the show is played again", async () => {
+    const refs = fullRefs();
+    const { rig, settle } = pending();
+    const tl = make(refs, "desktop", rig);
+    tl.time(P + 0.01);
+    tl.time(P + 0.8);
+    settle("ready");
     await settled();
-    tl.time(D.performance + 0.01);
     await settled();
-    expect(tl.paused()).toBe(false);
+    const turn = turnOf(tl, refs);
+    expect(turn.startTime()).toBeCloseTo(P + 0.8, 2);
+    tl.restart();
+    tl.pause();
+    // The show starts over on its first tick; its start puts the head turn back.
+    tl.time(0.1);
+    expect(turn.startTime()).toBeCloseTo(P, 3);
+    expect(turn.paused()).toBe(false);
+    tl.time(P + 0.01);
+    expect(shown(strip(refs, 0))).toBe(true);
+    expect(hidden(refs.rest)).toBe(true);
   });
 
-  it("a timeline killed while it waits is left alone when the timer fires", () => {
+  it("restarting while the head turn waits drops that wait; the answer is read again at the beat", async () => {
+    const refs = fullRefs();
+    const { rig, settle } = pending();
+    const tl = make(refs, "desktop", rig);
+    tl.time(P + 0.01);
+    tl.restart();
+    tl.pause();
+    tl.time(0.1);
+    settle("ready");
+    await settled();
+    await settled();
+    // Not at the beat yet: the head turn must not have started early.
+    expect(turnOf(tl, refs).startTime()).toBeCloseTo(P, 3);
+    expect(refs.strips.slice(1).every(hidden)).toBe(true);
+    tl.time(P + 0.01);
+    expect(shown(strip(refs, 0))).toBe(true);
+    expect(turnOf(tl, refs).paused()).toBe(false);
+  });
+
+  it("a timeline killed while the head turn waits is left alone when the timer fires or the rig arrives", async () => {
     vi.useFakeTimers();
-    const tl = make(fullRefs(), "desktop", new Promise<RigResult>(() => {}));
-    tl.seek(D.performance - 0.1).play();
-    tl.time(D.performance + 0.01);
-    expect(tl.paused()).toBe(true);
+    const onBeat = vi.fn();
+    const refs = fullRefs();
+    const { rig, settle } = pending();
+    const tl = make(refs, "desktop", rig, onBeat);
+    tl.time(P + 0.01);
+    const turn = turnOf(tl, refs);
+    const startTime = vi.spyOn(turn, "startTime");
+    const resume = vi.spyOn(turn, "resume");
+    const calls = onBeat.mock.calls.length;
     tl.kill();
     vi.advanceTimersByTime(2000);
-    expect(tl.paused()).toBe(true);
+    settle("ready");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(startTime).not.toHaveBeenCalled();
+    expect(resume).not.toHaveBeenCalled();
+    expect(onBeat.mock.calls).toHaveLength(calls);
   });
 
   it("the phone never waits for or plays the head turn", () => {
@@ -500,7 +652,7 @@ describe("createIntroTimeline: the look, the pixels and the name", () => {
     const refs = fullRefs();
     const tl = make(refs);
     const [first] = createPixels();
-    const anchor = refs.pixels[0]!.anchor;
+    const anchor = refs.pixels[0]!;
     tl.time(first!.delay - 0.01);
     expect(hidden(anchor)).toBe(true);
     tl.time(first!.delay + 0.8 * 0.18);
@@ -728,7 +880,7 @@ describe("createIntroTimeline: callbacks and clean-up", () => {
     tl.kill();
     expect(gsap.getTweensOf(refs.cta)).toHaveLength(0);
     expect(gsap.getTweensOf(refs.letters)).toHaveLength(0);
-    expect(gsap.getTweensOf(refs.pixels.map((p) => p.anchor))).toHaveLength(0);
+    expect(gsap.getTweensOf(refs.pixels)).toHaveLength(0);
   });
 
   it("a restart is idempotent: the same end state, the same pixels, the same letters", async () => {
@@ -756,6 +908,7 @@ describe("showIntroEndState", () => {
     showIntroEndState(gsap, refs);
     for (const part of [
       refs.crowd,
+      refs.dust,
       refs.sky,
       refs.field,
       refs.backlight,
@@ -777,8 +930,9 @@ describe("showIntroEndState", () => {
     expect(refs.banks.map((b) => b.style.opacity)).toEqual(["1", "1", "1", "1"]);
     expect(refs.letters.every((l) => l.dataset.lit === "done")).toBe(true);
     expect(refs.title.style.clipPath).toBe("");
-    expect(refs.fig.style.getPropertyValue("--lit")).toBe("1");
+    expect(refs.fig.style.getPropertyValue("--lit")).toBe("");
     expect(gsap.getProperty(refs.mover, "x")).toBe(0);
+    expect(refs.mover.style.filter).toBe("");
   });
 
   it("shows the phone's portrait", () => {
@@ -797,6 +951,7 @@ describe("showIntroEndState", () => {
       ...refs.ghosts,
       ...refs.glints,
       ...refs.flares,
+      refs.shade,
       refs.trails,
       refs.shock,
       refs.streak,
@@ -804,7 +959,7 @@ describe("showIntroEndState", () => {
       refs.boardHit,
       refs.flash,
       refs.titleBar,
-      ...refs.pixels.map((p) => p.anchor),
+      ...refs.pixels,
     ]) {
       expect(hidden(part)).toBe(true);
     }
