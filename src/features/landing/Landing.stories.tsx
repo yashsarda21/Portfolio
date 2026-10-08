@@ -18,10 +18,9 @@ export const Desktop: StoryObj = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("heading", { level: 1, name: "YASH SARDA" })).toBeInTheDocument();
-    await expect(canvas.getByRole("link", { name: /ENTER THE ARENA/ })).toHaveAttribute(
-      "href",
-      "/intro",
-    );
+    // The calls to action stay hidden (not yet in the accessibility tree) until the boot reaches them.
+    const enter = await canvas.findByRole("link", { name: /ENTER THE ARENA/ }, { timeout: 8000 });
+    await expect(enter).toHaveAttribute("href", "/intro");
   },
 };
 

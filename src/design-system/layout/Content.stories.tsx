@@ -351,7 +351,7 @@ export const MediaSlots: StoryObj = {
         badge="REPLAY"
         round="SEMI-FINAL"
         describedBy="kudo-line"
-        media={{ src: "replay-demo.mp4", poster: POSTER, silent: true }}
+        media={{ src: "/replay-demo.webm", poster: POSTER, silent: true }}
       />
       <p id="kudo-line" className="type-body-sm text-text-2">
         A recognition platform built from scratch for 10,000+ employees.
@@ -362,9 +362,9 @@ export const MediaSlots: StoryObj = {
         badge="REPLAY"
         round="QUARTER-FINAL"
         media={{
-          src: "replay-demo.mp4",
+          src: "/replay-demo.webm",
           poster: POSTER,
-          captions: { src: "replay-demo.vtt", label: "English", srcLang: "en" },
+          captions: { src: "/replay-demo.vtt", label: "English", srcLang: "en" },
         }}
       />
     </div>
