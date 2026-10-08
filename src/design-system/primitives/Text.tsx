@@ -22,6 +22,7 @@ export const textVariants = cva("", {
       "title-fixture": "type-title-fixture",
       "title-tile": "type-title-tile",
       "title-matchday": "type-title-matchday",
+      "title-hub": "type-title-hub",
       "title-shelf": "type-title-shelf",
       monogram: "type-monogram",
       name: "type-name",

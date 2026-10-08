@@ -1,3 +1,4 @@
+import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/cn";
 import { Glass } from "../primitives/Glass";
 
@@ -6,11 +7,8 @@ export function RecordChip({
   label,
   value,
   className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
+  ...rest
+}: { label: string; value: string } & Omit<ComponentPropsWithoutRef<"p">, "children">) {
   return (
     <Glass
       as="p"
@@ -18,6 +16,7 @@ export function RecordChip({
         "inline-flex h-11 items-center gap-2 px-3.5 type-mono-nav text-scout",
         className,
       )}
+      {...rest}
     >
       <span>{label}</span>
       <span className="text-floodlight">{value}</span>

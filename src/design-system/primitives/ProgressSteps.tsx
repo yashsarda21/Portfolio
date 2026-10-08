@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
 
 interface ProgressStepsProps {
@@ -8,6 +9,8 @@ interface ProgressStepsProps {
   variant?: "bar" | "segment";
   /** Progress in words, e.g. "1 of 3 venues played" — what screen readers announce. */
   label: string;
+  /** The cells fill in one after another on arrival (the segment preset: 350 ms, 40 ms apart). */
+  animate?: boolean;
   className?: string;
 }
 
@@ -20,6 +23,7 @@ export function ProgressSteps({
   current = false,
   variant = "bar",
   label,
+  animate = false,
   className,
 }: ProgressStepsProps) {
   const filled = Math.max(0, Math.min(done, total));
@@ -31,7 +35,9 @@ export function ProgressSteps({
           className={cn(
             CELL[variant],
             i < filled ? "bg-volt" : i === filled && current ? "bg-volt-a35" : "bg-seg-empty",
+            animate && "animate-seg-fill",
           )}
+          style={animate ? ({ "--i": i } as CSSProperties) : undefined}
         />
       ))}
     </div>

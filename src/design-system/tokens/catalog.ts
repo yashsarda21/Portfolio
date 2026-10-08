@@ -161,6 +161,7 @@ export const TOKEN_CATALOG = {
     "type-title-fixture",
     "type-title-tile",
     "type-title-matchday",
+    "type-title-hub",
     "type-title-shelf",
     "type-monogram",
     "type-name",

@@ -763,6 +763,14 @@
   line-height: 1;
   text-transform: uppercase;
 }
+/* The Hub's title ("CHOOSE YOUR VENUE"): 56px at .9 (type-d2s is 52px, type-d2 60px). */
+@utility type-title-hub {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
 /* A facility tile's name on the phone (Mobile-Hub): 18px, untracked (type-d5 is tracked .08em). */
 @utility type-title-tile {
   font-family: var(--font-display);

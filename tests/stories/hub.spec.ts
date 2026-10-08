@@ -1,7 +1,13 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { expect, test, type Locator } from "@playwright/test";
 import { PNG } from "pngjs";
-import { cropPng, diffImages, readReference, type Rect } from "../support/visual";
+import {
+  cropPng,
+  diffImages,
+  expectMatchesArtboard,
+  readReference,
+  type Rect,
+} from "../support/visual";
 
 const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y.manual:!true`;
 
@@ -68,6 +74,30 @@ test.describe("Hub.dc.html (1440 x 900)", () => {
         height: 760,
       },
     );
+    expect(ratio).toBeLessThanOrEqual(0.02);
+  });
+});
+
+test.describe("Hub page (1440 x 900)", () => {
+  // Reduced motion, as the route's compare: the arc sits where it is drawn.
+  test.use({ reducedMotion: "reduce" });
+
+  test("the Hub page matches the artboard (artboard copy)", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "Hub is a 1440×900 board");
+    await page.goto(story("features-hub--artboard-parity"));
+    await page.locator("#storybook-root [data-stage]").waitFor();
+    const ratio = await expectMatchesArtboard(page, "Hub", {
+      maxDiffRatio: 0.02,
+      // The chip says YOUR RECORD (spec §11.2 #11, H3): the artboard's says RECORD, so ours is wider.
+      mask: [page.getByText("YOUR RECORD", { exact: true }).locator("..")],
+      maskRects: [
+        // The index adds QUICK VIEW (spec §11.3, H6), a row the artboard does not draw.
+        { x: 55, y: 566, width: 198, height: 46 },
+        // The commentary line: the story has none, the artboard draws one.
+        { x: 304, y: 821, width: 414, height: 43 },
+      ],
+    });
+    console.log(`[ratio] Hub story ${ratio}`);
     expect(ratio).toBeLessThanOrEqual(0.02);
   });
 });
