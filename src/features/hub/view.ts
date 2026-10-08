@@ -78,13 +78,25 @@ const SCENES = { cricket: "turf", tennis: "court", badminton: "hall" } as const;
 const SKIP_TO = { cricket: "career", tennis: "highlights", badminton: "attributes" } as const;
 /** The only hidden achievement so far (H8). */
 const ACHIEVEMENTS = ["giant-killer"] as const;
+/** The academy is a section of the trophies page. */
+const ACADEMY = { route: "trophies", hash: "academy" } as const;
+type Target = keyof typeof ROUTES | typeof ACADEMY;
+const target = (routes: typeof ROUTES, to: Target) =>
+  typeof to === "string" ? routes[to] : `${routes[to.route]}#${to.hash}`;
+/** The facilities row, left to right; Team Up is the volt tile. */
+const FACILITIES = [
+  { key: "trophies", to: "trophies", tone: "glass" },
+  { key: "academy", to: ACADEMY, tone: "glass" },
+  { key: "card", to: "card", tone: "glass" },
+  { key: "teamUp", to: "teamUp", tone: "volt" },
+] as const satisfies readonly { key: HubFacility["key"]; to: Target; tone: HubFacility["tone"] }[];
 /** Index entries in order; each is "seen" with the section whose page it lives on. The Locker Room shows once unlocked. */
 const INDEX = [
   { key: "career", seenWith: "career", to: "career" },
   { key: "highlights", seenWith: "highlights", to: "highlights" },
   { key: "attributes", seenWith: "attributes", to: "attributes" },
   { key: "trophies", seenWith: "trophies", to: "trophies" },
-  { key: "academy", seenWith: "trophies", to: "trophies" },
+  { key: "academy", seenWith: "trophies", to: ACADEMY },
   { key: "card", seenWith: "card", to: "card" },
   { key: "teamUp", seenWith: "teamUp", to: "teamUp" },
   { key: "scout", seenWith: "scout", to: "scout" },
@@ -142,7 +154,7 @@ export function buildHubView(
       label: copy.label,
       tag: seen ? hub.index.seen : copy.tag,
       seen,
-      to: key === "academy" ? `${routes[to]}#academy` : routes[to],
+      to: target(routes, to),
     };
   };
   const links = INDEX.filter((e) => e.key !== "lockerRoom" || record.lockerRoomUnlocked).map(link);
@@ -152,34 +164,14 @@ export function buildHubView(
   const comms = [hub.comm.none, hub.comm.one, hub.comm.two, hub.comm.all];
 
   const f = hub.facilities;
-  const trophies: HubFacility = {
-    key: "trophies",
-    label: f.trophies.label,
-    title: f.trophies.title,
-    to: routes.trophies,
-    tone: "glass",
-  };
-  const academy: HubFacility = {
-    key: "academy",
-    label: f.academy.label,
-    title: f.academy.title,
-    to: `${routes.trophies}#academy`,
-    tone: "glass",
-  };
-  const card: HubFacility = {
-    key: "card",
-    label: f.card.label,
-    title: f.card.title,
-    to: routes.card,
-    tone: "glass",
-  };
-  const teamUp: HubFacility = {
-    key: "teamUp",
-    label: f.teamUp.label,
-    title: f.teamUp.title,
-    to: routes.teamUp,
-    tone: "volt",
-  };
+  const facilities = FACILITIES.map(({ key, to, tone }): HubFacility => ({
+    key,
+    label: f[key].label,
+    title: f[key].title,
+    to: target(routes, to),
+    tone,
+  }));
+  const [trophies, academy] = facilities as [HubFacility, HubFacility];
 
   return {
     heading: ui.routes.arena.heading,
@@ -204,7 +196,7 @@ export function buildHubView(
       label: a.label,
       text: `${unlocked} ${a.of} ${ACHIEVEMENTS.length} ${a.unlocked} ${unlocked > 0 ? a.open : a.locked}`,
     },
-    facilities: [trophies, academy, card, teamUp],
+    facilities,
     facilitiesPhone: [
       { ...trophies, label: f.trophies.labelPhone },
       { ...academy, title: f.academy.titlePhone },
