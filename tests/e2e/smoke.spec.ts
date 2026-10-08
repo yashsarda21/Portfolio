@@ -6,7 +6,7 @@ import { expectNoA11yViolations } from "../support/a11y";
 
 test("home page renders its heading", async ({ page }) => {
   await page.goto("/");
-  // The name is hidden until its turn in the boot (3 s).
+  // The name is in the page from the first frame, at opacity 0 (readable and focusable), and fades in at its turn in the boot (3 s).
   await expect(page.getByRole("heading", { level: 1, name: ui.routes.home.heading })).toBeVisible({
     timeout: 10_000,
   });
