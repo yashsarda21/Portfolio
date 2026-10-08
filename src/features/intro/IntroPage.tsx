@@ -17,7 +17,7 @@ import type { IntroView } from "./view";
 /**
  * The Player Introduction. From 768px up (desktop and tablet, L1) the 1440x900 stage plays the intro: a
  * timeline (useIntroTimeline) lights the scene, swings the silhouette in, locks the name in and finishes with
- * the call to action. Below 768px the phone's column plays its own two-second cut (IntroColumn, L6). Each
+ * the call to action. Below 768px the phone's column plays its own three-second cut (IntroColumn, L6, D-6). Each
  * layout is marked `data-intro-layout`, so the timeline collects the parts of the one on show only.
  *
  * `data-hold` on the root says where the show is (pending, playing, done). While it is pending, every part the
@@ -51,9 +51,13 @@ export function IntroPage({
             right={<IntroControls view={view} onReplay={onReplay} />}
           />
 
-          {/* h-135.5 w-310.5: the board is 1240x540 inside its 1px border (the artboard sizes the content box), so 1242x542 outside. */}
-          <Scoreboard.Power className="top-24 left-25 h-135.5 w-310.5" />
-          <Scoreboard size="intro" className="absolute top-24 left-25 h-135.5 w-310.5">
+          {/* The board is 1240x500 inside its 1px border (the artboard sizes the content box), so 1242x502 outside: it starts 40px lower than the artboard's (y 136, D-5, so the lights fit between it and the HUD) and ends where it did (y 638). The name stays where it was drawn; the figure and its glow move down with the board's top. */}
+          <Scoreboard.Power className="top-34 left-25 h-125.5 w-310.5" />
+          <Scoreboard
+            size="intro"
+            data-part="board"
+            className="absolute top-34 left-25 h-125.5 w-310.5"
+          >
             <Scoreboard.Header data-part="board-header" className="hold-part">
               <span className="flex items-center gap-2.5">
                 <LiveDot />
@@ -66,13 +70,13 @@ export function IntroPage({
             <div
               aria-hidden="true"
               data-part="backlight"
-              className="pointer-events-none hold-part absolute -right-10 bottom-7.5 h-130 w-175 intro-backlight"
+              className="pointer-events-none hold-part absolute -right-10 -bottom-2.5 h-130 w-175 intro-backlight"
             />
             <Scoreboard.Scan variant="bar" />
 
             <IntroFigure alt={view.portraitAlt} />
 
-            <div className="absolute top-37.5 left-14 z-4 flex flex-col gap-4.5">
+            <div className="absolute top-27.5 left-14 z-4 flex flex-col gap-4.5">
               <IntroName heading={view.heading} letters={letters} />
               <IntroTitle title={view.title} className="h-9.5" />
               <IntroTagline parts={view.tagline} variant="stage" />

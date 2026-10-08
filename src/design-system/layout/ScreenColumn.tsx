@@ -11,17 +11,19 @@ interface ScreenColumnProps extends Omit<ComponentPropsWithoutRef<"div">, "child
   backdrop?: ReactNode;
   /** The row across the top: the brand lockup and the controls. */
   top: ReactNode;
-  /** The screen's content (the scoreboard). It starts where the top row ends; place it with its own margin. */
+  /** The screen's content (the scoreboard). It and the actions form one group, centred under the top row. */
   children: ReactNode;
-  /** The calls to action, pinned to the foot of the column on a phone and set under the content on a tablet. */
+  /** The calls to action, set a fixed gap under the content: 40px on a phone, 56px from a tablet. */
   actions: ReactNode;
 }
 
 /**
  * The phone's frame for a cinematic screen (Mobile-Landing): a flex column at least one screen tall, so a
- * short phone scrolls instead of clipping, over its own backdrop. 16px gutters, 640px wide at most and centred
- * on a tablet, where the content and the actions sit together in the middle of what the top row leaves.
- * Slots: `top`, `children`, `actions`. Pass the Stage's counterpart as `until`.
+ * short phone scrolls instead of clipping, over its own backdrop. 16px gutters, 640px wide at most and centred.
+ * The content and the actions are one group under the top row: the actions a fixed gap below the content (40px,
+ * 56px from a tablet), the group centred in what the top row leaves, and never closer to the top row than 56px,
+ * the strip the backdrop's floodlights hang in (the column backdrop's banks end 14px short of it). Slots:
+ * `top` (data-part="top"), `children`, `actions`. Pass the Stage's counterpart as `until`.
  */
 export function ScreenColumn({
   until,
@@ -40,10 +42,12 @@ export function ScreenColumn({
     >
       {backdrop}
       <div className="relative mx-auto flex w-full max-w-160 flex-1 flex-col px-4 pt-4 pb-10">
-        <div className="flex items-center justify-between gap-2">{top}</div>
-        <div className="flex flex-1 flex-col md:justify-center md:py-8">
+        <div data-part="top" className="flex items-center justify-between gap-2">
+          {top}
+        </div>
+        <div className="flex flex-1 flex-col justify-center pt-14">
           {children}
-          <div className="mt-auto flex flex-col gap-3 pt-6 md:mt-14 md:pt-0">{actions}</div>
+          <div className="mt-10 flex flex-col gap-3 md:mt-14">{actions}</div>
         </div>
       </div>
     </div>

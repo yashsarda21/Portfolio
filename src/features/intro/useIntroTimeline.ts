@@ -15,7 +15,7 @@ type IntroState = "pending" | "playing" | "done";
 
 /**
  * Which intro this screen gets. The stage (desktop AND tablet, L1) plays the full show; the phone column
- * plays its own two-second cut (L6); reduced motion gets the end state at once, whatever the width.
+ * plays its own three-second cut (L6, D-6); reduced motion gets the end state at once, whatever the width.
  */
 const TIERS = {
   desktop: `${MEDIA.md} and (prefers-reduced-motion: no-preference)`,

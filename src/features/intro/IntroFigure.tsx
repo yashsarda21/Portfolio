@@ -48,7 +48,7 @@ export function IntroFigure({ alt }: { alt: string }) {
           key={tint}
           aria-hidden="true"
           data-part="ghost"
-          className="pointer-events-none invisible absolute right-9 bottom-16 z-1 h-112.75 w-140"
+          className="pointer-events-none invisible absolute right-9 bottom-6 z-1 h-112.75 w-140"
         >
           {/* The rest pose, not the head turn's first frame: it is already on its way, so the ghosts never wait on the strips (L7). */}
           <img
@@ -64,10 +64,10 @@ export function IntroFigure({ alt }: { alt: string }) {
       <div
         aria-hidden="true"
         data-part="shock"
-        className="pointer-events-none invisible absolute top-12 right-140 bottom-16 z-2 w-1.5 origin-left bg-linear-180 from-volt/0 via-volt to-volt/0 shadow-glow-volt-lg"
+        className="pointer-events-none invisible absolute top-12 right-140 bottom-6 z-2 w-1.5 origin-left bg-linear-180 from-volt/0 via-volt to-volt/0 shadow-glow-volt-lg"
       />
 
-      <div data-part="mover" className="hold-part absolute right-9 bottom-16 z-3 h-112.75 w-140">
+      <div data-part="mover" className="hold-part absolute right-9 bottom-6 z-3 h-112.75 w-140">
         <div
           aria-hidden="true"
           data-part="trails"

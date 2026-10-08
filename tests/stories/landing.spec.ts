@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectMobileLandingFidelity } from "../support/mobileLanding";
 import { expectMatchesArtboard } from "../support/visual";
 
 const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y.manual:!true`;
@@ -22,26 +23,19 @@ test("Landing layout matches the Main artboard (artboard copy)", async ({ page }
   expect(ratio).toBeLessThanOrEqual(0.02);
 });
 
-test("Landing phone matches the Mobile-Landing artboard (artboard copy)", async ({
+test("Landing phone matches the Mobile-Landing artboard where it was left alone and at the new places of what moved (artboard copy)", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "Mobile-Landing is a 390×844 board");
   await page.goto(story("features-landing--phone"));
   await page.locator("#storybook-root [data-landing-column]").waitFor();
-  const column = page.locator("[data-landing-column]");
-  const ratio = await expectMatchesArtboard(page, "Mobile-Landing", {
-    maxDiffRatio: 0.02,
-    // A2: the board's 10px labels are 11px on the page, so each label's box is masked (sized to it).
-    // L5: the board's toggle reads SOUND OFF, the page starts with sound on: only the state word is masked.
-    mask: [
-      column.getByText("LIVE · THE ARENA", { exact: true }),
-      column.getByText("01 / 01", { exact: true }),
-      column.getByText("STATUS", { exact: true }),
-      column.getByText("AWAY", { exact: true }),
-      column.getByText("LITE · ONE-THUMB GAMES", { exact: true }),
-      column.getByText("RECRUITER VIEW · 90 SEC", { exact: true }),
-      column.getByRole("button", { name: /SOUND/ }).locator("span[aria-hidden='true']"),
-    ],
+  const ratios = await expectMobileLandingFidelity(page, page.locator("[data-landing-column]"), {
+    live: "LIVE · THE ARENA",
+    playerShort: "01 / 01",
+    status: "STATUS",
+    away: "AWAY",
+    enterSub: "LITE · ONE-THUMB GAMES",
+    viewSub: "RECRUITER VIEW · 90 SEC",
   });
-  expect(ratio).toBeLessThanOrEqual(0.02);
+  for (const ratio of Object.values(ratios)) expect(ratio).toBeLessThanOrEqual(0.02);
 });

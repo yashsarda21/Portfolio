@@ -144,8 +144,8 @@ describe("ArenaBackdrop layouts", () => {
     for (const name of ["field", "pitch", "cone-left", "cone-right", "mast-left", "dust"])
       expect(part(root, name), name).toHaveLength(0);
     const banks = [1, 2].map((n) => part(root, `bank-${n}`)[0] as HTMLElement);
-    expect(banks[0]).toHaveClass("h-5.5", "w-15", "top-14", "left-7.5");
-    expect(banks[1]).toHaveClass("h-5.5", "w-15", "top-14", "right-7.5");
+    expect(banks[0]).toHaveClass("h-5.5", "w-15", "top-20", "left-7.5");
+    expect(banks[1]).toHaveClass("h-5.5", "w-15", "top-20", "right-7.5");
     // The banks hang in a box as wide as the column (640px at most, centred), not the screen.
     expect(banks[0]!.parentElement).toHaveClass("relative", "mx-auto", "h-full", "max-w-160");
     const crowd = root.querySelector(".scene-crowd-flat") as HTMLElement;
@@ -154,6 +154,44 @@ describe("ArenaBackdrop layouts", () => {
     // Only the banks enter (a screen holds them back); the washes are just there.
     expect([...root.querySelectorAll(".hold-part")]).toEqual(banks);
     expect(root.querySelector(".scene-sky")).not.toHaveAttribute("data-part");
+  });
+
+  it("column takes the boot like the stage: sky, venue glow and crowd enter on their beats, the two banks flicker in order", () => {
+    const boot = {
+      crowd: 0.3,
+      coneL: 1,
+      coneR: 1.5,
+      sky: 2.2,
+      field: 2.4,
+      pitch: 2.6,
+      banks: [0.6, 1.1, 1.6, 2],
+    } as const;
+    const { container } = render(<ArenaBackdrop layout="column" boot={boot} />);
+    const root = container.firstElementChild as HTMLElement;
+    const at = (el: Element | null) => (el as HTMLElement).style.getPropertyValue("--d");
+    const sky = part(root, "sky")[0]!;
+    const crowd = part(root, "crowd")[0]!;
+    const glow = part(root, "venue")[0]!;
+    expect(sky).toHaveClass("scene-sky", "animate-boot-fade");
+    expect(at(sky)).toBe("2.2s");
+    expect(crowd).toHaveClass("animate-boot-fade");
+    expect(at(crowd)).toBe("0.3s");
+    expect(glow).toHaveClass("scene-venue-glow", "animate-boot-fade");
+    expect(at(glow)).toBe("2.4s");
+    const banks = [1, 2].map((n) => part(root, `bank-${n}`)[0] as HTMLElement);
+    expect(banks.map(at)).toEqual(["0.6s", "1.1s"]);
+    for (const bank of banks) expect(bank).toHaveClass("animate-bank-flicker");
+    // The stage's other layers are still not here.
+    for (const name of ["field", "pitch", "cone-left", "cone-right", "dust"])
+      expect(part(root, name), name).toHaveLength(0);
+  });
+
+  it("column without a boot is as before: the washes are plain, only the banks take the held class", () => {
+    const { container } = render(<ArenaBackdrop layout="column" layerClassName="hold-part" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.querySelector(".scene-venue-glow")).not.toHaveAttribute("data-part");
+    expect(root.querySelector(".scene-crowd-flat")).not.toHaveAttribute("data-part");
+    expect(root.querySelector(".animate-boot-fade")).toBeNull();
   });
 
   it("dust fades in with the left cone, and holds back with the rest of the scene", () => {
@@ -207,6 +245,32 @@ describe("ArenaBackdrop layouts", () => {
         );
       }
     }
+  });
+
+  it("the Intro's four banks hang at the artboard's x, 76px down: under the HUD (ends y 60) with 16px between, above the board (starts y 136) with 16px (D-5, spec 11.4)", () => {
+    const { container } = render(<ArenaBackdrop layout="intro" />);
+    const bank = (n: number) => part(container, `bank-${n}`)[0] as HTMLElement;
+    expect([1, 2, 3, 4].map((n) => bank(n).classList.contains("top-19"))).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(bank(1)).toHaveClass("left-20", "h-11");
+    expect(bank(2)).toHaveClass("left-95", "h-8");
+    expect(bank(3)).toHaveClass("right-95", "h-8");
+    expect(bank(4)).toHaveClass("right-20", "h-11");
+    // The housings end at 76 + 44 = 120 (large) and 76 + 32 = 108 (small): 16px short of the board's top, 136.
+    expect(19 * 4 + 44 + 16).toBe(136);
+  });
+
+  it("each Intro beam still starts under its lamp: the cone boxes start 26px above the lowered housing's bottom as the artboard's start 26px above the old one's", () => {
+    const lampTop = 76; // top-19
+    const artboard = { lampTop: 34, coneTop: 60 };
+    expect(CONE_BOXES.intro.left.y - lampTop).toBe(artboard.coneTop - artboard.lampTop);
+    expect(CONE_BOXES.intro.right.y - lampTop).toBe(artboard.coneTop - artboard.lampTop);
+    // The bottom edge is where the artboard has it (y 860).
+    expect(CONE_BOXES.intro.left.y + CONE_BOXES.intro.left.h).toBe(860);
   });
 
   const BEATS = {

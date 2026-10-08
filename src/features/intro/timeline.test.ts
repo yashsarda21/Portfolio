@@ -99,12 +99,12 @@ describe("createIntroTimeline: beats and lengths", () => {
     );
   });
 
-  it("lengths: desktop ~6.4s, mobile ~2s", () => {
+  it("lengths: desktop ~6.4s, mobile ~3s (D-6)", () => {
     const d = (tier: "desktop" | "mobile") => make(fullRefs(), tier).duration();
     expect(d("desktop")).toBeGreaterThan(6.0);
     expect(d("desktop")).toBeLessThan(6.6);
-    expect(d("mobile")).toBeGreaterThan(1.8);
-    expect(d("mobile")).toBeLessThan(2.2);
+    expect(d("mobile")).toBeGreaterThan(2.8);
+    expect(d("mobile")).toBeLessThan(3.2);
   });
 
   it("skips tracks whose refs are missing (phone: no mover, strips, pixels)", () => {

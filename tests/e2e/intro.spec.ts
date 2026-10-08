@@ -4,7 +4,13 @@ import { expect, test as base, type Locator, type Page } from "@playwright/test"
 import { ui } from "../../src/content/ui-copy";
 import { INTRO_BEATS } from "../../src/features/intro/beats";
 import { expectNoA11yViolations } from "../support/a11y";
+import { INTRO_D5_MASKS } from "../support/introLights";
 import { expectMatchesArtboard, type Rect } from "../support/visual";
+import {
+  actionsGapAt,
+  expectBanksClearOfHud,
+  expectLightsBelowTopRow,
+} from "./support/columnLayout";
 import { expectNoHorizontalOverflow, waitForHydration } from "./support/contentPage";
 
 /*
@@ -168,30 +174,36 @@ function gsapChunks(): string[] {
   );
 }
 
-/*
- * Where Intro.dc.html draws the two light cones and where the page does (D-1, spec 11.4: our beam tops start
- * under each lamp; the artboard's are drawn offset). Cone boxes (src/design-system/scene/cones.ts), design px:
- *   left  x 40..580,  y 60..860 (540x800)         right x 860..1400, y 60..860
- * Artboard top edges, as percent of the box: left 18%-30%, right 70%-82%.
- *   left  18% = 40 + .18 x 540 = 137.2   30% = 40 + .30 x 540 = 202
- *   right 70% = 860 + .70 x 540 = 1238   82% = 860 + .82 x 540 = 1302.8
- * Ours (CONE_APEX.intro): left 7.4074%-28.1481% = x 80..192, right 71.8519%-92.5926% = x 1248..1360.
- * Both beams run to the same bottom corners, so they only part near the top, where the artboard's is the
- * narrower and the board has not yet covered either. The board (x 100..1340, y 96..636) hides the rest.
- *   above the board (y 60..96): left  x 80..202 (+6 blur each side) -> x 74..208
- *                               right x 1238..1360               -> x 1232..1366
- *   beside the board: our left edge runs x = 80 + 176 (y-60)/800, so it is still left of the board's edge
- *     (x = 100) until y = 60 + 20 x 800/176 = 151: a sliver x 84..100, y 98..154. On the right ours is
- *     x = 1360 - 500 (y-60)/800, inside the board's ring (x 1349) from y = 78.
- * Everything is boxed a little wider than the arithmetic; the board, name, portrait and CTA are never masked.
- */
-const CONE_MASKS: Rect[] = [
-  { x: 74, y: 58, width: 134, height: 40 }, // left beam above the board
-  { x: 84, y: 98, width: 16, height: 56 }, // left beam beside the board
-  { x: 1232, y: 58, width: 134, height: 40 }, // right beam above the board
-];
 /** The commentary line: the artboard draws it as a still, the page's comes and goes (box: 36,821 to 373,864). */
 const COMM_MASK: Rect = { x: 30, y: 815, width: 400, height: 60 };
+
+test.describe("stage: the banks hang under the HUD, over the board (D-5)", () => {
+  test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
+  for (const [width, height] of [
+    [1440, 900],
+    [1280, 720],
+    [1024, 768],
+    [768, 1024],
+  ] as const) {
+    test(`${width}x${height}: every bank is at least 8px under the logo, REPLAY and SKIP INTRO and ends above the board; the board stays clear of WELCOME and the CTA`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      // Played to its end, so REPLAY is there (reduced motion has none).
+      const show = await startShow(page);
+      await show.finish();
+      await done(page);
+      const stage = page.locator('[data-intro-layout="stage"]');
+      const board = stage.locator("[data-part='board']");
+      await expectBanksClearOfHud(page, stage, 4, { below: "all", board });
+      const b = (await board.boundingBox())!;
+      for (const below of [part(page, "welcome"), part(page, "cta")]) {
+        const box = (await below.boundingBox())!;
+        expect(box.y, "below the board").toBeGreaterThanOrEqual(b.y + b.height);
+      }
+    });
+  }
+});
 
 test.describe("desktop", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 1200, "the 1440x900 stage");
@@ -203,7 +215,7 @@ test.describe("desktop", () => {
     // animations: "disabled" in the compare ends every finite animation and drops the loops (breathing, glow, sweep).
     const ratio = await expectMatchesArtboard(page, "Intro", {
       maxDiffRatio: 0.02,
-      maskRects: [COMM_MASK, ...CONE_MASKS],
+      maskRects: [COMM_MASK, ...INTRO_D5_MASKS],
     });
     expect(ratio).toBeLessThanOrEqual(0.02);
   });
@@ -669,7 +681,7 @@ function trackPortrait(page: Page) {
   return urls;
 }
 
-test.describe("phone (L6): the column's two-second cut", () => {
+test.describe("phone (L6): the column's three-second cut (D-6)", () => {
   test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
 
   for (const [width, height] of [
@@ -677,17 +689,17 @@ test.describe("phone (L6): the column's two-second cut", () => {
     [375, 667],
     [360, 640],
   ] as const) {
-    test(`${width}x${height}: done in 2.6 s, no head-turn frames, targets and CTA sized, nothing clipped, mono at 11px or more`, async ({
+    test(`${width}x${height}: done in 3.2 s, no head-turn frames, targets and CTA sized, nothing clipped, mono at 11px or more`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
       const strips = trackStrips(page);
       const portrait = trackPortrait(page);
       const show = await startShow(page);
-      // The cut is done within 2.6 s of its first frame (nothing is left to wait for).
-      await show.to(2.6);
+      // The cut is done within 3.2 s of its first frame (D-6: about 3 s; nothing is left to wait for).
+      await show.to(3.2);
       await done(page, 1000);
-      await show.to(3);
+      await show.to(3.6);
 
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(name(page)).toBeVisible();
@@ -732,6 +744,29 @@ test.describe("phone (L6): the column's two-second cut", () => {
       expect(small, "mono text under 11px").toEqual([]);
     });
   }
+
+  test.describe("the column's lights and spacing (D-2, D-3)", () => {
+    for (const [width, height] of [
+      [390, 844],
+      [375, 667],
+      [360, 640],
+    ] as const) {
+      test(`${width}x${height}: the lights sit under the top row, and the welcome line a fixed gap under the board`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        const show = await startShow(page);
+        await show.finish();
+        await done(page);
+        const column = page.locator('[data-intro-layout="column"]');
+        await expectLightsBelowTopRow(page, column);
+        const board = (await column.locator("[data-part='board']").boundingBox())!;
+        const welcome = (await part(page, "welcome", "column").boundingBox())!;
+        const gap = welcome.y - (board.y + board.height);
+        expect(Math.abs(gap - actionsGapAt(width)), `gap ${gap}`).toBeLessThanOrEqual(2);
+      });
+    }
+  });
 
   test("the CTA is hidden, and out of the Tab order, until its beat; the name's letters lock in", async ({
     page,

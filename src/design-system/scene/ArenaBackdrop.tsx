@@ -16,7 +16,7 @@ interface LayoutSpec {
   frame: string;
   /** What `bleed` changes about the box: let the scene extend past 1440x900 into the Stage letterbox. */
   bleed: string;
-  /** "enters": the washes (sky, crowd, field, pitch, cones) take the boot, the layer class and a data-part. "static": scenery that is just there. */
+  /** "enters": the washes (sky, crowd, field, pitch, cones) take the boot, the layer class and a data-part. "static": scenery that is just there (the layer class is for the banks only; a boot still fades the washes in). */
   wash: "enters" | "static";
   sky: { alpha: number; w?: string; h?: string };
   /** The venue's own glow along the bottom, or null where the artboard draws none. */
@@ -90,7 +90,10 @@ const LAYOUT = {
     ],
     flare: false,
   },
-  // Intro.dc.html: lower crowd and field, wider cones, flat banks, no pitch glow or masts
+  // Intro.dc.html: lower crowd and field, wider cones, flat banks, no pitch glow or masts. D-5 (spec 11.4): the
+  // banks hang 76px down, not 34 / 20 (the artboard's), at the artboard's x: the HUD's controls end at y 60 and
+  // the board starts at y 136, so every housing has 16px above (8px on a 768px tablet's scaled stage) and
+  // below it. The cone boxes follow, so each beam still starts under its lamp.
   intro: {
     frame: STAGE_FRAME,
     bleed: STAGE_BLEED,
@@ -102,21 +105,24 @@ const LAYOUT = {
     pitch: null,
     cones: {
       alpha: 0.14,
-      left: "top-15 left-10 h-200 w-135",
-      right: "top-15 right-10 h-200 w-135",
+      left: "top-25.5 left-10 h-189.5 w-135",
+      right: "top-25.5 right-10 h-189.5 w-135",
     },
     masts: [],
     banksFrame: null,
     banks: [
-      { part: "bank-1", size: "lg", flat: true, className: "top-8.5 left-20" },
-      { part: "bank-2", size: "sm", flat: true, className: "top-5 left-95" },
-      { part: "bank-3", size: "sm", flat: true, className: "top-5 right-95" },
-      { part: "bank-4", size: "lg", flat: true, className: "top-8.5 right-20" },
+      { part: "bank-1", size: "lg", flat: true, className: "top-19 left-20" },
+      { part: "bank-2", size: "sm", flat: true, className: "top-19 left-95" },
+      { part: "bank-3", size: "sm", flat: true, className: "top-19 right-95" },
+      { part: "bank-4", size: "lg", flat: true, className: "top-19 right-20" },
     ],
     flare: true,
   },
   // Mobile-Landing: the phone's (and a tablet's) column. Two small banks hang over the column's own edges
-  // (centred at most 640px wide), over a sky and venue glow and a flat crowd band. Nothing enters but the banks.
+  // (centred at most 640px wide), over a sky and venue glow and a flat crowd band. The banks sit 80px down:
+  // clear of the top row (it ends at 60px) and short of the board (never above 116px, see ScreenColumn).
+  // With a boot the washes enter like the stage's (sky, glow on the field's turn, crowd) and the banks flicker
+  // left then right; without one the scene stands lit, and only the banks take layerClassName.
   column: {
     frame: "absolute inset-0 overflow-hidden",
     bleed: "",
@@ -130,8 +136,8 @@ const LAYOUT = {
     masts: [],
     banksFrame: "relative mx-auto h-full max-w-160",
     banks: [
-      { part: "bank-1", size: "mobile", className: "top-14 left-7.5" },
-      { part: "bank-2", size: "mobile", className: "top-14 right-7.5" },
+      { part: "bank-1", size: "mobile", className: "top-20 left-7.5" },
+      { part: "bank-2", size: "mobile", className: "top-20 right-7.5" },
     ],
     flare: false,
   },
@@ -156,7 +162,7 @@ export function ArenaBackdrop({
 }: {
   /** "landing": Main's positions. "intro": the Intro artboard's (lower crowd and field, wider cones, flat banks with flare layers, no pitch glow or masts). "column": the phone and tablet column's (sky and venue glow, a flat crowd band, two small banks). */
   layout?: keyof typeof LAYOUT;
-  /** The CSS boot: every layer fades in at its beat and the banks flicker on, at the page's --pace (the masts have no entrance). Omit it and the scene stands lit for a timeline to drive. */
+  /** The CSS boot: every layer fades in at its beat and the banks flicker on, at the page's --pace (the masts have no entrance). The column takes it too: its venue glow enters on the field's beat, and its two banks flicker at the first two bank beats. Omit it and the scene stands lit for a timeline to drive. */
   boot?: BootBeats;
   /** Dust drifting in the beams (the stage layouts; it is drawn on desktop with motion allowed). Fades in with the left cone. */
   dust?: boolean;
@@ -178,7 +184,9 @@ export function ArenaBackdrop({
   const layer = (part: string, own?: string, beat?: number) =>
     enters
       ? { "data-part": part, className: cn(own, fade, layerClassName), style: at(beat) }
-      : { className: own };
+      : boot
+        ? { "data-part": part, className: cn(own, fade), style: at(beat) }
+        : { className: own };
   const banks = spec.banks.map((bank, i) => (
     <FloodlightBank
       key={bank.part}
@@ -203,7 +211,7 @@ export function ArenaBackdrop({
         h={spec.sky.h}
         {...layer("sky", undefined, boot?.sky)}
       />
-      {spec.glow && <VenueGlow {...spec.glow} />}
+      {spec.glow && <VenueGlow {...spec.glow} {...layer("venue", undefined, boot?.field)} />}
       <CrowdTier
         shape={spec.crowd.shape}
         alpha={spec.crowd.alpha}

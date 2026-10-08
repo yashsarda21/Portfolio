@@ -141,20 +141,35 @@ export async function expectMatchesArtboard(
   return ratio;
 }
 
+/** Where a named box sits in the page's screenshot when that is not where the artboard has it (a deliberate move, spec §11). */
+export type Placements = Record<string, { x: number; y: number }>;
+
 /**
  * Compare named boxes (CSS px on the board) of two same-size images, each with its own ratio.
  * Pure: the diff images are not written. Used where a page differs from its board on purpose (a logged
  * deviation, spec §11) and the rest of it must still match: the boxes are the parts that must.
+ * `placements`: a box that has moved is cut out of the page at its new top-left and compared with the
+ * board's box at the old one (same size, whole pixels). `masks`: rects to exclude, relative to each box's own
+ * top-left, painted into both crops.
  */
 export function diffBoxes(
   actual: PNG,
   expected: PNG,
   boxes: Record<string, Rect>,
   threshold = 0.1,
+  placements: Placements = {},
+  masks: Record<string, Rect[]> = {},
 ): Record<string, number> {
   const ratios: Record<string, number> = {};
   for (const [name, box] of Object.entries(boxes)) {
-    ratios[name] = diffImages(cropPng(actual, box), cropPng(expected, box), [], threshold).ratio;
+    const at = placements[name];
+    const live = at ? { ...box, x: Math.round(at.x), y: Math.round(at.y) } : box;
+    ratios[name] = diffImages(
+      cropPng(actual, live),
+      cropPng(expected, box),
+      masks[name] ?? [],
+      threshold,
+    ).ratio;
   }
   return ratios;
 }
@@ -163,6 +178,23 @@ export interface BoxMatchOptions {
   /** Largest allowed share of differing pixels in each box (default 0.02, spec §9.1). */
   maxDiffRatio?: number;
   threshold?: number;
+  /** Where each moved box is in the page (its top-left in CSS px); a box not listed is where the board has it. */
+  placements?: Placements;
+  /** Exclusions per box, relative to its own top-left (see `localRects`). */
+  masks?: Record<string, Rect[]>;
+}
+
+/** Locator boxes as rects relative to `origin`: the way a page's mask elements become a box's `masks`. */
+export async function localRects(
+  locators: Locator[],
+  origin: { x: number; y: number },
+): Promise<Rect[]> {
+  const rects: Rect[] = [];
+  for (const locator of locators) {
+    const box = await locator.boundingBox();
+    if (box) rects.push({ ...box, x: box.x - origin.x, y: box.y - origin.y });
+  }
+  return rects;
 }
 
 /** Screenshot the page and compare only the named boxes with the same boxes of the artboard reference. */
@@ -177,7 +209,14 @@ export async function expectBoxesMatchArtboard(
   const expected = await readReference(artboard, viewport.width, viewport.height);
   await page.evaluate(() => document.fonts.ready);
   const actual = PNG.sync.read(await page.screenshot({ animations: "disabled", caret: "hide" }));
-  const ratios = diffBoxes(actual, expected, boxes, options.threshold);
+  const ratios = diffBoxes(
+    actual,
+    expected,
+    boxes,
+    options.threshold,
+    options.placements,
+    options.masks,
+  );
   const max = options.maxDiffRatio ?? 0.02;
   if (process.env.LOG_RATIOS) console.log(`[ratio] ${artboard} boxes`, JSON.stringify(ratios));
   const over = Object.entries(ratios).filter(([, ratio]) => ratio > max);

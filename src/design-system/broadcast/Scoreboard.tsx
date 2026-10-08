@@ -23,15 +23,19 @@ const ROOT = wideOr("shadow-board", "shadow-board-compact");
 function Root({
   size = "landing",
   className,
+  "data-part": part,
   children,
 }: {
   size?: ScoreboardSize;
   className?: string;
+  /** Names the board for the timeline or CSS that addresses it. */
+  "data-part"?: string;
   children: ReactNode;
 }) {
   return (
     <SizeContext value={size}>
       <div
+        data-part={part}
         className={cn(
           "relative flex flex-col overflow-hidden border border-line-strong bg-board led-dots",
           ROOT[size],

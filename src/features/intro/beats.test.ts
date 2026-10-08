@@ -35,22 +35,22 @@ describe("INTRO_BEATS", () => {
     });
   });
 
-  it("mobile is the 2 s phone cut", () => {
+  it("mobile is the 3 s phone cut (D-6: the 2 s cut's beats times 1.5)", () => {
     expect(INTRO_BEATS.mobile).toEqual({
-      banks: 0.05,
-      bankGap: 0.2,
-      boardOn: 0.3,
-      boardHeader: 0.3,
-      name: 0.6,
-      letterGap: 0.03,
-      title: 1.1,
-      tagline: 1.2,
+      banks: 0.075,
+      bankGap: 0.3,
+      boardOn: 0.45,
+      boardHeader: 0.45,
+      name: 0.9,
+      letterGap: 0.045,
+      title: 1.65,
+      tagline: 1.8,
       taglineGap: 0,
-      strip: 1.2,
-      welcome: 1.3,
-      cta: 1.5,
-      comm: 1.7,
-      ctaGlow: 2.0,
+      strip: 1.8,
+      welcome: 1.95,
+      cta: 2.25,
+      comm: 2.55,
+      ctaGlow: 3.0,
     });
   });
 
@@ -65,8 +65,8 @@ describe("INTRO_BEATS", () => {
     expect(["banks", "cta", "comm"].some(isGap)).toBe(false);
   });
 
-  it("the stage plays at the board's speed, the phone a little quicker", () => {
+  it("both tiers play the board's own reveal durations (the phone's beats are spread out, not squeezed)", () => {
     expect(INTRO_TEMPO.desktop).toBe(1);
-    expect(INTRO_TEMPO.mobile).toBeLessThan(1);
+    expect(INTRO_TEMPO.mobile).toBe(1);
   });
 });

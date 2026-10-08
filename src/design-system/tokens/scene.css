@@ -87,7 +87,7 @@
 }
 /*
  * The same D-1 rule for the Intro layout: cone boxes are 540px wide (Intro.dc.html: left 40 / right 40,
- * top 60, 540x800) and the large flat bank is 112px wide at left 80 / right 80:
+ * top 60, 540x800; here top 102 and 758 high, D-5: the lamps hang lower, the x spans are unchanged) and the large flat bank is 112px wide at left 80 / right 80:
  *   left  (box x 40-580):    bank 80-192    -> (80-40)/540 = 7.4074%,  (192-40)/540 = 28.1481%
  *   right (box x 860-1400):  bank 1248-1360 -> (1248-860)/540 = 71.8519%, (1360-860)/540 = 92.5926%
  * The Intro artboard draws the apex at 18%-30% / 70%-82%, offset from the lamp. Bottom edges unchanged.

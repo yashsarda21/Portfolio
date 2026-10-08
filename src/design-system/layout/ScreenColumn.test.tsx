@@ -50,14 +50,17 @@ describe("ScreenColumn", () => {
     column();
     const frame = screen.getByText("TOP").parentElement!.parentElement!;
     expect(frame).toHaveClass("mx-auto", "w-full", "max-w-160", "px-4", "pt-4", "pb-10", "flex-1");
+    // The group (content and actions) is centred in what the top row leaves, below a 56px strip the lights hang in.
     const body = screen.getByText("BOARD").parentElement!;
-    expect(body).toHaveClass("flex-1", "flex-col", "md:justify-center", "md:py-8");
-    expect(screen.getByText("ACT").parentElement).toHaveClass(
-      "mt-auto",
-      "gap-3",
-      "pt-6",
-      "md:mt-14",
-      "md:pt-0",
-    );
+    expect(body).toHaveClass("flex-1", "flex-col", "justify-center", "pt-14");
+    expect(body).not.toHaveClass("mt-auto");
+  });
+
+  it("sets the actions a fixed gap under the content (40px on a phone, 56px from a tablet), never pinned to the foot", () => {
+    column();
+    const actions = screen.getByText("ACT").parentElement!;
+    expect(actions).toHaveClass("mt-10", "md:mt-14", "flex", "flex-col", "gap-3");
+    expect(actions).not.toHaveClass("mt-auto");
+    expect(actions.className).not.toMatch(/\bpt-/);
   });
 });

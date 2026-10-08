@@ -30,15 +30,15 @@ export function polygonIn(
  *  - the apex percentages in scene.css (cones.test.ts checks them against CONE_APEX),
  *  - the dust regions below.
  */
-/** Each cone's box (Main: 520x760 at side 60 / top 70; Intro.dc.html: 540x800 at side 40 / top 60). */
+/** Each cone's box (Main: 520x760 at side 60 / top 70; Intro.dc.html: 540x800 at side 40 / top 60, here D-5: top 102, same bottom, 540x758, so each beam starts 26px into its lowered lamp as the artboard's does). */
 export const CONE_BOXES = {
   landing: {
     left: { x: 60, y: 70, w: 520, h: 760 },
     right: { x: 860, y: 70, w: 520, h: 760 },
   },
   intro: {
-    left: { x: 40, y: 60, w: 540, h: 800 },
-    right: { x: 860, y: 60, w: 540, h: 800 },
+    left: { x: 40, y: 102, w: 540, h: 758 },
+    right: { x: 860, y: 102, w: 540, h: 758 },
   },
 } as const satisfies Record<Layout, Record<Side, Box>>;
 

@@ -1,7 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
-import { expectMatchesArtboard } from "../support/visual";
+import { expectMobileLandingFidelity } from "../support/mobileLanding";
+import {
+  actionsGapAt,
+  expectBanksClearOfHud,
+  expectLightsBelowTopRow,
+} from "./support/columnLayout";
 import { expectNoHorizontalOverflow, waitForHydration } from "./support/contentPage";
 
 const enter = (page: Page) => page.getByRole("link", { name: ui.landing.enter });
@@ -43,6 +48,12 @@ async function tabStops(page: Page, count: number): Promise<string[]> {
 
 test.describe("desktop", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 1200, "the desktop Landing");
+
+  test("the four banks clear the HUD (the stage layout is unchanged)", async ({ page }) => {
+    await page.goto("/");
+    await expect(name(page)).toBeVisible();
+    await expectBanksClearOfHud(page, page.locator("[data-stage]"), 4);
+  });
 
   test.describe("boot order", () => {
     test("at 0.2 s the name is faded out and the calls to action cannot take focus", async ({
@@ -295,24 +306,21 @@ const soundToggle = (page: Page) => column(page).getByRole("button", { name: /SO
 test.describe("phone", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) !== 390, "the 390×844 phone");
 
-  test("matches the Mobile-Landing artboard", async ({ page }) => {
+  test("matches the Mobile-Landing artboard where it was left alone, and at the new places of what moved (D-2, D-3)", async ({
+    page,
+  }) => {
     await page.goto("/");
     await waitForHydration(page);
-    // A2: the board draws its labels at 10px, the page at 11px, so each label's box is masked (sized to it).
-    // L5: the board's toggle reads SOUND OFF, the page starts with sound on: only the state word is masked.
-    const ratio = await expectMatchesArtboard(page, "Mobile-Landing", {
-      maxDiffRatio: 0.02,
-      mask: [
-        column(page).getByText(ui.landing.live, { exact: true }),
-        column(page).getByText(ui.landing.playerShort, { exact: true }),
-        column(page).getByText(ui.landing.status, { exact: true }),
-        column(page).getByText(ui.landing.away, { exact: true }),
-        column(page).getByText(ui.landing.enterSubPhone, { exact: true }),
-        column(page).getByText(ui.landing.viewSub, { exact: true }),
-        soundToggle(page).locator("span[aria-hidden='true']"),
-      ],
+    await seekBoot(page, 6000); // measured at the boot's last frame (the calls to action rise 18px into place)
+    const ratios = await expectMobileLandingFidelity(page, column(page), {
+      live: ui.landing.live,
+      playerShort: ui.landing.playerShort,
+      status: ui.landing.status,
+      away: ui.landing.away,
+      enterSub: ui.landing.enterSubPhone,
+      viewSub: ui.landing.viewSub,
     });
-    expect(ratio).toBeLessThanOrEqual(0.02);
+    for (const ratio of Object.values(ratios)) expect(ratio).toBeLessThanOrEqual(0.02);
   });
 
   test("one h1, the stacked name, and nothing sideways", async ({ page }) => {
@@ -419,6 +427,242 @@ test.describe("tablet", () => {
     await page.goto("/");
     await expect(name(page)).toBeVisible();
     await expectNoA11yViolations(page);
+  });
+});
+
+/** Below the stage the lights hang under the top row and the board and the actions are one group (D-2, D-3). */
+const COLUMN_SIZES = [
+  [390, 844],
+  [375, 667],
+  [360, 640],
+  [768, 1024],
+  [1024, 768],
+  [1180, 820],
+] as const;
+
+test.describe("the column's lights and spacing (D-2, D-3)", () => {
+  test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
+
+  for (const [width, height] of COLUMN_SIZES) {
+    test(`${width}×${height}: the lights sit under the top row, and the challenge line sits a fixed gap under the board`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/");
+      await expect(name(page)).toBeVisible();
+      await seekBoot(page, 6000); // the boot's last frame: the calls to action have risen into place
+      await expectLightsBelowTopRow(page, column(page));
+
+      const board = (await column(page).locator("[data-part='board']").boundingBox())!;
+      const challenge = (await column(page).getByText(ui.landing.challenge).boundingBox())!;
+      const gap = challenge.y - (board.y + board.height);
+      // One rule for phone and tablet: a fixed gap (40px below 768px, 56px from it), never a screen apart.
+      expect(Math.abs(gap - actionsGapAt(width)), `gap ${gap}`).toBeLessThanOrEqual(2);
+
+      // Centred under the top row as one group, wherever the screen is tall enough to hold it.
+      const last = (await quick(page).boundingBox())!;
+      const scrolls = await page.evaluate(
+        () => document.documentElement.scrollHeight > window.innerHeight,
+      );
+      if (!scrolls) {
+        const above = board.y - 60;
+        const below = height - (last.y + last.height);
+        expect(Math.abs(above - below), `above ${above}, below ${below}`).toBeLessThanOrEqual(24);
+      }
+
+      await expectNoHorizontalOverflow(page, [width], height);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      for (const cta of [enter(page), quick(page)]) {
+        await cta.scrollIntoViewIfNeeded();
+        const inside = await cta.evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          const doc = document.documentElement;
+          return { left: r.left >= 0, right: r.right <= doc.scrollWidth };
+        });
+        expect(inside).toEqual({ left: true, right: true });
+      }
+      const small = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[class*="type-mono"]')]
+          .filter((el) => el.getClientRects().length > 0)
+          .map((el) => ({ text: el.textContent, size: parseFloat(getComputedStyle(el).fontSize) }))
+          .filter((m) => m.size < 11),
+      );
+      expect(small).toEqual([]);
+    });
+  }
+});
+
+/** One part of the column, by its data-part. */
+const part = (page: Page, p: string) => column(page).locator(`[data-part='${p}']`);
+const look = (page: Page, p: string) =>
+  part(page, p)
+    .first()
+    .evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { visibility: s.visibility, opacity: Number(s.opacity) };
+    });
+const lookAt = (page: Page, selector: string) =>
+  page.evaluate((sel) => {
+    const el = document.querySelector(`[data-landing-column] ${sel}`)!;
+    const s = getComputedStyle(el);
+    return { visibility: s.visibility, opacity: Number(s.opacity) };
+  }, selector);
+
+test.describe("the column plays the boot on Main's beats (D-4)", () => {
+  test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
+
+  for (const [width, height] of [
+    [390, 844],
+    [768, 1024],
+  ] as const) {
+    test.describe(`${width}×${height}`, () => {
+      test.use({ viewport: { width, height } });
+
+      test("the top row is there from the first frame; the scene and the board start dark", async ({
+        page,
+      }) => {
+        await page.goto("/");
+        await waitForHydration(page);
+        await seekBoot(page, 0);
+        for (const sel of ["[data-part='top'] > *", "[data-part='top'] button"]) {
+          expect(await lookAt(page, sel), sel).toEqual({ visibility: "visible", opacity: 1 });
+        }
+        for (const p of ["sky", "crowd", "venue"]) expect((await look(page, p)).opacity, p).toBe(0);
+        for (const p of ["bank-1", "bank-2", "board-header", "board-footer", "actions", "scan"])
+          expect((await look(page, p)).visibility, p).toBe("hidden");
+        expect((await lookAt(page, "h1")).opacity).toBe(0);
+      });
+
+      test("at 0.5 s the name and the calls to action are not shown (and cannot take focus), the sky and crowd are not up", async ({
+        page,
+      }) => {
+        await page.goto("/");
+        await waitForHydration(page);
+        await seekBoot(page, 350);
+        // The crowd's turn is .3 s: it has barely begun.
+        for (const p of ["sky", "crowd", "venue"])
+          expect((await look(page, p)).opacity, p).toBeLessThan(0.1);
+        await seekBoot(page, 500);
+        // The name is not interactive: it stays in the page (readable) and only fades in.
+        expect((await lookAt(page, "h1")).opacity).toBe(0);
+        expect((await look(page, "actions")).visibility).toBe("hidden");
+        // (Not getByRole: a hidden link is out of the accessibility tree, which is the point.)
+        for (const href of ["/intro", "/scout"])
+          expect(await lookAt(page, `a[href='${href}']`)).toMatchObject({ visibility: "hidden" });
+        for (const p of ["bank-1", "bank-2"])
+          expect((await look(page, p)).visibility, `${p} before its turn`).toBe("hidden");
+        const stops = await tabStops(page, 6);
+        expect(stops.join(" | ")).toContain(ui.audio.labelPhone);
+        expect(stops.join(" | ")).not.toContain(ui.landing.enter);
+        expect(stops.join(" | ")).not.toContain(ui.landing.view);
+      });
+
+      test("the banks flicker on left then right (.6 s, 1.1 s); sky, glow and the board follow on their beats", async ({
+        page,
+      }) => {
+        await page.goto("/");
+        await waitForHydration(page);
+        await seekBoot(page, 1000);
+        expect((await look(page, "bank-1")).visibility).toBe("visible");
+        expect((await look(page, "bank-2")).visibility).toBe("hidden");
+        await seekBoot(page, 1500);
+        expect((await look(page, "bank-2")).visibility).toBe("visible");
+        await seekBoot(page, 2000);
+        expect((await look(page, "sky")).opacity).toBe(0); // 2.2 s
+        await seekBoot(page, 2300);
+        expect((await look(page, "sky")).opacity).toBeGreaterThan(0);
+        expect((await look(page, "venue")).opacity).toBe(0); // 2.4 s
+        await seekBoot(page, 2500);
+        expect((await look(page, "venue")).opacity).toBeGreaterThan(0);
+        expect((await look(page, "board-header")).visibility).toBe("hidden"); // 2.7 s
+        await seekBoot(page, 3200); // header and scan (2.7), name (3.0) have begun
+        expect((await look(page, "board-header")).visibility).toBe("visible");
+        expect((await look(page, "scan")).visibility).toBe("visible");
+        expect((await lookAt(page, "h1")).opacity).toBeGreaterThan(0);
+        expect((await look(page, "board-footer")).visibility).toBe("hidden"); // 4.0 s
+        expect((await look(page, "actions")).visibility).toBe("hidden"); // 4.5 s
+      });
+
+      test("at the end everything is shown and both calls to action take Tab", async ({ page }) => {
+        await page.goto("/");
+        await waitForHydration(page);
+        await seekBoot(page, 6000);
+        for (const p of ["sky", "crowd", "venue", "bank-1", "bank-2", "board-header"])
+          expect(await look(page, p), p).toEqual({ visibility: "visible", opacity: 1 });
+        for (const p of ["board-footer", "actions"])
+          expect(await look(page, p), p).toEqual({ visibility: "visible", opacity: 1 });
+        expect((await lookAt(page, "h1")).opacity).toBe(1);
+        const stops = await tabStops(page, 6);
+        expect(stops.join(" | ")).toContain(ui.landing.enter);
+        expect(stops.join(" | ")).toContain(ui.landing.view);
+      });
+
+      test("a return visit plays the cut-down: the calls to action are in by 1.6 s", async ({
+        page,
+      }) => {
+        await page.addInitScript(() => localStorage.setItem("arena:landing-seen", "1"));
+        await page.goto("/");
+        await expect(page.locator("html")).toHaveAttribute("data-return-visit", "");
+        const end = await part(page, "actions").evaluate((group) =>
+          Math.max(
+            ...group.getAnimations().map((a) => Number(a.effect!.getComputedTiming().endTime)),
+          ),
+        );
+        expect(end).toBeLessThanOrEqual(1600);
+        await seekBoot(page, 1600);
+        await enter(page).focus();
+        await expect(enter(page)).toBeFocused();
+        await expect(quick(page)).toBeVisible();
+      });
+
+      test("coming back in the same session plays the cut-down too", async ({ page }) => {
+        // The page's timers run on a clock the test steps: the 5.2 s beat that marks the boot as played
+        // fires at once, with no wait. (The CSS animations ignore it.)
+        await page.clock.install();
+        await page.goto("/");
+        await waitForHydration(page);
+        await page.clock.fastForward(6000);
+        await page.clock.resume();
+        await seekBoot(page, 6000);
+        await quick(page).click();
+        await expect(page).toHaveURL("/scout");
+        await page.goBack();
+        await expect(page).toHaveURL("/");
+        await expect(page.locator("html")).toHaveAttribute("data-return-visit", "");
+        const end = await part(page, "actions").evaluate((group) =>
+          Math.max(
+            ...group.getAnimations().map((a) => Number(a.effect!.getComputedTiming().endTime)),
+          ),
+        );
+        expect(end).toBeLessThanOrEqual(1600);
+      });
+
+      test.describe("reduced motion", () => {
+        test.use({ reducedMotion: "reduce" });
+        test("everything is shown at once", async ({ page }) => {
+          await page.goto("/");
+          await waitForHydration(page);
+          await page.waitForTimeout(100);
+          for (const p of ["sky", "crowd", "venue", "bank-1", "bank-2", "board-header"])
+            expect(await look(page, p), p).toEqual({ visibility: "visible", opacity: 1 });
+          for (const p of ["board-footer", "actions"])
+            expect(await look(page, p), p).toEqual({ visibility: "visible", opacity: 1 });
+          expect((await lookAt(page, "h1")).opacity).toBe(1);
+          await expect(enter(page)).toBeVisible();
+          await expect(quick(page)).toBeVisible();
+        });
+      });
+    });
+  }
+
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+    test("the CSS boot still ends with the column in place", async ({ page }) => {
+      await page.goto("/");
+      await expect(enter(page)).toBeVisible({ timeout: 10_000 });
+      await expect(quick(page)).toBeVisible();
+      await expect(name(page)).toBeVisible();
+    });
   });
 });
 
