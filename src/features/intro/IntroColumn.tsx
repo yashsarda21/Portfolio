@@ -58,7 +58,8 @@ export function IntroColumn({
             </span>
             <span>{view.header.count}</span>
           </Scoreboard.Header>
-          <Scoreboard.Body className="py-4">
+          {/* A landscape tablet has no height for the stack: the portrait and the name sit side by side (squat:). */}
+          <Scoreboard.Body className="py-4 squat:flex-row squat:gap-6">
             <img
               data-part="portrait"
               src={portraitRest}
@@ -66,11 +67,13 @@ export function IntroColumn({
               width={PORTRAIT.width}
               height={PORTRAIT.height}
               decoding="async"
-              className="hold-part h-auto w-3/5 portrait-fade"
+              className="hold-part h-auto w-3/5 portrait-fade squat:w-2/5 squat:shrink-0"
             />
-            <IntroName heading={view.heading} letters={letters} stacked />
-            <IntroTitle title={view.title} />
-            <IntroTagline parts={view.tagline} variant="column" />
+            <div className="flex flex-col items-center gap-2.5">
+              <IntroName heading={view.heading} letters={letters} stacked />
+              <IntroTitle title={view.title} />
+              <IntroTagline parts={view.tagline} variant="column" />
+            </div>
           </Scoreboard.Body>
           <Scoreboard.Footer data-part="board-strip" className="hold-part">
             <Scoreboard.FooterCells cells={view.footerPhone} />

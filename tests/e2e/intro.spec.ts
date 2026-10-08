@@ -717,10 +717,12 @@ test.describe("phone (L6): the column's three-second cut (D-6)", () => {
     });
   }
 
-  test.describe("the column fits a common phone at its end state", () => {
+  test.describe("the column fits a common phone and a landscape tablet at its end state", () => {
     for (const [width, height] of [
       [390, 844],
       [375, 812],
+      [1024, 768],
+      [1180, 820],
     ] as const) {
       test(`${width}x${height}: no scrolling, ENTER THE ARENA at least 16px above the bottom`, async ({
         page,

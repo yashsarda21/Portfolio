@@ -173,3 +173,10 @@
   /* a streak of light softened by a couple of pixels (the intro's white trail) */
   --blur-soft: 2px;
 }
+
+/*
+ * `squat:` for a tablet held wide: at least `md` (768px) across but under 63rem (1008px) tall, so a screen drawn
+ * as one tall stack (the phone column on a landscape tablet) has no height for it and lays out in a row.
+ * A portrait tablet (768x1024 and taller) is not squat.
+ */
+@custom-variant squat (@media (width >= 48rem) and (height < 63rem));
