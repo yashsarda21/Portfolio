@@ -42,6 +42,12 @@
   --perspective-card: 1400px;
   /* The showcase scene's floor: the viewer stands close, so the floor lies back steeply. */
   --perspective-floor: 700px;
+  /* The Hub's grid floor: the viewer stands further back than at the showcase floor. */
+  --perspective-grid: 800px;
+  /* A venue picture's court or oval, seen from just above. */
+  --perspective-court: 500px;
+  /* The Hub's three venue cards fanning toward the viewer. */
+  --perspective-arc: 1600px;
 }
 
 @theme inline {
@@ -167,6 +173,8 @@
   --shadow-bank-flare:
     0 0 80px 30px rgb(var(--rgb-white) / 0.9), 0 0 420px 180px rgb(var(--rgb-beam) / 0.35);
   --shadow-bank-mini: 0 0 22px 6px rgb(var(--rgb-bulb) / 0.4);
+  /* the Hub's wide venue-card bank (50px): the mini glow, spread a little further */
+  --shadow-bank-card-wide: 0 0 26px 8px rgb(var(--rgb-bulb) / 0.4);
   --shadow-inset-cabinet: inset 0 0 120px rgb(0 0 0 / 0.8);
 
   --blur-glass: var(--glass-blur);

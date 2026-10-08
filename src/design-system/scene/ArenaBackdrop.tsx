@@ -6,6 +6,7 @@ import { Dust } from "./Dust";
 import { Field } from "./Field";
 import { FloodlightBank } from "./FloodlightBank";
 import { FloodlightMast } from "./FloodlightMast";
+import { GridFloor } from "./GridFloor";
 import { LightCone } from "./LightCone";
 import { PitchGlow } from "./PitchGlow";
 import { SkyGlow } from "./SkyGlow";
@@ -18,9 +19,11 @@ interface LayoutSpec {
   bleed: string;
   /** "enters": the washes (sky, crowd, field, pitch, cones) take the boot, the layer class and a data-part. "static": scenery that is just there (the layer class is for the banks only; a boot still fades the washes in). */
   wash: "enters" | "static";
-  sky: { alpha: number; w?: string; h?: string };
+  sky: { alpha: number; x?: string; w?: string; h?: string };
   /** The venue's own glow along the bottom, or null where the artboard draws none. */
   glow: { y: string; w: string; h: string; alpha: number } | null;
+  /** A volt glow rising from the floor, the same under every venue (the Hub's). Unset where the artboard draws none. */
+  floorGlow?: { x: string; y: string; w: string; h: string; alpha: number };
   crowd: { shape: CrowdShape; alpha?: number; className: string };
   /** The perspective turf, or null (the phone column has none). */
   field: { tilt: number; oval: string; className: string } | null;
@@ -40,6 +43,8 @@ interface LayoutSpec {
   >;
   /** Give each bank a flare layer for a timeline to tween. */
   flare: boolean;
+  /** The Hub's grid floor (GridFloor, at its own place). Unset where the artboard draws none. */
+  grid?: boolean;
 }
 
 /**
@@ -141,7 +146,30 @@ const LAYOUT = {
     ],
     flare: false,
   },
-} as const satisfies Record<"landing" | "intro" | "column", LayoutSpec>;
+  // Hub.dc.html: the sky leans right, a volt glow rises from the floor, a faint crowd strip and a grid floor.
+  // No banks, cones, field or masts: the venue cards carry their own lights.
+  hub: {
+    frame: STAGE_FRAME,
+    bleed: STAGE_BLEED,
+    wash: "enters",
+    sky: { alpha: 0.16, x: "60%", w: "70%", h: "40%" },
+    glow: null,
+    floorGlow: { x: "60%", y: "105%", w: "80%", h: "40%", alpha: 0.07 },
+    crowd: {
+      shape: "stand",
+      alpha: 0.2,
+      className: "left-70 -right-15 top-22.5 h-55 opacity-60 scene-crowd-fade",
+    },
+    field: null,
+    pitch: null,
+    cones: null,
+    masts: [],
+    banksFrame: null,
+    banks: [],
+    flare: false,
+    grid: true,
+  },
+} as const satisfies Record<"landing" | "intro" | "column" | "hub", LayoutSpec>;
 
 /**
  * The floodlit stadium. The stage layouts ("landing", "intro") are laid out in the 1440×900 design space
@@ -160,7 +188,7 @@ export function ArenaBackdrop({
   layerClassName,
   className,
 }: {
-  /** "landing": Main's positions. "intro": the Intro artboard's (lower crowd and field, wider cones, flat banks with flare layers, no pitch glow or masts). "column": the phone and tablet column's (sky and venue glow, a flat crowd band, two small banks). */
+  /** "hub": the Arena Hub's (a sky leaning right, a volt floor glow, a faint crowd strip, a grid floor; no banks). "landing": Main's positions. "intro": the Intro artboard's (lower crowd and field, wider cones, flat banks with flare layers, no pitch glow or masts). "column": the phone and tablet column's (sky and venue glow, a flat crowd band, two small banks). */
   layout?: keyof typeof LAYOUT;
   /** The CSS boot: every layer fades in at its beat and the banks flicker on, at the page's --pace (the masts have no entrance). The column takes it too: its venue glow enters on the field's beat, and its two banks flicker at the first two bank beats. Omit it and the scene stands lit for a timeline to drive. */
   boot?: BootBeats;
@@ -207,16 +235,21 @@ export function ArenaBackdrop({
     >
       <SkyGlow
         alpha={spec.sky.alpha}
+        x={spec.sky.x}
         w={spec.sky.w}
         h={spec.sky.h}
         {...layer("sky", undefined, boot?.sky)}
       />
       {spec.glow && <VenueGlow {...spec.glow} {...layer("venue", undefined, boot?.field)} />}
+      {spec.floorGlow && (
+        <VenueGlow {...spec.floorGlow} {...layer("floor-glow", "scene-glow-volt", boot?.field)} />
+      )}
       <CrowdTier
         shape={spec.crowd.shape}
         alpha={spec.crowd.alpha}
         {...layer("crowd", spec.crowd.className, boot?.crowd)}
       />
+      {spec.grid && <GridFloor {...layer("grid", undefined, boot?.field)} />}
       {spec.field && (
         <Field
           tilt={spec.field.tilt}
@@ -239,7 +272,7 @@ export function ArenaBackdrop({
           />
         </>
       )}
-      {dust && layout !== "column" && (
+      {dust && (layout === "landing" || layout === "intro") && (
         <Dust regions={CONE_REGIONS[layout]} {...layer("dust", undefined, boot?.coneL)} />
       )}
       {spec.masts.map((mast) => (

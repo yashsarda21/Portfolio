@@ -28,6 +28,11 @@
   );
 }
 
+/* A venue glow that stays volt inside any data-venue (the Hub's floor: the same light under every venue). */
+@utility scene-glow-volt {
+  --venue-glow-rgb: var(--rgb-volt);
+}
+
 @utility scene-crowd {
   background-image: radial-gradient(
     rgb(var(--venue-crowd-rgb, var(--rgb-crowd)) / var(--crowd-a, var(--venue-crowd-alpha, 0.3)))
@@ -35,8 +40,18 @@
     transparent 1.7px
   );
   background-size: 7px 6px;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 55%, transparent 90%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 55%, transparent 90%);
+  -webkit-mask-image: var(
+    --crowd-mask,
+    linear-gradient(180deg, transparent 0%, #000 30%, #000 55%, transparent 90%)
+  );
+  mask-image: var(
+    --crowd-mask,
+    linear-gradient(180deg, transparent 0%, #000 30%, #000 55%, transparent 90%)
+  );
+}
+/* The Hub's crowd strip fades in and out around 40% of its height (Hub.dc.html). Pair with scene-crowd. */
+@utility scene-crowd-fade {
+  --crowd-mask: linear-gradient(180deg, transparent, #000 40%, transparent);
 }
 
 /* The phone's crowd band (Mobile-Landing): a flat strip, a finer dot grid, fading in and out around its middle. */
@@ -508,4 +523,62 @@
     rgb(var(--rgb-beam) / 0.25) 60%,
     rgb(var(--rgb-white) / 0)
   );
+}
+
+/* ---------- the Hub (Hub.dc.html) ---------- */
+/* The floor grid: a 1300x600 plane lying back 72 degrees from its top edge, one line of white every 80px each way,
+   fading to nothing away from the top centre. The parent sets perspective (--perspective-grid). */
+@utility scene-grid-floor {
+  transform: rotateX(72deg);
+  transform-origin: 50% 0;
+  background:
+    repeating-linear-gradient(90deg, var(--ref-white-a05) 0 1px, transparent 1px 80px),
+    repeating-linear-gradient(0deg, var(--ref-white-a05) 0 1px, transparent 1px 80px);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000, transparent 70%);
+  mask-image: radial-gradient(ellipse at 50% 0%, #000, transparent 70%);
+}
+
+/* A venue picture's ground: the venue's mid colour rising from the foot, to its deep colour and the page ground.
+   --art-w / --art-h are the ellipse's reach (70% 60%; the hall's is 60% 70%). Needs a data-venue. */
+@utility scene-venue-art {
+  background: radial-gradient(
+    ellipse var(--art-w, 70%) var(--art-h, 60%) at 50% 100%,
+    var(--venue-mid),
+    var(--venue-deep) 60%,
+    var(--ref-ground)
+  );
+}
+/* Lie a court or oval back by --art-tilt. The parent sets perspective (--perspective-court). */
+@utility scene-art-tilt {
+  transform: rotateX(var(--art-tilt, 60deg));
+}
+/* The cricket oval: turf light to dark, a 2px ring of white just inside the edge. */
+@utility scene-oval {
+  background: radial-gradient(ellipse, rgb(var(--rgb-turf)), var(--ref-oval-lo) 70%);
+  box-shadow: inset 0 0 0 2px rgb(var(--rgb-white) / 0.35);
+}
+@utility scene-wicket {
+  background: var(--ref-wicket);
+}
+/* The two court surfaces, with the 2px court-line edge just inside. */
+@utility scene-court-hard {
+  background: var(--ref-court-hard);
+  box-shadow: inset 0 0 0 2px var(--ref-court-line);
+}
+@utility scene-court-hall {
+  background: var(--ref-court-hall);
+  box-shadow: inset 0 0 0 2px var(--ref-court-line);
+}
+/* The net: a 3px tape in the floodlight white; lifted adds a faint copy 10px above it (the tennis net's top cord). */
+@utility scene-net {
+  height: 3px;
+  background: var(--text-primary);
+}
+@utility scene-net-lifted {
+  box-shadow: 0 -10px 0 -1px rgb(var(--rgb-floodlight) / 0.25);
+}
+/* The hall's warm beam from the roof: the warm light at .22 fading to nothing down a narrow cone. */
+@utility scene-hall-beam {
+  background: linear-gradient(180deg, rgb(var(--rgb-warm) / 0.22), rgb(var(--rgb-warm) / 0));
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
 }

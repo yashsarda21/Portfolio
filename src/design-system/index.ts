@@ -57,6 +57,8 @@ export { FloodlightBank } from "./scene/FloodlightBank";
 export { FloodlightMast } from "./scene/FloodlightMast";
 export { Field } from "./scene/Field";
 export { PitchGlow } from "./scene/PitchGlow";
+export { GridFloor } from "./scene/GridFloor";
+export { VenueArt } from "./scene/VenueArt";
 export { ShowcaseBackdrop } from "./scene/ShowcaseBackdrop";
 export { ArenaBackdrop, type BootBeats } from "./scene/ArenaBackdrop";
 export { Dust } from "./scene/Dust";

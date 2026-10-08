@@ -9,6 +9,7 @@ import { CONE_REGIONS } from "./cones";
 import { Dust } from "./Dust";
 import { FloodlightBank } from "./FloodlightBank";
 import { SpriteStrip } from "./SpriteStrip";
+import { VenueArt } from "./VenueArt";
 import { VenueGlow } from "./VenueGlow";
 
 const meta: Meta = { title: "Scene/Stadium", parameters: { layout: "fullscreen" } };
@@ -126,5 +127,25 @@ export const SpriteFrame: StoryObj = {
       className="h-112.75 w-140"
       style={{ backgroundPosition: framePosition(7, 16) }}
     />
+  ),
+};
+
+/** The Hub's scene alone (sky, volt floor glow, crowd strip, grid floor), compared to Hub@1440x900 with every box of UI masked. */
+export const HubBackdrop: StoryObj = {
+  render: () => (
+    <div className="relative h-225 w-360">
+      <ArenaBackdrop layout="hub" />
+    </div>
+  ),
+};
+
+/** The three venue pictures at the width of a Hub card's art (348px): cricket, tennis and badminton. */
+export const VenueArts: StoryObj = {
+  render: () => (
+    <div className="flex w-360 gap-7 bg-ground p-7">
+      {(["turf", "court", "hall"] as const).map((scene) => (
+        <VenueArt key={scene} scene={scene} className="w-87" />
+      ))}
+    </div>
   ),
 };

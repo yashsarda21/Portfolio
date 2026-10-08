@@ -4,9 +4,11 @@ import { ArenaBackdrop } from "./ArenaBackdrop";
 import { CONE_BOXES } from "./cones";
 import { CrowdTier } from "./CrowdTier";
 import { FloodlightBank } from "./FloodlightBank";
+import { GridFloor } from "./GridFloor";
 import { SpriteStrip } from "./SpriteStrip";
 import { ShowcaseBackdrop } from "./ShowcaseBackdrop";
 import { SkyGlow } from "./SkyGlow";
+import { VenueArt } from "./VenueArt";
 
 describe("SkyGlow", () => {
   it("is the cool sky blue unless the tone is the venue's", () => {
@@ -373,5 +375,145 @@ describe("SpriteStrip", () => {
     const strip = container.firstElementChild as HTMLElement;
     expect(strip.style.backgroundSize).toBe("800% 100%");
     expect(strip).toHaveAttribute("data-frame", "3");
+  });
+});
+
+describe("ArenaBackdrop hub layout", () => {
+  it("is the Hub's sky, volt floor glow, crowd strip and grid floor: no banks, cones, field or masts", () => {
+    const { container } = render(<ArenaBackdrop layout="hub" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveAttribute("data-layout", "hub");
+    expect(root).toHaveAttribute("aria-hidden", "true");
+    for (const name of ["sky", "floor-glow", "crowd", "grid"]) {
+      expect(part(root, name), name).toHaveLength(1);
+    }
+    for (const name of [
+      "field",
+      "pitch",
+      "cone-left",
+      "cone-right",
+      "mast-left",
+      "bank-1",
+      "dust",
+    ]) {
+      expect(part(root, name), name).toHaveLength(0);
+    }
+    // The sky sits at 60% across; the crowd strip is the artboard's box at half strength.
+    expect(part(root, "sky")[0]).toHaveStyle("--sky-x: 60%");
+    expect(part(root, "crowd")[0]).toHaveClass(
+      "left-70",
+      "-right-15",
+      "top-22.5",
+      "h-55",
+      "opacity-60",
+    );
+    expect(part(root, "crowd")[0]).toHaveStyle("--crowd-a: 0.2");
+    // The floor glow is volt whatever the venue.
+    expect(part(root, "floor-glow")[0]).toHaveClass("scene-venue-glow", "scene-glow-volt");
+  });
+
+  it("bleed lets it extend past 1440x900 like the other stage layouts", () => {
+    const { container } = render(<ArenaBackdrop layout="hub" bleed />);
+    expect(container.firstElementChild).toHaveClass("overflow-visible", "bg-transparent");
+  });
+
+  it("the other layouts draw no floor glow or grid", () => {
+    for (const layout of ["landing", "intro", "column"] as const) {
+      const { container } = render(<ArenaBackdrop layout={layout} />);
+      const root = container.firstElementChild as HTMLElement;
+      expect(part(root, "floor-glow"), layout).toHaveLength(0);
+      expect(part(root, "grid"), layout).toHaveLength(0);
+    }
+  });
+});
+
+describe("GridFloor", () => {
+  it("is a decorative perspective box holding the plane", () => {
+    const { container } = render(<GridFloor className="top-10" />);
+    const box = container.firstElementChild as HTMLElement;
+    expect(box).toHaveAttribute("aria-hidden", "true");
+    expect(box).toHaveClass("pointer-events-none", "perspective-grid", "top-10");
+    expect(box.firstElementChild).toHaveClass("scene-grid-floor");
+  });
+});
+
+describe("VenueArt", () => {
+  const art = (scene: "turf" | "court" | "hall") => {
+    const { container } = render(<VenueArt scene={scene} />);
+    return container.firstElementChild as HTMLElement;
+  };
+
+  it("turf: two card banks, the oval in perspective and the wicket", () => {
+    const root = art("turf");
+    expect(root).toHaveAttribute("data-venue", "turf");
+    expect(root).toHaveAttribute("aria-hidden", "true");
+    expect(root).toHaveClass("h-50");
+    const banks = part(root, "bank");
+    expect(banks).toHaveLength(2);
+    for (const bank of banks) expect(bank).toHaveClass("h-3.5", "w-10", "shadow-bank-mini");
+    expect(banks[0]).toHaveClass("top-1.5", "left-7.5");
+    expect(banks[1]).toHaveClass("top-1.5", "right-7.5");
+    expect(part(root, "oval")).toHaveLength(1);
+    expect(part(root, "wicket")).toHaveLength(1);
+    for (const name of ["court", "roof", "beam"]) expect(part(root, name), name).toHaveLength(0);
+  });
+
+  it("court: one wide card bank and the tennis court with its net", () => {
+    const root = art("court");
+    expect(root).toHaveAttribute("data-venue", "court");
+    const banks = part(root, "bank");
+    expect(banks).toHaveLength(1);
+    expect(banks[0]).toHaveClass("h-3.5", "w-12.5", "shadow-bank-card-wide");
+    const court = part(root, "court")[0] as HTMLElement;
+    expect(court).toHaveStyle({ width: "130px", height: "240px" });
+    expect(court).toHaveClass("scene-court-hard");
+    expect(court.querySelector('[data-part="net"]')).not.toBeNull();
+    for (const name of ["oval", "wicket", "roof", "beam"])
+      expect(part(root, name), name).toHaveLength(0);
+  });
+
+  it("hall: the roof arc, the warm beam and the badminton court", () => {
+    const root = art("hall");
+    expect(root).toHaveAttribute("data-venue", "hall");
+    expect(part(root, "roof")).toHaveLength(1);
+    expect(part(root, "beam")).toHaveLength(1);
+    expect(part(root, "bank")).toHaveLength(0);
+    const court = part(root, "court")[0] as HTMLElement;
+    expect(court).toHaveStyle({ width: "110px", height: "230px" });
+    expect(court).toHaveClass("scene-court-hall");
+    expect(court.querySelector('[data-part="net"]')).not.toBeNull();
+  });
+
+  it("every part is decorative, and a className lands on the root", () => {
+    for (const scene of ["turf", "court", "hall"] as const) {
+      const { container } = render(<VenueArt scene={scene} className="w-87" />);
+      const root = container.firstElementChild as HTMLElement;
+      expect(root).toHaveClass("w-87");
+      for (const el of root.querySelectorAll("[data-part]")) {
+        expect(el.closest('[aria-hidden="true"]')).not.toBeNull();
+      }
+    }
+  });
+});
+
+describe("FloodlightBank card sizes", () => {
+  it("card is the mini bulbs in a 40x14 housing, card-wide a 50x14 one with its own glow", () => {
+    const bank = (size: "card" | "card-wide") => {
+      const { container } = render(<FloodlightBank size={size} />);
+      return container.firstElementChild as HTMLElement;
+    };
+    expect(bank("card")).toHaveClass(
+      "h-3.5",
+      "w-10",
+      "shadow-bank-mini",
+      "[--bulb-gx:7px]",
+      "[--bulb-gy:6px]",
+    );
+    expect(bank("card-wide")).toHaveClass(
+      "h-3.5",
+      "w-12.5",
+      "shadow-bank-card-wide",
+      "[--bulb-gx:7px]",
+    );
   });
 });

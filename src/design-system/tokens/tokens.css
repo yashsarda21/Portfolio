@@ -61,6 +61,11 @@
   --ref-hall-mid: #5a3e22;
   --ref-hall-deep: #22170d;
   --ref-court-line: #e8eef3;
+  /* the Hub's venue pictures (Hub.dc.html): the turf oval's dark edge, the stumps, and the two court surfaces */
+  --ref-oval-lo: #13432a;
+  --ref-wicket: #8c7650;
+  --ref-court-hard: #16456e;
+  --ref-court-hall: #2b3a33;
 
   /* RGB triplets for alpha use: rgb(var(--rgb-volt) / 0.35) */
   --rgb-sky: 150 172 200;
@@ -73,6 +78,7 @@
   --rgb-sheen: 140 200 255; /* the cool edge of the Player Card's sheen */
   --rgb-volt: 215 255 63;
   --rgb-white: 255 255 255;
+  --rgb-floodlight: 242 244 245; /* the court net's lifted shadow */
   --rgb-ground: 5 7 10;
   --rgb-volt-ink: 10 12 8;
   --rgb-bezel: 10 13 17;

@@ -8,6 +8,10 @@ const BULBS = {
   sm: "shadow-bank-sm [--bulb-r1:2.4px] [--bulb-r2:3.4px] [--bulb-gx:12px] [--bulb-gy:11px]",
   mini: "shadow-bank-mini [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]",
   mobile: "shadow-bank-mini [--bulb-r1:1.8px] [--bulb-r2:2.8px] [--bulb-gx:9px] [--bulb-gy:8px]",
+  // The Hub's venue pictures (Hub.dc.html): the mini bulbs, 40 and 50px wide.
+  card: "shadow-bank-mini [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]",
+  "card-wide":
+    "shadow-bank-card-wide [--bulb-r1:1.6px] [--bulb-r2:2.4px] [--bulb-gx:7px] [--bulb-gy:6px]",
 } as const;
 // The housing around those bulbs: its width and height.
 const HOUSING = {
@@ -15,12 +19,16 @@ const HOUSING = {
   sm: "h-9 w-21",
   mini: "h-4.5 w-11.5",
   mobile: "h-5.5 w-15",
+  card: "h-3.5 w-10",
+  "card-wide": "h-3.5 w-12.5",
 } as const;
 // `flat` is the Intro's shorter housing (112x44 and 84x32): the same bulbs and glow, a lower height.
 const FLAT_HEIGHT: Partial<Record<keyof typeof HOUSING, string>> = { lg: "h-11", sm: "h-8" };
 
+export type FloodlightBankSize = keyof typeof HOUSING;
+
 interface FloodlightBankProps extends SceneLayerProps {
-  size?: keyof typeof HOUSING;
+  size?: FloodlightBankSize;
   /** The Intro's shorter housing, for the large and small banks (the mini and mobile banks have one height). */
   flat?: boolean;
   on?: boolean;

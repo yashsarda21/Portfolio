@@ -184,6 +184,7 @@ export const TOKEN_CATALOG = {
     { name: "bank-lg", className: "shadow-bank-lg" },
     { name: "bank-sm", className: "shadow-bank-sm" },
     { name: "bank-mini", className: "shadow-bank-mini" },
+    { name: "bank-card-wide", className: "shadow-bank-card-wide" },
     { name: "bank-flare", className: "shadow-bank-flare" },
     { name: "inset-cabinet", className: "shadow-inset-cabinet" },
   ],

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectMatchesArtboard } from "../support/visual";
+import { PNG } from "pngjs";
+import { cropPng, diffImages, expectMatchesArtboard, readReference } from "../support/visual";
 
 const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y.manual:!true`;
 
@@ -21,6 +22,50 @@ test("Landing stadium + scoreboard match the Main artboard", async ({ page }, te
     ],
   });
   expect(ratio).toBeLessThanOrEqual(0.02);
+});
+
+test("Hub backdrop matches the Hub artboard (every box of UI masked)", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Hub is a 1440×900 board");
+  await page.goto(story("scene-stadium--hub-backdrop"));
+  await page.locator("#storybook-root > *").first().waitFor();
+  const ratio = await expectMatchesArtboard(page, "Hub", {
+    maxDiffRatio: 0.02,
+    maskRects: [
+      { x: 0, y: 0, width: 1440, height: 76 }, // HUD
+      { x: 36, y: 104, width: 236, height: 760 }, // left rail
+      { x: 300, y: 100, width: 440, height: 90 }, // kicker + title
+      { x: 296, y: 190, width: 1120, height: 464 }, // the three venue cards (rotated, so a little wider)
+      { x: 304, y: 672, width: 1100, height: 96 }, // facilities
+      { x: 304, y: 820, width: 420, height: 46 }, // commentary
+      { x: 1060, y: 830, width: 350, height: 28 }, // hint
+    ],
+  });
+  expect(ratio).toBeLessThanOrEqual(0.02);
+});
+
+test("Venue art: the tennis picture matches the middle card's art box", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Hub is a 1440×900 board");
+  await page.goto(story("scene-stadium--venue-arts"));
+  const art = page.locator('[data-venue="court"]');
+  await art.waitFor();
+  const actual = PNG.sync.read(await art.screenshot({ animations: "disabled", caret: "hide" }));
+  expect([actual.width, actual.height]).toEqual([348, 200]);
+  // The middle card is only translated -14px in the artboard, so its art box is x 680-1028, y 192-392. The
+  // left and right cards are rotated in the artboard (rotateY +-10deg), so they have no straight crop: the
+  // cricket and badminton pictures are eyeball-reviewed instead. 3%: the card's own 1px edge and antialiasing.
+  const expected = cropPng(await readReference("Hub", 1440, 900), {
+    x: 680,
+    y: 192,
+    width: 348,
+    height: 200,
+  });
+  const { ratio } = diffImages(actual, expected, []);
+  if (process.env.LOG_RATIOS) console.log(`[ratio] Hub venue art (tennis) ${ratio}`);
+  expect(ratio).toBeLessThanOrEqual(0.03);
 });
 
 /** Each beam's top edge (the first two clip-path points) against the large bank it should come from. */
