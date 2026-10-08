@@ -745,6 +745,30 @@ test.describe("phone (L6): the column's three-second cut (D-6)", () => {
     });
   }
 
+  test.describe("the column fits a common phone at its end state", () => {
+    for (const [width, height] of [
+      [390, 844],
+      [375, 812],
+    ] as const) {
+      test(`${width}x${height}: no scrolling, ENTER THE ARENA at least 16px above the bottom`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        const show = await startShow(page);
+        await show.finish();
+        await done(page);
+        const fit = await page.evaluate(() => ({
+          scroll: document.documentElement.scrollHeight - window.innerHeight,
+          ctaBottom: document
+            .querySelector('[data-intro-layout="column"] [data-part="cta"]')!
+            .getBoundingClientRect().bottom,
+        }));
+        expect(fit.scroll, "document is taller than the window by").toBeLessThanOrEqual(0);
+        expect(height - fit.ctaBottom, "space under the button").toBeGreaterThanOrEqual(16);
+      });
+    }
+  });
+
   test.describe("the column's lights and spacing (D-2, D-3)", () => {
     for (const [width, height] of [
       [390, 844],

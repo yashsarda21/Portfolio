@@ -465,9 +465,10 @@ test.describe("the column's lights and spacing (D-2, D-3)", () => {
         () => document.documentElement.scrollHeight > window.innerHeight,
       );
       if (!scrolls) {
-        const above = board.y - 60;
-        const below = height - (last.y + last.height);
-        expect(Math.abs(above - below), `above ${above}, below ${below}`).toBeLessThanOrEqual(24);
+        // The group is centred in what is left after 56px under the top row and 24px above the foot.
+        const above = board.y - 60 - 56;
+        const below = height - (last.y + last.height) - 24;
+        expect(Math.abs(above - below), `above ${above}, below ${below}`).toBeLessThanOrEqual(2);
       }
 
       await expectNoHorizontalOverflow(page, [width], height);
@@ -488,6 +489,31 @@ test.describe("the column's lights and spacing (D-2, D-3)", () => {
           .filter((m) => m.size < 11),
       );
       expect(small).toEqual([]);
+    });
+  }
+});
+
+test.describe("the column fits a tablet, landscape too (no vertical scroll)", () => {
+  test.skip(({ hasTouch }) => !hasTouch, "driven from the phone project");
+  for (const [width, height] of [
+    [1024, 768],
+    [1180, 820],
+  ] as const) {
+    test(`${width}×${height}: the document is no taller than the window, the gap stays 56px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/");
+      await expect(name(page)).toBeVisible();
+      await seekBoot(page, 6000);
+      const scroll = await page.evaluate(
+        () => document.documentElement.scrollHeight - window.innerHeight,
+      );
+      expect(scroll, "document is taller than the window by").toBeLessThanOrEqual(0);
+      const board = (await column(page).locator("[data-part='board']").boundingBox())!;
+      const challenge = (await column(page).getByText(ui.landing.challenge).boundingBox())!;
+      expect(Math.abs(challenge.y - (board.y + board.height) - 56)).toBeLessThanOrEqual(2);
+      await expectLightsBelowTopRow(page, column(page));
     });
   }
 });

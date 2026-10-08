@@ -58,7 +58,7 @@ export function IntroColumn({
             </span>
             <span>{view.header.count}</span>
           </Scoreboard.Header>
-          <Scoreboard.Body>
+          <Scoreboard.Body className="py-4">
             <img
               data-part="portrait"
               src={portraitRest}
@@ -66,7 +66,7 @@ export function IntroColumn({
               width={PORTRAIT.width}
               height={PORTRAIT.height}
               decoding="async"
-              className="hold-part h-auto w-3/4 portrait-fade"
+              className="hold-part h-auto w-3/5 portrait-fade"
             />
             <IntroName heading={view.heading} letters={letters} stacked />
             <IntroTitle title={view.title} />

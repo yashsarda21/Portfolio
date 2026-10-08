@@ -49,7 +49,7 @@ describe("ScreenColumn", () => {
   it("keeps the gutters, the 640px tablet width and the tablet centring in one place", () => {
     column();
     const frame = screen.getByText("TOP").parentElement!.parentElement!;
-    expect(frame).toHaveClass("mx-auto", "w-full", "max-w-160", "px-4", "pt-4", "pb-10", "flex-1");
+    expect(frame).toHaveClass("mx-auto", "w-full", "max-w-160", "px-4", "pt-4", "pb-6", "flex-1");
     // The group (content and actions) is centred in what the top row leaves, below a 56px strip the lights hang in.
     const body = screen.getByText("BOARD").parentElement!;
     expect(body).toHaveClass("flex-1", "flex-col", "justify-center", "pt-14");

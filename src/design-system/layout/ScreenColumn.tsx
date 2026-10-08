@@ -41,7 +41,7 @@ export function ScreenColumn({
       className={cn("relative flex min-h-dvh flex-col bg-night", UNTIL[until], className)}
     >
       {backdrop}
-      <div className="relative mx-auto flex w-full max-w-160 flex-1 flex-col px-4 pt-4 pb-10">
+      <div className="relative mx-auto flex w-full max-w-160 flex-1 flex-col px-4 pt-4 pb-6">
         <div data-part="top" className="flex items-center justify-between gap-2">
           {top}
         </div>
