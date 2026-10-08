@@ -66,6 +66,7 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] `CommentarySlot` takes only `className`, so the Hub's COMM slot has no `data-record-pending` (nothing record-bound can show there; a line left on air by the previous page is not record-bound).
 - [ ] The Hub route parity compares when the COMM line finishes entering (it stays 4s); on a very loaded host a later screenshot would differ only inside the COMM box.
 - [ ] The Hub's content-page parity after the `tabbar-clearance` move was covered by `pnpm verify` at the Phase 4 exit; re-check it if `ContentLayout` changes again.
+- [ ] Make the Hub backdrop parity meaningful (`tests/stories/scene.spec.ts` reports 0.0000 with most of the frame masked; near-black art passes pixelmatch's threshold almost regardless): use a luminance-stretched compare, or tight crops of the crowd strip and the grid.
 - [ ] The prerendered `/arena` HTML has two `<h1>` (stage and column, one hidden by CSS), as the Landing does; one-h1 tests use the accessibility tree.
 
 ## When a git remote is added (Phase 7 at latest)

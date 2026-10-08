@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useId,
   useRef,
   useState,
@@ -102,12 +103,16 @@ export function HubColumn({ view, ready }: { view: HubView; ready: boolean }) {
   // The stage takes over from 1200px: a drawer left open is closed with it, so the stage is never held inert.
   const onStage = useMediaQuery(MEDIA.lg);
   const pending = ready ? {} : { "data-record-pending": "" };
-  // Growing into the stage closes the drawer for good: shrinking back must not open it again by itself.
-  const [wasOnStage, setWasOnStage] = useState(onStage);
-  if (onStage !== wasOnStage) {
-    setWasOnStage(onStage);
-    if (onStage) setOpen(false);
-  }
+  // Growing into the stage closes the drawer for good: shrinking back must not open it again by itself. It listens
+  // for the change itself, so even a window dragged across 1200px and back within a frame is seen.
+  useEffect(() => {
+    const stage = window.matchMedia(MEDIA.lg);
+    const close = () => {
+      if (stage.matches) setOpen(false);
+    };
+    stage.addEventListener("change", close);
+    return () => stage.removeEventListener("change", close);
+  }, []);
 
   return (
     <div data-hub-column="" className="relative min-h-dvh bg-night lg:hidden">

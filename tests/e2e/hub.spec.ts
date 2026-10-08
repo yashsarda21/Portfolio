@@ -1094,6 +1094,9 @@ for (const [project, size] of [
       await indexButton(page).click();
       await expect(drawer(page)).toBeVisible();
       await page.setViewportSize({ width: 1300, height: size.height });
+      // The page has seen the wide window (it shut the dialog itself), not only hidden it: a resize back at once
+      // would otherwise be one the page never saw.
+      await expect(page.locator("dialog[data-drawer]")).not.toHaveAttribute("open", "");
       await expect(drawer(page)).toBeHidden();
       await page.setViewportSize(size);
       await expect(indexButton(page)).toBeVisible();
