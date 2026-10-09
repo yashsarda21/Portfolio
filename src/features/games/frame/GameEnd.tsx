@@ -41,8 +41,10 @@ export function GameEnd({
           to={link.to}
           size={stage ? "ml" : i === 0 ? "bar-lg" : "bar"}
           skew={stage}
-          // The column's label may wrap (WATCH THE HIGHLIGHT INSTEAD on a 360px phone): the button grows, never clips.
-          className={stage ? "px-8.5" : i === 0 ? "h-auto min-h-16 py-2" : undefined}
+          // The column's label may wrap (WATCH THE HIGHLIGHT INSTEAD on a 360px phone): the button grows, never clips, and the lines stay centred and even.
+          className={
+            stage ? "px-8.5" : i === 0 ? "h-auto min-h-16 py-2 text-center text-balance" : undefined
+          }
         >
           {link.label}
         </Button>
