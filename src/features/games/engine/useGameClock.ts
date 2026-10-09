@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { createGameClock, type GameClock } from "./clock";
 
 interface GameClockOptions {
-  /** The variable on the target the clock writes: the timing meter reads `--meter`, the power meter `--power`. */
-  cssVar: "--meter" | "--power";
+  /** The variable on the target the clock writes: the timing meter reads `--meter`, the power meter `--power`, tennis's serve line `--serve`. */
+  cssVar: "--meter" | "--power" | "--serve";
   /** The 0 to 1 position for a game time in ms. */
   value: (elapsedMs: number) => number;
   running: boolean;

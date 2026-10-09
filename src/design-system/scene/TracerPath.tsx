@@ -20,14 +20,19 @@ const DASH = {
 /**
  * The Hawk-Eye line: a dashed volt path drawn over the ground in the `viewBox`'s own coordinates (it fills its
  * parent, so give it the same box as the scene). `draw` reveals it from its start: 0 shows nothing and 1 the
- * whole path, so a flight can draw it as the ball goes. `bounce` adds the landing ellipse; `children` (a
- * ShuttleMark, say) are drawn in the same coordinates. Decorative.
+ * whole path, so a flight can draw it as the ball goes. `drawVar` names a CSS custom property (0 to 1, set on an
+ * ancestor) that the reveal follows instead, so a game's frame loop can draw the path with no re-render; `draw` is
+ * its value where the property is not set. `slice` fills the box the way a cropped court does (`xMidYMin slice`),
+ * for a `viewBox` that is a crop of a wider drawing. `bounce` adds the landing ellipse; `children` (a ShuttleMark,
+ * say) are drawn in the same coordinates. Decorative.
  */
 export function TracerPath({
   d,
   viewBox,
   size,
   draw = 1,
+  drawVar,
+  slice = false,
   bounce,
   children,
   className,
@@ -37,6 +42,10 @@ export function TracerPath({
   size: "stage" | "column";
   /** How much of the path is shown, 0 to 1 (default 1). */
   draw?: number;
+  /** A CSS custom property that sets the reveal, e.g. "--serve"; `draw` where it is unset. */
+  drawVar?: string;
+  /** Scale to fill the box and crop, keeping the top and the middle (a `viewBox` cropped from a wider drawing). */
+  slice?: boolean;
   bounce?: TracerBounce;
   children?: ReactNode;
   className?: string;
@@ -50,6 +59,7 @@ export function TracerPath({
     <svg
       aria-hidden="true"
       viewBox={viewBox}
+      preserveAspectRatio={slice ? "xMidYMin slice" : undefined}
       className={cn("pointer-events-none absolute inset-0 size-full", className)}
     >
       <mask id={maskId} maskUnits="userSpaceOnUse" x={x} y={y} width={w} height={h}>
@@ -59,6 +69,7 @@ export function TracerPath({
           pathLength={1}
           strokeDasharray={1}
           strokeDashoffset={1 - draw}
+          style={drawVar ? { strokeDashoffset: `calc(1 - var(${drawVar}, ${draw}))` } : undefined}
           strokeWidth={width * 3}
           className="fill-none stroke-white"
         />

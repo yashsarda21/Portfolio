@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { content, ui } from "@/content";
 import { MEDIA } from "@/lib/breakpoints";
 import { EASE, loadGsap } from "@/lib/motion";
@@ -10,8 +10,10 @@ import { autoRallyTimes, VERDICT_MS } from "../engine/beats";
 import { pingPong } from "../engine/clock";
 import type { GameLayout } from "../engine/types";
 import { useGameClock } from "../engine/useGameClock";
+import { useFlight } from "../engine/useFlight";
 import { useGameKeys } from "../engine/useGameKeys";
 import { useMatchResult } from "../engine/useMatchResult";
+import { useRun } from "../engine/useRun";
 import { useTimers } from "../engine/useTimers";
 import { ballAt, bounceOf } from "./flight";
 import { CricketPage } from "./CricketPage";
@@ -42,12 +44,11 @@ const START: Run = { game: CRICKET_START, phase: "ready", offerHighlight: false 
  * click and a key in the same frame, or a press during the flight cannot bowl a second.
  */
 export function CricketScreen() {
-  const [run, setRun] = useState<Run>(START);
-  // The latest run, readable by timers and handlers that were made before the last render.
-  const latest = useRef(run);
+  // `latest` is the run as timers and handlers that were made before the last render must read it.
+  const { run, latest, commit } = useRun<Run>(START);
   const root = useRef<HTMLElement>(null);
   const balls = { stage: useRef<HTMLSpanElement>(null), column: useRef<HTMLSpanElement>(null) };
-  const flight = useRef({ id: 0, kill: () => {} });
+  const flight = useFlight();
 
   const desktop = useMediaQuery(MEDIA.lg);
   const reduced = useMediaQuery(MEDIA.reducedMotion);
@@ -77,18 +78,6 @@ export function CricketScreen() {
     [run],
   );
 
-  const commit = (patch: Partial<Run>) => {
-    latest.current = { ...latest.current, ...patch };
-    setRun(latest.current);
-  };
-
-  /** Stops a ball in the air (a rematch, or leaving): nothing of it lands later. */
-  const stopFlight = () => {
-    flight.current.id += 1;
-    flight.current.kill();
-    flight.current.kill = () => {};
-  };
-
   /** A ball has been bowled and judged: the call, what it unlocked, the sound and the line; the over's end is saved at once (G8). */
   const land = (next: CricketState) => {
     const over = cricketOver(next);
@@ -113,10 +102,9 @@ export function CricketScreen() {
   /** The ball from your hand to the bounce and on to the bat, along the tracer; then `done`. Nothing but transform and opacity moves. */
   const fly = (where: GameLayout, bounce: { x: number; y: number }, done: () => void) => {
     const ball = balls[where].current;
-    const id = ++flight.current.id;
-    void loadGsap()
-      .then((gsap) => {
-        if (id !== flight.current.id || !ball) return;
+    flight.play(
+      (gsap) => {
+        if (!ball) return () => {};
         const progress = { value: 0 };
         const place = () => {
           const at = ballAt(where, bounce, progress.value);
@@ -134,15 +122,14 @@ export function CricketScreen() {
             done();
           },
         });
-        flight.current.kill = () => {
+        return () => {
           tween.kill();
           ball.style.opacity = "0";
         };
-      })
-      .catch(() => {
-        // GSAP did not load: the ball still lands, only without its flight.
-        if (id === flight.current.id) done();
-      });
+      },
+      // GSAP did not load: the ball still lands, only without its flight.
+      done,
+    );
   };
 
   /** One input: judge the release by the clock the meter was drawn from, then fly the ball (G2, G4). */
@@ -169,7 +156,7 @@ export function CricketScreen() {
 
   const again = () => {
     timers.clear();
-    stopFlight();
+    flight.stop();
     commit(START);
     clock.restart();
     if (desktop) say(ui.games.cricket.comm.start, { interrupt: true });
@@ -205,8 +192,6 @@ export function CricketScreen() {
     // The over starts when the setting turns on; its handlers are the latest by ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced]);
-
-  useEffect(() => stopFlight, []);
 
   return (
     <CricketPage

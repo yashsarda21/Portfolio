@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import { Glass } from "../primitives/Glass";
 
 /**
- * A highlight turned in toward the court (Tennis-Play): a 300 wide glass card, 32 degrees round its outer
+ * A highlight turned in toward the court (Tennis-Play): a 300 wide glass card (its content box, as the board draws it: 338 with its padding and border), 32 degrees round its outer
  * edge (the left card hinges on its left edge, the right card on its right) inside a 900px perspective. The
  * wrapper is the box to place; `media` is the placeholder text of the 110 high screen-recording slot. There is
  * no phone variant: the column shows the unlock in a `RevealChip`.
@@ -30,7 +30,7 @@ export function CourtsideCard({
         edge="none"
         elevation="card"
         className={cn(
-          "flex w-75 flex-col gap-2.5 border-volt-a40 p-4.5",
+          "flex w-84.5 flex-col gap-2.5 border-volt-a40 p-4.5",
           side === "left" ? "origin-left rotate-y-32" : "origin-right -rotate-y-32",
         )}
       >

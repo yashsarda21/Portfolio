@@ -10,6 +10,7 @@ export function AimZone({
   name,
   open,
   disabled = false,
+  tabbable = true,
   onPick,
   className,
 }: {
@@ -17,6 +18,7 @@ export function AimZone({
   name: string;
   open: boolean;
   disabled?: boolean;
+  tabbable?: boolean;
   onPick: () => void;
   className?: string;
 }) {
@@ -26,6 +28,7 @@ export function AimZone({
       aria-label={name}
       data-state={open ? "open" : "idle"}
       disabled={disabled}
+      tabIndex={tabbable ? undefined : -1}
       onClick={onPick}
       className={cn(
         "h-15 w-35.5 cursor-pointer border type-mono-tag transition-colors duration-(--dur-snap) ease-snap hover:bg-volt-a22 disabled:pointer-events-none disabled:opacity-40",

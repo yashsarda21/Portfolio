@@ -557,6 +557,23 @@ describe("TracerPath", () => {
     );
   });
 
+  it("drawVar hands the reveal to a CSS variable, with draw as its fallback; slice crops like a court", () => {
+    const { container } = render(
+      <TracerPath
+        d="M0 0 L10 10"
+        viewBox="0 0 20 20"
+        size="stage"
+        draw={0.25}
+        drawVar="--serve"
+        slice
+      />,
+    );
+    expect(container.querySelector('[data-part="reveal"]')).toHaveStyle({
+      strokeDashoffset: "calc(1 - var(--serve, 0.25))",
+    });
+    expect(container.querySelector("svg")).toHaveAttribute("preserveAspectRatio", "xMidYMin slice");
+  });
+
   it("draws the whole path by default, and the column's dashes are finer", () => {
     const { container } = render(<TracerPath d="M0 0 L10 10" viewBox="0 0 20 20" size="column" />);
     expect(container.querySelector('[data-part="reveal"]')).toHaveAttribute(

@@ -37,6 +37,18 @@ describe("AimZone", () => {
   });
 });
 
+describe("AimZone tabbable", () => {
+  it("tabbable={false} leaves the tab order but still takes a tap", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(<AimZone label="L" name="Left" open={false} tabbable={false} onPick={onPick} />);
+    const button = screen.getByRole("button", { name: "Left" });
+    expect(button).toHaveAttribute("tabindex", "-1");
+    await user.click(button);
+    expect(onPick).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("RevealList", () => {
   const slots = [
     { state: "open", eyebrow: "INNINGS 01 · NOT OUT", title: "DEUTSCHE BANK", meta: "SE1 · now" },
