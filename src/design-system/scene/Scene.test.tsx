@@ -4,10 +4,12 @@ import { ArenaBackdrop } from "./ArenaBackdrop";
 import { CONE_BOXES } from "./cones";
 import { CrowdTier } from "./CrowdTier";
 import { FloodlightBank } from "./FloodlightBank";
+import { GameBackdrop } from "./GameBackdrop";
 import { GridFloor } from "./GridFloor";
 import { SpriteStrip } from "./SpriteStrip";
 import { ShowcaseBackdrop } from "./ShowcaseBackdrop";
 import { SkyGlow } from "./SkyGlow";
+import { TracerPath } from "./TracerPath";
 import { VenueArt } from "./VenueArt";
 
 describe("SkyGlow", () => {
@@ -514,6 +516,56 @@ describe("FloodlightBank card sizes", () => {
       "w-12.5",
       "shadow-bank-card-wide",
       "[--bulb-gx:7px]",
+    );
+  });
+});
+
+describe("GameBackdrop", () => {
+  it.each([
+    ["turf", "stage"],
+    ["court", "stage"],
+    ["hall", "stage"],
+    ["turf", "column"],
+    ["court", "column"],
+    ["hall", "column"],
+  ] as const)("%s in the %s frame is decorative and takes its venue", (venue, frame) => {
+    const { container } = render(<GameBackdrop venue={venue} frame={frame} />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveAttribute("aria-hidden", "true");
+    expect(root).toHaveAttribute("data-venue", venue);
+    expect(root).toHaveAttribute("data-frame", frame);
+    expect(root.innerHTML).not.toMatch(/#[0-9a-f]{3,6}\b|rgba?\(/i);
+  });
+
+  it("the stage turf draws Yash's static bat", () => {
+    const { container } = render(<GameBackdrop venue="turf" frame="stage" />);
+    expect(container.querySelectorAll('[data-part="bat"]')).toHaveLength(1);
+  });
+});
+
+describe("TracerPath", () => {
+  it("draw reveals the path from its start: a mask path of length 1 with the dash offset left over", () => {
+    const { container } = render(
+      <TracerPath d="M0 0 L10 10" viewBox="0 0 20 20" size="stage" draw={0.5} />,
+    );
+    const reveal = container.querySelector('[data-part="reveal"]')!;
+    expect(reveal).toHaveAttribute("pathLength", "1");
+    expect(reveal).toHaveAttribute("stroke-dashoffset", "0.5");
+    expect(container.querySelector('[data-part="tracer"]')).toHaveAttribute(
+      "stroke-dasharray",
+      "2 8",
+    );
+  });
+
+  it("draws the whole path by default, and the column's dashes are finer", () => {
+    const { container } = render(<TracerPath d="M0 0 L10 10" viewBox="0 0 20 20" size="column" />);
+    expect(container.querySelector('[data-part="reveal"]')).toHaveAttribute(
+      "stroke-dashoffset",
+      "0",
+    );
+    expect(container.querySelector('[data-part="tracer"]')).toHaveAttribute(
+      "stroke-dasharray",
+      "2 7",
     );
   });
 });

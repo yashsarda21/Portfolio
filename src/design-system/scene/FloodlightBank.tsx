@@ -10,6 +10,8 @@ const BULBS = {
   sm: "shadow-bank-sm [--bulb-r1:2.4px] [--bulb-r2:3.4px] [--bulb-gx:12px] [--bulb-gy:11px]",
   mini: MINI_BULBS,
   mobile: "shadow-bank-mini [--bulb-r1:1.8px] [--bulb-r2:2.8px] [--bulb-gx:9px] [--bulb-gy:8px]",
+  // The game scenes' cricket banks (Cricket-Play): 100x40, the small bank's bulbs and a glow of their own.
+  game: "shadow-bank-game [--bulb-r1:2.4px] [--bulb-r2:3.4px] [--bulb-gx:12px] [--bulb-gy:11px]",
   // The Hub's venue pictures (Hub.dc.html): the mini bulbs, 40 and 50px wide.
   card: MINI_BULBS,
   "card-wide":
@@ -21,6 +23,7 @@ const HOUSING = {
   sm: "h-9 w-21",
   mini: "h-4.5 w-11.5",
   mobile: "h-5.5 w-15",
+  game: "h-10 w-25",
   card: "h-3.5 w-10",
   "card-wide": "h-3.5 w-12.5",
 } as const;

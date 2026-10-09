@@ -582,3 +582,84 @@
   background: linear-gradient(180deg, rgb(var(--rgb-warm) / 0.22), rgb(var(--rgb-warm) / 0));
   clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
 }
+
+/* ---------- the game scenes (Cricket-Play, Tennis-Play, Badminton-Play, Mobile-Game) ---------- */
+/* The outfield: stripes --stripe tall (46px on the stage, 40px on the phone) in two greens, cut to a wedge whose top
+   edge starts --edge in from each side (30%; the phone's 28%). The parent is the box it fills. */
+@utility game-outfield {
+  background: repeating-linear-gradient(
+    180deg,
+    var(--ref-outfield-a) 0 var(--stripe, 46px),
+    var(--ref-outfield-b) var(--stripe, 46px) calc(var(--stripe, 46px) * 2)
+  );
+  clip-path: polygon(var(--edge, 30%) 0, calc(100% - var(--edge, 30%)) 0, 100% 100%, 0 100%);
+}
+/* The stage's outfield fades in from half strength toward the horizon. */
+@utility game-outfield-fade {
+  -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.5), #000 40%);
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.5), #000 40%);
+}
+/* The ground dark at both sides of the stage's outfield. */
+@utility game-vignette {
+  background: linear-gradient(
+    90deg,
+    var(--ref-ground),
+    rgb(var(--rgb-ground) / 0) 30%,
+    rgb(var(--rgb-ground) / 0) 70%,
+    var(--ref-ground)
+  );
+}
+/* The pitch: far end to near end, a wedge from --top (the far edge's inset from each side) to --foot (the near edge's). */
+@utility game-pitch {
+  background: linear-gradient(180deg, var(--ref-pitch-far), var(--ref-pitch-near));
+  clip-path: polygon(
+    var(--top, 48.4%) 0,
+    calc(100% - var(--top, 48.4%)) 0,
+    calc(100% - var(--foot, 42%)) 100%,
+    var(--foot, 42%) 100%
+  );
+}
+@utility game-stump {
+  background: var(--ref-stump);
+}
+@utility game-stump-near {
+  background: linear-gradient(180deg, var(--ref-stump-hi), var(--ref-stump-lo));
+}
+@utility game-bat {
+  background: linear-gradient(180deg, var(--ref-stump), var(--ref-bat-lo));
+}
+
+/* A crowd band that fades in and out around --crowd-peak of its height (Cricket 45%, the others 50%). Pair with scene-crowd. */
+@utility game-crowd-peak {
+  --crowd-mask: linear-gradient(180deg, transparent, #000 var(--crowd-peak, 50%), transparent);
+}
+
+/* The hall: roof ribs every 120px fading out downward, the overhead beam and the lamp. */
+@utility game-roof-ribs {
+  background: repeating-linear-gradient(90deg, var(--ref-white-a04) 0 2px, transparent 2px 120px);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+}
+@utility game-hall-beam {
+  background: linear-gradient(180deg, rgb(var(--rgb-warm) / 0.2), rgb(var(--rgb-warm) / 0.02));
+}
+@utility game-lamp {
+  border-radius: 0 0 30px 30px;
+  background: var(--ref-lamp);
+}
+
+/* The court's net: a mesh every --mesh px (7 on the tennis court, 6 in the hall) over a dim ground. The top tape is the caller's border. */
+@utility game-net {
+  background:
+    repeating-linear-gradient(90deg, var(--ref-white-a16) 0 1px, transparent 1px var(--mesh, 7px)),
+    repeating-linear-gradient(0deg, var(--ref-white-a16) 0 1px, transparent 1px var(--mesh, 7px)),
+    var(--ref-ground-a35);
+}
+
+/* The court seen from behind the baseline: the surround and the playing surface take the venue's colours. */
+@utility game-fill-surround {
+  fill: var(--game-surround);
+}
+@utility game-fill-surface {
+  fill: var(--game-surface);
+}

@@ -66,6 +66,19 @@
   --ref-wicket: #8c7650;
   --ref-court-hard: #16456e;
   --ref-court-hall: #2b3a33;
+  /* the game scenes (Cricket-Play, Tennis-Play, Badminton-Play, Mobile-Game): outfield stripes, the pitch (far end to near end),
+     the stumps and bat (bone white to oak), the hall's court (its surround and surface differ from the Hub card's) and the hall's lamp */
+  --ref-outfield-a: #123e28;
+  --ref-outfield-b: #0f3622;
+  --ref-pitch-far: #6e5e40;
+  --ref-pitch-near: #a08a5e;
+  --ref-stump: #e8dcc0;
+  --ref-stump-hi: #f1e6cc;
+  --ref-stump-lo: #b9a57c;
+  --ref-bat-lo: #9c8660;
+  --ref-hall-surround: #14211c;
+  --ref-hall-surface: #1f3a30;
+  --ref-lamp: #fff3dd;
 
   /* RGB triplets for alpha use: rgb(var(--rgb-volt) / 0.35) */
   --rgb-sky: 150 172 200;
@@ -182,6 +195,8 @@
   --venue-light-rgb: var(--rgb-beam);
   --venue-crowd-rgb: var(--rgb-crowd);
   --venue-crowd-alpha: 0.24;
+  --game-surround: var(--ref-court-tint);
+  --game-surface: var(--ref-court-hard);
 }
 [data-venue="hall"] {
   --venue-tint: var(--ref-hall-tint);
@@ -191,6 +206,8 @@
   --venue-light-rgb: var(--rgb-warm);
   --venue-crowd-rgb: 230 214 190;
   --venue-crowd-alpha: 0.18;
+  --game-surround: var(--ref-hall-surround);
+  --game-surface: var(--ref-hall-surface);
   --surface-ground: var(--ref-ground-warm);
 }
 /* The trophy zone: the only place gold and silver exist (spec 5.1). Outside it these vars are undefined,

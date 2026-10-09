@@ -172,6 +172,12 @@
   /* the intro's bank flare: the bank's glow at its brightest (white at .9, a 420px halo of the beam light at .35) */
   --shadow-bank-flare:
     0 0 80px 30px rgb(var(--rgb-white) / 0.9), 0 0 420px 180px rgb(var(--rgb-beam) / 0.35);
+  /* the game scenes' cricket banks (100x40): the large bank's glow, a little tighter */
+  --shadow-bank-game:
+    0 0 40px 12px rgb(var(--rgb-bulb) / 0.42), 0 0 200px 70px rgb(var(--rgb-halo) / 0.12);
+  /* the hall's overhead lamp (Badminton-Play) and the cricket bat's shadow (Cricket-Play) */
+  --shadow-lamp: 0 0 50px 20px rgb(var(--rgb-warm) / 0.45);
+  --shadow-bat: 0 0 8px rgb(0 0 0 / 0.6);
   --shadow-bank-mini: 0 0 22px 6px rgb(var(--rgb-bulb) / 0.4);
   /* the Hub's wide venue-card bank (50px): the mini glow, spread a little further */
   --shadow-bank-card-wide: 0 0 26px 8px rgb(var(--rgb-bulb) / 0.4);
