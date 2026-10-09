@@ -56,6 +56,9 @@ const COURT: Record<"court" | "hall", CourtArt> = {
   },
 };
 
+/** The stage's design space, which a game's tracers and marks are drawn in (the viewBox of the boards). */
+export const GAME_STAGE_VIEW = "0 0 1440 900";
+
 /**
  * Each court's crop of the 1440x900 design space, as the column's backdrop draws it (`xMidYMin slice`, from 200px down).
  * A game that draws on the column's court (tracers, a ball) uses this as its `viewBox` and the same slice, so its

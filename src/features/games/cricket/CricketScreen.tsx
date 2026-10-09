@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { content, ui } from "@/content";
 import { MEDIA } from "@/lib/breakpoints";
-import { EASE, loadGsap } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useAudio } from "@/shell/audio";
 import { useCommentary } from "@/shell/commentary";
@@ -10,6 +9,7 @@ import { autoRallyTimes, VERDICT_MS } from "../engine/beats";
 import { pingPong } from "../engine/clock";
 import type { GameLayout } from "../engine/types";
 import { useGameClock } from "../engine/useGameClock";
+import { useArrival } from "../engine/useArrival";
 import { useFlight } from "../engine/useFlight";
 import { useGameKeys } from "../engine/useGameKeys";
 import { useMatchResult } from "../engine/useMatchResult";
@@ -102,34 +102,17 @@ export function CricketScreen() {
   /** The ball from your hand to the bounce and on to the bat, along the tracer; then `done`. Nothing but transform and opacity moves. */
   const fly = (where: GameLayout, bounce: { x: number; y: number }, done: () => void) => {
     const ball = balls[where].current;
-    flight.play(
-      (gsap) => {
-        if (!ball) return () => {};
-        const progress = { value: 0 };
-        const place = () => {
-          const at = ballAt(where, bounce, progress.value);
-          ball.style.transform = `translate(${at.x}px, ${at.y}px)`;
-        };
-        place();
-        ball.style.opacity = "1";
-        const tween = gsap.to(progress, {
-          value: 1,
-          duration: CRICKET_BEATS.flightMs / 1000,
-          ease: EASE.swing,
-          onUpdate: place,
-          onComplete: () => {
-            ball.style.opacity = "0";
-            done();
-          },
-        });
-        return () => {
-          tween.kill();
-          ball.style.opacity = "0";
-        };
+    flight.fly({
+      ms: CRICKET_BEATS.flightMs,
+      place: (progress) => {
+        const at = ballAt(where, bounce, progress);
+        if (ball) ball.style.transform = `translate(${at.x}px, ${at.y}px)`;
       },
+      start: () => ball && (ball.style.opacity = "1"),
+      end: () => ball && (ball.style.opacity = "0"),
       // GSAP did not load: the ball still lands, only without its flight.
       done,
-    );
+    });
   };
 
   /** One input: judge the release by the clock the meter was drawn from, then fly the ball (G2, G4). */
@@ -168,18 +151,8 @@ export function CricketScreen() {
     { active: run.phase === "ready" && !reduced },
   );
 
-  // The arrival line, on the stage only (phones are silent, L11).
-  const arrived = useRef(false);
-  useEffect(() => {
-    if (!desktop || arrived.current) return;
-    arrived.current = true;
-    say(ui.games.cricket.comm.start);
-  }, [desktop, say]);
-
-  // Warm GSAP while the visitor reads the board, so the first ball flies on time.
-  useEffect(() => {
-    if (!reduced) void loadGsap().catch(() => {});
-  }, [reduced]);
+  // The arrival line (stage only) and GSAP warmed while the visitor reads the board, so the first ball flies on time.
+  useArrival({ line: ui.games.cricket.comm.start, spoken: desktop, reduced });
 
   // Reduced motion: the over plays itself on arrival. Leaving, or the setting changing, ends it (and any ball in the air).
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { GAME_STAGE_VIEW } from "@/design-system";
 import type { GameLayout, Quality } from "../engine/types";
 
 interface Point {
@@ -38,7 +39,7 @@ const LINE: Record<GameLayout, { release: Point; batter: Point; bounce: Record<L
 export const TRACER = {
   stage: {
     d: "M714 836 Q 716 560 719 352 Q 721 340 724 326",
-    viewBox: "0 0 1440 900",
+    viewBox: GAME_STAGE_VIEW,
     bounce: { cx: 719, cy: 353, rx: 12, ry: 4, tone: "floodlight" },
   },
   column: {

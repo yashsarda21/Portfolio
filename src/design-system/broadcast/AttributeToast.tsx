@@ -40,9 +40,10 @@ export function AttributeToast(props: AttributeToastProps) {
       data-accent={props.accent ? "" : undefined}
       className={cn("flex animate-slide-in flex-col gap-2.5 px-4.5 py-4", props.className)}
     >
-      <div className="flex justify-between">
-        <span className="type-mono-round text-volt">{props.eyebrow}</span>
-        <span className="type-mono-note text-scout">{props.tag}</span>
+      <div className="flex justify-between gap-2">
+        {/* The eyebrow keeps its line (as drawn); a long shot name ("COURT VISION") wraps on its own, right-aligned. */}
+        <span className="type-mono-round whitespace-nowrap text-volt">{props.eyebrow}</span>
+        <span className="text-right type-mono-note text-scout">{props.tag}</span>
       </div>
       <span className="type-title-matchday">{props.title}</span>
       <ul className="flex flex-wrap gap-1.5">

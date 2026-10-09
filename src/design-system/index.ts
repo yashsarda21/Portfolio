@@ -80,7 +80,7 @@ export { Field } from "./scene/Field";
 export { PitchGlow } from "./scene/PitchGlow";
 export { GridFloor } from "./scene/GridFloor";
 export { VenueArt } from "./scene/VenueArt";
-export { GameBackdrop, GAME_COURT_VIEW } from "./scene/GameBackdrop";
+export { GameBackdrop, GAME_COURT_VIEW, GAME_STAGE_VIEW } from "./scene/GameBackdrop";
 export { TrackingRing } from "./scene/TrackingRing";
 export { TracerPath, ShuttleMark } from "./scene/TracerPath";
 export type { TracerBounce } from "./scene/TracerPath";

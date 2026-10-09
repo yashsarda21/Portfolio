@@ -6,10 +6,10 @@ interface Point {
 }
 
 /**
- * Tennis-Play's drawing space (1440x900). The column draws the same court in the same space: its backdrop crops this
- * space to `GAME_COURT_VIEW.court` and slices it to the width, so the tracers and the ball stand on the court at any width.
+ * Tennis-Play's drawing space is the stage's (`GAME_STAGE_VIEW`). The column draws the same court in the same space: its
+ * backdrop crops this space to `GAME_COURT_VIEW.court` and slices it to the width, so the tracers and the ball stand on
+ * the court at any width.
  */
-export const STAGE_VIEW = "0 0 1440 900";
 /** The Hawk-Eye line the board draws: from Yash's hand, through the bounce, on past the receiver. */
 export const SERVE = {
   d: "M736 290 Q 700 420 640 640 Q 600 720 560 790",

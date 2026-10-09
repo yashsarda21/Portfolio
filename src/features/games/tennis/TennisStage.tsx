@@ -3,6 +3,7 @@ import {
   AimZone,
   CallOverlay,
   CourtsideCard,
+  GAME_STAGE_VIEW,
   Glass,
   Heading,
   LEDMarquee,
@@ -16,7 +17,7 @@ import {
 import { cn } from "@/lib/cn";
 import { GameEnd } from "../frame/GameEnd";
 import { GameStage } from "../frame/GameStage";
-import { returnPath, SERVE, STAGE_VIEW } from "./flight";
+import { returnPath, SERVE } from "./flight";
 import type { Side } from "./referee";
 import { LIVE_PHASES, type TennisPhase, type TennisView } from "./view";
 
@@ -71,7 +72,7 @@ export function TennisStage({
             {/* The serve is drawn by the game's clock: `--serve` is 0 at the hit and 1 at the end of the window. */}
             <TracerPath
               d={SERVE.d}
-              viewBox={STAGE_VIEW}
+              viewBox={GAME_STAGE_VIEW}
               size="stage"
               draw={phase === "ready" ? 0 : 1}
               drawVar="--serve"
@@ -89,7 +90,7 @@ export function TennisStage({
               <TracerPath
                 key={view.returned}
                 d={returnPath(shot)}
-                viewBox={STAGE_VIEW}
+                viewBox={GAME_STAGE_VIEW}
                 size="stage"
                 drawVar={`--return-${shot}`}
               />

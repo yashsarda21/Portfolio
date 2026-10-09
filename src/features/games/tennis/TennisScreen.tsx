@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef } from "react";
 import { content, ui } from "@/content";
 import { MEDIA } from "@/lib/breakpoints";
-import { EASE, loadGsap } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useAudio } from "@/shell/audio";
 import { useCommentary } from "@/shell/commentary";
 import { ROUTES } from "@/shell/routes";
 import { autoRallyTimes, VERDICT_MS } from "../engine/beats";
 import type { GameLayout } from "../engine/types";
+import { useArrival } from "../engine/useArrival";
 import { useFlight } from "../engine/useFlight";
 import { useGameClock } from "../engine/useGameClock";
 import { useGameKeys } from "../engine/useGameKeys";
@@ -101,29 +101,15 @@ export function TennisScreen() {
   const fly = (side: Side) => {
     const ball = balls[live.current.layout].current;
     const el = root.current;
-    flight.play((gsap) => {
-      if (!ball || !el) return () => {};
-      const progress = { value: 0 };
-      const place = () => {
-        const at = returnAt(side, progress.value);
-        ball.style.transform = `translate(${at.x}px, ${at.y}px)`;
-        el.style.setProperty(`--return-${side}`, String(progress.value));
-      };
-      place();
-      ball.style.opacity = "1";
-      const tween = gsap.to(progress, {
-        value: 1,
-        duration: TENNIS_BEATS.flightMs / 1000,
-        ease: EASE.swing,
-        onUpdate: place,
-        onComplete: () => {
-          ball.style.opacity = "0";
-        },
-      });
-      return () => {
-        tween.kill();
-        ball.style.opacity = "0";
-      };
+    flight.fly({
+      ms: TENNIS_BEATS.flightMs,
+      place: (progress) => {
+        const at = returnAt(side, progress);
+        if (ball) ball.style.transform = `translate(${at.x}px, ${at.y}px)`;
+        el?.style.setProperty(`--return-${side}`, String(progress));
+      },
+      start: () => ball && (ball.style.opacity = "1"),
+      end: () => ball && (ball.style.opacity = "0"),
     });
   };
 
@@ -232,18 +218,8 @@ export function TennisScreen() {
     { active: LIVE_PHASES.includes(run.phase) && !reduced },
   );
 
-  // The arrival line, on the stage only (phones are silent, L11).
-  const arrived = useRef(false);
-  useEffect(() => {
-    if (!desktop || arrived.current) return;
-    arrived.current = true;
-    say(content.commentary.entrance[0]!);
-  }, [desktop, say]);
-
-  // Warm GSAP while the visitor reads the board, so the first return flies on time.
-  useEffect(() => {
-    if (!reduced) void loadGsap().catch(() => {});
-  }, [reduced]);
+  // The arrival line (stage only) and GSAP warmed while the visitor reads the board, so the first return flies on time.
+  useArrival({ line: content.commentary.entrance[0]!, spoken: desktop, reduced });
 
   // The game starts on arrival, and again when the setting changes. Leaving ends it (and any ball in the air).
   useEffect(() => {

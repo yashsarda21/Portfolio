@@ -1,9 +1,9 @@
 import type { Route } from "./+types/arena.badminton";
-import { PlaceholderScreen } from "@/shell/PlaceholderScreen";
+import { BadmintonScreen } from "@/features/games/badminton/BadmintonScreen";
 import { pageMeta } from "@/shell/meta";
 
 export const meta: Route.MetaFunction = () => pageMeta("badminton");
 
 export default function Badminton() {
-  return <PlaceholderScreen route="badminton" />;
+  return <BadmintonScreen />;
 }
