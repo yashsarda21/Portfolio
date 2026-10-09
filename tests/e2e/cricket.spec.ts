@@ -122,7 +122,11 @@ test.describe("route matches Cricket-Play", () => {
     await expect(page.locator("[data-commentary-bar]")).toBeVisible();
     // CSS animations are not on the fake clock: wait for the finite ones (the COMM line coming in) to end.
     await waitForFiniteAnimations(page);
-    const ratio = await expectMatchesArtboard(page, "Cricket-Play", { maxDiffRatio: 0.02 });
+    const ratio = await expectMatchesArtboard(page, "Cricket-Play", {
+      maxDiffRatio: 0.02,
+      // D-8: the near stumps, moved onto the pitch's centre line (both places).
+      maskRects: [{ x: 590, y: 785, width: 156, height: 115 }],
+    });
     console.log(`[ratio] Cricket-Play route ${ratio}`);
     expect(ratio).toBeLessThanOrEqual(0.02);
   });

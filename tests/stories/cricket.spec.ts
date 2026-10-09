@@ -30,7 +30,11 @@ test.describe("Cricket-Play.dc.html (1440 x 900)", () => {
     const ratio = await expectMatchesArtboard(page, "Cricket-Play", {
       maxDiffRatio: 0.02,
       // The commentary line: the story has none, the artboard draws one.
-      maskRects: [{ x: 36, y: 820, width: 350, height: 45 }],
+      // D-8: the near stumps, moved onto the pitch's centre line (both places).
+      maskRects: [
+        { x: 36, y: 820, width: 350, height: 45 },
+        { x: 590, y: 785, width: 156, height: 115 },
+      ],
     });
     console.log(`[ratio] Cricket-Play story ${ratio}`);
     expect(ratio).toBeLessThanOrEqual(0.02);

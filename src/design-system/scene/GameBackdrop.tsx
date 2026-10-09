@@ -147,7 +147,11 @@ function TurfStage() {
         data-part="bat"
         className="absolute top-71.5 left-179 h-10 w-2 origin-bottom -rotate-22 shadow-bat game-bat"
       />
-      <div data-part="stumps-near" className="absolute top-197.5 left-149 flex gap-2.75 opacity-85">
+      {/* D-8: on the pitch's centre line, under the far stumps (the artboard draws them at x 596). */}
+      <div
+        data-part="stumps-near"
+        className="absolute top-197.5 left-174.5 flex gap-2.75 opacity-85"
+      >
         <span className="h-30 w-1.75 game-stump-near" />
         <span className="h-30 w-1.75 game-stump-near" />
         <span className="h-30 w-1.75 game-stump-near" />
