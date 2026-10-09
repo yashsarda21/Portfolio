@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Lighthouse budget for the pages that carry a promise: the recruiter page (/scout), the Landing (/), the
-// Player Intro (/intro) and the Arena Hub (/arena). Not part of `pnpm verify` (slow): run it at a phase exit.
+// Player Intro (/intro), the Arena Hub (/arena) and the three games (/arena/cricket, /tennis, /badminton). Not part of `pnpm verify` (slow): run it at a phase exit.
 // Usage: pnpm build && pnpm lighthouse
 //
 // Serves build/client on port 4174 (the user's `pnpm preview` on 4173 is left alone), drives Playwright's
@@ -68,6 +68,12 @@ const PAGES = [
     path: "/arena",
     variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE],
   },
+  // The three games (spec 11.13, G17): a game waits for the visitor and moves by transform only, so desktop
+  // carries the Hub's gates. Mobile is reported.
+  ...["/arena/cricket", "/arena/tennis", "/arena/badminton"].map((path) => ({
+    path,
+    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE],
+  })),
 ];
 
 const METRICS = [

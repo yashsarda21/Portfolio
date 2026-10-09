@@ -44,9 +44,9 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 
 ## Phase 2 / 5
 - [ ] Career `status` enum only allows NOT OUT / DEBUT — extend when a third role exists (Phase 2).
-- [ ] Academy innings number is `careers.length + 1` — revisit with a third role (Phase 5, cricket).
-- [ ] ScoreBug cell padding is 16px here vs 14px on the artboard (Phase 5).
-- [ ] A2: the small ScoreBug uses an 11px mono floor where the artboard has 10px (Phase 5; keep 11px, log as a deviation).
+- [x] Academy innings number is `careers.length + 1` — revisit with a third role (Phase 5, cricket). → the over reveals the first two career innings, then the academy; its slot number is its place, tested with three careers (`cricket/view.test.ts`, §11.13 G7)
+- [x] ScoreBug cell padding is 16px here vs 14px on the artboard (Phase 5). → `ScoreBug.Cell pad="tight"` (14) for tennis and badminton; cricket keeps 16, as drawn (§11.13)
+- [x] A2: the small ScoreBug uses an 11px mono floor where the artboard has 10px (Phase 5; keep 11px, log as a deviation). → logged in §11.13 (deviations)
 
 ## Phase 3
 - [x] Main reference shows "SOFTWARE ENGINEER" with collapsed tracking (the `boot` keyframe end state, audit risk #11) — decide .42em design intent vs frozen end state; mask/log as deviation. → §11.11 L10 (.42em kept, box masked)
@@ -56,9 +56,9 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [x] Hub tablet treatment (drawer, §12) and the stage mono floor at Hub scale (`--stage-mono-min`, §11.11 L2). → §11.12 H1, H2, H13 (`mono-fit`)
 
 ## Phase 5 / 6
-- [ ] Count-up has no controlled trigger for tiles already in view at mount (they show the final value). The Hub does not need one (H11: its 0 to 3 numbers fill as bars instead); revisit for the game score (Phase 5) and the Locker Room record (Phase 6).
-- [ ] The Hub's PLAY / REMATCH go to `/arena/cricket`, `/arena/tennis`, `/arena/badminton`, which are still placeholders (Phase 5). The Hub's seeded states (`artboardRecord`) stand in for a real saved match until `completeMatch` is wired from the games.
-- [ ] Phase 5: a played venue's last score (`PLAYED · <score>`) is whatever the game saves; agree the score string format with the game screens.
+- [ ] Phase 6: Count-up has no controlled trigger for tiles already in view at mount (they show the final value). The Hub does not need one (H11: its 0 to 3 numbers fill as bars instead). The games do not need one either (ruling G14: score digits swap with the 200ms snap, §11.13); build it for the Locker Room record (Phase 6).
+- [x] The Hub's PLAY / REMATCH go to `/arena/cricket`, `/arena/tennis`, `/arena/badminton`, which are still placeholders (Phase 5). The Hub's seeded states (`artboardRecord`) stand in for a real saved match until `completeMatch` is wired from the games. → the three games are built and call `completeMatch` the moment the result is known (`useMatchResult`, §11.13 G8); the journeys play cricket from the Hub and back (`tests/e2e/journeys.spec.ts`)
+- [x] Phase 5: a played venue's last score (`PLAYED · <score>`) is whatever the game saves; agree the score string format with the game screens. → cricket `14* NOT OUT` / `0 OUT`, tennis `GAME YASH` / `BROKE SERVE`, badminton `21–19` / `20–20` (§11.13 G8)
 
 ## Phase 4 follow-ups (found in reviews)
 - [ ] Body-floored rail labels ("Match Highlights", "Training Academy") may wrap to two lines at the 11px tag / laptop scales (accepted, §11.12 H13). Revisit if the rail is redrawn.
@@ -68,6 +68,14 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] The Hub's content-page parity after the `tabbar-clearance` move was covered by `pnpm verify` at the Phase 4 exit; re-check it if `ContentLayout` changes again.
 - [ ] Make the Hub backdrop parity meaningful (`tests/stories/scene.spec.ts` reports 0.0000 with most of the frame masked; near-black art passes pixelmatch's threshold almost regardless): use a luminance-stretched compare, or tight crops of the crowd strip and the grid.
 - [ ] The prerendered `/arena` HTML has two `<h1>` (stage and column, one hidden by CSS), as the Landing does; one-h1 tests use the accessibility tree.
+
+## Phase 5 follow-ups (found in reviews)
+- [ ] The phone game column draws no route back to the Hub (the Mobile-Game board draws no tab bar); a visitor leaves through SKIP, QUICK VIEW or the browser's back. Decide in the final review whether the column gets a back chip.
+- [ ] The game calls (`SIX.`, `ON THE LINE.`) stay on screen through the verdict and the end, behind the end buttons (all three games). Fade the call when the end buttons appear if it reads as clutter.
+- [ ] `CourtMark` and the column's court placement use container query units (Safari 16+) and no `foreignObject`; spot-check the three game columns on a real Safari.
+- [ ] Tennis's Yash ring is a pill (`rounded-full`) where the board draws a 50% ellipse (the same `TrackingRing` as cricket's; inside the 2% limit).
+- [ ] Derived game copy (tennis `missed` / `line` COMM lines, badminton `start` / `rally` / `perfect` COMM lines, the phone hints, SEE / CLAIM labels, the `SAVED` and `GAME YASH` statuses) is flagged for Yash's review (§12).
+- [ ] Phase 7: audio files for the `bat`, `net` and `smash` slots (the games call `audio.play(...)`; silent until then, ruling G15).
 
 ## When a git remote is added (Phase 7 at latest)
 - [ ] CI: add `permissions: contents: read`, a concurrency cancel group, and `if-no-files-found` on artifact upload; confirm the workflow passes on Ubuntu.
