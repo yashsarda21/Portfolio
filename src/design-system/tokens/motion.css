@@ -77,6 +77,22 @@
     transform: scale(1);
   }
 }
+/* An attribute toast slides in from the right (Badminton-Play): stagger with --d. */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+    visibility: hidden;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility animate-slide-in {
+  animation: slide-in 600ms var(--ease-follow) both;
+  animation-delay: var(--d, 0s);
+}
 @utility animate-fade {
   animation: fade-in 1s ease-out both;
   animation-delay: var(--d, 0s);
@@ -380,6 +396,23 @@
 @utility animate-floodlight-pulse {
   opacity: 0;
   animation: floodlight-pulse 1.4s var(--ease-standard) 1;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* The LED marquee (Tennis-Play): two copies of the items side by side, the strip slides one copy to the left every
+   18s and starts over, so the seam never shows. Reduced motion: it stands still at frame 0. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@utility animate-marquee {
+  animation: marquee 18s linear infinite;
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }

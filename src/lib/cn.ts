@@ -15,6 +15,7 @@ const twMerge = extendTailwindMerge<"type-recipe" | "surface">({
         "glow-ring",
         "glow-cta",
         "glow-cursor",
+        "glow-power",
         "glow-volt-sm",
         "glow-volt-md",
         "glow-volt-lg",

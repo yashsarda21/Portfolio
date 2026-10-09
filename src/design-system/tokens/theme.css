@@ -48,6 +48,8 @@
   --perspective-court: 500px;
   /* The Hub's three venue cards fanning toward the viewer. */
   --perspective-arc: 1600px;
+  /* The courtside cards turned in toward the court (Tennis-Play): the viewer stands closer than at a Hub card. */
+  --perspective-courtside: 900px;
 }
 
 @theme inline {
@@ -124,6 +126,7 @@
   --color-volt-a16: var(--ref-volt-a16);
   --color-volt-a22: var(--ref-volt-a22);
   --color-volt-a35: var(--ref-volt-a35);
+  --color-volt-a40: var(--ref-volt-a40);
   --color-volt-a45: var(--ref-volt-a45);
   --color-volt-a60: var(--ref-volt-a60);
   --color-white-a03: var(--ref-white-a03);
@@ -132,6 +135,7 @@
   --color-white-a10: var(--ref-white-a10);
   --color-white-a09: var(--ref-white-a09);
   --color-white-a16: var(--ref-white-a16);
+  --color-floodlight-a35: var(--ref-floodlight-a35);
   --color-ground-a35: var(--ref-ground-a35);
   --color-ground-a85: var(--ref-ground-a85);
   --color-ground-a90: var(--ref-ground-a90);
@@ -161,6 +165,8 @@
   --shadow-glow-ring: 0 0 18px rgb(var(--rgb-volt) / 0.6);
   --shadow-glow-cta: 0 0 40px rgb(var(--rgb-volt) / 0.25);
   --shadow-glow-cursor: 0 0 12px rgb(var(--rgb-white) / 0.9);
+  /* the power meter's fill (Badminton-Play) */
+  --shadow-glow-power: 0 0 16px rgb(var(--rgb-floodlight) / 0.5);
   /* a volt glow around a small light, by strength (the intro's specks, trails, title bar and shock line) */
   --shadow-glow-volt-sm: 0 0 10px rgb(var(--rgb-volt));
   --shadow-glow-volt-md: 0 0 16px rgb(var(--rgb-volt));

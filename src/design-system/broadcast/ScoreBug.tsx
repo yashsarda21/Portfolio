@@ -56,13 +56,21 @@ function Name({ serving = false, className, children }: PartProps & { serving?: 
   );
 }
 
-function Cell({ muted = false, className, children }: PartProps & { muted?: boolean }) {
+/** `pad` is the side padding of the large bug: wide 16px (Cricket-Play), tight 14px (Tennis-Play, Badminton-Play). */
+function Cell({
+  muted = false,
+  pad = "wide",
+  className,
+  children,
+}: PartProps & { muted?: boolean; pad?: "wide" | "tight" }) {
   const size = useContext(SizeCtx);
   return (
     <span
       className={cn(
         "flex items-center bg-panel tabular-nums",
-        size === "md" ? "px-4 type-score-num" : "px-3 type-score",
+        size === "md"
+          ? cn(pad === "tight" ? "px-3.5" : "px-4", "type-score-num")
+          : "px-3 type-score",
         muted ? "border-l border-line text-scout" : "text-floodlight",
         className,
       )}

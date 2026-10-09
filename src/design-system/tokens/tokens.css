@@ -112,6 +112,7 @@
   --ref-volt-a16: rgb(var(--rgb-volt) / 0.16);
   --ref-volt-a22: rgb(var(--rgb-volt) / 0.22);
   --ref-volt-a35: rgb(var(--rgb-volt) / 0.35);
+  --ref-volt-a40: rgb(var(--rgb-volt) / 0.4); /* the courtside card's border */
   --ref-volt-a45: rgb(var(--rgb-volt) / 0.45);
   --ref-volt-a60: rgb(var(--rgb-volt) / 0.6);
   --ref-white-a03: rgb(var(--rgb-white) / 0.03);
@@ -120,6 +121,7 @@
   --ref-white-a09: rgb(var(--rgb-white) / 0.09);
   --ref-white-a10: rgb(var(--rgb-white) / 0.1);
   --ref-white-a16: rgb(var(--rgb-white) / 0.16);
+  --ref-floodlight-a35: rgb(var(--rgb-floodlight) / 0.35); /* an idle aim zone's dashed edge */
   --ref-ground-a35: rgb(var(--rgb-ground) / 0.35);
   --ref-ground-a85: rgb(var(--rgb-ground) / 0.85);
   --ref-ground-a90: rgb(var(--rgb-ground) / 0.9);

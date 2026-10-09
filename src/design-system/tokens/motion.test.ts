@@ -23,6 +23,7 @@ describe("entrance presets never leave a hidden part focusable", () => {
   it.each([
     ["fade-in", motion, "from"],
     ["rise-in", motion, "from"],
+    ["slide-in", motion, "from"],
     ["boot-scan", motion, "0%"],
     ["bank-flicker", scene, "0%"],
   ])("%s: its first frame is visibility: hidden", (name, css, first) => {

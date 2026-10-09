@@ -213,6 +213,15 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* The call on the phone's game column (derived; the board draws none): type-call at 64px. */
+@utility type-call-sm {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 /* The page title one step above d1: 96px at .85 (Team-Up). On the phone it is d1's 48px. */
 @utility type-d0 {
   font-family: var(--font-display);
@@ -936,6 +945,31 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+/* The game scenes (Cricket-Play, Tennis-Play, Badminton-Play, Mobile-Game). */
+/* A ball cell's label and the phone's reveal chip title: 22px, untracked, on the font's own line box. */
+@utility type-title-chip {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: normal;
+  text-transform: uppercase;
+}
+/* A courtside card's project name: 26px at line 1, untracked (type-d4 is tracked .04em). */
+@utility type-title-card {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+/* The power meter's legend (SMASH / CLEAR / DROP): type-title-card's size in the heavy weight. */
+@utility type-title-legend {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
+}
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -948,6 +982,10 @@
 }
 @utility glow-volt {
   text-shadow: 0 0 18px rgb(var(--rgb-volt) / 0.45);
+}
+/* The big call lifts off a busy scene on a dark halo (Cricket-Play). */
+@utility glow-call {
+  text-shadow: 0 0 40px rgb(0 0 0 / 0.8);
 }
 
 /* H5: a returning visitor's record-bound parts wait for the saved record (one frame after scripts run).
