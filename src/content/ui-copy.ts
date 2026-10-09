@@ -473,6 +473,8 @@ export const ui = {
       of: "OF",
       over: "OVER COMPLETE",
       notOutMark: "*",
+      /** A wicket, in the over's tracker. */
+      wicket: "W",
       notOut: "NOT OUT",
       out: "OUT",
       bowl: "BOWL · SPACE",
