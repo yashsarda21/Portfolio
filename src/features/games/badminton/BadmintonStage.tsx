@@ -84,6 +84,7 @@ export function BadmintonStage({
         <Glass
           as="section"
           pad="md"
+          data-part="power"
           className="absolute top-30 left-9 z-6 flex w-62.5 flex-col gap-4"
         >
           <MonoLabel variant="mono-label" tone="label">
@@ -101,7 +102,7 @@ export function BadmintonStage({
         </Glass>
       )}
 
-      <div className="absolute top-30 right-9 z-6 flex w-85 flex-col gap-2.5">
+      <div data-part="toasts" className="absolute top-30 right-9 z-6 flex w-85 flex-col gap-2.5">
         {view.toasts.map((toast, i) => (
           // A group flipping from next to charged is a new toast: it slides in. The others stay as they are.
           <AttributeToast key={`${i}-${toast.state}`} {...toast} />
@@ -114,7 +115,8 @@ export function BadmintonStage({
           call={call.text}
           tone={call.tone}
           size="stage"
-          className="absolute inset-x-0 top-105 z-6"
+          // The field between the panels (x 306 to 1044): a long call wraps there, over the court, never onto a panel.
+          className="absolute top-82 left-76.5 z-6 w-184.5"
         />
       ) : null}
 

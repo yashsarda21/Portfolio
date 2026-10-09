@@ -53,6 +53,39 @@ async function expectCharged(page: Page, count: number) {
   }
 }
 
+/** The box of the text itself (the call's own element may be wider than its words). */
+const textBox = (el: ReturnType<Page["locator"]>) =>
+  el.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const { x, y, width, height } = range.getBoundingClientRect();
+    return { x, y, width, height };
+  });
+type Box = { x: number; y: number; width: number; height: number };
+const meets = (a: Box, b: Box) =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+/**
+ * The call on screen stays inside the field: on the stage between the power panel and the toast column (it wraps
+ * to balanced lines there, at the same size), on the column inside the screen's width.
+ */
+async function expectCallFits(page: Page, lines: 1 | 2) {
+  const text = await textBox(call(page));
+  const onStage = await page.locator("[data-stage]").isVisible();
+  if (onStage) {
+    for (const part of ["power", "toasts"]) {
+      const panel = (await page.locator(`[data-stage] [data-part=${part}]`).boundingBox())!;
+      expect(meets(text, panel), `the call ${JSON.stringify(text)} meets the ${part}`).toBe(false);
+    }
+    // 120px display at line-height 1: one line is 120 tall, two are 240.
+    expect(Math.round(text.height / 120), "lines").toBe(lines);
+  } else {
+    const view = page.viewportSize()!;
+    expect(text.x, "call left").toBeGreaterThanOrEqual(0);
+    expect(text.x + text.width, "call right").toBeLessThanOrEqual(view.width);
+  }
+}
+
 /** Collects the page's errors: a game must never reach the console with one. */
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -114,6 +147,7 @@ test.describe("the forced win (the 1 %)", () => {
     await perfectGame(page);
     await expect(call(page)).toHaveText(badminton.calls.through);
     await expect(call(page)).toHaveAttribute("data-tone", "volt");
+    await expectCallFits(page, 2);
     await expect(bug(page)).toContainText(badminton.status.saved);
     const claim = page.getByRole("link", { name: badminton.claim });
     await expect(claim).toBeVisible();
@@ -142,6 +176,7 @@ test.describe("the forced loss", () => {
     await perfectGame(page);
     // At match point the last rally is a perfect drop that does not get through: it is called as the shot.
     await expect(call(page)).toHaveText(badminton.calls.drop);
+    await expectCallFits(page, 2);
     await expect(bug(page)).toContainText(badminton.status.game);
     await expect(bug(page)).toContainText("21");
     const see = page.getByRole("link", { name: badminton.see });
@@ -234,23 +269,55 @@ test("every rally reveals: four smashes charge four groups, and each is announce
   expect((await stored(page)).lastScores.badminton).toBe("21–19");
 });
 
+test("at the end the four toasts stand in one column and each eyebrow is one line", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the toasts are the stage's");
+  await forceLuck(page, 0);
+  await openFrozen(page, "/arena/badminton");
+  await perfectGame(page);
+  // The toasts slide in on CSS time, not the fake clock: let them finish.
+  await page.clock.resume();
+  await waitForFiniteAnimations(page);
+  const toasts = charged(page);
+  await expect(toasts).toHaveCount(4);
+  const boxes: Box[] = [];
+  for (const toast of await toasts.all()) {
+    boxes.push((await toast.boundingBox())!);
+    const eyebrow = toast.locator("span").first();
+    const lineTops = await eyebrow.evaluate((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+    });
+    expect(lineTops, `"${await eyebrow.textContent()}" lines`).toBe(1);
+  }
+  const column = (await page.locator("[data-stage] [data-part=toasts]").boundingBox())!;
+  for (const box of boxes) {
+    expect(box.x, "toast x").toBeCloseTo(column.x, 0);
+    expect(box.width, "toast width").toBeCloseTo(column.width, 0);
+  }
+  expect(boxes[3]!.x + boxes[3]!.width, "inside the window").toBeLessThanOrEqual(1440);
+});
+
 test("the shots: drop and smash are called as released; a perfect weight is called, except at match point", async ({
   page,
 }) => {
   await forceLuck(page, 0.99);
   await openFrozen(page, "/arena/badminton");
-  const rally = async (band: [number, number], called: string) => {
+  const rally = async (band: [number, number], called: string, lines: 1 | 2) => {
     await holdSpace(page, band);
     await advanceTo(page, ["called", "verdict"]);
     await expect(call(page)).toHaveText(called);
+    await expectCallFits(page, lines);
     if ((await phaseOf(page)) === "called") await advanceTo(page, ["ready"]);
   };
-  await rally(PERFECT, badminton.calls.perfect);
-  await rally(DROP, badminton.calls.drop);
-  await rally(SMASH, badminton.calls.smash);
+  await rally(PERFECT, badminton.calls.perfect, 2);
+  await rally(DROP, badminton.calls.drop, 2);
+  await rally(SMASH, badminton.calls.smash, 1);
   await expect(bug(page)).toContainText(badminton.matchPoint);
   // At match point only the 1 % is perfect: otherwise the shot is called, however well it was weighed.
-  await rally(PERFECT, badminton.calls.drop);
+  await rally(PERFECT, badminton.calls.drop, 2);
 });
 
 test.describe("holding (Review Focus 1)", () => {

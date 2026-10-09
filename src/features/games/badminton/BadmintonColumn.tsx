@@ -1,6 +1,8 @@
 import type { Ref } from "react";
 import {
   CallOverlay,
+  CourtBox,
+  CourtMark,
   GAME_COURT_VIEW,
   MonoLabel,
   PlayerTag,
@@ -13,7 +15,7 @@ import {
 } from "@/design-system";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
-import { ARC, PARKED, RING } from "./flight";
+import { ARC, PARKED, YASH_RING } from "./flight";
 import { HoldButton } from "./HoldButton";
 import type { BadmintonPhase, BadmintonView } from "./view";
 
@@ -65,22 +67,16 @@ export function BadmintonColumn({
       field={
         <div aria-hidden="true" data-part="field" className="absolute inset-0">
           {/* The court's own box: the backdrop's court fills it, so the stage's coordinates line up with the court. */}
-          <div className="absolute inset-x-0 top-50 bottom-0">
+          <CourtBox>
             <TracerPath d={ARC.d} viewBox={GAME_COURT_VIEW.hall} size="column" slice>
               <g ref={shuttleRef} className="will-change-transform">
                 <ShuttleMark x={PARKED.x} y={PARKED.y} />
               </g>
-              {/* Yash's ring is drawn inside the same slice as the court, so it stands where the arc ends. */}
-              <foreignObject
-                x={RING.yash.x}
-                y={RING.yash.y}
-                width={RING.yash.w}
-                height={RING.yash.h}
-                className="overflow-visible"
-              >
-                <TrackingRing who="yash" size="stage" className="top-0 left-0 h-3.5 w-14" />
-              </foreignObject>
             </TracerPath>
+            {/* Yash's ring stands where the arc ends, on the court at any width. */}
+            <CourtMark venue="hall" x={YASH_RING.x} y={YASH_RING.y}>
+              <TrackingRing who="yash" size="column" className="relative" />
+            </CourtMark>
             <PlayerTag
               live={false}
               className="absolute top-24 left-1/2 -translate-x-1/2 px-1.75 py-1 whitespace-nowrap"
@@ -96,7 +92,7 @@ export function BadmintonColumn({
                 className="absolute inset-x-0 top-32"
               />
             ) : null}
-          </div>
+          </CourtBox>
         </div>
       }
       thumb={

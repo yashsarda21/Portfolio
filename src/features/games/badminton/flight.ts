@@ -34,5 +34,5 @@ export function shuttleTransform(progress: number): string {
   return `translate(${at.x - PARKED.x}px, ${at.y - PARKED.y}px)`;
 }
 
-/** Yash's ring on the board, as the box it fills (its 2px border included), in the stage's design space. */
-export const RING = { yash: { x: 762, y: 334, w: 60, h: 18 } } as const;
+/** The centre of Yash's ring on the board (its 56x14 content box and 2px border, at 762,334), in the stage's design space. */
+export const YASH_RING = { x: 792, y: 343 } as const;

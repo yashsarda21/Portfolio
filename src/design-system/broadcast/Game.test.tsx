@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AimZone } from "./AimZone";
 import { AttributeToast } from "./AttributeToast";
 import { BallTracker } from "./BallTracker";
+import { CourtBox, CourtMark } from "../scene/CourtMark";
 import { CallOverlay } from "./CallOverlay";
 import { CourtsideCard } from "./CourtsideCard";
 import { LEDMarquee } from "./LEDMarquee";
@@ -180,6 +181,29 @@ describe("CallOverlay", () => {
     expect(call).toHaveAttribute("aria-hidden", "true");
     expect(call).toHaveAttribute("data-tone", "floodlight");
     expect(call).toHaveClass("extra");
+  });
+
+  it("wraps to balanced lines inside the box its parent gives it", () => {
+    render(<CallOverlay call="BACK LINE. STILL HIS." tone="floodlight" size="stage" />);
+    expect(screen.getByText("BACK LINE. STILL HIS.")).toHaveClass("text-balance", "text-center");
+  });
+});
+
+describe("CourtMark", () => {
+  it("stands at the board's point on the sliced court: the centre line is 50 %, the rest scales with the larger side", () => {
+    render(
+      <CourtBox>
+        <CourtMark venue="hall" x={792} y={343}>
+          <span>ring</span>
+        </CourtMark>
+      </CourtBox>,
+    );
+    const mark = screen.getByText("ring").parentElement!;
+    // (jsdom rewrites the divisions; the browser's layout is checked by the badminton e2e.)
+    // The hall's crop is 280 290 880 590: its middle is x 720, its top y 290.
+    expect(mark.style.left).toMatch(/^calc\(50% \+ 72\s*\*\s*max\(/);
+    expect(mark.style.top).toMatch(/^calc\(53\s*\*\s*max\(/);
+    expect(mark.parentElement!.style.containerType).toBe("size");
   });
 });
 
