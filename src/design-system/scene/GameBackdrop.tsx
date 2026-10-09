@@ -56,6 +56,13 @@ const COURT: Record<"court" | "hall", CourtArt> = {
   },
 };
 
+/**
+ * Each court's crop of the 1440x900 design space, as the column's backdrop draws it (`xMidYMin slice`, from 200px down).
+ * A game that draws on the column's court (tracers, a ball) uses this as its `viewBox` and the same slice, so its
+ * coordinates are the stage's own and the middle of the crop is the court's centre line.
+ */
+export const GAME_COURT_VIEW = { court: COURT.court.crop, hall: COURT.hall.crop } as const;
+
 /** The court's polygons and lines (the SVG's children). The net follows in the column, where it scales with the court. */
 function CourtShapes({ art }: { art: CourtArt }) {
   return (

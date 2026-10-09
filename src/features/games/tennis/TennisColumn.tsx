@@ -1,6 +1,7 @@
 import { useRef, type PointerEvent, type Ref } from "react";
 import {
   AimZone,
+  GAME_COURT_VIEW,
   Button,
   CallOverlay,
   MonoLabel,
@@ -14,7 +15,7 @@ import { ui } from "@/content";
 import { cn } from "@/lib/cn";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
-import { COLUMN_VIEW, returnPath, SERVE } from "./flight";
+import { returnPath, SERVE } from "./flight";
 import type { Side } from "./referee";
 import { LIVE_PHASES, type TennisPhase, type TennisView } from "./view";
 
@@ -94,7 +95,7 @@ export function TennisColumn({
               <>
                 <TracerPath
                   d={SERVE.d}
-                  viewBox={COLUMN_VIEW}
+                  viewBox={GAME_COURT_VIEW.court}
                   size="column"
                   draw={phase === "ready" ? 0 : 1}
                   drawVar="--serve"
@@ -113,7 +114,7 @@ export function TennisColumn({
                   <TracerPath
                     key={view.returned}
                     d={returnPath(shot)}
-                    viewBox={COLUMN_VIEW}
+                    viewBox={GAME_COURT_VIEW.court}
                     size="column"
                     drawVar={`--return-${shot}`}
                     slice

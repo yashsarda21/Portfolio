@@ -33,6 +33,8 @@ export interface TennisCard {
   media: string;
   title: string;
   line: string;
+  /** A newer card has taken this side's place on the court: this one stands in the free space above it. */
+  moved: boolean;
 }
 
 type Bar = "done" | "current" | "todo";
@@ -112,8 +114,11 @@ export function buildTennisView(
 
   // G7: the projects in round order, one per return, however many the content grows to.
   const highlights = getHighlights(content).slice(0, TENNIS_SERVES);
+  const sideOf = (i: number): Side => (i % 2 === 0 ? "left" : "right");
   const cards = highlights.slice(0, played).map((h, i): TennisCard => ({
-    side: i % 2 === 0 ? "left" : "right",
+    side: sideOf(i),
+    // The third card comes to the left again: the one it replaces there makes room, so every project stays on screen.
+    moved: i + 2 < played && sideOf(i + 2) === sideOf(i),
     eyebrow: `${copy.highlight} ${two(i + 1)} ${sep} ${h.roundShort}`,
     tag: `${ui.games.rally} ${i + 1}`,
     media: copy.recording,

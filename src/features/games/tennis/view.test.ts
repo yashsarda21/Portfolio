@@ -96,6 +96,7 @@ describe("buildTennisView", () => {
         media: "[SCREEN RECORDING]",
         title: "POWER BI DASHBOARD",
         line: "An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
+        moved: false,
       },
       {
         side: "right",
@@ -104,6 +105,7 @@ describe("buildTennisView", () => {
         media: "[SCREEN RECORDING]",
         title: "KUDO BOARD",
         line: "A recognition platform celebrating individual and team wins for 10,000+ employees.",
+        moved: false,
       },
     ]);
     expect(v.marquee).toEqual([
@@ -182,6 +184,8 @@ describe("buildTennisView", () => {
       ["left", "HIGHLIGHT 03 · F", "RALLY 3"],
     ]);
     expect(v.cards[2]!.title).toBe("AI INTERVIEW GROOMING PLATFORM");
+    // The third card takes the drawn place on the left; the first moves up out of its way. The right one stays.
+    expect(v.cards.map((c) => c.moved)).toEqual([true, false, false]);
   });
 
   it("a loss: GAME YASH, saved, and the highlights with a rematch", () => {

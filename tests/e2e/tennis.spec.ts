@@ -625,3 +625,52 @@ test.describe("axe", () => {
     await scan(page);
   });
 });
+
+test.describe("every courtside card stays on screen", () => {
+  test("at the end all three cards are visible and none overlaps another or the HUD", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the cards are the stage's");
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/tennis");
+    await playGame(page, "ArrowRight");
+    // The slide to make room is a transform: let it finish (it runs on real time).
+    await page.clock.resume();
+    await waitForFiniteAnimations(page);
+    await page.waitForTimeout(700);
+    const cardBoxes = cards(page);
+    await expect(cardBoxes).toHaveCount(3);
+    const titles = await cardBoxes.evaluateAll((els) => els.map((el) => el.textContent ?? ""));
+    for (const name of ["POWER BI DASHBOARD", "KUDO BOARD", "AI INTERVIEW GROOMING PLATFORM"]) {
+      expect(
+        titles.some((t) => t.includes(name)),
+        name,
+      ).toBe(true);
+    }
+    const boxes = await cardBoxes.evaluateAll((els) =>
+      els.map((el) => {
+        // The card itself (the rotated glass), not its perspective wrapper.
+        const r = el.firstElementChild!.getBoundingClientRect();
+        return { x: r.x, y: r.y, width: r.width, height: r.height };
+      }),
+    );
+    for (const [i, a] of boxes.entries()) {
+      for (const b of boxes.slice(i + 1)) {
+        const apart =
+          a.x + a.width <= b.x ||
+          b.x + b.width <= a.x ||
+          a.y + a.height <= b.y ||
+          b.y + b.height <= a.y;
+        expect(apart, `cards ${JSON.stringify(a)} and ${JSON.stringify(b)}`).toBe(true);
+      }
+      // Under the HUD (76) and inside the window.
+      expect(a.y).toBeGreaterThanOrEqual(76);
+      expect(a.y + a.height).toBeLessThanOrEqual(900);
+    }
+    const left = boxes.filter((b) => b.x < 720).sort((a, b) => a.y - b.y);
+    expect(left).toHaveLength(2);
+    // The one that moved is above the drawn spot (380); the pill (x 456 to 984) is clear of both columns.
+    expect(left[0]!.y + left[0]!.height).toBeLessThanOrEqual(380);
+    expect(Math.max(...boxes.map((b) => b.x + b.width))).toBeGreaterThan(0);
+  });
+});

@@ -119,11 +119,16 @@ export function TennisStage({
         ),
       )}
 
-      {view.cards.map((card, i) => (
+      {view.cards.map(({ moved, ...card }, i) => (
         <CourtsideCard
           key={i}
           {...card}
-          className={cn("absolute top-95", card.side === "left" ? "left-10" : "right-10")}
+          className={cn(
+            "absolute top-95 transition-transform duration-(--dur-glide) ease-snap motion-reduce:transition-none",
+            card.side === "left" ? "left-10" : "right-10",
+            // Up from the drawn spot (y 380) to y 96, under the HUD and clear of the card that takes its place.
+            moved && "-translate-y-71",
+          )}
         />
       ))}
 
