@@ -75,6 +75,9 @@ describe("Button", () => {
     expect(plateOf(screen.getByRole("button"))).not.toHaveClass("animate-cta-glow");
     rerender(<Button pulse>A</Button>);
     expect(plateOf(screen.getByRole("button"))).toHaveClass("animate-cta-glow");
+    rerender(<Button pulse="ring">A</Button>);
+    expect(plateOf(screen.getByRole("button"))).toHaveClass("animate-ring");
+    expect(plateOf(screen.getByRole("button"))).not.toHaveClass("animate-cta-glow");
   });
 
   it("shows a trailing icon", () => {

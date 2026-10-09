@@ -27,7 +27,9 @@ export function GameStage({
     <Stage from="lg" backdrop={<GameBackdrop venue={venue} frame="stage" />}>
       <HUD
         fade
-        className="absolute inset-x-0 top-0 z-10"
+        // The boards space the three groups out (justify-content: space-between), so the score bug sits where the
+        // breadcrumb's and the controls' widths put it, not on the centre line.
+        className="absolute inset-x-0 top-0 z-10 flex justify-between"
         left={<Breadcrumb as={ArenaLink} {...chrome.breadcrumb} />}
         center={bug}
         right={

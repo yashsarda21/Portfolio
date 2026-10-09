@@ -10,7 +10,7 @@ const STATE: Record<BallState, string> = {
 };
 
 /**
- * The over, one 52x52 cell per ball (Cricket-Play), seen from the bowler's end: dots and wickets are yours (`for`,
+ * The over, one 54x54 cell per ball (Cricket-Play draws 52 inside a 1px border), seen from the bowler's end: dots and wickets are yours (`for`,
  * volt), runs are his (`against`); `current` is the ball you bowl next and `pending` the ones after it.
  */
 export function BallTracker({
@@ -28,7 +28,7 @@ export function BallTracker({
           key={i}
           data-state={ball.state}
           className={cn(
-            "flex size-13 items-center justify-center border type-title-chip leading-auto",
+            "flex size-13.5 items-center justify-center border type-title-chip leading-auto",
             STATE[ball.state],
           )}
         >

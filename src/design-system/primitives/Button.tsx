@@ -35,6 +35,8 @@ export const buttonVariants = cva(
         bar: "h-13.5 w-full px-4 type-btn-bar",
         // The phone landing's call to action: the full-width bar at 64px, 22px heavy label (Mobile-Landing).
         "bar-lg": "h-16 w-full px-4 type-btn-bar-lg",
+        // The phone game's thumb button (Mobile-Game TAP TO BOWL): 110px tall, full width, 34px label.
+        tap: "h-27.5 w-full px-4 type-btn-tap",
       },
     },
     compoundVariants: [
@@ -75,13 +77,13 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "panel";
 
 export type ButtonOwnProps = {
   variant?: Variant;
-  size?: "card" | "s" | "m" | "l" | "ml" | "xl" | "2xl" | "cta" | "bar" | "bar-lg";
+  size?: "card" | "s" | "m" | "l" | "ml" | "xl" | "2xl" | "cta" | "bar" | "bar-lg" | "tap";
   /** true = always skewed, false = never, "desktop" = skewed from 768px up (default). */
   skew?: boolean | "desktop";
   /** Second line under the label (XL CTAs). */
   subLabel?: ReactNode;
-  /** Volt glow pulse for the hero CTA. */
-  pulse?: boolean;
+  /** Volt glow pulse for the hero CTA; "ring" is a game's main button, a ring breathing out of the plate. */
+  pulse?: boolean | "ring";
   /** Volt glow shadow under the primary plate (default true). */
   glow?: boolean;
   iconRight?: IconName;
@@ -121,7 +123,9 @@ export function Button<T extends ElementType = "button">({
         data-plate
         className={cn(
           buttonPlateVariants({ variant, skew: skewKey, glow }),
-          pulse && variant === "primary" && "animate-cta-glow",
+          pulse &&
+            variant === "primary" &&
+            (pulse === "ring" ? "animate-ring" : "animate-cta-glow"),
         )}
       />
       <span className="inline-flex items-center gap-2.5">

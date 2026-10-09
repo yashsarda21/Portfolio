@@ -321,6 +321,11 @@
   @apply face-btn;
   font-size: 26px;
 }
+/* The phone game's thumb button (Mobile-Game TAP TO BOWL): 34px heavy. */
+@utility type-btn-tap {
+  @apply face-btn-heavy;
+  font-size: 34px;
+}
 /* The form's send button (Team-Up). */
 @utility type-btn-lg {
   @apply face-btn-heavy;
@@ -632,6 +637,14 @@
     font-size: 22px;
     line-height: normal;
   }
+}
+/* A game panel's headline (Cricket-Play "3 BALLS. ONE BATTER..."): 32px at .95 (type-title-lg is the same size at 1). */
+@utility type-title-game {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 0.95;
+  text-transform: uppercase;
 }
 @utility type-title {
   font-family: var(--font-display);

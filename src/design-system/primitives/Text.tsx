@@ -14,6 +14,7 @@ export const textVariants = cva("", {
       "section-sm": "type-section-sm",
       band: "type-band",
       "title-lg": "type-title-lg",
+      "title-game": "type-title-game",
       title: "type-title",
       "title-sm": "type-title-sm",
       "title-detail": "type-title-detail",
