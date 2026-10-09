@@ -1,0 +1,67 @@
+import type { ReactNode } from "react";
+import { GameBackdrop, SkipChip } from "@/design-system";
+import { ui } from "@/content";
+import { ArenaLink } from "@/shell/ArenaLink";
+import { QuickViewChip } from "@/shell/QuickViewChip";
+import type { GameChrome } from "./chrome";
+
+/**
+ * The phone and tablet game (Mobile-Game; below 1200px, so CSS shows exactly one of this and the stage). It fills the
+ * screen: the score `bug` and SKIP in the top row, the `reveal` under them with QUICK VIEW right-aligned beneath it
+ * (the board has none, A5), the in-field tags and rings in `field`, and the `thumb` zone at the bottom, under the
+ * thumb and clear of the home bar. On a tablet it stands centred and a step up, as the Hub does. The `h1` is for
+ * screen readers (the board draws no title). Keys work here too.
+ */
+export function GameColumn({
+  chrome,
+  venue,
+  bug,
+  reveal,
+  field,
+  thumb,
+  heading,
+}: {
+  chrome: GameChrome;
+  venue: "turf" | "court" | "hall";
+  bug: ReactNode;
+  reveal: ReactNode;
+  field?: ReactNode;
+  thumb: ReactNode;
+  heading: string;
+}) {
+  return (
+    <div data-game-column="" className="relative h-dvh overflow-hidden bg-night lg:hidden">
+      <div className="relative mx-auto h-full max-w-160">
+        <GameBackdrop venue={venue} frame="column" />
+        <h1 className="sr-only">{heading}</h1>
+        <div
+          data-part="top"
+          className="absolute inset-x-3 top-3.5 z-10 flex items-center justify-between md:inset-x-5 md:top-5"
+        >
+          {bug}
+          {/* The name is the full "SKIP TO …" (it holds the visible word, 2.5.3); the chip draws SKIP →. */}
+          <SkipChip
+            variant="hub"
+            as={ArenaLink}
+            to={chrome.skip.to}
+            aria-label={chrome.skip.label}
+            className="h-11"
+          >
+            {ui.hub.venue.skip}
+          </SkipChip>
+        </div>
+        <div className="absolute inset-x-3 top-18 z-10 flex flex-col items-end gap-2 md:inset-x-5 md:top-23">
+          <div className="w-full">{reveal}</div>
+          <QuickViewChip tone="glass-line" />
+        </div>
+        {field ? <div className="absolute inset-0 z-5">{field}</div> : null}
+        <div
+          data-part="thumb"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex min-h-75 flex-col justify-end bg-linear-to-b from-ground/0 to-ground/92 to-30% px-5 pb-[calc(34px+env(safe-area-inset-bottom))]"
+        >
+          <div className="pointer-events-auto flex flex-col items-center gap-4">{thumb}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
