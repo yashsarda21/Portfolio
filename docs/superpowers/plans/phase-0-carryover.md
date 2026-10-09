@@ -79,3 +79,10 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 
 ## All later plans (convention found in 0C)
 - [ ] Any font-weight / size / leading / tracking override that sits next to a `type-*` class must be passed as a **separate `cn()` argument after the type class** (e.g. `cn("type-mono-tag", "font-bold")`). Prettier's Tailwind class sorter reorders literal strings, and `cn`'s type-recipe conflict group then silently drops the override.
+
+## Phase 8 — 3D games (owner request 2026-10-09; the project's last phase, after Phase 7)
+3D only for the three games (cricket, tennis, badminton); every other screen stays as built. React Three Fiber in the Stage backdrop slot (spec D1), with the 2D board as first paint and fallback.
+- [ ] Cricket: realistic bowling speed and bounce; an animated 3D batsman holding the bat; natural full-body swings; aerial trajectories for sixes; ground-level fours; smooth camera tracking; responsive play.
+- [ ] Tennis and badminton: the same 3D treatment (players, shot trajectories, camera).
+- [ ] Skills to load (compatible with the stack): react-three-fiber-game, threejs-react, threejs-animation, threejs-loaders, threejs-camera, threejs-lighting, threejs-materials, threejs-performance; threejs-physics only if an engine is chosen over referee-driven paths.
+- [ ] Decide then: character source (Mixamo / CC0 / code-built), which screen sizes get 3D, the download and Lighthouse budget, parity against the 2D boards.
