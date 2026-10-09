@@ -27,7 +27,7 @@ import { hubHint, type HubView } from "./view";
 
 type Venue = HubView["venues"][number];
 
-/** Read after the page loads; until then both are false, so the prerendered hint shows everything (as the artboard). */
+/** Read after the page loads, like MEDIA.reducedMotion; until then both are false, so the prerendered hint shows everything (as the artboard). */
 const TOUCH_ONLY = "(pointer: coarse) and (not (any-pointer: fine))";
 
 /** Where each card sits on the arc, left to right: the outer two turn in, the middle one stands 14px higher. */
