@@ -10,4 +10,5 @@ export const MEDIA = {
   belowMd: `(max-width: ${BREAKPOINT.md - 1}px)`,
   lg: `(min-width: ${BREAKPOINT.lg}px)`,
   belowLg: `(max-width: ${BREAKPOINT.lg - 1}px)`,
+  reducedMotion: "(prefers-reduced-motion: reduce)",
 } as const;

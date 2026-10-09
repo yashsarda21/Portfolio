@@ -28,7 +28,6 @@ import { hubHint, type HubView } from "./view";
 type Venue = HubView["venues"][number];
 
 /** Read after the page loads; until then both are false, so the prerendered hint shows everything (as the artboard). */
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 const TOUCH_ONLY = "(pointer: coarse) and (not (any-pointer: fine))";
 
 /** Where each card sits on the arc, left to right: the outer two turn in, the middle one stands 14px higher. */
@@ -99,7 +98,7 @@ export function HubStage({ view, ready }: { view: HubView; ready: boolean }) {
   const plate = useRef<HTMLDivElement>(null);
   const { consumeDrag, ...orbitHandlers } = useOrbit(plate, { enabled: live });
   const hint = hubHint(view.hint, {
-    reducedMotion: useMediaQuery(REDUCED_MOTION),
+    reducedMotion: useMediaQuery(MEDIA.reducedMotion),
     touchOnly: useMediaQuery(TOUCH_ONLY),
   });
 

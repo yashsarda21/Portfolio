@@ -18,6 +18,7 @@ describe("breakpoints", () => {
       belowMd: "(max-width: 767px)",
       belowLg: "(max-width: 1199px)",
       lg: "(min-width: 1200px)",
+      reducedMotion: "(prefers-reduced-motion: reduce)",
     });
   });
 });

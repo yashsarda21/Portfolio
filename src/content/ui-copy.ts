@@ -446,9 +446,136 @@ export const ui = {
     hint: { drag: "DRAG TO ORBIT", keys: "1 2 3 TO PICK A VENUE" },
     drawer: { open: "INDEX", close: "Close the index" },
   },
+  games: {
+    /** The score bug's group name for screen readers. */
+    bug: "Score",
+    rally: "RALLY",
+    unlocked: "UNLOCKED",
+    /** G9: after two losses at one venue. */
+    highlight: "WATCH THE HIGHLIGHT INSTEAD",
+    /** Saved for Team Up on a win (spec §8 outcome; Phase 6 reads it). */
+    prefill: "I beat you.",
+    /** Shown by the column under the reveal chip until the first reveal (derived). */
+    firstReveal: "EVERY INPUT UNLOCKS SOMETHING",
+    cricket: {
+      headline: "3 BALLS. ONE BATTER WHO HATES GETTING OUT.",
+      how: "Release when the marker hits the yorker zone. Every ball you bowl — wicket or six — unlocks an innings of my career.",
+      screen: "STADIUM SCREEN",
+      innings: "INNINGS",
+      locked: "LOCKED",
+      bowlBall: "BOWL BALL",
+      meter: { short: "SHORT", yorker: "YORKER", full: "FULL TOSS" },
+      pitch: { yorker: "YORKER", good: "GOOD LENGTH" },
+      onStrike: "ON STRIKE",
+      bowling: "BOWLING",
+      away: "YOU BOWLING",
+      ball: "BALL",
+      of: "OF",
+      over: "OVER COMPLETE",
+      notOutMark: "*",
+      notOut: "NOT OUT",
+      out: "OUT",
+      bowl: "BOWL · SPACE",
+      bowlPhone: "TAP TO BOWL",
+      touchHint: "WIDER YORKER ZONE ON TOUCH · HAPTIC ON RELEASE",
+      calls: { dot: "DOT BALL.", four: "FOUR.", six: "SIX.", bowled: "BOWLED HIM." },
+      comm: {
+        start: "Your ball. Let's see what you've got.",
+        dot: "Yorker. Dug out. I respect that.",
+        four: "On a length. Still found the gap.",
+        six: "Too short. That one is going on the highlight reel.",
+        lastPerfect: "Perfect yorker. Flicked off the toes anyway. Still not out.",
+        lastGood: "Good ball. Better shot. Career high score updated.",
+        lastSix: "Into the second tier. Still not out.",
+        bowled: "Middle stump. Okay… you got me. That doesn't happen often.",
+      },
+      see: "SEE THE FULL SCORECARD",
+      again: "BOWL AGAIN",
+      claim: "CLAIM YOUR WICKET",
+      skip: "SKIP TO CAREER STATS",
+    },
+    tennis: {
+      how: "Pick the open side before the bounce.",
+      keys: "← →",
+      tap: "or tap a side.",
+      phoneHint: "SWIPE OR TAP THE OPEN SIDE", // derived
+      serving: "SERVING",
+      kmh: "KM/H",
+      aim: {
+        left: "LEFT",
+        right: "RIGHT",
+        open: "OPEN COURT",
+        /** Accessible names (the artboard's aria-labels): "Return to the left", "Return to the right — open court". */
+        to: { left: "Return to the left", right: "Return to the right" },
+        openName: "open court",
+        dash: "—",
+      },
+      progress: "EACH RETURN UNLOCKS A HIGHLIGHT",
+      highlight: "HIGHLIGHT",
+      recording: "[SCREEN RECORDING]",
+      marquee: {
+        highlights: "MATCH HIGHLIGHTS",
+        shipped: "ANOTHER PROJECT SHIPPED",
+        isNext: "IS NEXT",
+        matchPoint: "MATCH POINT",
+        allIn: "ALL THREE ON THE BIG SCREEN", // derived
+      },
+      status: { game: "GAME YASH", broke: "BROKE SERVE" }, // derived
+      calls: {
+        clean: "CLEAN RETURN.",
+        returned: "RETURNED.",
+        ace: "ACE.",
+        wrong: "WRONG SIDE.",
+        early: "TOO EARLY.",
+        line: "ON THE LINE.",
+        winner: "RETURN WINNER.",
+      }, // derived
+      comm: {
+        // start: content.commentary.entrance[0]
+        shipped: "Another project shipped. He's not letting up.",
+        missed: "Ace. The project ships anyway.", // derived
+        line: "Clipped the line. Still undefeated.", // derived
+      },
+      see: "SEE MATCH HIGHLIGHTS", // derived
+      claim: "CLAIM YOUR BREAK", // derived
+      skip: "SKIP TO MATCH HIGHLIGHTS",
+    },
+    badminton: {
+      power: "SHOT POWER",
+      shots: {
+        smash: { name: "SMASH", note: ["Top 20%. Fast,", "but he reads it."] },
+        clear: { name: "CLEAR", note: ["Push him", "to the back line."] },
+        drop: { name: "DROP", note: ["Soft. Risky.", "Very satisfying."] },
+      },
+      hold: "HOLD · RELEASE",
+      phoneHint: "PRESS AND HOLD · LET GO TO PLAY", // derived
+      reading: "READING YOUR GRIP",
+      charged: "ATTRIBUTE CHARGED",
+      upNext: "UP NEXT",
+      matchPoint: "MATCH POINT",
+      status: { game: "GAME YASH", saved: "SAVED" }, // derived
+      calls: {
+        smash: "HE READS IT.",
+        clear: "BACK LINE. STILL HIS.",
+        drop: "AT THE NET. STILL HIS.",
+        perfect: "PERFECT WEIGHT.",
+        through: "IT GETS THROUGH.",
+      }, // derived
+      comm: {
+        start: "Your serve. He's reading your grip.", // derived
+        rally: "He reads it. Another attribute charged.", // derived
+        perfect: "Perfect weight. He still got there.", // derived
+        matchPoint: "Match point. He's done this before.",
+        // final loss: content.commentary.yashWins[0]; a win: content.commentary.visitorWins[0]
+      },
+      see: "SEE PLAYER ATTRIBUTES", // derived
+      claim: "CLAIM YOUR POINT", // derived
+      skip: "SKIP TO PLAYER ATTRIBUTES",
+    },
+  },
   // Shared by every screen. Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one, and says so.
   a11y: { newTab: "(opens in a new tab)", copied: "Scouting link copied" },
-  glyph: { next: "→", external: "↗", download: "↓", sep: "·", bullet: "•", period: "." },
+  glyph: { next: "→", prev: "←", external: "↗", download: "↓", sep: "·", bullet: "•", period: "." },
   record: { ...RECORD, career: `${RECORD.label} ${RECORD.value}` as const, yours: "YOUR RECORD" },
 } as const;
 
