@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { cn } from "@/lib/cn";
 import { CrowdTier } from "./CrowdTier";
 import { FloodlightBank } from "./FloodlightBank";
@@ -74,7 +75,8 @@ function CourtShapes({ art }: { art: CourtArt }) {
 /** The net as SVG, for the column: the tape on top of a dim mesh, and the hall's two posts. */
 function CourtNet({ venue, art }: { venue: "court" | "hall"; art: CourtArt }) {
   const { x, y, w, h, mesh } = art.net;
-  const id = `game-mesh-${venue}`;
+  // Unique per instance: two backdrops on one page (a story, a resize) never share a pattern.
+  const id = `game-mesh-${venue}-${useId().replace(/\W/g, "")}`;
   return (
     <>
       <defs>
