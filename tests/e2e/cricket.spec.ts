@@ -456,6 +456,34 @@ test.describe("viewports (Review Focus 5)", () => {
   });
 });
 
+test.describe("the phone's pitch centre line (D-9)", () => {
+  test("the far stumps, the Yash ring and the pitch share one centre", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "the column is the phone's layout");
+    const centreX = async (selector: string) =>
+      page
+        .locator(`[data-game-column] ${selector}`)
+        .first()
+        .evaluate((el) => {
+          const box = el.getBoundingClientRect();
+          return box.left + box.width / 2;
+        });
+    for (const { width, height } of [
+      { width: 390, height: 844 },
+      { width: 360, height: 640 },
+    ]) {
+      await page.setViewportSize({ width, height });
+      await page.goto("/arena/cricket");
+      await waitForHydration(page);
+      const pitch = await centreX("[data-part=pitch]");
+      expect(Math.abs((await centreX("[data-part=stumps-far]")) - pitch)).toBeLessThanOrEqual(1);
+      expect(Math.abs((await centreX("[data-who=yash]")) - pitch)).toBeLessThanOrEqual(1);
+      expect(Math.abs((await centreX("[data-part=length]")) - pitch)).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
 test.describe("axe", () => {
   /** axe waits on timers, which the fake clock holds: let time run for the scan, then stop it again. */
   async function scan(page: Page) {

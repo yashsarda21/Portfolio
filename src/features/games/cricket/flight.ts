@@ -24,12 +24,12 @@ const LINE: Record<GameLayout, { release: Point; batter: Point; bounce: Record<L
   },
   column: {
     release: { x: 192, y: 640 },
-    batter: { x: 197, y: 218 },
+    batter: { x: 195, y: 218 },
     bounce: {
       yorker: { x: 195, y: 236 },
       good: { x: 195, y: 262 },
       short: { x: 194, y: 380 },
-      full: { x: 197, y: 218 },
+      full: { x: 195, y: 218 },
     },
   },
 };
@@ -42,7 +42,7 @@ export const TRACER = {
     bounce: { cx: 719, cy: 353, rx: 12, ry: 4, tone: "floodlight" },
   },
   column: {
-    d: "M192 640 Q 194 420 195 236 Q 196 226 197 218",
+    d: "M192 640 Q 194 420 195 236 Q 195 226 195 218",
     viewBox: "0 0 390 844",
     bounce: undefined,
   },

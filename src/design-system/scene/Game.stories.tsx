@@ -12,7 +12,7 @@ const COLUMN = "0 0 390 844";
 const CRICKET_PATH = "M714 836 Q 716 560 719 352 Q 721 340 724 326";
 const TENNIS_PATH = "M736 290 Q 700 420 640 640 Q 600 720 560 790";
 const BADMINTON_PATH = "M560 770 Q 640 40 790 330";
-const COLUMN_PATH = "M192 640 Q 194 420 195 236 Q 196 226 197 218";
+const COLUMN_PATH = "M192 640 Q 194 420 195 236 Q 195 226 195 218";
 
 /** Cricket-Play, 1440x900: the turf, Yash's static bat, both rings and the drawn ball path with its bounce. */
 export const CricketStage: StoryObj = {
@@ -65,7 +65,7 @@ export const TurfColumn: StoryObj = {
     <div className="relative h-211 w-97.5 overflow-hidden">
       <GameBackdrop venue="turf" frame="column" />
       <TracerPath d={COLUMN_PATH} viewBox={COLUMN} size="column" />
-      <TrackingRing who="yash" size="column" className="top-53.5 left-43.5" />
+      <TrackingRing who="yash" size="column" className="top-53.5 left-43" />
     </div>
   ),
 };

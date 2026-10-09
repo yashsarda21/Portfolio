@@ -235,7 +235,8 @@ function TurfColumn() {
         data-part="pitch"
         className="absolute inset-x-0 top-52.5 bottom-0 game-pitch [--foot:34%] [--top:46%]"
       />
-      <div data-part="stumps-far" className="absolute top-49.5 left-1/2 -ml-2.25 flex gap-0.75">
+      {/* D-9: three 2px stumps with 3px gaps are 12px wide: half of that left of the pitch's centre line. */}
+      <div data-part="stumps-far" className="absolute top-49.5 left-1/2 -ml-1.5 flex gap-0.75">
         <span className="h-4.5 w-0.5 game-stump" />
         <span className="h-4.5 w-0.5 game-stump" />
         <span className="h-4.5 w-0.5 game-stump" />
