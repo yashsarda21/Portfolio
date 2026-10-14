@@ -3,7 +3,14 @@ import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
 import { waitForFiniteAnimations } from "../support/animations";
 import { waitForHydration } from "./support/contentPage";
-import { expectGameViewport, forceLuck, openFrozen, pauseClock, VIEWPORTS } from "./support/game";
+import {
+  CLOCK_START,
+  expectGameViewport,
+  forceLuck,
+  openFrozen,
+  pauseClock,
+  VIEWPORTS,
+} from "./support/game";
 
 const tennis = ui.games.tennis;
 const NAMES = tennis.aim.to;
@@ -253,6 +260,8 @@ test.describe("what a return reveals and says", () => {
     ]);
     expect(said[0]).toContain("POWER BI DASHBOARD");
     expect(said[2]).toContain("AI INTERVIEW GROOMING PLATFORM");
+    // The last return also says how the game ended (m-4).
+    expect(said[2]).toMatch(/\. Game yash\.$/);
     await expectUnlocked(page, 3);
   });
 });
@@ -748,5 +757,67 @@ test.describe("every courtside card stays on screen", () => {
     // The one that moved is above the drawn spot (380); the pill (x 456 to 984) is clear of both columns.
     expect(left[0]!.y + left[0]!.height).toBeLessThanOrEqual(380);
     expect(Math.max(...boxes.map((b) => b.x + b.width))).toBeGreaterThan(0);
+  });
+});
+
+test.describe("review minors", () => {
+  test("m-5: a keyboard pick on an aim zone keeps the focus on it", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the stage's zones take Tab");
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/tennis");
+    const zone = page.getByRole("button", { name: new RegExp(`^${NAMES.right}`) });
+    await toWindow(page);
+    await zone.focus();
+    await page.keyboard.press("Enter");
+    await advanceTo(page, ["called"]);
+    // Between serves the zone is aria-disabled, not disabled: it is still the focused one.
+    await expect(zone).toBeFocused();
+    await expect(zone).toHaveAttribute("aria-disabled", "true");
+    await toWindow(page);
+    await expect(zone).toBeFocused();
+  });
+
+  test("m-3: a visitor who has tabbed to QUICK VIEW keeps the focus when the game ends", async ({
+    page,
+  }) => {
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/tennis");
+    const quick = page.getByRole("link", { name: ui.hud.quickView });
+    await toWindow(page);
+    await page.keyboard.press("ArrowRight");
+    await pass(page);
+    await quick.focus();
+    await toWindow(page);
+    await page.keyboard.press("ArrowRight");
+    await pass(page);
+    await toWindow(page);
+    await page.keyboard.press("ArrowRight");
+    await pass(page, ["end"]);
+    await expect(game(page)).toHaveAttribute("data-phase", "end");
+    await expect(quick).toBeFocused();
+  });
+
+  test("m-7: the first serve is scheduled a beat (1.5 s) after arriving, not 300 ms", async ({
+    page,
+  }) => {
+    await forceLuck(page, 0.99);
+    await page.clock.install({ time: CLOCK_START });
+    // Wrap the fake clock's setTimeout (this init script runs after the clock's) to see what the game asks for.
+    await page.addInitScript(() => {
+      const asked: number[] = [];
+      (window as unknown as { __asked: number[] }).__asked = asked;
+      const real = window.setTimeout.bind(window);
+      window.setTimeout = ((fn: TimerHandler, ms?: number, ...rest: unknown[]) => {
+        asked.push(ms ?? 0);
+        return real(fn, ms, ...rest);
+      }) as typeof window.setTimeout;
+    });
+    await page.goto("/arena/tennis");
+    await waitForHydration(page);
+    const asked = await page.evaluate(() => (window as unknown as { __asked: number[] }).__asked);
+    expect(asked).toContain(1500);
+    await pauseClock(page);
+    // And the serve does begin once it has gone by.
+    await advanceTo(page, ["tell"], 4000, 100);
   });
 });

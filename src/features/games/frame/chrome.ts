@@ -5,8 +5,8 @@ import type { ROUTES } from "@/shell/routes";
 export interface GameChrome {
   /** The HUD's breadcrumb: "HUB / CRICKET GROUND", the brand going back to the Hub. */
   breadcrumb: { mark: string; hubLabel: string; label: string; trail: string[]; to: string };
-  /** "SKIP TO CAREER STATS": always on screen. */
-  skip: { label: string; to: string };
+  /** "SKIP TO CAREER STATS": always on screen. `short` is the word the phone's chip draws. */
+  skip: { label: string; short: string; to: string };
   /** The venue's page (career / highlights / attributes): where the end's main button goes. */
   content: string;
   commTag: string;
@@ -23,12 +23,12 @@ export function buildGameChrome(ui: UiCopy, routes: typeof ROUTES, venue: Venue)
   return {
     breadcrumb: {
       mark: ui.brand.mark,
-      hubLabel: ui.placeholder.hub,
+      hubLabel: ui.games.hubLabel,
       label: ui.pages.breadcrumb,
       trail: [ui.venues[venue]],
       to: routes.arena,
     },
-    skip: { label: ui.games[venue].skip, to },
+    skip: { label: ui.games[venue].skip, short: ui.games.skipShort, to },
     content: to,
     commTag: ui.comm.tag,
     audio: ui.audio,
@@ -46,10 +46,16 @@ export interface GameEndView {
   claim?: Link;
   /** Play again (a loss only). */
   again?: string;
+  /** Back to the Hub: the phone's column draws it as a quiet third link (the stage has the breadcrumb). */
+  hub: Link;
 }
 
 /** "ATTRIBUTE CHARGED" becomes "Attribute charged": the screen-reader sentence reads the copy in sentence case. */
 export const sentenceCase = (text: string) => text.charAt(0) + text.slice(1).toLowerCase();
+
+/** What a screen reader hears: the last call and its reveal, then, once the game is over, how it ended. */
+export const announceWith = (line: string, outcome: string | null) =>
+  outcome ? `${line}. ${outcome}.` : line;
 
 /**
  * The end of a game, the same in all three: nothing while it is on; a win offers only CLAIM; a loss offers the
@@ -76,9 +82,11 @@ export function buildGameEnd(
   },
 ): GameEndView | null {
   if (!over) return null;
-  if (won) return { primary: null, claim: { label: claim, to: routes.giantKiller } };
+  const hub = { label: ui.games.backToHub, to: routes.arena };
+  if (won) return { primary: null, claim: { label: claim, to: routes.giantKiller }, hub };
   return {
     primary: { label: offerHighlight ? ui.games.highlight : see, to: chrome.content },
     again,
+    hub,
   };
 }

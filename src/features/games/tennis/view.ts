@@ -2,6 +2,7 @@ import { getHighlights, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
 import {
   buildGameChrome,
+  announceWith,
   buildGameEnd,
   sentenceCase,
   type GameChrome,
@@ -29,6 +30,8 @@ export interface TennisAim {
   /** The accessible name: "Return to the right — open court". */
   name: string;
   open: boolean;
+  /** The arrow on the phone's button for this side. */
+  arrow: string;
 }
 
 /** A courtside highlight card: what `CourtsideCard` takes. */
@@ -139,6 +142,7 @@ export function buildTennisView(
       label: side === "left" ? `${ui.glyph.prev} ${words}` : `${words} ${ui.glyph.next}`,
       name: lit ? `${copy.aim.to[side]} ${copy.aim.dash} ${copy.aim.openName}` : copy.aim.to[side],
       open: lit,
+      arrow: side === "left" ? ui.glyph.prev : ui.glyph.next,
     };
   };
 
@@ -219,7 +223,10 @@ export function buildTennisView(
     comm,
     announce:
       last && newest
-        ? `${copy.calls[last.call]} ${sentenceCase(copy.highlight)} ${two(played)} ${ui.games.unlocked.toLowerCase()}: ${newest.title}, ${newest.line}`
+        ? announceWith(
+            `${copy.calls[last.call]} ${sentenceCase(copy.highlight)} ${two(played)} ${ui.games.unlocked.toLowerCase()}: ${newest.title}, ${newest.line}`,
+            over ? sentenceCase(status) : null,
+          )
         : "",
     end: buildGameEnd(ui, routes, chrome, {
       over,

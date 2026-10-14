@@ -76,7 +76,9 @@ describe("Button", () => {
     rerender(<Button pulse>A</Button>);
     expect(plateOf(screen.getByRole("button"))).toHaveClass("animate-cta-glow");
     rerender(<Button pulse="ring">A</Button>);
-    expect(plateOf(screen.getByRole("button"))).toHaveClass("animate-ring");
+    // The ring is the button's own pseudo-element (transform and opacity only), not a shadow on the plate.
+    expect(screen.getByRole("button")).toHaveClass("after:animate-ring");
+    expect(plateOf(screen.getByRole("button"))).not.toHaveClass("animate-ring");
     expect(plateOf(screen.getByRole("button"))).not.toHaveClass("animate-cta-glow");
   });
 

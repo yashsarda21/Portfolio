@@ -83,7 +83,7 @@ export function TennisStage({
                 data-part="ball"
                 r={6}
                 opacity={0}
-                className="fill-floodlight will-change-transform"
+                className="fill-floodlight"
               />
             </TracerPath>
             {returning ? (

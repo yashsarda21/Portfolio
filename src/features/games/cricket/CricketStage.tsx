@@ -1,7 +1,6 @@
 import type { Ref } from "react";
 import {
   BallTracker,
-  Button,
   CallOverlay,
   Glass,
   Heading,
@@ -16,6 +15,7 @@ import {
 } from "@/design-system";
 import { GameEnd } from "../frame/GameEnd";
 import { GameStage } from "../frame/GameStage";
+import { BowlButton } from "./BowlButton";
 import { TRACER } from "./flight";
 import type { CricketPhase, CricketView } from "./view";
 
@@ -89,7 +89,7 @@ export function CricketStage({
         <span
           ref={ballRef}
           data-part="ball"
-          className="absolute top-0 left-0 -mt-1.5 -ml-1.5 size-3 rounded-full bg-floodlight opacity-0 will-change-transform"
+          className="absolute top-0 left-0 -mt-1.5 -ml-1.5 size-3 rounded-full bg-floodlight opacity-0"
         />
       </div>
 
@@ -135,17 +135,17 @@ export function CricketStage({
           {phase === "end" && end ? (
             <GameEnd size="stage" end={end} onAgain={onAgain} />
           ) : reduced ? null : (
-            <Button
+            <BowlButton
               size="m"
               skew
               pulse="ring"
               glow={false}
-              aria-disabled={phase !== "ready"}
-              onClick={onBowl}
+              disabled={phase !== "ready"}
+              onBowl={onBowl}
               className="px-11 type-btn-xl"
             >
               {view.bowl.label}
-            </Button>
+            </BowlButton>
           )}
         </div>
       )}

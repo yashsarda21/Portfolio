@@ -154,7 +154,7 @@ describe("the reduced-motion rally", () => {
 
 describe("fair play", () => {
   it("fits the 15 s cap on the longest (touch) layout", () => {
-    let total = VERDICT_MS;
+    let total = VERDICT_MS + TENNIS_BEATS.firstMs;
     for (let i = 0; i < SERVE_WINDOW_MS.length; i++) {
       total += TELL_MS + TOSS_MS.max + windowFor(i, "column") + TENNIS_BEATS.callMs;
     }

@@ -196,8 +196,11 @@ test("every input reveals: three misses open three innings, and each is announce
   expect(said).toEqual([
     "SIX. Innings 01 unlocked: DEUTSCHE BANK, Software Engineer 1, Jul 2024 – now",
     "SIX. Innings 02 unlocked: DEUTSCHE BANK, Graduate Analyst Intern, Jun – Jul 2023",
-    "SIX. Innings 03 unlocked: PICT, PUNE, B.Tech, Information Technology, 2020 – 2024",
+    // The last ball also says how the over ended (m-4).
+    "SIX. Innings 03 unlocked: PICT, PUNE, B.Tech, Information Technology, 2020 – 2024. Over complete. Yash 18 not out.",
   ]);
+  // Each ball is heard once: the commentary bar's own live region is not on the page while a game is.
+  await expect(page.locator("[data-game] [aria-live]")).toHaveCount(0);
   await advanceTo(page, ["end"]);
   expect((await stored(page)).lastScores.cricket).toBe("18* NOT OUT");
 });
@@ -483,5 +486,88 @@ test.describe("axe", () => {
     await release(page, miss);
     await pass(page, ["end"]);
     await scan(page);
+  });
+});
+
+test.describe("review minors", () => {
+  const bowlButton = (page: Page) =>
+    page.getByRole("button", { name: /^(BOWL · SPACE|TAP TO BOWL)$/ });
+
+  test("m-6: Space on the focused BOWL bowls on the key going down, not when it comes up", async ({
+    page,
+  }) => {
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/cricket");
+    await bowlButton(page).focus();
+    await stepUntil(
+      page,
+      () => cssVar(page, "--meter"),
+      (v) => v < 0.2,
+    );
+    await page.keyboard.down("Space");
+    // The key is still down: a button's own Space would not have fired yet.
+    await expect(game(page)).not.toHaveAttribute("data-phase", "ready");
+    await page.keyboard.up("Space");
+    await pass(page);
+    await expectUnlocked(page, 1);
+  });
+
+  test("m-9: the BOWL ring is the button's pseudo-element, and will-change is set only in flight", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "one layout is enough");
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/cricket");
+    const look = () =>
+      page.evaluate(() => {
+        const button = [...document.querySelectorAll("button")].find((b) =>
+          /BOWL/.test(b.textContent ?? ""),
+        )!;
+        const plate = button.querySelector("[data-plate]")!;
+        const ball = document.querySelector("[data-game] [data-part=ball]")!;
+        return {
+          ring: getComputedStyle(button, "::after").animationName,
+          plate: getComputedStyle(plate).animationName,
+          willChange: getComputedStyle(ball).willChange,
+        };
+      });
+    expect(await look()).toEqual({ ring: "ring", plate: "none", willChange: "auto" });
+    await release(page, perfect);
+    await advanceTo(page, ["flight"]);
+    await page.clock.runFor(60);
+    expect((await look()).willChange).toBe("transform");
+    await pass(page);
+    expect((await look()).willChange).toBe("auto");
+  });
+
+  test("m-8: the phone's end has a quiet way back to the Hub; the stage has the breadcrumb", async ({
+    page,
+  }, testInfo) => {
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/cricket");
+    for (let ball = 1; ball <= 3; ball++) {
+      await release(page, miss);
+      await pass(page, ball < 3 ? ["ready"] : ["end"]);
+    }
+    const back = page.getByRole("link", { name: ui.games.backToHub });
+    if (testInfo.project.name === "mobile") {
+      await expect(back).toBeVisible();
+      await expect(back).toHaveAttribute("href", "/arena");
+    } else {
+      await expect(back).toHaveCount(0);
+    }
+  });
+
+  test("m-3: a visitor who has tabbed to QUICK VIEW keeps the focus when the game ends by itself", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/cricket");
+    const quick = page.getByRole("link", { name: ui.hud.quickView });
+    await quick.focus();
+    await page.clock.runFor(3000);
+    await advanceTo(page, ["end"]);
+    await expect(quick).toBeFocused();
   });
 });

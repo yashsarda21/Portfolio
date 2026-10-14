@@ -8,6 +8,9 @@ const GOOD: ReturnPick = { side: "right", atMs: 600 };
 const PERFECT: ReturnPick = { side: "right", atMs: 100 };
 const ACE: ReturnPick = { side: null, atMs: 9999 };
 
+/** The phone's quiet third link at the end. */
+const HUB = { label: "BACK TO THE HUB", to: "/arena" };
+
 /** Plays picks in order on serves that open on `open`; `luck` is the roll the last return's 1 % takes. */
 const play = (picks: ReturnPick[], luck = 0.99, open: Side = "right"): TennisState =>
   picks.reduce(
@@ -64,7 +67,11 @@ describe("buildTennisView", () => {
       tap: "or tap a side.",
       phoneHint: "SWIPE OR TAP THE OPEN SIDE",
     });
-    expect(v.chrome.skip).toEqual({ label: "SKIP TO MATCH HIGHLIGHTS", to: "/highlights" });
+    expect(v.chrome.skip).toEqual({
+      label: "SKIP TO MATCH HIGHLIGHTS",
+      short: "SKIP",
+      to: "/highlights",
+    });
   });
 
   it("lights no side until a serve is in play", () => {
@@ -210,6 +217,7 @@ describe("buildTennisView", () => {
     expect(v.end).toEqual({
       primary: { label: "SEE MATCH HIGHLIGHTS", to: "/highlights" },
       again: "REMATCH",
+      hub: HUB,
     });
   });
 
@@ -222,6 +230,7 @@ describe("buildTennisView", () => {
     expect(v.end).toEqual({
       primary: null,
       claim: { label: "CLAIM YOUR BREAK", to: "/arena/giant-killer" },
+      hub: HUB,
     });
   });
 
@@ -230,6 +239,16 @@ describe("buildTennisView", () => {
     expect(v.end).toEqual({
       primary: { label: "WATCH THE HIGHLIGHT INSTEAD", to: "/highlights" },
       again: "REMATCH",
+      hub: HUB,
     });
+  });
+  it("m-4: the announcer says how the game ended, once it is over, and not before", () => {
+    expect(view(play([GOOD]), { phase: "called" }).announce).not.toMatch(/game yash|broke serve/i);
+    expect(view(play([GOOD, GOOD, GOOD]), { phase: "verdict" }).announce).toMatch(
+      /\. Game yash\.$/,
+    );
+    expect(view(play([PERFECT, PERFECT, PERFECT], 0), { phase: "verdict" }).announce).toMatch(
+      /\. Broke serve\.$/,
+    );
   });
 });

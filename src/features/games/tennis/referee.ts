@@ -11,8 +11,11 @@ export const SERVE_KMH = [178, 186, 194] as const;
 /** The open side lights up this long after the serve begins; the toss then runs a random 0.4–0.9 s. */
 export const TELL_MS = 300;
 export const TOSS_MS = { min: 400, max: 900 } as const;
-/** The returned ball's flight, then how long the call holds before the next serve. */
-export const TENNIS_BEATS = { flightMs: 500, callMs: 1400 } as const;
+/**
+ * The returned ball's flight, then how long the call holds before the next serve. `firstMs` is the beat a visitor
+ * gets on arriving, once the page has settled, to read the board before the first serve begins.
+ */
+export const TENNIS_BEATS = { flightMs: 500, callMs: 1400, firstMs: 1500 } as const;
 /** G5: the bug narrates Yash's service game, YASH first: the points before each serve. */
 export const TENNIS_POINTS = [
   ["15", "15"],

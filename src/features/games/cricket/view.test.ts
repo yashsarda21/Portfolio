@@ -5,6 +5,9 @@ import type { Quality } from "../engine/types";
 import { bowl, CRICKET_START, type CricketState } from "./referee";
 import { buildCricketView, type CricketPhase } from "./view";
 
+/** The phone's quiet third link at the end. */
+const HUB = { label: "BACK TO THE HUB", to: "/arena" };
+
 /** Plays qualities in order. `luck` decides the 1 % on the last ball (0 lands it, 0.99 never does). */
 const play = (qualities: Quality[], luck = 0.99): CricketState =>
   qualities.reduce((s, q) => bowl(s, q, () => luck), CRICKET_START);
@@ -127,6 +130,7 @@ describe("buildCricketView", () => {
     expect(v.end).toEqual({
       primary: { label: "SEE THE FULL SCORECARD", to: "/career" },
       again: "BOWL AGAIN",
+      hub: HUB,
     });
   });
 
@@ -135,6 +139,7 @@ describe("buildCricketView", () => {
     expect(v.end).toEqual({
       primary: { label: "WATCH THE HIGHLIGHT INSTEAD", to: "/career" },
       again: "BOWL AGAIN",
+      hub: HUB,
     });
   });
 
@@ -154,6 +159,7 @@ describe("buildCricketView", () => {
     expect(v.end).toEqual({
       primary: null,
       claim: { label: "CLAIM YOUR WICKET", to: "/arena/giant-killer" },
+      hub: HUB,
     });
   });
 
@@ -177,6 +183,17 @@ describe("buildCricketView", () => {
     expect(v.pitch).toEqual({ yorker: "YORKER", good: "GOOD LENGTH" });
     expect(v.youTag).toBe("YOU · BOWLING");
     expect(v.how).toBe(ui.games.cricket.how);
-    expect(v.chrome.skip).toEqual({ label: "SKIP TO CAREER STATS", to: "/career" });
+    expect(v.chrome.skip).toEqual({ label: "SKIP TO CAREER STATS", short: "SKIP", to: "/career" });
+  });
+  it("m-4: the announcer says how the over ended, once it is over, and not before", () => {
+    const first = view(play(["good"]), { phase: "called" }).announce;
+    expect(first).not.toMatch(/over complete/i);
+    const done = view(play(["good", "miss", "good"]), { phase: "verdict" }).announce;
+    expect(done).toMatch(/\. Over complete\. Yash 14 not out\.$/);
+    expect(view(play(["perfect", "perfect", "perfect"], 0), { phase: "verdict" }).announce).toMatch(
+      /\. Over complete\. Yash 0 out\.$/,
+    );
+    // The end buttons appear on the same words: nothing is said again.
+    expect(view(play(["good", "miss", "good"]), { phase: "end" }).announce).toBe(done);
   });
 });

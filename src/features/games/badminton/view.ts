@@ -3,6 +3,7 @@ import type { AttributeToastProps } from "@/design-system";
 import type { ROUTES } from "@/shell/routes";
 import {
   buildGameChrome,
+  announceWith,
   buildGameEnd,
   sentenceCase,
   type GameChrome,
@@ -170,7 +171,11 @@ export function buildBadmintonView(
     comm,
     announce:
       last && newest
-        ? `${copy.calls[last.call]} ${sentenceCase(copy.charged)}, ${rallyName(played).toLowerCase()}: ${newest.title}, ${newest.chips.join(", ")}`
+        ? announceWith(
+            `${copy.calls[last.call]} ${sentenceCase(copy.charged)}, ${rallyName(played).toLowerCase()}: ${newest.title}, ${newest.chips.join(", ")}`,
+            // "Game yash. 21–19."
+            status ? `${sentenceCase(status)}. ${score.yash}–${score.you}` : null,
+          )
         : "",
     end: buildGameEnd(ui, routes, chrome, {
       over,

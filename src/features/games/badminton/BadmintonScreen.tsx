@@ -96,6 +96,9 @@ export function BadmintonScreen() {
       place: (progress) => {
         if (shuttle) shuttle.style.transform = shuttleTransform(progress);
       },
+      // The browser is told to get ready for the move only while the shuttle is moving (spec section 7).
+      start: () => shuttle && (shuttle.style.willChange = "transform"),
+      end: () => shuttle && (shuttle.style.willChange = ""),
       // GSAP did not load: the rally still lands, only without its flight.
       done,
     });

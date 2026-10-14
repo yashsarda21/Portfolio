@@ -107,6 +107,17 @@ export function Button<T extends ElementType = "button">({
   const typeProp = Comp === "button" ? { type: (rest as { type?: string }).type ?? "button" } : {};
   const subTone = variant === "primary" ? "text-volt-ink-2" : "text-scout";
 
+  // A game's main button: a ring breathes out of it. It is the button's own `::after`, in the plate's shape (the plate
+  // clips what overflows it), and only its scale and opacity move.
+  const ring =
+    pulse === "ring" && variant === "primary"
+      ? cn(
+          "after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:border-3 after:border-volt after:opacity-0 after:content-[''] after:animate-ring",
+          skewKey === "always" && "after:-skew-x-12",
+          skewKey === "desktop" && "after:md:-skew-x-12",
+        )
+      : undefined;
+
   return (
     <Comp
       {...rest}
@@ -115,6 +126,7 @@ export function Button<T extends ElementType = "button">({
       className={cn(
         buttonVariants({ variant, size }),
         subLabel ? "flex-col gap-1" : undefined,
+        ring,
         className,
       )}
     >
@@ -123,9 +135,7 @@ export function Button<T extends ElementType = "button">({
         data-plate
         className={cn(
           buttonPlateVariants({ variant, skew: skewKey, glow }),
-          pulse &&
-            variant === "primary" &&
-            (pulse === "ring" ? "animate-ring" : "animate-cta-glow"),
+          pulse === true && variant === "primary" && "animate-cta-glow",
         )}
       />
       <span className="inline-flex items-center gap-2.5">

@@ -45,7 +45,8 @@ export function GameStage({
         }
       />
       {children}
-      <CommentarySlot tag={chrome.commTag} className="absolute bottom-9 left-9 z-8" />
+      {/* The game's announcer says each call: the bar's own live region would say it a second time. */}
+      <CommentarySlot tag={chrome.commTag} live={false} className="absolute bottom-9 left-9 z-8" />
       <SkipChip
         variant="game"
         as={ArenaLink}

@@ -457,6 +457,12 @@ export const ui = {
     prefill: "I beat you.",
     /** Shown by the column under the reveal chip until the first reveal (derived). */
     firstReveal: "EVERY INPUT UNLOCKS SOMETHING",
+    /** The phone's SKIP chip: the long "SKIP TO …" is its accessible name (derived). */
+    skipShort: "SKIP",
+    /** The breadcrumb's first step, back to the Hub (derived). */
+    hubLabel: "HUB",
+    /** The column's quiet third link at the end of a game, where the desktop has the breadcrumb (derived, m-8). */
+    backToHub: "BACK TO THE HUB",
     cricket: {
       headline: "3 BALLS. ONE BATTER WHO HATES GETTING OUT.",
       how: "Release when the marker hits the yorker zone. Every ball you bowl — wicket or six — unlocks an innings of my career.",

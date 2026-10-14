@@ -86,6 +86,22 @@ describe("commentary service", () => {
     expect(live).toHaveTextContent("Career high score updated.");
   });
 
+  it("live={false} keeps the live region out (a game announces its own calls), the bar still draws", () => {
+    function Speaker() {
+      const { say } = useCommentary();
+      return <button onClick={() => say("Four runs.")}>speak</button>;
+    }
+    render(
+      <CommentaryProvider>
+        <Speaker />
+        <CommentarySlot tag="COMM" live={false} />
+      </CommentaryProvider>,
+    );
+    act(() => screen.getByText("speak").click());
+    expect(document.querySelector('[aria-live="polite"]')).toBeNull();
+    expect(screen.getByText("Four runs.")).toBeInTheDocument();
+  });
+
   describe("below md (phones are silent)", () => {
     function phone(on: boolean) {
       vi.stubGlobal("matchMedia", (q: string) => ({

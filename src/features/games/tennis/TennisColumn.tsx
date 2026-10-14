@@ -12,7 +12,6 @@ import {
   TracerPath,
   TrackingRing,
 } from "@/design-system";
-import { ui } from "@/content";
 import { cn } from "@/lib/cn";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
@@ -108,7 +107,7 @@ export function TennisColumn({
                     data-part="ball"
                     r={6}
                     opacity={0}
-                    className="fill-floodlight will-change-transform"
+                    className="fill-floodlight"
                   />
                 </TracerPath>
                 {returning ? (
@@ -180,10 +179,11 @@ export function TennisColumn({
                   variant={aim.open ? "primary" : "secondary"}
                   aria-label={aim.name}
                   aria-disabled={!live}
+                  data-game-control=""
                   onClick={() => onPick(aim.side)}
                   className="min-w-0 flex-1"
                 >
-                  {aim.side === "left" ? ui.glyph.prev : ui.glyph.next}
+                  {aim.arrow}
                 </Button>
               ))}
             </div>

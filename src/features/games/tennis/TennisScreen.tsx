@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
+import { useArenaTransition } from "@/shell/transition";
 import { autoRallyTimes } from "../engine/beats";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
@@ -58,6 +59,10 @@ export function TennisScreen() {
   // The serve in play: when the window opened on the game clock, and how long it is (the layout it began in).
   const hitAt = useRef<number | null>(null);
   const serve = useRef({ windowMs: 0, layout });
+  // The first serve waits for the page's wipe to be done (m-7): `busyRef` is the wipe now, `waitingForPage` a serve due.
+  const { busy } = useArenaTransition();
+  const busyRef = useRef(busy);
+  const waitingForPage = useRef(false);
   // A serve is due but the tab is hidden: it is served when the tab is visible again (G2).
   const waiting = useRef(false);
   const clock = useGameClock(root, {
@@ -84,8 +89,9 @@ export function TennisScreen() {
         if (ball) ball.style.transform = `translate(${at.x}px, ${at.y}px)`;
         el?.style.setProperty(`--return-${side}`, String(progress));
       },
-      start: () => ball && (ball.style.opacity = "1"),
-      end: () => ball && (ball.style.opacity = "0"),
+      // The browser is told to get ready for the move only while the ball is moving (spec section 7).
+      start: () => ball && ((ball.style.opacity = "1"), (ball.style.willChange = "transform")),
+      end: () => ball && ((ball.style.opacity = "0"), (ball.style.willChange = "")),
     });
   };
 
@@ -187,8 +193,22 @@ export function TennisScreen() {
     });
   };
 
-  /** The first serve, a beat after arriving or after a rematch. */
+  /** After a rematch the first serve comes a beat after the click. */
   const serveFirst = () => timers.after(TELL_MS, beginServe);
+
+  /** On arrival the visitor has the board to read: the first serve comes once the wipe is done and `firstMs` has gone by (m-7). */
+  const serveOnArrival = () => {
+    if (busyRef.current) waitingForPage.current = true;
+    else timers.after(TENNIS_BEATS.firstMs, beginServe);
+  };
+  useEffect(() => {
+    busyRef.current = busy;
+    if (busy || !waitingForPage.current) return;
+    waitingForPage.current = false;
+    timers.after(TENNIS_BEATS.firstMs, beginServe);
+    // Its handlers are the latest by ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy]);
 
   const again = () =>
     session.again(() => {
@@ -208,7 +228,11 @@ export function TennisScreen() {
   useArrival({ line: content.commentary.entrance[0]!, spoken: desktop, reduced });
 
   // The game starts on arrival, and again when the setting changes. Leaving ends it (and any ball in the air).
-  useAutoRally(session, { play: playRally, otherwise: serveFirst });
+  useAutoRally(session, {
+    play: playRally,
+    otherwise: serveOnArrival,
+    reset: () => (waitingForPage.current = false),
+  });
 
   // G2: a hidden tab drops the serve in play and the game serves again when it is visible; time away is never judged.
   useEffect(() => {

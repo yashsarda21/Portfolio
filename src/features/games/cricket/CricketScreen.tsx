@@ -78,8 +78,9 @@ export function CricketScreen() {
         const at = ballAt(where, bounce, progress);
         if (ball) ball.style.transform = `translate(${at.x}px, ${at.y}px)`;
       },
-      start: () => ball && (ball.style.opacity = "1"),
-      end: () => ball && (ball.style.opacity = "0"),
+      // The browser is told to get ready for the move only while the ball is moving (spec section 7).
+      start: () => ball && ((ball.style.opacity = "1"), (ball.style.willChange = "transform")),
+      end: () => ball && ((ball.style.opacity = "0"), (ball.style.willChange = "")),
       // GSAP did not load: the ball still lands, only without its flight.
       done,
     });

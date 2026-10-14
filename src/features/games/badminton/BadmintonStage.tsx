@@ -62,7 +62,7 @@ export function BadmintonStage({
 
       <div aria-hidden="true" className="absolute inset-0">
         <TracerPath d={ARC.d} viewBox={GAME_STAGE_VIEW} size="stage">
-          <g ref={shuttleRef} className="will-change-transform">
+          <g ref={shuttleRef}>
             <ShuttleMark x={PARKED.x} y={PARKED.y} />
           </g>
         </TracerPath>

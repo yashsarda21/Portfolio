@@ -1,6 +1,5 @@
 import type { Ref } from "react";
 import {
-  Button,
   CallOverlay,
   MonoLabel,
   PlayerTag,
@@ -12,6 +11,7 @@ import {
 } from "@/design-system";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
+import { BowlButton } from "./BowlButton";
 import { TRACER } from "./flight";
 import type { CricketPhase, CricketView } from "./view";
 
@@ -63,7 +63,7 @@ export function CricketColumn({
           <span
             ref={ballRef}
             data-part="ball"
-            className="absolute top-0 left-0 -mt-1.5 -ml-1.5 size-3 rounded-full bg-floodlight opacity-0 will-change-transform"
+            className="absolute top-0 left-0 -mt-1.5 -ml-1.5 size-3 rounded-full bg-floodlight opacity-0"
           />
           {call ? (
             <CallOverlay
@@ -90,15 +90,15 @@ export function CricketColumn({
             >
               {view.bowl.hint}
             </MonoLabel>
-            <Button
+            <BowlButton
               size="tap"
               skew={false}
               glow={false}
-              aria-disabled={phase !== "ready"}
-              onClick={onBowl}
+              disabled={phase !== "ready"}
+              onBowl={onBowl}
             >
               {view.bowl.labelPhone}
-            </Button>
+            </BowlButton>
           </>
         )
       }

@@ -69,7 +69,7 @@ export function BadmintonColumn({
           {/* The court's own box: the backdrop's court fills it, so the stage's coordinates line up with the court. */}
           <CourtBox>
             <TracerPath d={ARC.d} viewBox={GAME_COURT_VIEW.hall} size="column" slice>
-              <g ref={shuttleRef} className="will-change-transform">
+              <g ref={shuttleRef}>
                 <ShuttleMark x={PARKED.x} y={PARKED.y} />
               </g>
             </TracerPath>

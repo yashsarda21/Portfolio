@@ -2,6 +2,7 @@ import { getInningsReveals, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
 import {
   buildGameChrome,
+  announceWith,
   buildGameEnd,
   sentenceCase,
   type GameChrome,
@@ -176,7 +177,13 @@ export function buildCricketView(
     comm: last ? copy.comm[last.line] : copy.comm.start,
     announce:
       last && newest
-        ? `${copy.calls[last.call]} ${sentenceCase(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`
+        ? announceWith(
+            `${copy.calls[last.call]} ${sentenceCase(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`,
+            // "Over complete. Yash 14 not out."
+            over
+              ? `${sentenceCase(copy.over)}. ${sentenceCase(yash)} ${sentenceCase(`${runs} ${state.won ? copy.out : copy.notOut}`)}`
+              : null,
+          )
         : "",
     meter: {
       labels: { start: copy.meter.short, target: copy.meter.yorker, end: copy.meter.full },

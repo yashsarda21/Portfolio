@@ -8,12 +8,12 @@ describe("buildGameChrome", () => {
     const chrome = buildGameChrome(ui, ROUTES, "cricket");
     expect(chrome.breadcrumb).toEqual({
       mark: ui.brand.mark,
-      hubLabel: ui.placeholder.hub,
+      hubLabel: ui.games.hubLabel,
       label: ui.pages.breadcrumb,
       trail: ["CRICKET GROUND"],
       to: "/arena",
     });
-    expect(chrome.skip).toEqual({ label: "SKIP TO CAREER STATS", to: "/career" });
+    expect(chrome.skip).toEqual({ label: "SKIP TO CAREER STATS", short: "SKIP", to: "/career" });
     expect(chrome.content).toBe("/career");
     expect(chrome.heading).toBe(ui.routes.cricket.heading);
     expect(chrome.commTag).toBe(ui.comm.tag);
@@ -25,7 +25,7 @@ describe("buildGameChrome", () => {
     ["badminton", "/attributes", ui.games.badminton.skip, ui.venues.badminton],
   ] as const)("%s: skip and content go to %s", (venue, to, label, crumb) => {
     const chrome = buildGameChrome(ui, ROUTES, venue);
-    expect(chrome.skip).toEqual({ label, to });
+    expect(chrome.skip).toEqual({ label, short: "SKIP", to });
     expect(chrome.content).toBe(to);
     expect(chrome.breadcrumb.trail).toEqual([crumb]);
     expect(chrome.heading).toBe(ui.routes[venue].heading);
@@ -46,6 +46,7 @@ describe("buildGameEnd", () => {
     expect(end(true, true, false)).toEqual({
       primary: null,
       claim: { label: "CLAIM", to: ROUTES.giantKiller },
+      hub: { label: ui.games.backToHub, to: ROUTES.arena },
     });
   });
 
@@ -53,6 +54,7 @@ describe("buildGameEnd", () => {
     expect(end(true, false, false)).toEqual({
       primary: { label: "SEE IT", to: chrome.content },
       again: "AGAIN",
+      hub: { label: ui.games.backToHub, to: ROUTES.arena },
     });
     expect(end(true, false, true)?.primary).toEqual({
       label: ui.games.highlight,

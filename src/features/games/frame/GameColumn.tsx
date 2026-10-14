@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { GameBackdrop, SkipChip } from "@/design-system";
-import { ui } from "@/content";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import type { GameChrome } from "./chrome";
@@ -52,7 +51,7 @@ export function GameColumn({
               aria-label={chrome.skip.label}
               className="h-11"
             >
-              {ui.hub.venue.skip}
+              {chrome.skip.short}
             </SkipChip>
           </div>
         </div>

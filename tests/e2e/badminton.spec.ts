@@ -262,9 +262,13 @@ test("every rally reveals: four smashes charge four groups, and each is announce
   expect(said).toEqual(
     GROUPS.map(
       ([name, chips], i) =>
-        `${badminton.calls.smash} Attribute charged, rally ${i + 1}: ${name}, ${chips}`,
+        `${badminton.calls.smash} Attribute charged, rally ${i + 1}: ${name}, ${chips}` +
+        // The last rally also says how the game ended (m-4).
+        (i === GROUPS.length - 1 ? ". Game yash. 21–19." : ""),
     ),
   );
+  // Each rally is heard once: the commentary bar's own live region is not on the page while a game is.
+  await expect(page.locator("[data-game] [aria-live]")).toHaveCount(0);
   await advanceTo(page, ["end"]);
   expect((await stored(page)).lastScores.badminton).toBe("21–19");
 });

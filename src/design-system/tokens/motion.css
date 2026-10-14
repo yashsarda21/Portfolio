@@ -14,15 +14,20 @@
   animation: cta-glow 2.4s var(--ease-standard) infinite;
 }
 
-/* The ring that breathes out of a game's main button (Cricket-Play BOWL): a volt ring grows 10px and fades, 1.8s.
-   Reduced motion: the button stands still. */
+/* The ring that breathes out of a game's main button (Cricket-Play BOWL): a volt ring on the button's pseudo-element
+   (`after:animate-ring`) grows a little and fades, 1.8s. Only transform (scale) and opacity move (spec section 7); it
+   is invisible at rest. Reduced motion: the button stands still. */
 @keyframes ring {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgb(var(--rgb-volt) / 0.5);
+  0% {
+    scale: 1;
+    opacity: 0;
   }
-  50% {
-    box-shadow: 0 0 0 10px rgb(var(--rgb-volt) / 0);
+  20% {
+    opacity: 0.7;
+  }
+  100% {
+    scale: 1.14;
+    opacity: 0;
   }
 }
 @utility animate-ring {

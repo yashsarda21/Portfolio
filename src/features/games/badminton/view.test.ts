@@ -4,6 +4,9 @@ import { ROUTES } from "@/shell/routes";
 import { BADMINTON_START_STATE, playRally, type BadmintonState } from "./referee";
 import { buildBadmintonView, type BadmintonPhase } from "./view";
 
+/** The phone's quiet third link at the end. */
+const HUB = { label: "BACK TO THE HUB", to: "/arena" };
+
 /** Powers that land in each zone, none of them the perfect band. */
 const SMASH = 85;
 const CLEAR = 50;
@@ -165,6 +168,7 @@ describe("buildBadmintonView", () => {
     expect(v.end).toEqual({
       primary: { label: "SEE PLAYER ATTRIBUTES", to: ROUTES.attributes },
       again: "REMATCH",
+      hub: HUB,
     });
     expect(v.comm).toBe(content.commentary.yashWins[0]);
     expect(v.toasts.every((t) => t.state === "charged")).toBe(true);
@@ -197,6 +201,7 @@ describe("buildBadmintonView", () => {
     expect(v.end).toEqual({
       primary: null,
       claim: { label: "CLAIM YOUR POINT", to: ROUTES.giantKiller },
+      hub: HUB,
     });
     expect(v.comm).toBe(content.commentary.visitorWins[0]);
   });
@@ -230,5 +235,14 @@ describe("buildBadmintonView", () => {
         expect(JSON.stringify(view(state, { phase }))).not.toMatch(/locked/i);
       }
     }
+  });
+  it("m-4: the announcer says how the game ended, once it is over, and not before", () => {
+    expect(view(play([CLEAR])).announce).not.toMatch(/21|game yash/i);
+    expect(view(play([CLEAR, SMASH, DROP, DROP]), { phase: "verdict" }).announce).toMatch(
+      /\. Game yash\. 21–19\.$/,
+    );
+    expect(
+      view(play([PERFECT, PERFECT, PERFECT, PERFECT], 0), { phase: "verdict" }).announce,
+    ).toMatch(/\. Saved\. 20–20\.$/);
   });
 });

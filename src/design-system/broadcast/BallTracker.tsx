@@ -21,7 +21,8 @@ export function BallTracker({
   className?: string;
 }) {
   return (
-    <div className={cn("flex gap-2", className)}>
+    // Decorative for a screen reader: the cells would read as "bullet, 4, 3". The announcer and the score bug carry the over.
+    <div aria-hidden="true" className={cn("flex gap-2", className)}>
       {balls.map((ball, i) => (
         <span
           // The over has a fixed order: a cell's place is its identity.

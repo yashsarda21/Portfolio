@@ -45,6 +45,7 @@ export function HoldButton({
       glow={false}
       aria-label={label}
       aria-disabled={disabled}
+      data-game-control=""
       onPointerDown={press}
       onPointerUp={onRelease}
       onPointerCancel={onRelease}

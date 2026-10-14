@@ -26,6 +26,15 @@ describe("AimZone", () => {
     expect(screen.getByRole("button")).toHaveAttribute("data-state", "open");
   });
 
+  it("disabled is aria-disabled, not `disabled`: it stays focusable", () => {
+    render(<AimZone label="L" name="Left" open={false} disabled onPick={() => {}} />);
+    const button = screen.getByRole("button", { name: "Left" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
+    button.focus();
+    expect(button).toHaveFocus();
+  });
+
   it("a click calls onPick; disabled does not", async () => {
     const user = userEvent.setup();
     const onPick = vi.fn();
@@ -165,6 +174,8 @@ describe("BallTracker", () => {
         ]}
       />,
     );
+    // m-10: the cells read as noise ("bullet, 4, 3"): the announcer and the score bug carry the over.
+    expect(screen.getByText("•").parentElement).toHaveAttribute("aria-hidden", "true");
     const cells = ["•", "3"].map((t) => screen.getByText(t));
     expect(cells.map((c) => c.getAttribute("data-state"))).toEqual(["for", "current"]);
     expect(screen.getAllByText("4").map((c) => c.getAttribute("data-state"))).toEqual([

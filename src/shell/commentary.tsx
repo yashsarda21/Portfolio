@@ -101,8 +101,19 @@ export function useCommentary(): CommentaryApi {
   return api;
 }
 
-/** The on-screen lower-third plus a polite live region (spec §4.6). Position it with className. */
-export function CommentarySlot({ tag, className }: { tag: string; className?: string }) {
+/**
+ * The on-screen lower-third plus a polite live region (spec §4.6). Position it with className. `live={false}` keeps
+ * the live region out: a game announces each call itself (its own announcer), so the bar must not say it twice.
+ */
+export function CommentarySlot({
+  tag,
+  className,
+  live = true,
+}: {
+  tag: string;
+  className?: string;
+  live?: boolean;
+}) {
   const { current } = useCommentary();
   return (
     <>
@@ -115,9 +126,11 @@ export function CommentarySlot({ tag, className }: { tag: string; className?: st
           className={cn("max-md:hidden", className)}
         />
       ) : null}
-      <div aria-live="polite" className="sr-only">
-        {current?.state === "in" ? current.line : ""}
-      </div>
+      {live ? (
+        <div aria-live="polite" className="sr-only">
+          {current?.state === "in" ? current.line : ""}
+        </div>
+      ) : null}
     </>
   );
 }
