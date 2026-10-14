@@ -88,6 +88,7 @@ export function CricketScreen() {
 
   /** One input: judge the release by the clock the meter was drawn from, then fly the ball (G2, G4). */
   const release = () => {
+    live.current.audio.unlock(); // a bowl is a gesture: a game reached directly makes sound too
     if (latest.current.phase !== "ready" || reduced) return;
     const at = pingPong(clock.elapsed(), CRICKET_PERIOD_MS);
     const quality = lengthQuality(at, layout);

@@ -20,10 +20,15 @@ const rig = {
   state: "running",
   resume: vi.fn(() => Promise.resolve()),
   created: 0,
+  time: 12,
+  limiters: [] as { threshold: { value: number }; connect: ReturnType<typeof vi.fn> }[],
+  masters: [] as { connect: ReturnType<typeof vi.fn> }[],
 };
 
 class FakeAudioContext {
-  currentTime = 12;
+  get currentTime() {
+    return rig.time;
+  }
   destination = {};
   get state() {
     return rig.state;
@@ -33,7 +38,7 @@ class FakeAudioContext {
     rig.created++;
   }
   createGain() {
-    return {
+    const master = {
       gain: {
         set value(v: number) {
           rig.gainValue = v;
@@ -42,6 +47,20 @@ class FakeAudioContext {
       },
       connect: vi.fn(),
     };
+    rig.masters.push(master);
+    return master;
+  }
+  createDynamicsCompressor() {
+    const limiter = {
+      threshold: { value: 0 },
+      knee: { value: 0 },
+      ratio: { value: 0 },
+      attack: { value: 0 },
+      release: { value: 0 },
+      connect: vi.fn(),
+    };
+    rig.limiters.push(limiter);
+    return limiter;
   }
 }
 
@@ -51,6 +70,9 @@ beforeEach(() => {
   rig.resume.mockClear();
   rig.state = "running";
   rig.created = 0;
+  rig.time = 12;
+  rig.limiters = [];
+  rig.masters = [];
   vi.mocked(RECIPES.bat).mockClear();
   vi.stubGlobal("AudioContext", FakeAudioContext);
 });
@@ -134,6 +156,68 @@ describe("audio service", () => {
     expect(() => act(() => result.current.play("bat"))).not.toThrow();
     expect(RECIPES.bat).not.toHaveBeenCalled();
     expect(log).not.toHaveBeenCalled();
+  });
+
+  it("unlocks from the sound toggle when it turns the sound on (a game reached directly)", () => {
+    localStorage.setItem("arena:audio", "off");
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    expect(result.current.enabled).toBe(false);
+    expect(result.current.unlocked).toBe(false);
+    act(() => result.current.toggle());
+    expect(result.current.enabled).toBe(true);
+    expect(result.current.unlocked).toBe(true);
+    expect(rig.created).toBe(1);
+    act(() => result.current.play("bat"));
+    expect(RECIPES.bat).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not make a context when the toggle turns the sound off", () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.toggle());
+    expect(rig.created).toBe(0);
+  });
+
+  it("ignores the same sound asked for again within 60 ms, and lets it through after", () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.unlock());
+    act(() => result.current.play("bat"));
+    rig.time = 12.03;
+    act(() => result.current.play("bat"));
+    expect(RECIPES.bat).toHaveBeenCalledTimes(1);
+    rig.time = 12.07;
+    act(() => result.current.play("bat"));
+    expect(RECIPES.bat).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the gap per sound: a different sound is not held back", () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.unlock());
+    act(() => result.current.play("bat"));
+    act(() => result.current.play("net"));
+    expect(RECIPES.bat).toHaveBeenCalledTimes(1);
+  });
+
+  it("puts a limiter between the master gain and the speakers", () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.unlock());
+    expect(rig.limiters).toHaveLength(1);
+    expect(rig.masters[0]!.connect).toHaveBeenCalledWith(rig.limiters[0]);
+    expect(rig.limiters[0]!.connect).toHaveBeenCalledTimes(1);
+    expect(rig.limiters[0]!.threshold.value).toBeLessThan(0);
+  });
+
+  it("falls back to the speakers when there is no compressor", () => {
+    class NoCompressor extends FakeAudioContext {
+      createDynamicsCompressor(): never {
+        throw new Error("unsupported");
+      }
+    }
+    vi.stubGlobal("AudioContext", NoCompressor);
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.unlock());
+    act(() => result.current.play("bat"));
+    expect(RECIPES.bat).toHaveBeenCalledTimes(1);
+    expect(rig.masters[0]!.connect).toHaveBeenCalledTimes(1);
   });
 
   it("has no sound files or fetching left", async () => {

@@ -106,6 +106,7 @@ export function BadmintonScreen() {
 
   /** The hold begins: the meter's clock starts from nothing. */
   const charge = () => {
+    live.current.audio.unlock(); // the press is a gesture: a game reached directly makes sound too
     if (latest.current.phase !== "ready" || reduced) return;
     clock.restart();
     commit({ phase: "charging" });

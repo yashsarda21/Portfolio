@@ -160,6 +160,12 @@ export function TennisScreen() {
     });
   }
 
+  /** The visitor's pick (a key or a tap): a gesture, so a game reached directly makes sound too. Then it is judged. */
+  function pick(side: Side) {
+    live.current.audio.unlock();
+    judge(side);
+  }
+
   /** One input: judge the pick by the clock the serve was drawn from. A pick before the hit is TOO EARLY. */
   function judge(side: Side | null) {
     const cur = latest.current;
@@ -219,7 +225,7 @@ export function TennisScreen() {
     });
 
   useGameKeys(
-    { down: { ArrowLeft: () => judge("left"), ArrowRight: () => judge("right") } },
+    { down: { ArrowLeft: () => pick("left"), ArrowRight: () => pick("right") } },
     { active: LIVE_PHASES.includes(run.phase) && !reduced },
   );
 
@@ -256,7 +262,7 @@ export function TennisScreen() {
       phase={run.phase}
       reduced={reduced}
       shot={run.shot}
-      onPick={judge}
+      onPick={pick}
       onAgain={again}
       rootRef={root}
       ballRefs={balls}
