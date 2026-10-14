@@ -109,6 +109,8 @@ test("without JavaScript an unknown address still shows OUT OF BOUNDS and the wa
   const h1 = page.getByRole("heading", { level: 1 });
   await expect(h1).toBeVisible();
   await expect(h1).toHaveText(ui.routes.notFound.heading, { ignoreCase: true });
+  await expect(page).toHaveTitle(ui.routes.notFound.title);
+  await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1);
   await expect(page.locator("main")).toHaveCount(1);
   const back = page.getByRole("link", { name: ui.notFound.hub });
   await expect(back).toBeVisible();

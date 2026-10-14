@@ -78,9 +78,11 @@ test.describe("the host's 404 file", () => {
   test.beforeAll(() => {
     html = readFileSync("build/client/404.html", "utf8");
   });
-  test("build/client/404.html is the client-only page plus the OUT OF BOUNDS content in a <noscript>", () => {
+  test("build/client/404.html is the client-only page plus the OUT OF BOUNDS title, meta tags and content (in a <noscript>)", () => {
     expect(html).toContain('"isSpaMode":true');
-    expect(html).not.toContain("<title>");
+    expect(html.match(/<title>/g)).toHaveLength(1);
+    expect(html).toContain(`<title>${ui.routes.notFound.title}</title>`);
+    expect(html).toContain('<meta name="robots" content="noindex"/>');
     const noscript = /<noscript>(<main[\s\S]*<\/main>)<\/noscript>/.exec(html);
     expect(noscript, "a <noscript> holding the <main>").not.toBeNull();
     expect(noscript![1]).toMatch(/<h1[^>]*>/);
