@@ -3,11 +3,11 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Plinth } from "./Plinth";
 
-export type TrophyKind = "cup" | "medal" | "plaque" | "pennant" | "round" | "locked";
+export type TrophyKind = "cup" | "medal" | "plaque" | "pennant" | "round";
 
 type TrophyProps = {
   kind: TrophyKind;
-  /** The lettering drawn on the art: the medal's figure ("99.5"), the plaque's word ("PAPER"), the locked mark (default "?"). */
+  /** The lettering drawn on the art: the medal's figure ("99.5"), the plaque's word ("PAPER"). */
   label?: string;
   /** Turn on a turntable (12s). Only the figure turns; its plinth stays. The parent can set perspective. */
   spinning?: boolean;
@@ -21,9 +21,8 @@ const FIGURE = "relative flex flex-col items-center";
 const trophyRoot = cva(`${FIGURE} [perspective:800px]`, {
   variants: {
     scale: { art: "", phone: "max-md:h-39 max-md:justify-end max-md:scene-zoom-sm" },
-    locked: { true: "opacity-60", false: "" },
   },
-  defaultVariants: { scale: "art", locked: false },
+  defaultVariants: { scale: "art" },
 });
 
 /**
@@ -77,23 +76,11 @@ function figure(kind: TrophyKind, label: string | undefined): ReactNode {
           <span className="h-6 w-3 trophy-stem" />
         </>
       );
-    case "locked":
-      // The dashes are decoration (line-3 is for borders only). The "?" is lettering, so it takes the dim text grey (spec A1).
-      return (
-        <>
-          <span className="flex h-17.5 w-21 items-center justify-center trophy-cup-shape border-2 border-dashed border-line-3">
-            <span className="trophy-glyph-lg text-dim">{label ?? "?"}</span>
-          </span>
-          <span className="h-7.5 w-3 border-x-2 border-dashed border-line-3" />
-          <span className="h-5.5 w-22.5 border-2 border-dashed border-line-3" />
-        </>
-      );
   }
 }
 
 /**
- * One trophy: the figure on its plinth, aria-hidden (the cell around it carries the name). `locked` is the
- * dashed outline of a trophy not yet won: dimmed, with its own dashed base instead of a plinth.
+ * One trophy: the figure on its plinth, aria-hidden (the cell around it carries the name).
  */
 export function Trophy({ kind, label, spinning = false, scale, className, ...rest }: TrophyProps) {
   const plinth =
@@ -101,14 +88,14 @@ export function Trophy({ kind, label, spinning = false, scale, className, ...res
       <Plinth size="lg" />
     ) : kind === "medal" || kind === "plaque" ? (
       <Plinth size="lg" className="mt-2.5" />
-    ) : kind === "pennant" || kind === "round" ? (
+    ) : (
       <Plinth size="md" />
-    ) : null;
+    );
   return (
     <span
       aria-hidden="true"
       data-kind={kind}
-      className={cn(trophyRoot({ scale, locked: kind === "locked" }), className)}
+      className={cn(trophyRoot({ scale }), className)}
       {...rest}
     >
       <span className={cn(FIGURE, spinning && "animate-turntable")}>{figure(kind, label)}</span>

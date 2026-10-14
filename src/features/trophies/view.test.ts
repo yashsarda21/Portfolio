@@ -4,51 +4,30 @@ import { buildTrophiesView } from "./view";
 
 const build = (c: Content = content) => buildTrophiesView(c, ui);
 
-/** The same content with a second cup unlocked before the locked one: nothing may assume a fixed count. */
-const extended = (): Content => {
-  const [cup, ...rest] = content.trophyRoom;
-  return {
-    ...content,
-    trophyRoom: [cup!, { ...cup!, title: "Second Cup" }, ...rest],
-  } as Content;
-};
-
 describe("buildTrophiesView", () => {
-  it("lists the trophies in content order, the locked one last", () => {
+  it("lists Yash's five trophies in content order", () => {
     const { trophies } = build();
-    expect(trophies.map((t) => t.kind)).toEqual([
-      "cup",
-      "medal",
-      "plaque",
-      "pennant",
-      "round",
-      "locked",
-    ]);
+    expect(trophies.map((t) => t.kind)).toEqual(["cup", "medal", "plaque", "pennant", "round"]);
     expect(trophies.map((t) => t.title)).toEqual(content.trophyRoom.map((t) => t.title));
-    expect(trophies.map((t) => t.locked)).toEqual([false, false, false, false, false, true]);
+    expect(trophies.map((t) => t.id)).toEqual([
+      "trophy-1",
+      "trophy-2",
+      "trophy-3",
+      "trophy-4",
+      "trophy-5",
+    ]);
   });
 
-  it("gives every trophy its own id", () => {
-    const ids = build(extended()).trophies.map((t) => t.id);
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it("the locked trophy has no detail; the others do", () => {
+  it("every trophy has a detail, numbered n / 5", () => {
     const { trophies } = build();
-    expect(trophies.at(-1)!.detail).toBeNull();
-    for (const t of trophies.slice(0, -1)) expect(t.detail).not.toBeNull();
-  });
-
-  it("numbers the plinth panels n / 5: the locked trophy is not counted", () => {
-    const indexes = build().trophies.map((t) => t.detail?.index ?? null);
-    expect(indexes).toEqual(["1 / 5", "2 / 5", "3 / 5", "4 / 5", "5 / 5", null]);
-  });
-
-  it("counts whatever is unlocked", () => {
-    const indexes = build(extended())
-      .trophies.map((t) => t.detail?.index)
-      .filter(Boolean);
-    expect(indexes).toEqual(["1 / 6", "2 / 6", "3 / 6", "4 / 6", "5 / 6", "6 / 6"]);
+    for (const t of trophies) expect(t.detail).not.toBeNull();
+    expect(trophies.map((t) => t.detail.index)).toEqual([
+      "1 / 5",
+      "2 / 5",
+      "3 / 5",
+      "4 / 5",
+      "5 / 5",
+    ]);
   });
 
   it("the shelf shows the short sub where there is one; the panel the full sub", () => {
@@ -82,12 +61,11 @@ describe("buildTrophiesView", () => {
     expect(trophies[1]!.label).toBe("99.5");
     expect(trophies[2]!.label).toBe("PAPER");
     expect(trophies[2]!.label).toBe(ui.pages.trophies.plaqueLabel);
-    for (const i of [0, 3, 4, 5]) expect(trophies[i]!.label).toBeUndefined();
+    for (const i of [0, 3, 4]) expect(trophies[i]!.label).toBeUndefined();
   });
 
-  it("selects the first unlocked trophy (the cup) first", () => {
-    const view = build();
-    expect(view.defaultId).toBe(view.trophies[0]!.id);
+  it("selects the cup first", () => {
+    expect(build().defaultId).toBe("trophy-1");
   });
 
   it("takes its labels from the copy", () => {
@@ -109,15 +87,5 @@ describe("buildTrophiesView", () => {
     expect(academy.extrasLabel).toBe("EXTRA DRILLS");
     expect(academy.extras).toBe(content.trainingAcademy.extras.join(" · "));
     expect(academy.extraItems).toEqual(content.trainingAcademy.extras);
-  });
-
-  it("has no default selection when nothing is unlocked", () => {
-    const allLocked = {
-      ...content,
-      trophyRoom: [content.trophyRoom.at(-1)!],
-    } as Content;
-    const view = build(allLocked);
-    expect(view.defaultId).toBe("");
-    expect(view.trophies[0]!.detail).toBeNull();
   });
 });

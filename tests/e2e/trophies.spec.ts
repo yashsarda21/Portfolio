@@ -19,10 +19,8 @@ const content = JSON.parse(
   trophyRoom: { type: string; title: string; description: string }[];
   trainingAcademy: { school: string; shortName: string };
 };
-const WON = content.trophyRoom.filter((t) => t.type !== "locked");
+const TROPHIES = content.trophyRoom;
 const NEXT = new RegExp(ui.pages.trophies.next);
-/** The locked trophy's tab: its title, then the shelf line (named from its own text, like every tab). */
-const LOCKED = /Giant Killer/;
 const ACADEMY = { level: 2, name: ui.scout.academy.title } as const;
 /** The heading the `#academy` link must bring into view. */
 const academyHeading = (page: Page) => page.getByRole("heading", ACADEMY);
@@ -57,20 +55,20 @@ async function expectAcademyLanded(page: Page) {
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("the heading, every description, the locked trophy and the academy are in the HTML", async ({
+  test("the heading, every description, all five trophy tabs and the academy are in the HTML", async ({
     page,
   }) => {
     await page.goto(ROUTES.trophies);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.trophies.heading, {
       ignoreCase: true,
     });
-    expect(WON).toHaveLength(5);
-    for (const t of WON)
+    expect(TROPHIES).toHaveLength(5);
+    for (const t of TROPHIES)
       await expect(page.getByText(t.description, { exact: true })).toBeAttached();
-    // The locked trophy is on the shelf (disabled, no panel) and has no description.
-    await expect(tab(page, LOCKED)).toBeDisabled();
-    await expect(tab(page, LOCKED)).not.toHaveAttribute("aria-controls");
-    await expect(page.getByRole("tab")).toHaveCount(6);
+    // Five tabs, none of them disabled.
+    await expect(page.getByRole("tab")).toHaveCount(5);
+    for (const t of await page.getByRole("tab").all()) await expect(t).toBeEnabled();
+    expect(await page.getByRole("tab", { disabled: true }).count()).toBe(0);
     await expect(academyHeading(page)).toBeVisible();
     await expect(page.locator("#academy")).toHaveCount(1);
     const { school, shortName } = content.trainingAcademy;
@@ -79,7 +77,7 @@ test.describe("without JavaScript", () => {
 });
 
 test.describe("trophy cabinet", () => {
-  test("arrow keys select the next trophy and the panel follows; End skips the locked one", async ({
+  test("arrow keys select the next trophy and the panel follows; End reaches the fifth", async ({
     page,
   }) => {
     await page.goto(ROUTES.trophies);
@@ -96,23 +94,29 @@ test.describe("trophy cabinet", () => {
     await expect(panel).toBeVisible();
     await expect(panel).toContainText("99.5 Percentile");
     await expect(panel).toContainText("2 / 5");
-    await expect(page.getByText(WON[0]!.description, { exact: true })).toBeHidden();
+    await expect(page.getByText(TROPHIES[0]!.description, { exact: true })).toBeHidden();
 
     await page.keyboard.press("End");
     await expect(tab(page, /System Design Blogs/i)).toHaveAttribute("aria-selected", "true");
     await expect(tab(page, /System Design Blogs/i)).toBeFocused();
     await expect(page.getByRole("tabpanel")).toContainText("5 / 5");
-    await expect(tab(page, LOCKED)).toHaveAttribute("aria-selected", "false");
   });
 
-  test("the locked trophy cannot be selected by click", async ({ page }) => {
+  test("every one of the five trophies can be selected, and its panel reads n / 5", async ({
+    page,
+  }) => {
     await page.goto(ROUTES.trophies);
     await waitForHydration(page);
-    const locked = tab(page, LOCKED);
-    await locked.click({ force: true });
-    await expect(locked).toHaveAttribute("aria-selected", "false");
-    await expect(page.getByRole("tab").first()).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByRole("tabpanel")).toContainText("750+ Problems Solved");
+    const tabs = page.getByRole("tab");
+    await expect(tabs).toHaveCount(5);
+    for (let i = 0; i < 5; i++) {
+      await tabs.nth(i).click();
+      await expect(tabs.nth(i)).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByRole("tabpanel")).toContainText(`${i + 1} / 5`);
+      await expect(page.getByRole("tabpanel")).toContainText(TROPHIES[i]!.title, {
+        ignoreCase: true,
+      });
+    }
   });
 
   test("clicking a trophy selects it", async ({ page }) => {
@@ -120,7 +124,7 @@ test.describe("trophy cabinet", () => {
     await waitForHydration(page);
     await tab(page, /Published Research/i).click();
     await expect(page.getByRole("tabpanel")).toContainText("3 / 5");
-    await expect(page.getByRole("tabpanel")).toContainText(WON[2]!.description);
+    await expect(page.getByRole("tabpanel")).toContainText(TROPHIES[2]!.description);
   });
 
   test("plinth links open in the same tab", async ({ page }) => {
@@ -189,9 +193,9 @@ test.describe("motion", () => {
           ),
         ),
       );
-    await expect.poll(turning).toEqual([true, false, false, false, false, false]);
+    await expect.poll(turning).toEqual([true, false, false, false, false]);
     await tab(page, /99\.5 Percentile/i).click();
-    await expect.poll(turning).toEqual([false, true, false, false, false, false]);
+    await expect.poll(turning).toEqual([false, true, false, false, false]);
   });
 
   test("with reduced motion nothing turns and the spotlight is simply lit", async ({ page }) => {

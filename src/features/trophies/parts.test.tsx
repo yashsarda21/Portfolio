@@ -35,7 +35,7 @@ describe("Cabinet", () => {
     renderWith(<Harness />);
     const list = screen.getByRole("tablist", { name: ui.pages.trophies.listLabel });
     expect(list).toHaveAttribute("aria-orientation", "horizontal");
-    expect(within(list).getAllByRole("tab")).toHaveLength(6);
+    expect(within(list).getAllByRole("tab")).toHaveLength(5);
   });
 
   it("names each tab by its title and shelf line; the art is hidden from assistive tech", () => {
@@ -51,42 +51,30 @@ describe("Cabinet", () => {
     }
   });
 
-  it("the locked trophy is a disabled tab named by its own title and sub, with no panel to point at", () => {
+  it("no tab is disabled: every trophy is on the shelf to open", () => {
     renderWith(<Harness />);
-    const sub = content.trophyRoom.at(-1)!.sub;
-    const locked = screen.getByRole("tab", { name: new RegExp(`Giant Killer.*${sub}`) });
-    expect(locked).toBeDisabled();
-    expect(locked).toHaveAttribute("aria-selected", "false");
-    expect(locked).not.toHaveAttribute("aria-label");
-    expect(locked).not.toHaveAttribute("aria-controls");
+    for (const tab of screen.getAllByRole("tab")) {
+      expect(tab).toBeEnabled();
+      expect(tab).toHaveAttribute("aria-controls");
+    }
   });
 
-  it("starts on the cup, and the arrows skip the locked tab", async () => {
+  it("starts on the cup, and the arrows move through all five and wrap", async () => {
     const user = userEvent.setup();
     renderWith(<Harness />);
     const tabs = screen.getAllByRole("tab");
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     await user.tab();
-    await user.keyboard("{ArrowRight}");
-    expect(tabs[1]).toHaveAttribute("aria-selected", "true");
-    await user.keyboard("{End}");
-    expect(tabs[4]).toHaveAttribute("aria-selected", "true");
-    expect(tabs[4]).toHaveFocus();
-    // Past the last unlocked tab the arrow wraps to the first, never onto the locked one.
+    for (const next of [1, 2, 3, 4]) {
+      await user.keyboard("{ArrowRight}");
+      expect(tabs[next]).toHaveAttribute("aria-selected", "true");
+      expect(tabs[next]).toHaveFocus();
+    }
+    // Past the fifth the arrow wraps to the first.
     await user.keyboard("{ArrowRight}");
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
-    expect(tabs[5]).toHaveAttribute("aria-selected", "false");
-  });
-
-  it("clicking the locked trophy does nothing", async () => {
-    const user = userEvent.setup();
-    renderWith(<Harness />);
-    await user.click(screen.getByRole("tab", { name: /Giant Killer/ }));
-    expect(screen.getAllByRole("tab")[0]).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: /Giant Killer/ })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
+    await user.keyboard("{End}");
+    expect(tabs[4]).toHaveAttribute("aria-selected", "true");
   });
 
   it("only the selected trophy turns, and the turntable follows the selection", async () => {
@@ -102,7 +90,7 @@ describe("Cabinet", () => {
     );
   });
 
-  it("lights the selected trophy brightest, and the locked one not at all", async () => {
+  it("lights the selected trophy brightest, and every trophy has a light", async () => {
     const user = userEvent.setup();
     renderWith(<Harness />);
     const lead = () => document.querySelectorAll(".scene-spot.\\[--spot-a\\:0\\.3\\]");
@@ -116,7 +104,7 @@ describe("Cabinet", () => {
     expect(document.querySelectorAll(".scene-spot")).toHaveLength(5);
   });
 
-  it("puts a light bar between the shelves: after 3 trophies, or after 2 on the phone, none after the last", () => {
+  it("puts one light bar between the desktop shelves (after 3) and two on the phone (after 2 and 4), none after the last", () => {
     renderWith(<Harness />);
     const order = [...screen.getByRole("tablist").children].map((el) => {
       if (el.getAttribute("role") === "tab") return "tab";
@@ -132,7 +120,27 @@ describe("Cabinet", () => {
       "tab",
       "phone light",
       "tab",
-      "tab",
+    ]);
+    expect(order.filter((o) => o === "desktop light")).toHaveLength(1);
+    expect(order.filter((o) => o === "phone light")).toHaveLength(2);
+  });
+
+  it("centres a short last shelf: the fourth and fifth on the desktop, the fifth alone on the phone", () => {
+    renderWith(<Harness />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((t) => t.classList.contains("md:col-start-2"))).toEqual([
+      false,
+      false,
+      false,
+      true,
+      false,
+    ]);
+    expect(tabs.map((t) => t.classList.contains("max-md:col-start-2"))).toEqual([
+      false,
+      false,
+      false,
+      false,
+      true,
     ]);
   });
 
@@ -148,14 +156,13 @@ describe("Cabinet", () => {
 });
 
 describe("PlinthDetail", () => {
-  it("has one panel per unlocked trophy (the locked one has none), all in the HTML", () => {
+  it("has one panel per trophy, all in the HTML", () => {
     renderWith(<Harness />);
     const panels = screen.getAllByRole("tabpanel", { hidden: true });
     expect(panels).toHaveLength(5);
-    for (const t of content.trophyRoom.filter((x) => x.type !== "locked")) {
+    for (const t of content.trophyRoom) {
       expect(screen.getByText(t.description)).toBeInTheDocument();
     }
-    expect(screen.queryByText(content.trophyRoom.at(-1)!.description)).toBeNull();
   });
 
   it("shows the selected trophy: label, index, title, sub, description", () => {

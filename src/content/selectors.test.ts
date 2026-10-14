@@ -74,10 +74,10 @@ describe("selectors", () => {
     expect(groups[1]!.skills[2]).toMatchObject({ level: "built", segments: 7, tierLabel: "BUILT" });
   });
 
-  it("trophies mark only the hidden one as locked", () => {
+  it("returns Yash's five trophies, none of them hidden", () => {
     const trophies = getTrophies(c);
-    expect(trophies).toHaveLength(6);
-    expect(trophies.filter((t) => t.locked).map((t) => t.title)).toEqual(["Giant Killer"]);
+    expect(trophies.map((t) => t.type)).toEqual(["cup", "medal", "plaque", "pennant", "round"]);
+    expect(trophies.every((t) => !("locked" in t))).toBe(true);
   });
 
   it("resume falls back to a request email while no public PDF exists", () => {

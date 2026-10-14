@@ -90,6 +90,12 @@ describe("content schema", () => {
       expect(() => parseContent(broken)).toThrow(/trophyRoom/);
     });
 
+    it("holds exactly Yash's five trophies: no hidden sixth", () => {
+      const broken = clone();
+      broken.trophyRoom.push({ ...broken.trophyRoom[0], type: "locked" });
+      expect(() => parseContent(broken)).toThrow(/trophyRoom/);
+    });
+
     it("rejects a career whose end is before its start", () => {
       const broken = clone();
       broken.careerStats[1].start = "2023-07";

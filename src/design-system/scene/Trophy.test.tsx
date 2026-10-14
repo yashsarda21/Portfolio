@@ -6,14 +6,14 @@ import { ShelfLight } from "./ShelfLight";
 import { Spotlight } from "./Spotlight";
 import { Trophy } from "./Trophy";
 
-const KINDS = ["cup", "medal", "plaque", "pennant", "round", "locked"] as const;
+const KINDS = ["cup", "medal", "plaque", "pennant", "round"] as const;
 
 describe("Trophy", () => {
   it.each(KINDS)("draws the %s as aria-hidden art", (kind) => {
     const { container } = render(<Trophy kind={kind} />);
     const root = container.firstElementChild as HTMLElement;
     expect(root).toHaveAttribute("aria-hidden", "true");
-    expect(root.textContent).toBe(kind === "locked" ? "?" : "");
+    expect(root.textContent).toBe("");
     expect(root).toHaveAttribute("data-kind", kind);
   });
 
@@ -26,10 +26,10 @@ describe("Trophy", () => {
     expect(cup).not.toHaveTextContent("IGNORED");
   });
 
-  it("stands every kind on a plinth, except the locked outline which draws its own dashed base", () => {
+  it("stands every kind on a plinth", () => {
     for (const kind of KINDS) {
       const { container, unmount } = render(<Trophy kind={kind} />);
-      expect(container.querySelector("[data-plinth]") !== null).toBe(kind !== "locked");
+      expect(container.querySelector("[data-plinth]")).not.toBeNull();
       unmount();
     }
   });
@@ -58,14 +58,6 @@ describe("Trophy", () => {
     expect(root.className.split(" ").filter((c) => c.includes("scene-zoom"))).toEqual([
       "max-md:scene-zoom-sm",
     ]);
-  });
-
-  it("the cup and the locked outline share one bowl shape", () => {
-    const { container: cup } = render(<Trophy kind="cup" />);
-    const { container: locked } = render(<Trophy kind="locked" />);
-    expect(cup.querySelectorAll(".trophy-cup-shape")).toHaveLength(1);
-    expect(locked.querySelectorAll(".trophy-cup-shape")).toHaveLength(1);
-    expect(locked.querySelector(".trophy-cup")).toBeNull();
   });
 });
 

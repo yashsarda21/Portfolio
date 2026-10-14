@@ -244,9 +244,7 @@ export function buildScoutReport(c: Content, copy: UiCopy, routes: typeof ROUTES
     },
     trophies: {
       title: s.trophies.title,
-      rows: getTrophies(c)
-        .filter((t) => !t.locked)
-        .map((t) => ({ title: t.title, sub: t.sub })),
+      rows: getTrophies(c).map((t) => ({ title: t.title, sub: t.sub })),
     },
     academy: {
       title: s.academy.title,

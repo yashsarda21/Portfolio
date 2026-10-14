@@ -19,9 +19,9 @@ function Zone({ children, className }: { children: ReactNode; className?: string
 }
 
 const LABELS: Partial<Record<TrophyKind, string>> = { medal: "99.5", plaque: "PAPER" };
-const KINDS: TrophyKind[] = ["cup", "medal", "plaque", "pennant", "round", "locked"];
+const KINDS: TrophyKind[] = ["cup", "medal", "plaque", "pennant", "round"];
 
-/** All six figures, each on its plinth (the locked outline has its own dashed base). */
+/** All five figures, each on its plinth. */
 export const Kinds: StoryObj = {
   render: () => (
     <Zone className="grid grid-cols-3 gap-10 p-10">
@@ -66,7 +66,6 @@ const SHELF_ONE: { kind: TrophyKind; label?: string; name: string }[] = [
 const SHELF_TWO: typeof SHELF_ONE = [
   { kind: "pennant", name: "DISTINCTION" },
   { kind: "round", name: "SYSTEM DESIGN BLOGS" },
-  { kind: "locked", name: "GIANT KILLER" },
 ];
 
 function Shelf({
@@ -85,12 +84,13 @@ function Shelf({
   className: string;
 }) {
   return (
-    <div className={`absolute inset-x-0 grid grid-cols-3 ${className}`}>
+    <div className={`absolute inset-x-0 grid grid-cols-6 ${className}`}>
       {items.map(({ kind, label, name }, i) => (
-        <div key={name} className="relative flex flex-col items-center justify-end gap-3.5 pb-4">
-          {kind === "locked" ? null : (
-            <Spotlight intensity={lit === i ? "lead" : "support"} size={size} index={offset + i} />
-          )}
+        <div
+          key={name}
+          className={`relative col-span-2 flex flex-col items-center justify-end gap-3.5 pb-4 ${items.length === 2 && i === 0 ? "col-start-2" : ""}`}
+        >
+          <Spotlight intensity={lit === i ? "lead" : "support"} size={size} index={offset + i} />
           <Trophy kind={kind} label={label} spinning={spinning && lit === i} className="relative" />
           <span className="type-d5 text-floodlight">{name}</span>
         </div>
@@ -148,7 +148,7 @@ export const PhoneScale: StoryObj = {
     <Zone className="grid grid-cols-2 gap-x-6 gap-y-8 p-6">
       {KINDS.map((kind) => (
         <figure key={kind} className="relative flex flex-col items-center gap-3">
-          {kind === "locked" ? null : <Spotlight size="lg" scale="phone" />}
+          <Spotlight size="lg" scale="phone" />
           <Trophy kind={kind} label={LABELS[kind]} scale="phone" />
           <figcaption className="type-mono-tag text-scout">{kind}</figcaption>
         </figure>

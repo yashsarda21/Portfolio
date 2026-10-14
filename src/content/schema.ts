@@ -177,7 +177,7 @@ export const ContentSchema = z.strictObject({
   trophyRoom: z
     .array(
       z.strictObject({
-        type: z.enum(["cup", "medal", "plaque", "pennant", "round", "locked"]),
+        type: z.enum(["cup", "medal", "plaque", "pennant", "round"]),
         title: z.string().min(1),
         sub: z.string().min(1),
         shortSub: z.string().min(1).optional(),
@@ -186,7 +186,7 @@ export const ContentSchema = z.strictObject({
         draftCopy: z.boolean(),
       }),
     )
-    .length(6)
+    .length(5)
     .refine((rows) => isUnique(rows.map((r) => r.type)), "Each trophy type must appear once"),
   trainingAcademy: z
     .strictObject({

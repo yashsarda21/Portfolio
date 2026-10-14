@@ -9,7 +9,6 @@ export const artboardTrophiesView: TrophiesView = {
       kind: "cup",
       title: "750+ PROBLEMS SOLVED",
       shelfSub: "LEETCODE · CODEFORCES · CODECHEF",
-      locked: false,
       detail: {
         index: "1 / 5",
         title: "750+ PROBLEMS SOLVED",
@@ -28,7 +27,6 @@ export const artboardTrophiesView: TrophiesView = {
       kind: "medal",
       title: "99.5 PERCENTILE",
       shelfSub: "MHT-CET 2020 · STATE RANK 709",
-      locked: false,
       label: "99.5",
       detail: {
         index: "2 / 5",
@@ -43,7 +41,6 @@ export const artboardTrophiesView: TrophiesView = {
       kind: "plaque",
       title: "PUBLISHED RESEARCH",
       shelfSub: "AI INTERVIEW PLATFORM · JOURNAL",
-      locked: false,
       label: "PAPER",
       detail: {
         index: "3 / 5",
@@ -58,7 +55,6 @@ export const artboardTrophiesView: TrophiesView = {
       kind: "pennant",
       title: "DISTINCTION · CGPA 8.94",
       shelfSub: "SPPU · B.TECH 2024",
-      locked: false,
       detail: {
         index: "4 / 5",
         title: "DISTINCTION · CGPA 8.94",
@@ -72,7 +68,6 @@ export const artboardTrophiesView: TrophiesView = {
       kind: "round",
       title: "SYSTEM DESIGN BLOGS",
       shelfSub: "WRITTEN & SHARED ON LINKEDIN",
-      locked: false,
       detail: {
         index: "5 / 5",
         title: "SYSTEM DESIGN BLOGS",
@@ -80,14 +75,6 @@ export const artboardTrophiesView: TrophiesView = {
         description: "",
         links: [],
       },
-    },
-    {
-      id: "locked",
-      kind: "locked",
-      title: "GIANT KILLER",
-      shelfSub: "HIDDEN · BEAT YASH TO UNLOCK",
-      locked: true,
-      detail: null,
     },
   ],
   defaultId: "cup",

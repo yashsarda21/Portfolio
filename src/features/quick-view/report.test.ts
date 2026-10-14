@@ -77,7 +77,7 @@ describe("buildScoutReport", () => {
     ]);
   });
 
-  it("trophies skip the locked one", () => {
+  it("trophies list Yash's five", () => {
     const { trophies } = build();
     expect(trophies.rows).toHaveLength(5);
     expect(trophies.rows[0]).toEqual({

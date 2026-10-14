@@ -41,7 +41,7 @@ export interface AttributeGroup {
   skills: SkillView[];
 }
 
-export type Trophy = Content["trophyRoom"][number] & { locked: boolean };
+export type Trophy = Content["trophyRoom"][number];
 
 export interface Academy {
   /** The school without its trailing " (SHORT)" suffix (only that exact suffix). */
@@ -137,7 +137,7 @@ export function getAttributeGroups(c: Content): AttributeGroup[] {
 }
 
 export function getTrophies(c: Content): Trophy[] {
-  return c.trophyRoom.map((t) => ({ ...t, locked: t.type === "locked" }));
+  return [...c.trophyRoom];
 }
 
 export function getAcademy(c: Content): Academy {
