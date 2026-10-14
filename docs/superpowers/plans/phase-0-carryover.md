@@ -89,6 +89,11 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] Any font-weight / size / leading / tracking override that sits next to a `type-*` class must be passed as a **separate `cn()` argument after the type class** (e.g. `cn("type-mono-tag", "font-bold")`). Prettier's Tailwind class sorter reorders literal strings, and `cn`'s type-recipe conflict group then silently drops the override.
 
 ## Phase 8 — 3D games (owner request 2026-10-09; the project's last phase, after Phase 7)
+- [ ] **Discuss in detail with Yash before planning Phase 8** (owner request 2026-10-14). Phase 5 games are rule-driven (fixed referee outcomes) with linear, scripted motion; Yash wants instead:
+  - the **real game flow** of all three sports in 3D, with **players playing in real time** (not scripted beats);
+  - the opponent as a **bot** that plays every time (owner's words: "my user as bot who will everytime" — confirm: Yash's bot that (almost) always wins, keeping the ~1 % rule?);
+  - natural, non-linear motion (physics-like ball and shuttle flight, animated full-body players, camera tracking).
+  Open questions for that discussion: how the real-time play keeps "every input reveals content" and the 15 s fair-play bound; bot difficulty and the 1 % win; phones; reduced motion; what stays of the Phase 5 referees.
 3D only for the three games (cricket, tennis, badminton); every other screen stays as built. React Three Fiber in the Stage backdrop slot (spec D1), with the 2D board as first paint and fallback.
 - [ ] Cricket: realistic bowling speed and bounce; an animated 3D batsman holding the bat; natural full-body swings; aerial trajectories for sixes; ground-level fours; smooth camera tracking; responsive play.
 - [ ] Tennis and badminton: the same 3D treatment (players, shot trajectories, camera).
