@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 // Runs after `react-router build`.
-//  1. A static host serves a real 404 status from /404.html, so the prerendered OUT OF BOUNDS page
-//     (build/client/404/index.html) is copied there.
+//  1. A static host serves a real 404 status from /404.html for every unknown address. That file is the client-only
+//     page (__spa-fallback.html), so the router renders the catch-all once at the address tried; the prerendered
+//     OUT OF BOUNDS content (build/client/404/index.html) is added in a <noscript> for visitors without JavaScript
+//     (see tools/notfound.mjs).
 //  2. Every prerendered page gets its own Content-Security-Policy <meta>, listing the exact hash of each of its
 //     inline scripts (see tools/csp.mjs). The host-only headers (frame-ancestors, upgrade-insecure-requests and the rest) are in vercel.json.
-import { copyFileSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formOriginOf, withCsp } from "./csp.mjs";
+import { notFoundFile } from "./notfound.mjs";
 
 const CLIENT = join(resolve(dirname(fileURLToPath(import.meta.url)), ".."), "build/client");
 
-copyFileSync(join(CLIENT, "404/index.html"), join(CLIENT, "404.html"));
+writeFileSync(
+  join(CLIENT, "404.html"),
+  notFoundFile(
+    readFileSync(join(CLIENT, "__spa-fallback.html"), "utf8"),
+    readFileSync(join(CLIENT, "404/index.html"), "utf8"),
+  ),
+);
 console.log("postbuild: build/client/404.html written");
 
 function htmlFiles(dir) {

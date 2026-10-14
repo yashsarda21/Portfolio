@@ -44,13 +44,13 @@ Both are read **at build time**, so changing either one means a new deploy.
 
 ### 4. Deploy
 
-Press **Deploy**. Vercel runs `pnpm build`, which is `react-router build` and then `tools/postbuild.mjs` (it copies the 404 page to `404.html` and adds each page's security policy with the exact hash of its inline scripts).
+Press **Deploy**. Vercel runs `pnpm build`, which is `react-router build` and then `tools/postbuild.mjs` (it writes `404.html`, the file the host sends with status 404 for every wrong address, and adds each page's security policy with the exact hash of its inline scripts).
 
 ### 5. Check the live site
 
 Use the real address, and do these in order.
 
-- [ ] **A wrong address is a real 404.** Open `<site>/nope`. You should see OUT OF BOUNDS, and the browser's developer tools (Network tab) should show status **404**, not 200. If it shows 200, the host is serving the fallback page: tell me, do not ignore it.
+- [ ] **A wrong address is a real 404.** Open `<site>/nope`. You should see OUT OF BOUNDS once (one page, not two stacked), with a line "You tried /nope", and the browser's developer tools (Network tab) should show status **404**, not 200. If it shows 200, the host is serving the fallback page: tell me, do not ignore it.
 - [ ] **The headers match what we planned.** Reload any page and open the Network tab, click the page, then Headers. Look for:
   - `Content-Security-Policy: frame-ancestors 'none'; upgrade-insecure-requests`
   - `X-Frame-Options: DENY`
