@@ -3,7 +3,7 @@
 //  1. A static host serves a real 404 status from /404.html, so the prerendered OUT OF BOUNDS page
 //     (build/client/404/index.html) is copied there.
 //  2. Every prerendered page gets its own Content-Security-Policy <meta>, listing the exact hash of each of its
-//     inline scripts (see tools/csp.mjs). The host-only headers (frame-ancestors and the rest) are in vercel.json.
+//     inline scripts (see tools/csp.mjs). The host-only headers (frame-ancestors, upgrade-insecure-requests and the rest) are in vercel.json.
 import { copyFileSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

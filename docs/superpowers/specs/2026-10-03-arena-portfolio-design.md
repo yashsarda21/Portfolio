@@ -332,7 +332,8 @@ Each phase gets its own detailed plan. Yash approves the plan before building st
 | 5 | **Games** | Engine + cricket, tennis, badminton (desktop and one-thumb mobile), reveals, verdicts, "watch the highlight" offer, reduced-motion auto-rally | Referee unit tests (incl. forced win and 1% maths); journeys; visual diffs of drawn states |
 | 6 | ~~**Giant Killer + Locker Room + achievements**~~ | ~~Easter egg sequence, trophy unlock in cabinet, Team Up prefill, Locker Room page~~ | ~~Forced-win journey passes end to end~~ |
 | 6 | **Full Time + cleanup** (superseded, §11.14) | Yash always wins, the matchday ends on Full Time (YOU 0 · 3 YASH, graded), the Hub's FULL TIME box, Team Up prefill, five trophies | Full-matchday journey passes end to end |
-| 7 | **Hardening** | Audio wiring, final perf pass, full a11y audit (keyboard + screen reader spot check), SEO (meta, OG image, sitemap, robots, canonical from env), 404, Vercel production deploy | All budgets green; Opus final review; Yash sign-off |
+| 7 | ~~**Hardening**~~ (superseded, §11.15) | ~~Audio wiring, final perf pass, full a11y audit (keyboard + screen reader spot check), SEO (meta, OG image, sitemap, robots, canonical from env), 404, Vercel production deploy~~ | ~~All budgets green; Opus final review; Yash sign-off~~ |
+| 7 | **Launch ready** (deploy deferred by owner decision 2026-10-14, §11.15) | Sound made in code, OUT OF BOUNDS (a real 404), production address from `VITE_SITE_URL` with canonical / `og:*` / sitemap / robots and a share image, a per-page CSP and host headers (`vercel.json`), phones gated at 80 in Lighthouse, axe and keyboard sweeps, a WebKit smoke, a screen-reader checklist and a wording review for Yash, CI prepared, the launch checklist (`docs/launch/README.md`) | All budgets green; Opus final review; Yash runs the screen-reader checklist and marks the copy review; **publishing waits for his separate "publish"** |
 
 **How builders work (every phase):**
 1. The orchestrator writes the phase plan as small tasks with exact files, tests and the definition of done.
@@ -953,6 +954,224 @@ Journeys (`tests/e2e/journeys.spec.ts`, both projects unless noted):
 - The same matchday with storage blocked: the third end still offers SEE FULL TIME and Full Time shows the done state in that visit.
 - Kept and updated: Landing to Career with the Hub remembering (`YASH 1 · YOU 0`); SKIP on every game; "perfect play still loses" (no claim, `4* NOT OUT`, no Locker Room link); keyboard only; reduced motion.
 
+### 11.15 Launch ready (Phase 7)
+
+**Owner decisions, 2026-10-14.** The sounds are made in code (P1). The site is made launch ready but **not published** (P2): no git remote was added, nothing was pushed, and Vercel was never called. Phones must score at least 80 in Lighthouse (P7). Yash checks the site with a screen reader himself (P8). This replaces the old "Hardening" row of §10 (audio wiring, final perf pass, accessibility audit, SEO, 404, Vercel deploy), except the deploy, which waits for his separate word "publish". The steps for that day are in `docs/launch/README.md`.
+
+Rulings, as built (P1 to P11 of the Phase 7 plan):
+
+| ID | Decision | Why |
+|---|---|---|
+| P1 | **Sounds are synthesised** in `src/shell/synth.ts` (Web Audio oscillators and filtered noise), no audio files. Five slots: **bat** (FOUR or SIX in cricket), **net** (a tennis return that was not a miss), **smash** (a badminton smash), **floodlight** (a low thud at the Intro's lights-on beat), **crowd** (a 1.5s swell when any game's verdict lands). The provider (`src/shell/audio.tsx`) builds the `AudioContext` and one master `GainNode` (0.35) on the first unlock; `play` is stable and gated by refs, so it works in the same tick as `unlock`. Nothing plays before the first click, while the toggle is off, or if the browser has no `AudioContext` (everything is wrapped; silent on failure). The floodlight plays once per Intro show, on the first bank of lights (not on each of the four); reduced motion builds no timeline, so it has no sound. The final values are below. | Yash's choice. Each slot has one obvious moment (ruling G15 had left them silent). |
+| P2 | **Don't publish.** No remote, no push, no Vercel call. `vercel.json`, the CI file and the launch checklist are prepared, so publishing later is about 15 minutes with Yash at the keyboard. **`vercel.json` is unverified until the first deploy**, and **CI has never run on Ubuntu**. | Yash's choice. Publishing is outward-facing. |
+| P3 | **The production address comes from `VITE_SITE_URL`** (https only, only its origin kept; `parseSiteUrl` in `src/shell/config.ts`, like `VITE_FORM_ENDPOINT`). **Unset:** no canonical, `og:url` or `og:image` tags, `sitemap.xml` is a valid empty `<urlset/>`, and `robots.txt` has no `Sitemap:` line. **Set:** all of them, absolute. `twitter:card` is `summary_large_image` only when the address is set (the image needs an absolute URL). Pages that are `noindex` (OUT OF BOUNDS) emit no canonical or `og:url`, since every unknown path would otherwise claim `/404` as its address. `sitemap.xml` and `robots.txt` are resource routes that React Router prerenders under `ssr:false`; the sitemap lists every route except OUT OF BOUNDS (so `/arena/full-time` is in, and `/arena/giant-killer`, `/locker-room` and `/404` are not). Tests and Lighthouse build with `VITE_SITE_URL=https://arena.example` (a reserved test name). | Never ship a wrong canonical. The site still builds before a domain exists. |
+| P4 | **Share image** `public/og.png`, 1200×630, 289,803 bytes: the portrait cutout on the arena's dark ground with a blurred volt spotlight, "YASH SARDA", the role line from `content.json`, and "THE ARENA". `tools/og-image.mjs` (`pnpm og-image`) renders an HTML card with Playwright once; the PNG is committed. The size came from a blurred flat ellipse for the spotlight (gradients dither) and drawing the portrait at half detail. Alt text `ui.shareAlt`. | §13; a share preview recruiters see. |
+| P5 | **Security.** A per-page **Content-Security-Policy meta** (the first child of `<head>`) and host headers in `vercel.json`. `tools/csp.mjs` builds the policy from the page's own inline scripts; `tools/postbuild.mjs` adds it to every prerendered page after the build. The policy and headers are quoted below. **As built, `upgrade-insecure-requests` is a host header, not part of the meta (R2).** The form service's origin (from `VITE_FORM_ENDPOINT`) is added to `connect-src` and `form-action` only when set. | Carry-over row 30. A meta policy cannot express `frame-ancestors`, so that goes in a header. |
+| P6 | **OUT OF BOUNDS page (derived, §12).** It replaces `PlaceholderScreen`, which is deleted. Built on the content-page frame (`ContentPage`: brand, QUICK VIEW chip). The breadcrumb reads HUB / OUT OF BOUNDS, the eyebrow is THE ARENA, the `h1` is OUT OF BOUNDS and the description is "This page is out of bounds." A compact scoreboard panel holds a line "You tried <path>" (the path in the `mono-code` recipe so it keeps its case, cut at 60 characters with "…") and three links: BACK TO THE HUB (volt), QUICK VIEW, HOME. `noindex`. `/404` and every unknown path show it. `tools/postbuild.mjs` copies `build/client/404/index.html` to `build/client/404.html`, which a static host serves with a real **404 status**. | §12 row; carry-over 28. |
+| P7 | **Phones at 80 or more.** Finding: the old phone score of about 64 came from the test server, not the site. `tools/lighthouse.mjs` now serves `build/client` through a small `node:http` server with brotli (quality 5, cached in memory) for text, JS, CSS, JSON, SVG and XML, as Vercel does; the same build then scored 0.91 to 0.95 on phones (/scout 0.71 to 0.95). So **no app code was changed** for speed (the plan said to stop changing code once every gated page was at 80). **The gate:** mobile performance at least 0.80 on each page whose desktop performance is gated (`/scout`, `/`, `/arena`, the three games, `/arena/full-time`) and on `/` with reduced motion (a new variant); the Landing's full-motion phone run stays reported (L13, its LCP is the animated `h1`) and `/intro` mobile is reported only (its desktop performance is not gated). Tables below. | Yash's choice. The old number measured the server. |
+| P8 | **Accessibility.** An axe sweep (`tests/e2e/a11y-sweep.spec.ts`) of the 15 routes plus an unknown address, at 1440×900 and 390×844, fresh and with a full matchday: zero violations. A keyboard sweep (`tests/e2e/keyboard-sweep.spec.ts`): Tab from the top of every route until focus wraps; every stop is visible, sized, on screen and has a focus ring, and every tabbable element in the DOM was reached; the INDEX drawer keeps focus inside, Esc closes it and focus returns to INDEX. `docs/launch/screen-reader-checklist.md` (eight steps, VoiceOver on Mac and iPhone) is for Yash; what he marks "Not OK" comes back as fixes. | Spec §10 row; Yash's choice. |
+| P9 | **Leftovers decided, not built.** No mid-game back chip on phones (carry-over 73): the end has BACK TO THE HUB, and SKIP, QUICK VIEW and the browser's back always work. The big call stays behind the end buttons (carry-over 74), as drawn. | YAGNI; the drawn boards. |
+| P10 | **Safari (carry-over 75).** There was no WebKit smoke, so this phase created it: a `webkit` Playwright project (the Desktop Safari engine at 390×844, touch) running only `tests/e2e/webkit-smoke.spec.ts` (the three game columns and Full Time seeded with a full matchday: one rendered `h1`, the thumb button on screen, no sideways scroll, the board's label). It needs WebKit installed (`playwright install webkit`), also in CI (R3). | A real-Safari-engine check without hardware. |
+| P11 | **Wording review.** `docs/launch/copy-review.md` lists the 84 strings we wrote that are not in the design or `content.json` (59 marked derived in `src/content/ui-copy.ts`, 21 more that §12 names, 4 draft trophy descriptions), with where each shows. Yash marks changes; they go in as one copy task before launch. | Carry-over 77; §12. |
+
+Rulings during the build (from the orchestrator, not in the plan):
+
+| ID | Decision | Why |
+|---|---|---|
+| R1 | **Fonts are never inlined as `data:` URLs** (`build.assetsInlineLimit` in `vite.config.ts` returns false for `.woff`, `.woff2`, `.ttf`, `.otf` and `.eot`; everything else keeps the default). The first CSP e2e run showed `font-src` blocking `data:` fonts. The policy stays strict (`font-src 'self'`) rather than widening to `data:`. | A few more small font requests (measured in P7: no effect on the gates) for a tighter policy. Applies to the Storybook build too. |
+| R2 | **`upgrade-insecure-requests` moves out of the page's meta CSP and into `vercel.json`'s `Content-Security-Policy` header**, beside `frame-ancestors`. Safari/WebKit applied the directive to `http://localhost` and loaded every script over https, which failed, so every local preview broke in Safari (Yash's VoiceOver check uses Safari). Production is https only with HSTS, so the header keeps the protection there. The WebKit smoke no longer strips it; it passes without. | It costs nothing on the live site and a local `pnpm preview` works in every browser. This changes P5's text as built. |
+| R3 | **CI installs WebKit too** (`pnpm exec playwright install --with-deps chromium webkit`), since `playwright.config.ts` has a `webkit` project and `pnpm verify` runs it. | Without it CI fails on the first push. |
+
+**Sound recipes, final values.** Master gain 0.35 (`MASTER_GAIN`); `PEAK` 0.9; silence floor 0.001. Each stop time is the hard cap a unit test checks. Noise is a looped white-noise buffer.
+
+| Slot | Recipe | Peak after master (measured) |
+|---|---|---|
+| bat | Noise, bandpass 2200 Hz Q 1.2, level 0.8 × `PEAK`, 2ms attack, exponential decay to 0.001 at 90ms (stops 100ms). Plus a sine 140 to 70 Hz over 60ms at 0.4 × `PEAK` (stops 80ms). | 0.18 to 0.24 |
+| net | Noise, bandpass 1400 Hz Q 0.8, 0.6 × `PEAK`, 4ms attack, decay 120ms (stops 140ms). Plus a triangle at 320 Hz, 0.25 × `PEAK`, decay 50ms (stops 60ms). | 0.11 to 0.12 |
+| smash | Noise, highpass 3000 Hz Q 0.7, 0.5 × `PEAK` (lowered from 0.7: the first render peaked at 1.04 before the master gain, since a resonant highpass rings above its envelope), 1ms attack, decay 150ms (stops 160ms). Plus a sine 900 to 300 Hz over 80ms, 0.3 × `PEAK` (lowered from 0.33; stops 100ms). | 0.24 to 0.26 |
+| floodlight | Sine 70 to 38 Hz over 450ms, 0.8 × `PEAK`, 5ms attack, to silence at 550ms. Plus a noise click, 0.15 × `PEAK`, decay 30ms (stops 40ms). | 0.24 |
+| crowd | Looped noise, lowpass 1200 Hz, bandpass 700 Hz Q 0.7 (centre swayed ±250 Hz by a 1.3 Hz sine), up to 0.5 × `PEAK` over 400ms, held to 1.1s, falling to 0.001 at 1.6s (all sources stop at 1.6s). | 0.08 to 0.09 |
+
+Peaks were measured with an `OfflineAudioContext` in Chromium (44.1 kHz, three renders each, as the noise is random); every sound stays under 1.0 with margin and every audible tail ends inside its cap. **The builder could not listen**: the values past smash are starting points, to be tuned by ear (`RECIPES` and `MASTER_GAIN` are the only knobs). The crowd is deliberately very quiet.
+
+**The security policy, verbatim.**
+
+The page's meta (the example is `/scout`, built with no `VITE_FORM_ENDPOINT`; the `sha256` list is that page's own eleven inline scripts, and differs per page: 17 pages, 27 distinct hashes in all):
+
+```
+default-src 'self'; script-src 'self' 'sha256-h7yQbqf9aASGBmlHy7d1/ivZ9lqyXeUzktasGBx4XL0=' 'sha256-jTYpJv6RVuNOKOA45HlQBMtFMspDsg8/4yiXN64665E=' 'sha256-UHk7yYf0g66ipavM7T1Il3IpenM+th+KgJnhUUbiWfA=' 'sha256-n1D9cZXw4ZNSiUR+6/8u4KC6Mx7KCFb9ScJA8U0UdhI=' 'sha256-eWa6DMZRMTkb7k2BX579qgK/VGeDqc4D+SQPSUKmNtE=' 'sha256-iwejSqUxRTkrWaltYaBfQ0Sb3AY/i3/X4gtBcsaOQd4=' 'sha256-7mu4H06fwDCjmnxxr/xNHyuQC6pLTHr4M2E4jXw5WZs=' 'sha256-duhaxWNI+6QAukUMmlYrkl97X+e0pxobkwS+TpY5/CQ=' 'sha256-QAlSewaQLi/NPCznjAZSyvQ72heD0VdxmNDDkZeCxgc=' 'sha256-RBZNiG3Ztb26Xi/69+VRecU4BPhrfxcvspLXMRrrCNE=' 'sha256-p7GE78bbMHDrE4IWzpiMSttAsTpUu7wwi5/wvnH54Os='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self' https:; connect-src 'self'; form-action 'self' mailto:; object-src 'none'; base-uri 'self'
+```
+
+(Before R2 this policy ended with `; upgrade-insecure-requests`; R2 moved it to the header below.) With `VITE_FORM_ENDPOINT` set, its origin is appended to `connect-src` and `form-action`. Styles allow `'unsafe-inline'` because React writes `style` attributes; scripts never do (no `'unsafe-inline'` or `'unsafe-eval'` in `script-src`). A page with no inline scripts would carry only `'self'`.
+
+The host (`vercel.json`, verbatim):
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "build/client",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'; upgrade-insecure-requests"
+        },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}
+```
+
+Proofs: `tools/csp.test.ts` (28 unit tests: the hash of a known vector, the exact policy text, no `'unsafe-*'` in `script-src`, the form origin only when given, `withCsp` twice changes nothing); `tests/e2e/csp.spec.ts` (an enforcement canary: an unhashed inline script is blocked and reported; 15 pages "as served" have the meta first in `<head>` and no `'unsafe'` in `script-src`; ten pages used end to end with zero `securitypolicyviolation` events and no CSP console lines).
+
+**What is not verified yet.** (1) `vercel.json` has never run on a real host, so the headers and the real 404 status are checked on the first deploy (`docs/launch/README.md`, step 5). (2) The form-origin path (`connect-src` and `form-action` with the service's origin) is covered by unit tests only, because e2e runs with no form address. (3) CI (`.github/workflows/ci.yml`) has never run on Ubuntu. (4) The sounds have not been listened to. (5) Yash's VoiceOver checklist and wording review are open.
+
+**CI (carry-over 89, prepared without a remote).** `permissions: contents: read`; `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }`; `if-no-files-found: ignore` on the artifact upload; `VITE_SITE_URL: https://arena.example` in the verify step's environment; Chromium and WebKit installed (R3). The YAML shape was parsed with Python's `yaml` and prettier-checked.
+
+**Speed.** Phones, same build, only the server changed (median of three runs, Lighthouse's default phone profile):
+
+| Page | Before: performance (FCP / LCP), uncompressed test server | After: performance (FCP / LCP), brotli as Vercel serves it | Gate |
+|---|---|---|---|
+| `/scout` | 65 (5555 / 5705 ms) | 95 (1958 / 2564 ms) | gated at 80 |
+| `/` full motion | 63 (5704 / 6455 ms) | 91 (2111 / 3167 ms) | reported (L13) |
+| `/` reduced motion | not measured | 94 (2110 / 2715 ms) | gated at 80 (new) |
+| `/intro` | 62 (5855 / 6695 ms) | 92 (1960 / 3107 ms) | reported |
+| `/arena` | 65 (5554 / 5704 ms) | 95 (1965 / 2569 ms) | gated at 80 |
+| `/arena/cricket` | 64 (5704 / 5854 ms) | 94 (2035 / 2716 ms) | gated at 80 |
+| `/arena/tennis` | 64 (5705 / 5855 ms) | 94 (2036 / 2716 ms) | gated at 80 |
+| `/arena/badminton` | 64 (5704 / 5854 ms) | 94 (2036 / 2716 ms) | gated at 80 |
+| `/arena/full-time` | 63 (5703 / 6455 ms) | 94 (2110 / 2715 ms) | gated at 80 |
+
+The "before" column is the plain test server of Phases 1 to 6 (the §11.14 table, built at the end of Phase 6; `/scout` and `/` re-measured at the start of Phase 7 at 71 and 70). The "after" column is this phase's final run of `pnpm lighthouse`. What the numbers say: the raw 156 KB stylesheet is 21 KB in brotli (12 KB unused); the `transition` chunk is React Router's own library code (51 KB in brotli); `entry.client` is 57 KB, react-dom 36 KB, GSAP 25 KB (idle prefetch, not blocking). Total blocking time is 0 ms everywhere. Full diagnostics for the Landing, Player Intro and Cricket before any change: Phase 7's `lh-mobile-before.md`.
+
+The final `pnpm lighthouse` (production build, brotli server, median of 3; desktop and phone gates as listed; "reported" rows are not gated):
+
+```
+/scout
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    473 ms   575 ms    0.001     0 ms
+  desktop run 2                     100 100 100 100    466 ms   566 ms    0.002     0 ms
+  desktop run 3                     100 100 100 100    464 ms   564 ms    0.002     0 ms
+> desktop (gate)                    100 100 100 100    466 ms   566 ms    0.002     0 ms
+  mobile run 1                       95 100 100 100   1959 ms  2564 ms    0.000     0 ms
+  mobile run 2                       95 100 100 100   1953 ms  2704 ms    0.000     0 ms
+  mobile run 3                       95 100 100 100   1958 ms  2563 ms    0.000     0 ms
+> mobile (gate)                      95 100 100 100   1958 ms  2564 ms    0.000     0 ms
+
+/
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    468 ms   577 ms    0.000     0 ms
+  desktop run 2                     100 100 100 100    467 ms   687 ms    0.011     0 ms
+  desktop run 3                     100 100 100 100    467 ms   687 ms    0.011     0 ms
+> desktop (gate)                    100 100 100 100    467 ms   687 ms    0.011     0 ms
+  desktop, reduced motion run 1     100 100 100 100    466 ms   687 ms    0.001     0 ms
+  desktop, reduced motion run 2     100 100 100 100    464 ms   566 ms    0.000     0 ms
+  desktop, reduced motion run 3     100 100 100 100    465 ms   568 ms    0.000     0 ms
+> desktop, reduced motion (gate)    100 100 100 100    465 ms   568 ms    0.001     0 ms
+  mobile run 1                       94 100 100 100   2110 ms  2715 ms    0.009     0 ms
+  mobile run 2                       91 100 100 100   2111 ms  3167 ms    0.027     0 ms
+  mobile run 3                       91 100 100 100   2111 ms  3167 ms    0.027     0 ms
+> mobile (gate)                      91 100 100 100   2111 ms  3167 ms    0.027     0 ms
+  mobile, reduced motion run 1       94 100 100 100   2111 ms  2719 ms    0.017     0 ms
+  mobile, reduced motion run 2       95 100 100 100   1960 ms  2714 ms    0.017     0 ms
+  mobile, reduced motion run 3       94 100 100 100   2110 ms  2715 ms    0.009     0 ms
+> mobile, reduced motion (gate)      94 100 100 100   2110 ms  2715 ms    0.017     0 ms
+
+/intro
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                      99 100 100 100    466 ms   738 ms    0.000     0 ms
+  desktop run 2                      99 100 100 100    446 ms   738 ms    0.000     0 ms
+  desktop run 3                      99 100 100 100    465 ms   736 ms    0.000     0 ms
+> desktop (gate)                     99 100 100 100    465 ms   738 ms    0.000     0 ms
+  mobile run 1                       92 100 100 100   1962 ms  3112 ms    0.002     0 ms
+  mobile run 2                       92 100 100 100   1960 ms  3106 ms    0.002     0 ms
+  mobile run 3                       92 100 100 100   1960 ms  3107 ms    0.002     0 ms
+> mobile (gate)                      92 100 100 100   1960 ms  3107 ms    0.002     0 ms
+
+/arena
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    465 ms   570 ms    0.000     0 ms
+  desktop run 2                     100 100 100 100    465 ms   565 ms    0.000     0 ms
+  desktop run 3                     100 100 100 100    465 ms   565 ms    0.000     0 ms
+> desktop (gate)                    100 100 100 100    465 ms   565 ms    0.000     0 ms
+  mobile run 1                       95 100 100 100   1960 ms  2565 ms    0.000     0 ms
+  mobile run 2                       95 100 100 100   1969 ms  2579 ms    0.000     0 ms
+  mobile run 3                       95 100 100 100   1965 ms  2569 ms    0.000     0 ms
+> mobile (gate)                      95 100 100 100   1965 ms  2569 ms    0.000     0 ms
+
+/arena/cricket
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    527 ms   688 ms    0.001     0 ms
+  desktop run 2                     100 100 100 100    465 ms   565 ms    0.000     0 ms
+  desktop run 3                     100 100 100 100    466 ms   566 ms    0.000     0 ms
+> desktop (gate)                    100 100 100 100    466 ms   566 ms    0.001     0 ms
+  mobile run 1                       94 100 100 100   2035 ms  2718 ms    0.000     0 ms
+  mobile run 2                       94 100 100 100   2034 ms  2715 ms    0.000     0 ms
+  mobile run 3                       94 100 100 100   2035 ms  2716 ms    0.000     0 ms
+> mobile (gate)                      94 100 100 100   2035 ms  2716 ms    0.000     0 ms
+
+/arena/tennis
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    528 ms   691 ms    0.000     0 ms
+  desktop run 2                     100 100 100 100    464 ms   564 ms    0.000     0 ms
+  desktop run 3                     100 100 100 100    464 ms   564 ms    0.000     0 ms
+> desktop (gate)                    100 100 100 100    464 ms   564 ms    0.000     0 ms
+  mobile run 1                       92 100 100 100   2190 ms  3028 ms    0.001     0 ms
+  mobile run 2                       94 100 100 100   2035 ms  2715 ms    0.001     0 ms
+  mobile run 3                       94 100 100 100   2036 ms  2716 ms    0.001     0 ms
+> mobile (gate)                      94 100 100 100   2036 ms  2716 ms    0.001     0 ms
+
+/arena/badminton
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    525 ms   686 ms    0.001     0 ms
+  desktop run 2                     100 100 100 100    464 ms   565 ms    0.001     0 ms
+  desktop run 3                     100 100 100 100    466 ms   566 ms    0.001     0 ms
+> desktop (gate)                    100 100 100 100    466 ms   566 ms    0.001     0 ms
+  mobile run 1                       94 100 100 100   2036 ms  2718 ms    0.001     0 ms
+  mobile run 2                       94 100 100 100   2036 ms  2716 ms    0.001     0 ms
+  mobile run 3                       94 100 100 100   2035 ms  2715 ms    0.001     0 ms
+> mobile (gate)                      94 100 100 100   2036 ms  2716 ms    0.001     0 ms
+
+/arena/full-time
+                                    perf a11y  bp seo       FCP      LCP      CLS      TBT
+  desktop run 1                     100 100 100 100    464 ms   687 ms    0.000     0 ms
+  desktop run 2                     100 100 100 100    466 ms   690 ms    0.000     0 ms
+  desktop run 3                     100 100 100 100    464 ms   686 ms    0.000     0 ms
+> desktop (gate)                    100 100 100 100    464 ms   687 ms    0.000     0 ms
+  mobile run 1                       94 100 100 100   2110 ms  2715 ms    0.000     0 ms
+  mobile run 2                       94 100 100 100   2110 ms  2715 ms    0.000     0 ms
+  mobile run 3                       94 100 100 100   2114 ms  2718 ms    0.000     0 ms
+> mobile (gate)                      94 100 100 100   2110 ms  2715 ms    0.000     0 ms
+
+gate rows: performance = median, accessibility / best practices / SEO = worst run,
+FCP / LCP / TBT = median, CLS = worst run. Variants without a gate for a column only report it.
+
+Lighthouse budget met.
+```
+
+**Sweeps, results and fixes.** Axe: 64 tests (16 paths × 2 viewports × fresh and full matchday), zero violations on the first run; the shared helper still logs some colour-contrast nodes as "incomplete" (translucent glass; axe cannot compute them, `contrast.test.ts` covers contrast) and does not fail on them. Keyboard: 17 tests (16 routes plus the drawer), zero findings in the page code. Two failures in the first draft of the sweep were test mistakes and were fixed in the test: a Radix `[role=tablist]` forwards focus to the selected tab, so the list itself is not a stop; and a native modal `<dialog>` hops to the browser's own bar after its last control (the document reads as `body`), so the drawer test accepts "in the drawer" or "body" and fails if focus ever lands on the page behind, on Tab or Shift+Tab (24 presses each). **No application code needed fixing.** WebKit smoke: 4 tests. The shared helper `tests/e2e/support/matchday.ts` (`FULL_MATCHDAY`, `seedFullMatchday`, `ALL_PATHS`) serves these specs.
+
+**Deferred minors.** `ui.games.firstReveal` ("EVERY INPUT UNLOCKS SOMETHING") is derived copy used only by `Frame.stories.tsx`; it is flagged in `copy-review.md`. The VoiceOver checklist's expected phrases ("has pop-up", "invalid data") are what VoiceOver usually says, not recorded output. The Intro's floodlight is audible when the Intro is reached from the Landing (its ENTER THE ARENA click unlocks audio); a visitor who opens `/intro` directly hears it from REPLAY or the next visit.
+
+**Derived designs added to §12.** The OUT OF BOUNDS row (P6) and the share image (P4) below; the 404 row that was already there still reads "scoreboard panel with links to Hub and Quick View" and the page now also has a line naming the path tried and a HOME link.
+
+Tests added or changed: `src/shell/synth.test.ts`, `audio.test.tsx`; `src/shell/config.test.ts`, `seo.test.ts`, `meta.test.ts`; `src/features/not-found/view.test.ts`; `tools/csp.test.ts`; `tests/e2e/not-found.spec.ts`, `seo.spec.ts`, `csp.spec.ts`, `a11y-sweep.spec.ts`, `keyboard-sweep.spec.ts`, `webkit-smoke.spec.ts`; `routes.spec.ts` updated (the wipe, focus and reduced-motion tests use the page's own links, not the placeholder site map).
+
 ---
 
 ## 12. Derived designs (not in the artboards; built from existing components, flagged for Yash's review)
@@ -982,6 +1201,8 @@ Journeys (`tests/e2e/journeys.spec.ts`, both projects unless noted):
 | Team Up prefill (F10) | Once a venue is played, an empty, untouched message field starts as "Good game, Yash." Nothing typed is replaced; derived from `venuesPlayed`, never stored. Flagged for review. |
 | Trophy Room, five trophies (F9) | Desktop: three on the top shelf, the second shelf's two centred under them. Phone: 2 + 2, then the fifth centred. The locked outline is gone from the cabinet and the design system. Flagged for review. |
 | 404 | "OUT OF BOUNDS": scoreboard panel with links to Hub and Quick View |
+| OUT OF BOUNDS `404` as built (§11.15, P6) | The content-page frame (brand, QUICK VIEW chip), breadcrumb HUB / OUT OF BOUNDS, eyebrow THE ARENA, `h1` OUT OF BOUNDS, the lede "This page is out of bounds.", and a compact scoreboard panel with "You tried <path>" and the links BACK TO THE HUB (volt), QUICK VIEW and HOME. `noindex`; no canonical. Shown for `/404` and every unknown path; the host serves it as `404.html` with a real 404 status. Every string is derived (`ui.notFound`, `ui.routes.notFound`). Flagged for review. |
+| Share image `og.png` (§11.15, P4) | 1200×630: the portrait cutout on the arena's dark ground with a blurred volt spotlight, "YASH SARDA", the role line from `content.json` and "THE ARENA". Made once by `tools/og-image.mjs` and committed. Derived (no artboard). Flagged for review. |
 | Trophy descriptions 2–5 | Written from content data, in the dry commentary voice |
 
 ---

@@ -25,9 +25,9 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [x] Phase 3: commentary live region on the mobile placeholders (speak or stay silent?). → §11.11 L11 (silent below 768px)
 - [x] Phase 3 / 7: lazy-load GSAP (dynamic import in `go()` plus idle prefetch) and check Lighthouse. → Task 1 (`loadGsap` / `prefetchGsap`), §11.11 (Lighthouse results)
 - [x] Phase 4 / 5: match record shape guard/merge, and migrate on a version bump (`arena:v1`). → Phase 4 Task 1 (`sanitizeRecord` in the persist `merge` and `migrate`; §11.12)
-- [ ] Phase 7: the host must serve a real Out-of-Bounds HTML page with HTTP 404 (not the SPA fallback's 200); verify it.
-- [ ] Phase 7: `og:image`, `og:url` and `<link rel="canonical">` from the production domain (env); Phase 1 ships og:title/description/type/site_name + twitter:card only.
-- [ ] Phase 7: CSP needs build-time hashes for React Router's inline scripts and the stage-scale script.
+- [x] Phase 7: the host must serve a real Out-of-Bounds HTML page with HTTP 404 (not the SPA fallback's 200); verify it. → done (§11.15 P6): `/404` and every unknown path show OUT OF BOUNDS (noindex); `tools/postbuild.mjs` copies it to `build/client/404.html` for the host's real 404. The live status check is step 5 of `docs/launch/README.md` (unverified until the first deploy).
+- [x] Phase 7: `og:image`, `og:url` and `<link rel="canonical">` from the production domain (env); Phase 1 ships og:title/description/type/site_name + twitter:card only. → done (§11.15 P3, P4): `VITE_SITE_URL` gives canonical, `og:url`, `og:image` (1200×630 `public/og.png`) and `summary_large_image`; unset, none of them are emitted.
+- [x] Phase 7: CSP needs build-time hashes for React Router's inline scripts and the stage-scale script. → done (§11.15 P5, R1, R2): a per-page CSP meta with the exact hash of each inline script (`tools/csp.mjs`, `tools/postbuild.mjs`); `vercel.json` carries the host-only headers. The host headers are unverified until the first deploy; the form-origin path is unit-tested only.
 - [ ] Optional: bidirectional check between `ROUTES` (src/shell/routes.ts) and `app/routes.ts`.
 
 ## Before Phase 1's first pixel diff
@@ -70,12 +70,12 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] The prerendered `/arena` HTML has two `<h1>` (stage and column, one hidden by CSS), as the Landing does; one-h1 tests use the accessibility tree.
 
 ## Phase 5 follow-ups (found in reviews)
-- [ ] The phone game column draws no route back to the Hub (the Mobile-Game board draws no tab bar); a visitor leaves through SKIP, QUICK VIEW or the browser's back. Decide in the final review whether the column gets a back chip.
-- [ ] The game calls (`SIX.`, `ON THE LINE.`) stay on screen through the verdict and the end, behind the end buttons (all three games). Fade the call when the end buttons appear if it reads as clutter.
-- [ ] `CourtMark` and the column's court placement use container query units (Safari 16+) and no `foreignObject`; spot-check the three game columns on a real Safari.
+- [x] The phone game column draws no route back to the Hub (the Mobile-Game board draws no tab bar); a visitor leaves through SKIP, QUICK VIEW or the browser's back. Decide in the final review whether the column gets a back chip. → decided, not built (§11.15 P9): the end has BACK TO THE HUB, and SKIP, QUICK VIEW and the browser's back always work; the Mobile-Game board draws no back chip.
+- [x] The game calls (`SIX.`, `ON THE LINE.`) stay on screen through the verdict and the end, behind the end buttons (all three games). Fade the call when the end buttons appear if it reads as clutter. → decided, not built (§11.15 P9): the call stays behind the end buttons, as drawn.
+- [x] `CourtMark` and the column's court placement use container query units (Safari 16+) and no `foreignObject`; spot-check the three game columns on a real Safari. → done as far as no hardware allows (§11.15 P10): the `webkit` Playwright project (the Safari engine, 390×844) checks the three game columns and Full Time; a real-Safari look is step 1–2 of `docs/launch/screen-reader-checklist.md`.
 - [ ] Tennis's Yash ring is a pill (`rounded-full`) where the board draws a 50% ellipse (the same `TrackingRing` as cricket's; inside the 2% limit).
-- [ ] Derived game copy (tennis `missed` / `line` COMM lines, badminton `start` / `rally` / `perfect` COMM lines, the phone hints, SEE / CLAIM labels, the `SAVED` and `GAME YASH` statuses) is flagged for Yash's review (§12).
-- [ ] Phase 7: audio files for the `bat`, `net` and `smash` slots (the games call `audio.play(...)`; silent until then, ruling G15).
+- [x] Derived game copy (tennis `missed` / `line` COMM lines, badminton `start` / `rally` / `perfect` COMM lines, the phone hints, SEE / CLAIM labels, the `SAVED` and `GAME YASH` statuses) is flagged for Yash's review (§12). → done as a list (§11.15 P11): every derived string is in `docs/launch/copy-review.md` (84 strings) for Yash to mark; the changes then go in as one copy task before launch.
+- [x] Phase 7: audio files for the `bat`, `net` and `smash` slots (the games call `audio.play(...)`; silent until then, ruling G15). → done (§11.15 P1): the five slots (`bat`, `net`, `smash`, `floodlight`, `crowd`) are synthesised in `src/shell/synth.ts`; no audio files. Not yet tuned by ear.
 
 ## Phase 6 follow-ups (found in reviews; none blocking)
 - [x] Full Time's stage now has QUICK VIEW top-right (A5, "one tap away on every screen"; the artboard draws none): `FullTimeStage` uses the Hub's `HUD` + `QuickViewChip`, its box is masked in `tests/stories/full-time.spec.ts` (§11.14 deviations, parity 0.52%), and `tests/e2e/full-time.spec.ts` asserts it is visible and at least 44px tall at every viewport. Fixed in the Phase 6 fix wave.
@@ -83,10 +83,10 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] The Full Time board's loser score uses `text-dim` (#7D8893), not the drawn #5D6670 (A1 bans decoration greys as text). Logged in §11.14; revisit if the design ever adds a text-safe dark grey.
 - [x] `tests/e2e/hub.spec.ts` now seeds badminton's last score as `21–19`, as the game saves it (Phase 6 fix wave).
 - [ ] Playwright quirk, not a page bug: with JavaScript off, a `click()` on a Full Time stage link during the 0.9s rise stalls ("not stable"); the JS-off test waits for finite animations first. Keep that wait in any new JS-off test of an animated page.
-- [ ] Phase 7: add `/arena/full-time` to the sitemap and the OG tags check (it is a page like the Hub; the old `/arena/giant-killer` and `/locker-room` addresses must not appear).
+- [x] Phase 7: add `/arena/full-time` to the sitemap and the OG tags check (it is a page like the Hub; the old `/arena/giant-killer` and `/locker-room` addresses must not appear). → done (§11.15 P3): `/arena/full-time` is in `sitemap.xml`; `/404`, `/arena/giant-killer` and `/locker-room` are not (`tests/e2e/seo.spec.ts`).
 
 ## When a git remote is added (Phase 7 at latest)
-- [ ] CI: add `permissions: contents: read`, a concurrency cancel group, and `if-no-files-found` on artifact upload; confirm the workflow passes on Ubuntu.
+- [x] CI: add `permissions: contents: read`, a concurrency cancel group, and `if-no-files-found` on artifact upload; confirm the workflow passes on Ubuntu. → done, prepared without a remote (§11.15): `permissions: contents: read`, the concurrency group, `if-no-files-found: ignore`, `VITE_SITE_URL`, and chromium + webkit installed. Not yet run on Ubuntu: it needs a push (step 1 of `docs/launch/README.md`).
 
 ## Accepted (no action)
 - References are not byte-identical between runs (Chromium raster noise); pixel diff uses tolerance — never hash-compare.
@@ -95,6 +95,21 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 
 ## All later plans (convention found in 0C)
 - [ ] Any font-weight / size / leading / tracking override that sits next to a `type-*` class must be passed as a **separate `cn()` argument after the type class** (e.g. `cn("type-mono-tag", "font-bold")`). Prettier's Tailwind class sorter reorders literal strings, and `cn`'s type-recipe conflict group then silently drops the override.
+
+## Phase 7 follow-ups (found in reviews and the build)
+- [ ] **Publish: follow `docs/launch/README.md` when Yash says "publish".** Nothing is pushed, no remote exists, Vercel has never been called (§11.15 P2).
+- [ ] Yash runs `docs/launch/screen-reader-checklist.md` (VoiceOver, about 10 minutes); anything marked "Not OK" comes back as one fix task.
+- [ ] Yash marks `docs/launch/copy-review.md`; his changes go in as one copy task before launch.
+- [ ] Listen to the five synthesised sounds by ear (`src/shell/synth.ts` `RECIPES`, `MASTER_GAIN`); the builder could not. The crowd is deliberately very quiet (about 0.08 after the master gain).
+- [ ] `vercel.json` is unverified until the first deploy (the headers, the 404 status); the Team Up form-origin CSP path (`connect-src`, `form-action`) is covered by unit tests only, because e2e runs with no `VITE_FORM_ENDPOINT`.
+- [ ] CI has never run on Ubuntu (no remote): the first push is its first run.
+- [ ] `ui.games.firstReveal` ("EVERY INPUT UNLOCKS SOMETHING") is derived copy used only by `Frame.stories.tsx`; remove it or use it (it is flagged in `copy-review.md`).
+- [ ] First-visit floodlight: audio unlocks at the Landing's ENTER THE ARENA click, so the Intro's lights-on thud is audible when the Intro is reached from the Landing; a visitor who opens `/intro` directly hears it from the second visit or REPLAY (`useIntroTimeline` plays it once per show).
+- [ ] axe reports some colour-contrast nodes as "incomplete" (translucent glass) and does not fail on them; `contrast.test.ts` covers contrast.
+- [ ] The VoiceOver checklist's expected phrases ("has pop-up", "invalid data") are what VoiceOver usually says, not recorded output; small wording differences in Yash's notes are not bugs.
+- [ ] The Landing's full-motion phone run stays reported, not gated (L13: the animated `h1` is its LCP by design); its reduced-motion phone run is gated at 80.
+- [x] `upgrade-insecure-requests` moved from the page's CSP meta to the `vercel.json` header (R2), so Safari/WebKit can preview `http://127.0.0.1:4173`.
+- [x] CI installs WebKit as well as Chromium (R3), since `playwright.config.ts` has a `webkit` project.
 
 ## Phase 8 — 3D games (owner request 2026-10-09; the project's last phase, after Phase 7)
 - [ ] **Discuss in detail with Yash before planning Phase 8** (owner request 2026-10-14). Phase 5 games are rule-driven (fixed referee outcomes) with linear, scripted motion; Yash wants instead:

@@ -4,7 +4,7 @@ You will use VoiceOver (Apple's screen reader) to "listen" to the site, the way 
 
 Do the **Mac (Safari)** lines on your Mac. Do the **iPhone** lines on your phone. Both are short. If you are short on time, do the Mac lines in steps 1 to 8 and the iPhone lines only in steps 3 and 4.
 
-**Use the real https address of the site** (the preview link), not `http://127.0.0.1:4173`. Safari loads a page's scripts over https only when the page says "upgrade insecure requests", so the local http address can look broken in Safari. That is the test setup, not a bug in the site.
+**Which address to open.** Run `pnpm build` and then `pnpm preview` in the project folder, and open `http://127.0.0.1:4173` in Safari on your Mac. This works in Safari (the setting that used to break it, "upgrade insecure requests", now lives in the host's headers and is only used on the live https site). For the iPhone lines, the phone must reach your Mac: run `pnpm exec sirv build/client --single __spa-fallback.html --port 4173 --host 0.0.0.0` instead of `pnpm preview`, and open `http://<your Mac's address on the Wi-Fi>:4173` on the phone. (If you only have the Mac, do the Mac lines.)
 
 Write your finding in each box. Anything marked "Not OK" comes back to me as a fix.
 
