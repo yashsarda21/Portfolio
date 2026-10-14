@@ -108,10 +108,10 @@ describe("the page rewrite", () => {
     ]);
   });
 
-  it("puts the policy first in <head>, with each distinct script hashed once", () => {
+  it("puts the policy right after the charset in <head>, with each distinct script hashed once", () => {
     const { html, scriptHashes } = add(page, null);
     expect(html).toMatch(
-      /<head><meta http-equiv="Content-Security-Policy" content="[^"]+"\/><meta charSet/,
+      /<head><meta charSet="utf-8"\/><meta http-equiv="Content-Security-Policy" content="[^"]+"\/><title>/,
     );
     expect(scriptHashes).toEqual([
       hash("var a = 1;"),
@@ -124,6 +124,23 @@ describe("the page rewrite", () => {
   it("is the same when run twice", () => {
     const once = add(page, "https://f.example").html;
     expect(add(once, "https://f.example").html).toBe(once);
+  });
+
+  it("keeps the charset in the first 1024 bytes however long the policy is", () => {
+    const many = Array.from({ length: 30 }, (_, i) => `<script>var n${i} = ${i};</script>`).join(
+      "",
+    );
+    const { html } = add(
+      `<html><head><meta charSet="utf-8"/>${many}</head><body></body></html>`,
+      "https://form.example",
+    );
+    expect(html.indexOf("<script>")).toBeGreaterThan(1024); // the policy alone is longer than the prescan window
+    expect(html.indexOf('charSet="utf-8"')).toBeLessThan(1024 - 20);
+  });
+
+  it("puts the policy first when the charset is not the first child", () => {
+    const { html } = add('<html><head><title>t</title><meta charSet="utf-8"/></head></html>', null);
+    expect(html).toMatch(/<head><meta http-equiv="Content-Security-Policy"/);
   });
 
   it("refuses a page without a head", () => {

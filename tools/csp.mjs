@@ -50,6 +50,7 @@ export function formOriginOf(raw) {
 const SCRIPT = /<script\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
 const HAS_SRC = /(?:^|\s)src\s*=/i;
 const CSP_META = /<meta http-equiv="Content-Security-Policy"[^>]*>/gi;
+const CHARSET_META = /^<meta\s+charset=[^>]*>/i;
 
 /** The text of every inline script in `html`, in order. */
 export function inlineScripts(html) {
@@ -57,8 +58,10 @@ export function inlineScripts(html) {
 }
 
 /**
- * `html` with the page's CSP meta as the first child of <head> (an earlier one is replaced, so running twice
- * changes nothing). Returns the new html and the distinct hashes it allows.
+ * `html` with the page's CSP meta in <head>: right after the `<meta charset>` when that is the first child (the browser
+ * finds the charset only in the first 1024 bytes, and a long policy would push it out), else first. Either way it comes
+ * before every script. An earlier policy is replaced, so running twice changes nothing. Returns the new html and the
+ * distinct hashes it allows.
  */
 export function withCsp(html, formOrigin) {
   const bare = html.replace(CSP_META, "");
@@ -66,6 +69,8 @@ export function withCsp(html, formOrigin) {
   const meta = `<meta http-equiv="Content-Security-Policy" content="${buildCsp({ scriptHashes, formOrigin })}"/>`;
   const head = /<head\b[^>]*>/i.exec(bare);
   if (!head) throw new Error("withCsp: no <head> in the page");
-  const at = head.index + head[0].length;
+  const start = head.index + head[0].length;
+  const charset = CHARSET_META.exec(bare.slice(start));
+  const at = start + (charset ? charset[0].length : 0);
   return { html: bare.slice(0, at) + meta + bare.slice(at), scriptHashes };
 }

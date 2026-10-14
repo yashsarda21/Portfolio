@@ -32,15 +32,19 @@ async function watch(page: Page) {
 
 const violations = (page: Page) => page.evaluate(() => (window as unknown as CspWindow).__csp);
 
-/** Nothing was blocked, said, or reported; and the policy is still the first thing in <head>. */
+/** Nothing was blocked, said, or reported; and the policy is still right after the charset at the top of <head>. */
 async function expectClean(page: Page, messages: string[], at: string) {
   expect(await violations(page), `${at}: securitypolicyviolation events`).toEqual([]);
   expect(messages, `${at}: console messages`).toEqual([]);
-  const first = await page.evaluate(() => {
-    const el = document.head.firstElementChild;
-    return el?.getAttribute("http-equiv") ?? el?.tagName;
-  });
-  expect(first, `${at}: the first element of <head>`).toBe("Content-Security-Policy");
+  const [first, second] = await page.evaluate(() =>
+    [...document.head.children]
+      .slice(0, 2)
+      .map((el) => el.getAttribute("http-equiv") ?? el.getAttribute("charset")),
+  );
+  expect(first, `${at}: the first element of <head> (the charset)`).toBe("utf-8");
+  expect(second, `${at}: the second element of <head> (the policy)`).toBe(
+    "Content-Security-Policy",
+  );
 }
 
 /** Where a page opens the mail app: the page's `window.open` is a stand-in, so no real mail app is started. */
@@ -85,11 +89,15 @@ test.describe("every page, as served", () => {
     ["attributes", ROUTES.attributes],
     ["404", ROUTES.notFound],
   ] as const) {
-    test(`${name} (${path}) is sent with the policy as the first thing in <head>`, async ({
+    test(`${name} (${path}) is sent with the charset first and the policy next in <head>`, async ({
       request,
     }) => {
       const html = await (await request.get(path)).text();
-      expect(html).toMatch(/<head[^>]*>\s*<meta http-equiv="Content-Security-Policy" content="/);
+      expect(html).toMatch(
+        /<head[^>]*>\s*<meta charSet="utf-8"\/>\s*<meta http-equiv="Content-Security-Policy" content="/,
+      );
+      // The browser finds the charset only in the first 1024 bytes of the file.
+      expect(html.indexOf('charSet="utf-8"')).toBeLessThan(1024 - 20);
       expect(html.split(CSP_META)).toHaveLength(2);
       const policy = /content="([^"]*)"/.exec(html.slice(html.indexOf(CSP_META)))![1]!;
       expect(policy).toContain("default-src 'self'");
