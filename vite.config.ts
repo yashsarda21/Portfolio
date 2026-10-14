@@ -23,4 +23,9 @@ export default defineConfig({
   plugins: [contentCheck(), tailwindcss(), reactRouter()],
   resolve: { tsconfigPaths: true },
   define: buildDefine,
+  build: {
+    // The page policy allows fonts from the site only (font-src 'self'), so Vite must not inline a small font
+    // into the CSS as a data: URL. Every other small asset keeps Vite's default.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf|eot)$/i.test(file) ? false : undefined),
+  },
 });
