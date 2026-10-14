@@ -9,10 +9,12 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildEnv } from "./buildEnv.mjs";
 import { formOriginOf, withCsp } from "./csp.mjs";
 import { notFoundFile } from "./notfound.mjs";
 
-const CLIENT = join(resolve(dirname(fileURLToPath(import.meta.url)), ".."), "build/client");
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const CLIENT = join(ROOT, "build/client");
 
 writeFileSync(
   join(CLIENT, "404.html"),
@@ -31,7 +33,7 @@ function htmlFiles(dir) {
   });
 }
 
-const formOrigin = formOriginOf(process.env.VITE_FORM_ENDPOINT);
+const formOrigin = formOriginOf(buildEnv(ROOT).VITE_FORM_ENDPOINT);
 const pages = htmlFiles(CLIENT);
 const distinct = new Set();
 for (const page of pages) {
