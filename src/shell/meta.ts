@@ -1,4 +1,4 @@
-import { ui, type RouteKey } from "@/content";
+import { content, ui, type RouteKey } from "@/content";
 import { siteUrl } from "./config";
 import { ROUTES } from "./routes";
 import { absoluteUrl } from "./seo";
@@ -14,6 +14,9 @@ interface PageMetaOptions {
 
 /** The share image (public/og.png): 1200x630. */
 const SHARE_IMAGE = { path: "/og.png", width: 1200, height: 630 } as const;
+
+/** The share image's alt text: who and what the picture shows, from the content and the brand (P4). */
+const shareAlt = () => `${content.player.name}, ${content.player.title} — ${ui.brand.siteName}`;
 
 /** <title>, description, Open Graph and Twitter tags for a route (spec §4.5). */
 export function pageMeta(key: RouteKey, opts: PageMetaOptions = {}, base: string | null = siteUrl) {
@@ -39,7 +42,7 @@ export function pageMeta(key: RouteKey, opts: PageMetaOptions = {}, base: string
       { property: "og:image", content: imageUrl },
       { property: "og:image:width", content: String(SHARE_IMAGE.width) },
       { property: "og:image:height", content: String(SHARE_IMAGE.height) },
-      { property: "og:image:alt", content: ui.shareAlt },
+      { property: "og:image:alt", content: shareAlt() },
     );
   }
   if (opts.noindex) tags.push({ name: "robots", content: "noindex" });

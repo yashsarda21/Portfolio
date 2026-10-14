@@ -144,7 +144,7 @@ export function ContentPage({
                 as={ArenaLink}
                 to={ROUTES.arena}
                 mark={ui.brand.mark}
-                hubLabel={ui.placeholder.hub}
+                hubLabel={ui.breadcrumb.hub}
                 label={ui.pages.breadcrumb}
                 trail={[...trail, heading]}
               />

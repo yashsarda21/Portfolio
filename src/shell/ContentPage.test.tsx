@@ -91,7 +91,7 @@ describe("ContentPage", () => {
     setup();
     const crumbs = screen.getByRole("navigation", { name: ui.pages.breadcrumb });
     expect(
-      within(crumbs).getByRole("link", { name: new RegExp(ui.placeholder.hub) }),
+      within(crumbs).getByRole("link", { name: new RegExp(ui.breadcrumb.hub) }),
     ).toHaveAttribute("href", ROUTES.arena);
     expect(within(crumbs).getByText(ui.venues.cricket)).toBeInTheDocument();
     expect(within(crumbs).getByText(ui.routes.career.heading)).toHaveAttribute(

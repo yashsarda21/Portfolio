@@ -1,6 +1,10 @@
 /** The record, split so the Intro board's cell can show label and value apart while `career` says it once. */
 const RECORD = { label: "RECORD", value: "99 – 1" } as const;
 
+/** Said in more than one place, so said once. */
+const HUB = "HUB";
+const BACK_TO_HUB = "BACK TO THE HUB";
+
 /** Interface copy that is not resume data (spec §6). Screens never hard-code strings. */
 export const ui = {
   brand: { mark: "YS", wordmark: "THE ARENA", siteName: "The Arena" },
@@ -179,17 +183,15 @@ export const ui = {
   comm: { tag: "COMM" },
   audio: { name: "Crowd audio", label: "CROWD", labelPhone: "SOUND", on: "ON", off: "OFF" },
   /** The hub's short name in the breadcrumb. */
-  placeholder: {
-    hub: "HUB",
+  breadcrumb: {
+    hub: HUB,
   },
   /** P6: the OUT OF BOUNDS page (derived, §12 404 row). The heading and description are ui.routes.notFound's. */
   notFound: {
     tried: "You tried",
-    hub: "BACK TO THE HUB",
+    hub: BACK_TO_HUB,
     home: "HOME",
   },
-  /** P4: the share image's alt text. */
-  shareAlt: "Yash Sarda, Software Engineer — The Arena",
   landing: {
     live: "LIVE · THE ARENA",
     player: "PLAYER 01 / 01",
@@ -446,9 +448,9 @@ export const ui = {
     /** The phone's SKIP chip: the long "SKIP TO …" is its accessible name (derived). */
     skipShort: "SKIP",
     /** The breadcrumb's first step, back to the Hub (derived). */
-    hubLabel: "HUB",
+    hubLabel: HUB,
     /** The column's quiet third link at the end of a game, where the desktop has the breadcrumb (derived, m-8). */
-    backToHub: "BACK TO THE HUB",
+    backToHub: BACK_TO_HUB,
     cricket: {
       headline: "3 BALLS. ONE BATTER WHO HATES GETTING OUT.",
       how: "Release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.",

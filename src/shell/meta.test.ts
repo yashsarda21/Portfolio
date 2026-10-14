@@ -45,7 +45,9 @@ describe("pageMeta", () => {
       expect(find(tags, "property", "og:image")?.content).toBe("https://a.example/og.png");
       expect(find(tags, "property", "og:image:width")?.content).toBe("1200");
       expect(find(tags, "property", "og:image:height")?.content).toBe("630");
-      expect(find(tags, "property", "og:image:alt")?.content).toBe(ui.shareAlt);
+      expect(find(tags, "property", "og:image:alt")?.content).toBe(
+        "Yash Sarda, Software Engineer — The Arena",
+      );
       expect(find(tags, "name", "twitter:card")?.content).toBe("summary_large_image");
     });
 
