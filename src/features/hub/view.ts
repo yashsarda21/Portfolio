@@ -1,5 +1,5 @@
 import type { Content, UiCopy } from "@/content";
-import { VENUES, type MatchRecordData, type Venue } from "@/shell/matchRecord";
+import { VENUES, matchdayComplete, type MatchRecordData, type Venue } from "@/shell/matchRecord";
 import type { ROUTES } from "@/shell/routes";
 
 export type HubRecord = Pick<
@@ -38,7 +38,7 @@ export type IndexKey =
   | "card"
   | "teamUp"
   | "scout"
-  | "lockerRoom";
+  | "fullTime";
 export interface HubIndexLink {
   key: IndexKey;
   label: string;
@@ -63,7 +63,8 @@ export interface HubView {
   fixtures: string;
   venues: HubVenue[];
   index: { label: string; title: string; links: HubIndexLink[] };
-  achievements: { label: string; text: string };
+  /** The rail's bottom box (F8): waits for all three venues, then says the result is up. */
+  fullTime: { label: string; text: string };
   facilities: HubFacility[];
   facilitiesPhone: HubFacility[];
   comm: string;
@@ -77,8 +78,6 @@ export interface HubView {
 
 const SCENES = { cricket: "turf", tennis: "court", badminton: "hall" } as const;
 const SKIP_TO = { cricket: "career", tennis: "highlights", badminton: "attributes" } as const;
-/** The only hidden achievement so far (H8). */
-const ACHIEVEMENTS = ["giant-killer"] as const;
 /** The academy is a section of the trophies page. */
 const ACADEMY = { route: "trophies", hash: "academy" } as const;
 type Target = keyof typeof ROUTES | typeof ACADEMY;
@@ -101,6 +100,7 @@ const INDEX = [
   { key: "card", seenWith: "card", to: "card" },
   { key: "teamUp", seenWith: "teamUp", to: "teamUp" },
   { key: "scout", seenWith: "scout", to: "scout" },
+  { key: "fullTime", seenWith: "fullTime", to: "fullTime" },
 ] as const;
 
 /** Everything the Hub shows, as plain words, from the content, the copy and the saved record (H3 to H8). */
@@ -157,11 +157,10 @@ export function buildHubView(
       to: target(routes, to),
     };
   };
-  const links = INDEX.map(link);
+  // Full Time is listed once the matchday is complete (F8).
+  const complete = matchdayComplete(record);
+  const links = INDEX.filter(({ key }) => key !== "fullTime" || complete).map(link);
 
-  // The visitor never beats Yash (F1): the hidden achievement stays locked.
-  const unlocked = 0;
-  const a = hub.achievements;
   const comms = [hub.comm.none, hub.comm.one, hub.comm.two, hub.comm.all];
 
   const f = hub.facilities;
@@ -193,9 +192,9 @@ export function buildHubView(
     fixtures: `${hub.matchday.fixtures} ${sep} ${done} ${hub.matchday.of} ${total} ${hub.matchday.played}`,
     venues,
     index: { label: hub.index.label, title: hub.index.title, links },
-    achievements: {
-      label: a.label,
-      text: `${unlocked} ${a.of} ${ACHIEVEMENTS.length} ${a.unlocked} ${unlocked > 0 ? a.open : a.locked}`,
+    fullTime: {
+      label: hub.fullTime.label,
+      text: complete ? hub.fullTime.done : hub.fullTime.pending,
     },
     facilities,
     facilitiesPhone: [

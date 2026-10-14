@@ -20,7 +20,7 @@ interface IndexRailProps {
   links: IndexRailLink[];
   /** Above the index (the matchday card). */
   header?: ReactNode;
-  /** Pinned to the bottom (the hidden achievements). */
+  /** Pinned to the bottom (the Hub's FULL TIME box). */
   footer?: ReactNode;
   className?: string;
 }

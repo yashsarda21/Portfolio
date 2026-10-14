@@ -135,6 +135,8 @@ export const ui = {
         message: "THE CHALLENGE",
         messagePh: "The role, the problem, or the match you want to talk about.",
       },
+      /** F10: what a visitor who has played starts with, in an empty, untouched message (derived). */
+      prefill: "Good game, Yash.",
       errors: {
         name: "Tell me who's challenging.",
         email: "That email doesn't look right.",
@@ -254,12 +256,6 @@ export const ui = {
       heading: "FULL TIME",
       phase: 6,
     },
-    giantKiller: {
-      title: "Giant Killer — The Arena",
-      description: "The rare result: you beat Yash.",
-      heading: "GIANT KILLER",
-      phase: 6,
-    },
     career: {
       title: "Career Stats — Yash Sarda",
       description:
@@ -297,12 +293,6 @@ export const ui = {
       description: "Challenge Yash: hire him, collaborate, or just say hello.",
       heading: "TEAM UP",
       phase: 2,
-    },
-    lockerRoom: {
-      title: "Locker Room — The Arena",
-      description: "The hidden room for giant killers only.",
-      heading: "THE LOCKER ROOM",
-      phase: 6,
     },
     scout: {
       title: "Scouting Report — Yash Sarda",
@@ -426,15 +416,14 @@ export const ui = {
         card: { label: "Player Card", tag: "RESUME" },
         teamUp: { label: "Team Up", tag: "CONTACT" },
         scout: { label: "Quick View", tag: "RECRUITER" },
-        lockerRoom: { label: "Locker Room", tag: "UNLOCKED" },
+        fullTime: { label: "Full Time", tag: "RESULT" }, // derived
       },
     },
-    achievements: {
-      label: "HIDDEN ACHIEVEMENTS",
-      of: "of",
-      unlocked: "unlocked.",
-      locked: "Rumour says you have to beat him.",
-      open: "Giant Killer. The Locker Room is open.",
+    /** F8: the rail's bottom box, where the artboard draws HIDDEN ACHIEVEMENTS (derived). */
+    fullTime: {
+      label: "FULL TIME",
+      pending: "The final whistle blows after all three venues.",
+      done: "Final whistle. Your result is up.",
     },
     facilities: {
       trophies: { label: "ACHIEVEMENTS", title: "TROPHY ROOM", labelPhone: "AWARDS" },
@@ -471,7 +460,7 @@ export const ui = {
     backToHub: "BACK TO THE HUB",
     cricket: {
       headline: "3 BALLS. ONE BATTER WHO HATES GETTING OUT.",
-      how: "Release when the marker hits the yorker zone. Every ball you bowl — wicket or six — unlocks an innings of my career.",
+      how: "Release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.",
       screen: "STADIUM SCREEN",
       innings: "INNINGS",
       locked: "LOCKED",

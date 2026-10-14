@@ -24,7 +24,7 @@ export const artboardView: FullTimeView = {
     eyebrow: "NOW OPEN · ONLY FOR GIANT KILLERS",
     title: "THE LOCKER ROOM",
     body: "How this arena was built, the story behind the published AI interview paper, and the system design notes I write about.",
-    cta: { label: "ENTER", to: ROUTES.lockerRoom },
+    cta: { label: "ENTER", to: "/locker-room" },
   },
   links: [
     { label: "TELL YASH YOU WON →", to: ROUTES.teamUp },

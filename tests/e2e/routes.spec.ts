@@ -46,16 +46,19 @@ for (const [, path] of entries) {
   });
 }
 
-test("unknown paths show Out of Bounds", async ({ page }) => {
-  await page.goto("/definitely-not-a-page");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.notFound.heading, {
-    ignoreCase: true,
+// F11: the win path's old pages are gone, with no redirect: the catch-all answers them.
+for (const path of ["/definitely-not-a-page", "/locker-room", "/arena/giant-killer"]) {
+  test(`unknown path shows Out of Bounds: ${path}`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.notFound.heading, {
+      ignoreCase: true,
+    });
   });
-});
+}
 
 test("focus moves to the new heading after a wipe navigation", async ({ page }) => {
-  // A page that is still a placeholder (they carry the site map).
-  await page.goto(ROUTES.lockerRoom);
+  // Out of Bounds is the one placeholder left (it carries the site map).
+  await page.goto(ROUTES.notFound);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
     .getByRole("link", { name: ui.routes.highlights.heading })
@@ -70,8 +73,8 @@ test("focus lands on the rendered heading of the landing page, not its hidden tw
   page,
 }) => {
   // "/" holds two <h1>s (desktop Scoreboard, phone/tablet column); only one is rendered per breakpoint.
-  // A page that is still a placeholder (they carry the site map).
-  await page.goto(ROUTES.lockerRoom);
+  // Out of Bounds is the one placeholder left (it carries the site map).
+  await page.goto(ROUTES.notFound);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
     .getByRole("link", { name: ui.routes.home.heading })
@@ -91,8 +94,8 @@ test("journey: Landing → Quick View", async ({ page }, testInfo) => {
 
 test("reduced motion navigates without the wipe", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  // A page that is still a placeholder (they carry the site map).
-  await page.goto(ROUTES.lockerRoom);
+  // Out of Bounds is the one placeholder left (it carries the site map).
+  await page.goto(ROUTES.notFound);
   await page
     .getByRole("navigation", { name: ui.placeholder.siteMap })
     .getByRole("link", { name: ui.routes.scout.navLabel })

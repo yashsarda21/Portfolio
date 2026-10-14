@@ -39,20 +39,25 @@ const ARTBOARD = {
   venuesPlayed: ["cricket"],
   lastScores: { cricket: "14* NOT OUT" },
   sectionsSeen: ["career"],
-  record: { yash: 1, you: 0 },
-  achievements: [],
-  lockerRoomUnlocked: false,
-  teamUpPrefill: null,
+  yashWins: 1,
 };
-/** After a win: the Locker Room is listed (the rail's longest state). */
-const UNLOCKED = {
+/** After the full matchday: Full Time is listed (the rail's longest state). */
+const DONE = {
   ...ARTBOARD,
   venuesPlayed: ["cricket", "tennis", "badminton"],
-  lastScores: { cricket: "14* NOT OUT", tennis: "WON 2-1", badminton: "WON 15-9" },
+  lastScores: { cricket: "14* NOT OUT", tennis: "GAME YASH", badminton: "GAME YASH" },
   sectionsSeen: ["career", "highlights", "attributes", "trophies", "card", "teamUp", "scout"],
+  yashWins: 3,
+};
+/** A record saved by Phase 5, with the win path still in it (Review Focus 1). */
+const PHASE_5 = {
+  ...DONE,
+  yashWins: undefined,
   record: { yash: 2, you: 1 },
   achievements: ["giant-killer"],
   lockerRoomUnlocked: true,
+  teamUpPrefill: "I beat you.",
+  sectionsSeen: [...DONE.sectionsSeen, "lockerRoom"],
 };
 
 const rail = (page: Page) => page.locator("aside");
@@ -107,6 +112,8 @@ test.describe("desktop hub", () => {
         "record chip": recordChip(page),
         // The index adds QUICK VIEW (spec §11.3, H6): a row the artboard does not draw.
         "quick view index row": rail(page).getByRole("link", { name: /Quick View/ }),
+        // F8: the rail's bottom box says FULL TIME where the artboard says HIDDEN ACHIEVEMENTS (new words).
+        "full time box": rail(page).getByText(hub.fullTime.label, { exact: true }).locator(".."),
       };
       for (const [name, locator] of Object.entries(masks))
         console.log(`[mask] ${name} ${JSON.stringify(await locator.boundingBox())}`);
@@ -147,6 +154,32 @@ test.describe("desktop hub", () => {
     await expect(rail(page).getByRole("link", { name: /Player Attributes/ })).not.toContainText(
       hub.index.seen,
     );
+  });
+
+  test("the rail's FULL TIME box waits for all three venues, then says the result is up (F8)", async ({
+    page,
+  }) => {
+    await seed(page, ARTBOARD);
+    await page.goto("/arena");
+    await waitForHydration(page);
+    const box = rail(page).getByText(hub.fullTime.label, { exact: true }).locator("..");
+    await expect(box).toContainText(hub.fullTime.pending);
+    await expect(rail(page).getByRole("link", { name: /Full Time/ })).toHaveCount(0);
+  });
+
+  test("a record saved by Phase 5 reads as Yash's wins against YOU 0, with Full Time and no Locker Room", async ({
+    page,
+  }) => {
+    const errors = watchErrors(page);
+    await seed(page, PHASE_5);
+    await page.goto("/arena");
+    await waitForHydration(page);
+    await expect(recordChip(page)).toHaveText(`${ui.record.yours}YASH 2 · YOU 0`);
+    const full = rail(page).getByRole("link", { name: /Full Time/ });
+    await expect(full).toHaveAttribute("href", "/arena/full-time");
+    await expect(rail(page).getByRole("link", { name: /Locker Room/ })).toHaveCount(0);
+    await expect(rail(page)).toContainText(hub.fullTime.done);
+    expect(errors).toEqual([]);
   });
 
   test.describe("odd saved records read as a fresh visitor", () => {
@@ -464,7 +497,7 @@ test.describe("desktop hub", () => {
             for (const text of labels) out.push(measure(text, leaf(text, aside)));
             return out;
           },
-          { labels: [hub.matchday.label, hub.index.title, hub.achievements.label] },
+          { labels: [hub.matchday.label, hub.index.title, hub.fullTime.label] },
         );
         expect(lines).toHaveLength(9);
         for (const row of lines) {
@@ -482,11 +515,11 @@ test.describe("desktop hub", () => {
       test(`${width}x${height}: one-line card meta, the whole rail inside its box, nothing past the stage`, async ({
         page,
       }) => {
-        await seed(page, UNLOCKED);
+        await seed(page, DONE);
         await page.setViewportSize({ width, height });
         await page.goto("/arena");
         await waitForHydration(page);
-        await expect(rail(page).getByRole("link", { name: /Locker Room/ })).toBeVisible();
+        await expect(rail(page).getByRole("link", { name: /Full Time/ })).toBeVisible();
         const result = await page.evaluate(() => {
           const stage = document.querySelector("[data-stage]")!.getBoundingClientRect();
           // The meta rows: the venue number and the status, side by side.

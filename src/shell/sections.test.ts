@@ -11,7 +11,6 @@ describe("sectionForPath", () => {
     ["/team-up", "teamUp"],
     ["/scout", "scout"],
     ["/arena/full-time", "fullTime"],
-    ["/locker-room", "lockerRoom"],
     ["/career/", "career"],
   ])("%s is %s", (path, key) => expect(sectionForPath(path)).toBe(key));
   it.each(["/", "/intro", "/arena", "/arena/cricket", "/careers", "/404"])(

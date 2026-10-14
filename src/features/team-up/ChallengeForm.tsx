@@ -1,9 +1,11 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Button, Fieldset, RadioCard, Text, TextArea, TextField } from "@/design-system";
 import { useCopyText } from "@/lib/useCopyText";
+import { useMatchRecord, useRecordReady } from "@/shell/matchRecord";
 import {
   HONEYPOT_NAME,
   messageText,
+  prefillMessage,
   submitChallenge,
   validate,
   type ChallengeValues,
@@ -51,10 +53,22 @@ export function ChallengeForm({
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+  // F10: a visitor who has played starts with "Good game, Yash." once their record is in, unless they have touched the field.
+  const played = useMatchRecord((s) => s.venuesPlayed.length > 0);
+  const recordReady = useRecordReady();
+  const messageTouched = useRef(false);
 
   useEffect(() => {
     if (focusName) nameRef.current?.focus();
   }, [focusName]);
+
+  useEffect(() => {
+    if (!recordReady) return;
+    setValues((v) => {
+      const message = prefillMessage(v.message, messageTouched.current, played, view.prefill);
+      return message === v.message ? v : { ...v, message };
+    });
+  }, [recordReady, played, view.prefill]);
 
   const sending = phase === "sending";
   const mailto = phase === "mailto";
@@ -71,8 +85,10 @@ export function ChallengeForm({
     }
   };
   const onText =
-    (key: Field | "website") => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    (key: Field | "website") => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (key === "message") messageTouched.current = true;
       set({ [key]: e.target.value });
+    };
 
   const formatTitle = () => view.formats.options.find((o) => o.id === values.format)!.title;
 

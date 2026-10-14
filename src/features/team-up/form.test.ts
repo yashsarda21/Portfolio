@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { ui } from "@/content";
-import { buildMailto, messageText, submitChallenge, validate, type ChallengeValues } from "./form";
+import {
+  buildMailto,
+  messageText,
+  prefillMessage,
+  submitChallenge,
+  validate,
+  type ChallengeValues,
+} from "./form";
 
 const errors = ui.pages.teamUp.errors;
 const valid: ChallengeValues = {
@@ -179,4 +186,16 @@ describe("submitChallenge", () => {
     });
     await expect(submitChallenge(valid, d)).resolves.toBe("error");
   });
+});
+
+describe("prefillMessage (F10)", () => {
+  const prefill = "Good game, Yash.";
+  it("fills an empty, untouched message for a visitor who has played", () =>
+    expect(prefillMessage("", false, true, prefill)).toBe(prefill));
+  it("leaves it empty for a visitor who has not played", () =>
+    expect(prefillMessage("", false, false, prefill)).toBe(""));
+  it("leaves it empty once the visitor has touched it (they cleared it)", () =>
+    expect(prefillMessage("", true, true, prefill)).toBe(""));
+  it("keeps typed text", () =>
+    expect(prefillMessage("Hiring a SWE", false, true, prefill)).toBe("Hiring a SWE"));
 });

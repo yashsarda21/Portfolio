@@ -61,6 +61,7 @@ describe("buildTeamUpView", () => {
     expect(view.fields.email.label).toBe("EMAIL");
     expect(view.fields.message.label).toBe("THE CHALLENGE");
     expect(view.errors).toEqual(ui.pages.teamUp.errors);
+    expect(view.prefill).toBe("Good game, Yash.");
     expect([view.send, view.sending, view.error]).toEqual([
       "SEND CHALLENGE",
       "SENDING…",

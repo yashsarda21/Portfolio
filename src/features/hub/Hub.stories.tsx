@@ -108,7 +108,7 @@ export const PhoneFresh: StoryObj = {
   render: () => <HubPage view={fresh} />,
 };
 
-/** The index drawer open on a phone: the record chip, the matchday card, the full index, the achievements. */
+/** The index drawer open on a phone: the record chip, the matchday card, the full index, the FULL TIME box. */
 export const PhoneDrawerOpen: StoryObj = {
   parameters: { route: ROUTES.arena },
   render: () => <HubPage view={artboardHubView} />,

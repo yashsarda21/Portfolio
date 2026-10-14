@@ -10,9 +10,9 @@ interface HubIndexProps {
   onNavigate?: () => void;
 }
 
-/** The Hub's rail content: the matchday card, the full index, the hidden achievements. Shared by the stage rail and the drawer. */
+/** The Hub's rail content: the matchday card, the full index, the FULL TIME box. Shared by the stage rail and the drawer. */
 export function HubIndex({ view, inDrawer = false, onNavigate }: HubIndexProps) {
-  const { matchday, index, achievements, record } = view;
+  const { matchday, index, fullTime, record } = view;
   return (
     <IndexRail
       label={index.label}
@@ -37,9 +37,9 @@ export function HubIndex({ view, inDrawer = false, onNavigate }: HubIndexProps) 
         </>
       }
       footer={
-        <RailSection label={achievements.label}>
+        <RailSection label={fullTime.label}>
           <Text as="p" variant="body-sm" tone="secondary" leading="font">
-            {achievements.text}
+            {fullTime.text}
           </Text>
         </RailSection>
       }

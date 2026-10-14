@@ -20,6 +20,7 @@ export const artboardTeamUpView: TeamUpView = {
       placeholder: "The role, the problem, or the match you want to talk about.",
     },
   },
+  prefill: "Good game, Yash.",
   errors: {
     name: "Tell me who's challenging.",
     email: "That email doesn't look right.",

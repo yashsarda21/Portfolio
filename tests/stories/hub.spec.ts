@@ -86,10 +86,19 @@ test.describe("Hub page (1440 x 900)", () => {
     test.skip(testInfo.project.name !== "desktop", "Hub is a 1440×900 board");
     await page.goto(story("features-hub--artboard-parity"));
     await page.locator("#storybook-root [data-stage]").waitFor();
+    // F8: the rail's bottom box says FULL TIME where the artboard says HIDDEN ACHIEVEMENTS (new words); Task 5 copies this.
+    const fullTimeBox = page
+      .locator("[data-stage]")
+      .getByText("FULL TIME", { exact: true })
+      .locator("..");
+    console.log(`[mask] full time box ${JSON.stringify(await fullTimeBox.boundingBox())}`);
     const ratio = await expectMatchesArtboard(page, "Hub", {
       maxDiffRatio: 0.02,
       // The chip says YOUR RECORD (spec §11.2 #11, H3): the artboard's says RECORD, so ours is wider.
-      mask: [page.locator("[data-stage]").getByText("YOUR RECORD", { exact: true }).locator("..")],
+      mask: [
+        page.locator("[data-stage]").getByText("YOUR RECORD", { exact: true }).locator(".."),
+        fullTimeBox,
+      ],
       maskRects: [
         // The index adds QUICK VIEW (spec §11.3, H6), a row the artboard does not draw.
         { x: 55, y: 566, width: 198, height: 46 },

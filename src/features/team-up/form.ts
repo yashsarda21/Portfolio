@@ -31,6 +31,16 @@ export function validate(
   return errors;
 }
 
+/** F10: the message a visitor who has played starts with; only ever into an empty, untouched field. */
+export function prefillMessage(
+  current: string,
+  touched: boolean,
+  played: boolean,
+  prefill: string,
+): string {
+  return !touched && played && current === "" ? prefill : current;
+}
+
 /** The challenge written out as an email: its subject and body. */
 export function buildMessage(v: ChallengeValues, formatTitle: string) {
   const name = v.name.trim();

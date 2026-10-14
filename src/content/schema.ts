@@ -210,7 +210,6 @@ export const ContentSchema = z.strictObject({
     reveal: Lines,
     closeCall: Lines,
     yashWins: Lines,
-    visitorWins: Lines,
     intro: Lines,
   }),
 });

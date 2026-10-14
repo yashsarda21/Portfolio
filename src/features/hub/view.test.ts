@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
+import type { Venue } from "@/shell/matchRecord";
 import { buildHubView, hubHint, type HubRecord } from "./view";
 
 const fresh: HubRecord = {
@@ -59,7 +60,6 @@ describe("buildHubView", () => {
       ["Team Up", "CONTACT", false],
       ["Quick View", "RECRUITER", false],
     ]);
-    expect(v.achievements.text).toBe("0 of 1 unlocked. Rumour says you have to beat him.");
   });
   it("a fresh visitor: nothing played, the opening line", () => {
     const v = view(fresh);
@@ -93,11 +93,24 @@ describe("buildHubView", () => {
     expect(show(false, true)).toBe("DRAG TO ORBIT");
     expect(show(true, true)).toBe("");
   });
-  it("the Locker Room is never listed, and the record reads Yash's wins against YOU 0", () => {
-    const v = view({ ...artboard, yashWins: 5, sectionsSeen: ["lockerRoom"] });
-    expect(v.index.links.map((l) => l.label)).not.toContain("Locker Room");
-    expect(v.record.value).toBe("YASH 5 · YOU 0");
-    expect(v.achievements.text).toBe("0 of 1 unlocked. Rumour says you have to beat him.");
+  it("the rail's FULL TIME box waits for all three venues, then says the result is up (F8)", () => {
+    const some = view({ ...fresh, venuesPlayed: ["cricket"] });
+    expect(some.fullTime).toEqual({ label: "FULL TIME", text: ui.hub.fullTime.pending });
+    const all = view({ ...fresh, venuesPlayed: ["cricket", "tennis", "badminton"] });
+    expect(all.fullTime.text).toBe(ui.hub.fullTime.done);
+  });
+
+  it("lists Full Time in the index once the matchday is complete, SEEN once opened (F8)", () => {
+    const keys = (r: HubRecord) => view(r).index.links.map((l) => l.key);
+    expect(keys({ ...fresh, venuesPlayed: ["cricket", "tennis"] })).not.toContain("fullTime");
+    const done = { ...fresh, venuesPlayed: ["cricket", "tennis", "badminton"] as Venue[] };
+    expect(keys(done).at(-1)).toBe("fullTime");
+    const link = view({ ...done, sectionsSeen: ["fullTime"] }).index.links.at(-1)!;
+    expect(link).toMatchObject({ to: "/arena/full-time", tag: ui.hub.index.seen, seen: true });
+  });
+
+  it("the record chip always reads YOU 0", () => {
+    expect(view({ ...fresh, yashWins: 4 }).record.value).toBe("YASH 4 · YOU 0");
   });
   it("Training Academy is seen with the trophy room and links to its section", () => {
     const v = view({ ...fresh, sectionsSeen: ["trophies"] });

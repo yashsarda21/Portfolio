@@ -168,9 +168,7 @@ test("perfect play still loses: SEE THE FULL SCORECARD, no claim, and the Hub li
 
   await backToHub(page, phone);
   const index = await openIndex(page, phone);
-  await expect(
-    index.getByRole("link", { name: new RegExp(ui.hub.index.links.lockerRoom.label) }),
-  ).toHaveCount(0);
+  await expect(index.getByRole("link", { name: /Locker Room/ })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

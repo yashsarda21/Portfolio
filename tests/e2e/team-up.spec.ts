@@ -134,6 +134,40 @@ test.describe("page", () => {
   });
 });
 
+test.describe("Good game, Yash. (F10)", () => {
+  const PLAYED = { venuesPlayed: ["cricket"], lastScores: { cricket: "14* NOT OUT" } };
+  const seedRecord = (page: Page, state: object) =>
+    page.addInitScript((value) => {
+      localStorage.setItem("arena:v1", JSON.stringify({ state: value, version: 1 }));
+    }, state);
+
+  test("a visitor who has played starts with the line in the message", async ({ page }) => {
+    await seedRecord(page, PLAYED);
+    await page.goto(ROUTES.teamUp);
+    await waitForHydration(page);
+    await expect(messageField(page)).toHaveValue(t.prefill);
+  });
+
+  test("a visitor who has not played gets an empty message", async ({ page }) => {
+    await page.goto(ROUTES.teamUp);
+    await waitForHydration(page);
+    await expect(nameField(page)).toBeVisible();
+    await expect(messageField(page)).toHaveValue("");
+  });
+
+  test("clearing the field and leaving it does not bring the line back", async ({ page }) => {
+    await seedRecord(page, PLAYED);
+    await page.goto(ROUTES.teamUp);
+    await waitForHydration(page);
+    await expect(messageField(page)).toHaveValue(t.prefill);
+    await messageField(page).fill("");
+    await messageField(page).blur();
+    await nameField(page).focus();
+    await page.waitForTimeout(300);
+    await expect(messageField(page)).toHaveValue("");
+  });
+});
+
 test.describe("checking the form", () => {
   test("sending it empty shows three errors, each linked to its field, and the cursor goes to the first", async ({
     page,

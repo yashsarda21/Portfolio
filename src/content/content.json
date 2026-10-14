@@ -326,7 +326,6 @@
     "reveal": ["Another project shipped.", "Career high score updated."],
     "closeCall": ["Match point.", "Close. Not close enough."],
     "yashWins": ["Still undefeated.", "Still not out.", "He doesn't like losing. Noted."],
-    "visitorWins": ["Okay… you got me. That doesn't happen often."],
     "intro": ["The player has entered the arena."]
   }
 }

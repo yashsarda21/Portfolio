@@ -16,6 +16,8 @@ export interface TeamUpView {
   intro: string;
   formats: { legend: string; options: { id: Format; title: string; sub: string }[] };
   fields: Record<"name" | "email" | "message", { label: string; placeholder: string }>;
+  /** The message a visitor who has played starts with (F10). */
+  prefill: string;
   errors: UiCopy["pages"]["teamUp"]["errors"];
   send: string;
   sending: string;
@@ -68,6 +70,7 @@ export function buildTeamUpView(c: Content, copy: UiCopy): TeamUpView {
       email: { label: t.fields.email, placeholder: t.fields.emailPh },
       message: { label: t.fields.message, placeholder: t.fields.messagePh },
     },
+    prefill: t.prefill,
     errors: t.errors,
     send: t.send,
     sending: t.sending,
