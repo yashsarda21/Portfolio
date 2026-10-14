@@ -1,19 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
-import { MEDIA } from "@/lib/breakpoints";
-import { useMediaQuery } from "@/lib/useMediaQuery";
-import { useAudio } from "@/shell/audio";
-import { useCommentary } from "@/shell/commentary";
 import { ROUTES } from "@/shell/routes";
-import { autoRallyTimes, VERDICT_MS } from "../engine/beats";
-import type { GameLayout } from "../engine/types";
+import { autoRallyTimes } from "../engine/beats";
 import { useArrival } from "../engine/useArrival";
-import { useFlight } from "../engine/useFlight";
 import { useGameClock } from "../engine/useGameClock";
+import { useAutoRally, useGameSession } from "../engine/useGameSession";
 import { useGameKeys } from "../engine/useGameKeys";
-import { useMatchResult } from "../engine/useMatchResult";
-import { useRun } from "../engine/useRun";
-import { useTimers } from "../engine/useTimers";
 import { returnAt, serveDrawn } from "./flight";
 import {
   newServe,
@@ -41,6 +33,9 @@ interface Run {
 }
 const START: Run = { game: TENNIS_START, phase: "ready", offerHighlight: false, shot: null };
 
+const build = (game: TennisState, at: { phase: TennisPhase; offerHighlight: boolean }) =>
+  buildTennisView(content, ui, ROUTES, game, at);
+
 /**
  * The tennis route: it holds the game, runs the serve's clock, judges a pick by it and walks the phases (ready, tell,
  * toss, window, called, verdict, end). The referee decides, the view builder words it, the page draws it. One input is
@@ -50,21 +45,15 @@ const START: Run = { game: TENNIS_START, phase: "ready", offerHighlight: false, 
  * and serves again when it is visible: time spent away is never judged (G2).
  */
 export function TennisScreen() {
-  const { run, latest, commit } = useRun<Run>(START);
+  const session = useGameSession({ venue: "tennis", start: START, build });
+  // `latest` is the run as timers and handlers that were made before the last render must read it.
+  const { run, latest, commit, view, timers, flight, live, desktop, reduced, layout, say } =
+    session;
   const root = useRef<HTMLElement>(null);
   const balls = {
     stage: useRef<SVGCircleElement>(null),
     column: useRef<SVGCircleElement>(null),
   };
-  const flight = useFlight();
-
-  const desktop = useMediaQuery(MEDIA.lg);
-  const reduced = useMediaQuery(MEDIA.reducedMotion);
-  const layout: GameLayout = desktop ? "stage" : "column";
-  const audio = useAudio();
-  const { say } = useCommentary();
-  const timers = useTimers();
-  const { save } = useMatchResult("tennis");
 
   // The serve in play: when the window opened on the game clock, and how long it is (the layout it began in).
   const hitAt = useRef<number | null>(null);
@@ -74,21 +63,6 @@ export function TennisScreen() {
     value: (t) => serveDrawn(t, hitAt.current, serve.current.windowMs),
     running: LIVE_PHASES.includes(run.phase) && !reduced,
   });
-
-  // What the timers and the ball in the air need when they fire: this render's, not the one they were made in.
-  const live = useRef({ desktop, audio, say, save, layout, reduced });
-  useEffect(() => {
-    live.current = { desktop, audio, say, save, layout, reduced };
-  });
-
-  const view = useMemo(
-    () =>
-      buildTennisView(content, ui, ROUTES, run.game, {
-        phase: run.phase,
-        offerHighlight: run.offerHighlight,
-      }),
-    [run],
-  );
 
   /** The tracers read their reveal from variables on the root: put them back to nothing drawn. */
   const clearLines = () => {
@@ -116,10 +90,7 @@ export function TennisScreen() {
   /** A return has been judged: the call, what it unlocked, the sound and the line; the game's end is saved at once (G8). */
   const land = (next: TennisState, side: Side | null) => {
     const over = tennisOver(next);
-    const after = buildTennisView(content, ui, ROUTES, next, {
-      phase: "called",
-      offerHighlight: false,
-    });
+    const after = build(next, { phase: "called", offerHighlight: false });
     const last = next.returns.at(-1);
     const now = live.current;
     if (last && last.q !== "miss") now.audio.play("net");
@@ -132,9 +103,7 @@ export function TennisScreen() {
       timers.after(TENNIS_BEATS.callMs, beginServe);
       return;
     }
-    const { offerHighlight } = now.save({ score: after.saved, winner: tennisWinner(next)! });
-    commit({ game: next, phase: "verdict", offerHighlight, shot: side });
-    timers.after(VERDICT_MS, () => commit({ phase: "end" }));
+    session.finish(next, tennisWinner(next)!, after.saved, { shot: side });
   };
 
   /** The window is over and nobody picked: Yash's serve was an ace. */
@@ -198,20 +167,16 @@ export function TennisScreen() {
   };
 
   /** The first serve, a beat after arriving or after a rematch. */
-  const startPlay = () => {
-    if (live.current.reduced) playRally();
-    else timers.after(TELL_MS, beginServe);
-  };
+  const serveFirst = () => timers.after(TELL_MS, beginServe);
 
-  const again = () => {
-    timers.clear();
-    flight.stop();
-    hitAt.current = null;
-    clearLines();
-    commit(START);
-    if (desktop) say(content.commentary.entrance[0]!, { interrupt: true });
-    startPlay();
-  };
+  const again = () =>
+    session.again(() => {
+      hitAt.current = null;
+      clearLines();
+      if (desktop) say(content.commentary.entrance[0]!, { interrupt: true });
+      if (live.current.reduced) playRally();
+      else serveFirst();
+    });
 
   useGameKeys(
     { down: { ArrowLeft: () => judge("left"), ArrowRight: () => judge("right") } },
@@ -222,16 +187,7 @@ export function TennisScreen() {
   useArrival({ line: content.commentary.entrance[0]!, spoken: desktop, reduced });
 
   // The game starts on arrival, and again when the setting changes. Leaving ends it (and any ball in the air).
-  useEffect(() => {
-    startPlay();
-    return () => {
-      timers.clear();
-      flight.stop();
-      commit(START);
-    };
-    // The game starts when the setting is known; its handlers are the latest by ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced]);
+  useAutoRally(session, { play: playRally, otherwise: serveFirst });
 
   // G2: a hidden tab ends the serve in play and serves again when it is visible; time away is never judged.
   useEffect(() => {

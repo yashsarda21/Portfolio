@@ -5,7 +5,7 @@ import { ui } from "@/content";
 import { Button, RevealChip, ScoreBug } from "@/design-system";
 import { ROUTES } from "@/shell/routes";
 import { withShell } from "@/shell/storyDecorators";
-import { buildGameChrome } from "./chrome";
+import { buildGameChrome, buildGameEnd, type GameEndView } from "./chrome";
 import { GameAnnouncer } from "./GameAnnouncer";
 import { GameColumn } from "./GameColumn";
 import { GameEnd } from "./GameEnd";
@@ -95,37 +95,41 @@ function Shape({ caption, children }: { caption: string; children: ReactNode }) 
   );
 }
 
+/** The end of an over, as the cricket view builds it. */
+const end = (won: boolean, offerHighlight: boolean): GameEndView =>
+  buildGameEnd(ui, ROUTES, chrome, {
+    over: true,
+    won,
+    offerHighlight,
+    see: cricket.see,
+    claim: cricket.claim,
+    again: cricket.again,
+  })!;
+
 /** The end buttons: a loss, the highlight offer after the second loss, and a win; on the stage and in the column. */
 export const End: StoryObj = {
   parameters: { layout: "padded" },
   render: () => {
-    const see = { label: cricket.see, to: ROUTES.career };
-    const again = { label: cricket.again, onClick: () => {} };
-    const claim = { label: cricket.claim, to: ROUTES.giantKiller };
-    const offer = { label: ui.games.highlight, to: ROUTES.career };
-    const shapes = [
-      ["Loss", <GameEnd key="l" primary={see} again={again} size="stage" />],
-      ["Offer", <GameEnd key="o" primary={offer} again={again} size="stage" />],
-      ["Win", <GameEnd key="w" primary={null} claim={claim} size="stage" />],
-    ] as const;
-    const column = [
-      ["Loss", <GameEnd key="l" primary={see} again={again} size="column" />],
-      ["Offer", <GameEnd key="o" primary={offer} again={again} size="column" />],
-      ["Win", <GameEnd key="w" primary={null} claim={claim} size="column" />],
+    const ends = [
+      ["Loss", end(false, false)],
+      ["Offer", end(false, true)],
+      ["Win", end(true, false)],
     ] as const;
     return (
       <div className="flex flex-col gap-10 p-6">
         <div className="flex flex-col gap-8">
-          {shapes.map(([caption, node]) => (
+          {ends.map(([caption, e]) => (
             <Shape key={caption} caption={`stage · ${caption}`}>
-              {node}
+              <GameEnd end={e} onAgain={() => {}} size="stage" />
             </Shape>
           ))}
         </div>
         <div className="flex flex-wrap gap-8">
-          {column.map(([caption, node]) => (
+          {ends.map(([caption, e]) => (
             <Shape key={caption} caption={`column · ${caption}`}>
-              <div className="w-87.5">{node}</div>
+              <div className="w-87.5">
+                <GameEnd end={e} onAgain={() => {}} size="column" />
+              </div>
             </Shape>
           ))}
         </div>

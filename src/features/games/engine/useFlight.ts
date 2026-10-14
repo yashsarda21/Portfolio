@@ -15,25 +15,33 @@ interface Flight {
   done?: () => void;
 }
 
+/** How long past its own length a flight waits for GSAP before the ball lands without it. */
+const FALLBACK_MS = 1500;
+
 /**
  * The tween a game's ball flies on. GSAP is loaded on demand (never at the top of a module); `play` hands it to
  * `build`, which makes the tween and returns how to kill it. Starting another flight, `stop()`, or leaving ends the
  * one in the air, and a flight whose GSAP arrives after that is never started: nothing of it lands later.
- * If GSAP does not load, `onFail` runs (the ball still lands, only without its flight).
+ * If GSAP does not load, `onFail` runs (the ball still lands, only without its flight). A `fly` whose GSAP never
+ * settles (a stalled request) lands the same way once its length plus 1.5 s has passed, so the game is never stuck.
  */
 export function useFlight() {
-  const flight = useRef({ id: 0, kill: () => {} });
+  const flight = useRef({
+    id: 0,
+    kill: () => {},
+    fallback: undefined as ReturnType<typeof setTimeout> | undefined,
+  });
 
   const stop = () => {
     flight.current.id += 1;
+    clearTimeout(flight.current.fallback);
     flight.current.kill();
     flight.current.kill = () => {};
   };
 
   const play = (build: (gsap: typeof Gsap) => () => void, onFail?: () => void) => {
-    const id = ++flight.current.id;
-    flight.current.kill();
-    flight.current.kill = () => {};
+    stop();
+    const id = flight.current.id;
     void loadGsap()
       .then((gsap) => {
         if (id === flight.current.id) flight.current.kill = build(gsap);
@@ -44,8 +52,14 @@ export function useFlight() {
   };
 
   /** The ball's flight on the swing ease: `place` each frame, `done` at the end. If GSAP does not load, `done` still runs. */
-  const fly = ({ ms, place, start, end, done }: Flight, onFail: () => void = () => done?.()) =>
+  const fly = ({ ms, place, start, end, done }: Flight, onFail: () => void = () => done?.()) => {
+    // GSAP failing to load is the flight's end too: the fallback below must not land the ball a second time.
+    const fail = () => {
+      clearTimeout(flight.current.fallback);
+      onFail();
+    };
     play((gsap) => {
+      clearTimeout(flight.current.fallback);
       const progress = { value: 0 };
       place(0);
       start?.();
@@ -63,7 +77,15 @@ export function useFlight() {
         tween.kill();
         end?.();
       };
-    }, onFail);
+    }, fail);
+    // GSAP has not arrived in time: this flight is over (a late arrival is never started) and the ball lands.
+    const id = flight.current.id;
+    flight.current.fallback = setTimeout(() => {
+      if (id !== flight.current.id) return;
+      flight.current.id += 1;
+      onFail();
+    }, ms + FALLBACK_MS);
+  };
 
   // Leaving ends any flight in the air. `stop` is made fresh each render but only touches the ref.
   useEffect(() => stop, []);

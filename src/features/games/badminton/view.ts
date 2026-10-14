@@ -1,7 +1,13 @@
 import { getAttributeGroups, type Content, type UiCopy } from "@/content";
 import type { AttributeToastProps } from "@/design-system";
 import type { ROUTES } from "@/shell/routes";
-import { buildGameChrome, type GameChrome } from "../frame/chrome";
+import {
+  buildGameChrome,
+  buildGameEnd,
+  sentenceCase,
+  type GameChrome,
+  type GameEndView,
+} from "../frame/chrome";
 import {
   badmintonOver,
   badmintonScore,
@@ -15,7 +21,6 @@ import {
 /** Where the game is: waiting for a hold, the hold, the shuttle in the air, the call, the 2 s verdict, the end buttons. */
 export type BadmintonPhase = "ready" | "charging" | "flight" | "called" | "verdict" | "end";
 
-type Link = { label: string; to: string };
 type Tone = "volt" | "floodlight";
 
 export interface BadmintonView {
@@ -61,19 +66,14 @@ export interface BadmintonView {
   /** What a screen reader hears of the last rally: the call and what it charged. "" before rally 1. */
   announce: string;
   /** What the end offers; null while the game is still being played. */
-  end: { primary: Link | null; claim?: Link; again?: string } | null;
+  end: GameEndView | null;
   /** The result saved to the match record and shown on the Hub: "21–19" | "20–20". */
   saved: string;
   heading: string;
 }
 
-/** The route the claim goes to. */
-const CLAIM_TO = "giantKiller" as const;
 /** The calls that go your way. */
 const FOR_YOU = new Set(["perfect", "through"]);
-
-/** "ATTRIBUTE CHARGED" → "Attribute charged": the screen-reader sentence reads the copy in sentence case. */
-const sentence = (words: string) => words.charAt(0) + words.slice(1).toLowerCase();
 
 /** Everything the badminton game shows, as plain words, from the content, the copy and the game so far (G6, G7, G8). */
 export function buildBadmintonView(
@@ -116,9 +116,6 @@ export function buildBadmintonView(
   const status = over ? (state.won ? copy.status.saved : copy.status.game) : null;
   const atMatchPoint = !over && matchPoint(state);
   const calling = phase === "called" || phase === "verdict" || phase === "end";
-  const loss = offerHighlight
-    ? { label: ui.games.highlight, to: chrome.content }
-    : { label: copy.see, to: chrome.content };
 
   const comm = over
     ? state.won
@@ -173,13 +170,16 @@ export function buildBadmintonView(
     comm,
     announce:
       last && newest
-        ? `${copy.calls[last.call]} ${sentence(copy.charged)}, ${rallyName(played).toLowerCase()}: ${newest.title}, ${newest.chips.join(", ")}`
+        ? `${copy.calls[last.call]} ${sentenceCase(copy.charged)}, ${rallyName(played).toLowerCase()}: ${newest.title}, ${newest.chips.join(", ")}`
         : "",
-    end: !over
-      ? null
-      : state.won
-        ? { primary: null, claim: { label: copy.claim, to: routes[CLAIM_TO] } }
-        : { primary: loss, again: ui.hud.rematch },
+    end: buildGameEnd(ui, routes, chrome, {
+      over,
+      won: state.won,
+      offerHighlight,
+      see: copy.see,
+      claim: copy.claim,
+      again: ui.hud.rematch,
+    }),
     saved: `${score.yash}–${score.you}`,
     heading: chrome.heading,
   };

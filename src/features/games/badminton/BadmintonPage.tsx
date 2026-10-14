@@ -1,5 +1,5 @@
 import type { Ref } from "react";
-import { GameAnnouncer } from "../frame/GameAnnouncer";
+import { GamePage } from "../frame/GamePage";
 import { BadmintonColumn } from "./BadmintonColumn";
 import { BadmintonStage } from "./BadmintonStage";
 import type { BadmintonPhase, BadmintonView } from "./view";
@@ -33,8 +33,11 @@ export function BadmintonPage({
   shuttleRefs?: { stage: Ref<SVGGElement>; column: Ref<SVGGElement> };
 }) {
   return (
-    <>
-      <main id="main" ref={rootRef} data-game="" data-phase={phase}>
+    <GamePage
+      phase={phase}
+      announce={view.announce}
+      rootRef={rootRef}
+      stage={
         <BadmintonStage
           view={view}
           phase={phase}
@@ -44,6 +47,8 @@ export function BadmintonPage({
           onAgain={onAgain}
           shuttleRef={shuttleRefs?.stage}
         />
+      }
+      column={
         <BadmintonColumn
           view={view}
           phase={phase}
@@ -53,8 +58,7 @@ export function BadmintonPage({
           onAgain={onAgain}
           shuttleRef={shuttleRefs?.column}
         />
-      </main>
-      <GameAnnouncer line={view.announce} />
-    </>
+      }
+    />
   );
 }

@@ -1,6 +1,12 @@
 import { getHighlights, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
-import { buildGameChrome, type GameChrome } from "../frame/chrome";
+import {
+  buildGameChrome,
+  buildGameEnd,
+  sentenceCase,
+  type GameChrome,
+  type GameEndView,
+} from "../frame/chrome";
 import {
   SERVE_KMH,
   TENNIS_SERVES,
@@ -38,7 +44,6 @@ export interface TennisCard {
 }
 
 type Bar = "done" | "current" | "todo";
-type Link = { label: string; to: string };
 
 export interface TennisView {
   chrome: GameChrome;
@@ -79,21 +84,17 @@ export interface TennisView {
   /** What a screen reader hears of the last return: the call and what it unlocked. "" before return 1. */
   announce: string;
   /** What the end offers; null while the game is still being played. */
-  end: { primary: Link | null; claim?: Link; again?: string } | null;
+  end: GameEndView | null;
   /** The result saved to the match record and shown on the Hub: "GAME YASH" | "BROKE SERVE". */
   saved: string;
   heading: string;
 }
 
-/** The route the claim goes to. */
-const CLAIM_TO = "giantKiller" as const;
 /** The calls that go your way. */
 const FOR_YOU = new Set(["clean", "returned", "winner"]);
 /** The phases in which a serve is in play: the open side is lit and a side can be picked (before the hit it is TOO EARLY). */
 export const LIVE_PHASES: readonly TennisPhase[] = ["tell", "toss", "window"];
 
-/** "HIGHLIGHT" → "Highlight": the screen-reader sentence reads the copy in sentence case. */
-const sentence = (word: string) => word.charAt(0) + word.slice(1).toLowerCase();
 const two = (n: number) => String(n).padStart(2, "0");
 
 /** Everything the tennis game shows, as plain words, from the content, the copy and the game so far (G5, G7, G8). */
@@ -144,9 +145,6 @@ export function buildTennisView(
   const won = state.won;
   const status = won ? copy.status.broke : copy.status.game;
   const calling = phase === "called" || phase === "verdict" || phase === "end";
-  const loss = offerHighlight
-    ? { label: ui.games.highlight, to: chrome.content }
-    : { label: copy.see, to: chrome.content };
 
   const comm = !last
     ? content.commentary.entrance[0]!
@@ -221,13 +219,16 @@ export function buildTennisView(
     comm,
     announce:
       last && newest
-        ? `${copy.calls[last.call]} ${sentence(copy.highlight)} ${two(played)} ${ui.games.unlocked.toLowerCase()}: ${newest.title}, ${newest.line}`
+        ? `${copy.calls[last.call]} ${sentenceCase(copy.highlight)} ${two(played)} ${ui.games.unlocked.toLowerCase()}: ${newest.title}, ${newest.line}`
         : "",
-    end: !over
-      ? null
-      : won
-        ? { primary: null, claim: { label: copy.claim, to: routes[CLAIM_TO] } }
-        : { primary: loss, again: ui.hud.rematch },
+    end: buildGameEnd(ui, routes, chrome, {
+      over,
+      won,
+      offerHighlight,
+      see: copy.see,
+      claim: copy.claim,
+      again: ui.hud.rematch,
+    }),
     saved: status,
     heading: chrome.heading,
   };

@@ -1,10 +1,7 @@
 import { GAME_STAGE_VIEW } from "@/design-system";
+import { lerp, type Point } from "../engine/geometry";
 import type { GameLayout, Quality } from "../engine/types";
 
-interface Point {
-  x: number;
-  y: number;
-}
 type Length = "yorker" | "good" | "short" | "full";
 
 /**
@@ -63,11 +60,6 @@ export function bounceOf(layout: GameLayout, q: Quality, at: number): Point {
 
 /** Share of the flight spent reaching the bounce; the rest is the ball rising to the bat. */
 const BOUNCE_AT = 0.7;
-
-const lerp = (a: Point, b: Point, t: number): Point => ({
-  x: a.x + (b.x - a.x) * t,
-  y: a.y + (b.y - a.y) * t,
-});
 
 /** The ball's place at `progress` (0 to 1) of its flight: your hand, then the bounce, then the batter. */
 export function ballAt(layout: GameLayout, bounce: Point, progress: number): Point {

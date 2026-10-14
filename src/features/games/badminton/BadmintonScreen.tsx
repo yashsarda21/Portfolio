@@ -1,19 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
-import { MEDIA } from "@/lib/breakpoints";
-import { useMediaQuery } from "@/lib/useMediaQuery";
-import { useAudio } from "@/shell/audio";
-import { useCommentary } from "@/shell/commentary";
 import { ROUTES } from "@/shell/routes";
-import { autoRallyTimes, VERDICT_MS } from "../engine/beats";
-import type { GameLayout } from "../engine/types";
+import { autoRallyTimes } from "../engine/beats";
 import { useArrival } from "../engine/useArrival";
-import { useFlight } from "../engine/useFlight";
 import { useGameClock } from "../engine/useGameClock";
+import { useAutoRally, useGameSession } from "../engine/useGameSession";
 import { useGameKeys } from "../engine/useGameKeys";
-import { useMatchResult } from "../engine/useMatchResult";
-import { useRun } from "../engine/useRun";
-import { useTimers } from "../engine/useTimers";
 import { BadmintonPage } from "./BadmintonPage";
 import { shuttleTransform } from "./flight";
 import {
@@ -35,6 +27,9 @@ interface Run {
 }
 const START: Run = { game: BADMINTON_START_STATE, phase: "ready", offerHighlight: false };
 
+const build = (game: BadmintonState, at: { phase: BadmintonPhase; offerHighlight: boolean }) =>
+  buildBadmintonView(content, ui, ROUTES, game, at);
+
 /** The phases in which a hold can begin or end: the game is waiting for you. */
 const HOLDING: readonly BadmintonPhase[] = ["ready", "charging"];
 
@@ -50,41 +45,20 @@ const REST = powerAt(0) / 100;
  * a hidden tab and a key coming up anywhere let go at the power the meter has reached.
  */
 export function BadmintonScreen() {
-  const { run, latest, commit } = useRun<Run>(START);
+  const session = useGameSession({ venue: "badminton", start: START, build });
+  // `latest` is the run as timers and handlers that were made before the last render must read it.
+  const { run, latest, commit, view, timers, flight, live, desktop, reduced, say } = session;
   const root = useRef<HTMLElement>(null);
   const shuttles = {
     stage: useRef<SVGGElement>(null),
     column: useRef<SVGGElement>(null),
   };
-  const flight = useFlight();
 
-  const desktop = useMediaQuery(MEDIA.lg);
-  const reduced = useMediaQuery(MEDIA.reducedMotion);
-  const layout: GameLayout = desktop ? "stage" : "column";
-  const audio = useAudio();
-  const { say } = useCommentary();
-  const timers = useTimers();
-  const { save } = useMatchResult("badminton");
   const clock = useGameClock(root, {
     cssVar: "--power",
     value: (t) => powerAt(t) / 100,
     running: run.phase === "charging" && !reduced,
   });
-
-  // What the timers and the shuttle in the air need when they fire: this render's, not the one they were made in.
-  const live = useRef({ desktop, audio, say, save, layout });
-  useEffect(() => {
-    live.current = { desktop, audio, say, save, layout };
-  });
-
-  const view = useMemo(
-    () =>
-      buildBadmintonView(content, ui, ROUTES, run.game, {
-        phase: run.phase,
-        offerHighlight: run.offerHighlight,
-      }),
-    [run],
-  );
 
   /** The meter at rest, and the shuttle back where the board parks it. */
   const rest = () => {
@@ -103,10 +77,7 @@ export function BadmintonScreen() {
   /** A rally has been played: the call, what it charged, the line; the game's end is saved at once (G8). */
   const land = (next: BadmintonState) => {
     const over = badmintonOver(next);
-    const after = buildBadmintonView(content, ui, ROUTES, next, {
-      phase: "called",
-      offerHighlight: false,
-    });
+    const after = build(next, { phase: "called", offerHighlight: false });
     const now = live.current;
     if (now.desktop) now.say(after.comm, { interrupt: true });
     if (!over) {
@@ -114,9 +85,7 @@ export function BadmintonScreen() {
       timers.after(BADMINTON_BEATS.callMs, ready);
       return;
     }
-    const { offerHighlight } = now.save({ score: after.saved, winner: badmintonWinner(next)! });
-    commit({ game: next, phase: "verdict", offerHighlight });
-    timers.after(VERDICT_MS, () => commit({ phase: "end" }));
+    session.finish(next, badmintonWinner(next)!, after.saved);
   };
 
   /** The shuttle from your ring over the net to Yash's, along the arc. Nothing but transform moves. */
@@ -161,15 +130,13 @@ export function BadmintonScreen() {
     });
   };
 
-  const again = () => {
-    timers.clear();
-    flight.stop();
-    rest();
-    commit(START);
-    clock.restart();
-    if (desktop) say(ui.games.badminton.comm.start, { interrupt: true });
-    if (reduced) playGame();
-  };
+  const again = () =>
+    session.again(() => {
+      rest();
+      clock.restart();
+      if (desktop) say(ui.games.badminton.comm.start, { interrupt: true });
+      if (reduced) playGame();
+    });
 
   useGameKeys(
     { down: { " ": charge }, up: { " ": release } },
@@ -206,17 +173,7 @@ export function BadmintonScreen() {
   }, [run.phase]);
 
   // Reduced motion: the game plays itself on arrival. Leaving, or the setting changing, ends it (and any shuttle in the air).
-  useEffect(() => {
-    if (!reduced) return;
-    playGame();
-    return () => {
-      timers.clear();
-      flight.stop();
-      commit(START);
-    };
-    // The game starts when the setting turns on; its handlers are the latest by ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced]);
+  useAutoRally(session, { play: playGame, reset: rest });
 
   return (
     <BadmintonPage

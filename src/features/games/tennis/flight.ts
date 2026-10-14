@@ -1,9 +1,5 @@
+import { quad, type Point } from "../engine/geometry";
 import type { Side } from "./referee";
-
-interface Point {
-  x: number;
-  y: number;
-}
 
 /**
  * Tennis-Play's drawing space is the stage's (`GAME_STAGE_VIEW`). The column draws the same court in the same space: its
@@ -34,11 +30,7 @@ export const returnPath = (side: Side): string => {
 /** The returned ball's place at `progress` (0 to 1) along that line. */
 export function returnAt(side: Side, progress: number): Point {
   const { via, to } = RETURN[side];
-  const u = 1 - progress;
-  return {
-    x: u * u * RECEIVER.x + 2 * u * progress * via.x + progress * progress * to.x,
-    y: u * u * RECEIVER.y + 2 * u * progress * via.y + progress * progress * to.y,
-  };
+  return quad(RECEIVER, via, to, progress);
 }
 
 /** How far into its window the serve is at game time `elapsedMs`, for a window that began at `hitAt`: 0 before the hit, 1 once the window is over. */

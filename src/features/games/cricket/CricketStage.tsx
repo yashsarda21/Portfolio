@@ -133,12 +133,7 @@ export function CricketStage({
             <TimingMeter size="stage" labels={view.meter.labels} zones={view.meter.zones.stage} />
           )}
           {phase === "end" && end ? (
-            <GameEnd
-              size="stage"
-              primary={end.primary}
-              claim={end.claim}
-              again={end.again ? { label: end.again, onClick: onAgain } : undefined}
-            />
+            <GameEnd size="stage" end={end} onAgain={onAgain} />
           ) : reduced ? null : (
             <Button
               size="m"

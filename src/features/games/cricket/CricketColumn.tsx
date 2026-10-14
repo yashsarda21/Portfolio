@@ -78,12 +78,7 @@ export function CricketColumn({
       }
       thumb={
         phase === "end" && end ? (
-          <GameEnd
-            size="column"
-            primary={end.primary}
-            claim={end.claim}
-            again={end.again ? { label: end.again, onClick: onAgain } : undefined}
-          />
+          <GameEnd size="column" end={end} onAgain={onAgain} />
         ) : reduced ? null : (
           <>
             <TimingMeter size="column" zones={view.meter.zones.column} />

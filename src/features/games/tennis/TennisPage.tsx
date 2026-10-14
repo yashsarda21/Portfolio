@@ -1,5 +1,5 @@
 import type { Ref } from "react";
-import { GameAnnouncer } from "../frame/GameAnnouncer";
+import { GamePage } from "../frame/GamePage";
 import type { Side } from "./referee";
 import { TennisColumn } from "./TennisColumn";
 import { TennisStage } from "./TennisStage";
@@ -36,8 +36,11 @@ export function TennisPage({
   ballRefs?: { stage: Ref<SVGCircleElement>; column: Ref<SVGCircleElement> };
 }) {
   return (
-    <>
-      <main id="main" ref={rootRef} data-game="" data-phase={phase}>
+    <GamePage
+      phase={phase}
+      announce={view.announce}
+      rootRef={rootRef}
+      stage={
         <TennisStage
           view={view}
           phase={phase}
@@ -47,6 +50,8 @@ export function TennisPage({
           onAgain={onAgain}
           ballRef={ballRefs?.stage}
         />
+      }
+      column={
         <TennisColumn
           view={view}
           phase={phase}
@@ -56,8 +61,7 @@ export function TennisPage({
           onAgain={onAgain}
           ballRef={ballRefs?.column}
         />
-      </main>
-      <GameAnnouncer line={view.announce} />
-    </>
+      }
+    />
   );
 }

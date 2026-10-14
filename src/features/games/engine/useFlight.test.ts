@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const load = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/motion", () => ({ loadGsap: load, EASE: { swing: "swing" } }));
@@ -135,6 +135,52 @@ describe("useFlight", () => {
       const done = vi.fn();
       result.current.fly(flightOf({ done }));
       await vi.waitFor(() => expect(done).toHaveBeenCalledTimes(1));
+    });
+    describe("when GSAP never settles", () => {
+      afterEach(() => vi.useRealTimers());
+
+      it("the ball lands once, 1.5 s after the flight's own length, and a late GSAP starts nothing", async () => {
+        vi.useFakeTimers();
+        let arrive: (g: typeof gsap) => void = () => {};
+        load.mockReturnValue(new Promise((resolve) => (arrive = resolve)));
+        const { result } = renderHook(() => useFlight());
+        const done = vi.fn();
+        result.current.fly(flightOf({ done }));
+
+        vi.advanceTimersByTime(600 + 1499);
+        expect(done).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(1);
+        expect(done).toHaveBeenCalledTimes(1);
+
+        arrive(gsap);
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(tweens).toHaveLength(0);
+        vi.advanceTimersByTime(10_000);
+        expect(done).toHaveBeenCalledTimes(1);
+      });
+
+      it("a flight that did start is not landed a second time by the fallback", async () => {
+        const { result } = renderHook(() => useFlight());
+        const done = vi.fn();
+        result.current.fly(flightOf({ done }));
+        await vi.waitFor(() => expect(tweens).toHaveLength(1));
+        vi.useFakeTimers();
+        (tweens[0]!.vars.onComplete as () => void)();
+        vi.advanceTimersByTime(10_000);
+        expect(done).toHaveBeenCalledTimes(1);
+      });
+
+      it("a flight stopped before the fallback is never landed by it", () => {
+        vi.useFakeTimers();
+        load.mockReturnValue(new Promise(() => {}));
+        const { result } = renderHook(() => useFlight());
+        const done = vi.fn();
+        result.current.fly(flightOf({ done }));
+        result.current.stop();
+        vi.advanceTimersByTime(10_000);
+        expect(done).not.toHaveBeenCalled();
+      });
     });
   });
 });

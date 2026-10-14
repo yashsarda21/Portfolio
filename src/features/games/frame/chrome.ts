@@ -35,3 +35,50 @@ export function buildGameChrome(ui: UiCopy, routes: typeof ROUTES, venue: Venue)
     heading: ui.routes[venue].heading,
   };
 }
+
+type Link = { label: string; to: string };
+
+/** What a game offers when it is over: `GameEnd` draws it as it is. */
+export interface GameEndView {
+  /** The venue's page, or after the second loss the highlight (G9); null after a win. */
+  primary: Link | null;
+  /** A win: on to the Giant Killer. */
+  claim?: Link;
+  /** Play again (a loss only). */
+  again?: string;
+}
+
+/** "ATTRIBUTE CHARGED" becomes "Attribute charged": the screen-reader sentence reads the copy in sentence case. */
+export const sentenceCase = (text: string) => text.charAt(0) + text.slice(1).toLowerCase();
+
+/**
+ * The end of a game, the same in all three: nothing while it is on; a win offers only CLAIM; a loss offers the
+ * venue's page (`see`), or the highlight once `offerHighlight` (G9), and play again.
+ */
+export function buildGameEnd(
+  ui: UiCopy,
+  routes: typeof ROUTES,
+  chrome: GameChrome,
+  {
+    over,
+    won,
+    offerHighlight,
+    see,
+    claim,
+    again,
+  }: {
+    over: boolean;
+    won: boolean;
+    offerHighlight: boolean;
+    see: string;
+    claim: string;
+    again: string;
+  },
+): GameEndView | null {
+  if (!over) return null;
+  if (won) return { primary: null, claim: { label: claim, to: routes.giantKiller } };
+  return {
+    primary: { label: offerHighlight ? ui.games.highlight : see, to: chrome.content },
+    again,
+  };
+}

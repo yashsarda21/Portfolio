@@ -4,6 +4,7 @@ import {
   GAME_COURT_VIEW,
   Button,
   CallOverlay,
+  CourtBox,
   MonoLabel,
   PlayerTag,
   RevealChip,
@@ -90,7 +91,7 @@ export function TennisColumn({
           className="absolute inset-0 touch-pan-y"
         >
           {/* The court's own box: the backdrop's court fills it, so the stage's coordinates line up with the court. */}
-          <div className="absolute inset-x-0 top-50 bottom-0">
+          <CourtBox>
             {reduced ? null : (
               <>
                 <TracerPath
@@ -153,17 +154,12 @@ export function TennisColumn({
                 className="absolute inset-x-0 top-44"
               />
             ) : null}
-          </div>
+          </CourtBox>
         </div>
       }
       thumb={
         phase === "end" && end ? (
-          <GameEnd
-            size="column"
-            primary={end.primary}
-            claim={end.claim}
-            again={end.again ? { label: end.again, onClick: onAgain } : undefined}
-          />
+          <GameEnd size="column" end={end} onAgain={onAgain} />
         ) : reduced ? null : (
           <>
             <MonoLabel variant="mono-chip" tone="label" className="text-center text-balance">

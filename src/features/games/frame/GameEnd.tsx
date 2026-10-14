@@ -2,11 +2,9 @@ import { useEffect, useRef } from "react";
 import { Button } from "@/design-system";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { cn } from "@/lib/cn";
+import type { GameEndView } from "./chrome";
 
-interface LinkSpec {
-  label: string;
-  to: string;
-}
+type LinkSpec = NonNullable<GameEndView["primary"]>;
 
 /**
  * What the game offers when it is over. A loss: the venue's page (volt) and play again (glass); after the second
@@ -15,14 +13,12 @@ interface LinkSpec {
  * they appear, so a keyboard player is already there (Space and Enter then press that button, never a shot).
  */
 export function GameEnd({
-  primary,
-  claim,
-  again,
+  end: { primary, claim, again },
+  onAgain,
   size,
 }: {
-  primary: LinkSpec | null;
-  claim?: LinkSpec;
-  again?: { label: string; onClick: () => void };
+  end: GameEndView;
+  onAgain: () => void;
   size: "stage" | "column";
 }) {
   const root = useRef<HTMLDivElement>(null);
@@ -55,9 +51,9 @@ export function GameEnd({
           size={stage ? "ml" : links.length === 0 ? "bar-lg" : "bar"}
           skew={stage}
           className={stage ? "px-7.5" : undefined}
-          onClick={again.onClick}
+          onClick={onAgain}
         >
-          {again.label}
+          {again}
         </Button>
       ) : null}
     </div>

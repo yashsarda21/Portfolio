@@ -1,20 +1,13 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 import { content, ui } from "@/content";
-import { MEDIA } from "@/lib/breakpoints";
-import { useMediaQuery } from "@/lib/useMediaQuery";
-import { useAudio } from "@/shell/audio";
-import { useCommentary } from "@/shell/commentary";
 import { ROUTES } from "@/shell/routes";
-import { autoRallyTimes, VERDICT_MS } from "../engine/beats";
+import { autoRallyTimes } from "../engine/beats";
 import { pingPong } from "../engine/clock";
 import type { GameLayout } from "../engine/types";
 import { useGameClock } from "../engine/useGameClock";
 import { useArrival } from "../engine/useArrival";
-import { useFlight } from "../engine/useFlight";
+import { useAutoRally, useGameSession } from "../engine/useGameSession";
 import { useGameKeys } from "../engine/useGameKeys";
-import { useMatchResult } from "../engine/useMatchResult";
-import { useRun } from "../engine/useRun";
-import { useTimers } from "../engine/useTimers";
 import { ballAt, bounceOf } from "./flight";
 import { CricketPage } from "./CricketPage";
 import {
@@ -37,6 +30,9 @@ interface Run {
 }
 const START: Run = { game: CRICKET_START, phase: "ready", offerHighlight: false };
 
+const build = (game: CricketState, at: { phase: CricketPhase; offerHighlight: boolean }) =>
+  buildCricketView(content, ui, ROUTES, game, at);
+
 /**
  * The cricket route: it holds the over, runs the meter's clock, judges a release by it and walks the phases
  * (ready, flight, called, verdict, end). The referee decides, the view builder words it, the page draws it.
@@ -44,47 +40,23 @@ const START: Run = { game: CRICKET_START, phase: "ready", offerHighlight: false 
  * click and a key in the same frame, or a press during the flight cannot bowl a second.
  */
 export function CricketScreen() {
+  const session = useGameSession({ venue: "cricket", start: START, build });
   // `latest` is the run as timers and handlers that were made before the last render must read it.
-  const { run, latest, commit } = useRun<Run>(START);
+  const { run, latest, commit, view, timers, flight, live, desktop, reduced, layout, say } =
+    session;
   const root = useRef<HTMLElement>(null);
   const balls = { stage: useRef<HTMLSpanElement>(null), column: useRef<HTMLSpanElement>(null) };
-  const flight = useFlight();
 
-  const desktop = useMediaQuery(MEDIA.lg);
-  const reduced = useMediaQuery(MEDIA.reducedMotion);
-  const layout: GameLayout = desktop ? "stage" : "column";
-  const audio = useAudio();
-  const { say } = useCommentary();
-  const timers = useTimers();
-  const { save } = useMatchResult("cricket");
   const clock = useGameClock(root, {
     cssVar: "--meter",
     value: (t) => pingPong(t, CRICKET_PERIOD_MS),
     running: run.phase === "ready" && !reduced,
   });
 
-  // What the timers and the ball in the air need when they fire: this render's, not the one they were made in.
-  const live = useRef({ desktop, audio, say, save });
-  useEffect(() => {
-    live.current = { desktop, audio, say, save };
-  });
-
-  const view = useMemo(
-    () =>
-      buildCricketView(content, ui, ROUTES, run.game, {
-        phase: run.phase,
-        offerHighlight: run.offerHighlight,
-      }),
-    [run],
-  );
-
   /** A ball has been bowled and judged: the call, what it unlocked, the sound and the line; the over's end is saved at once (G8). */
   const land = (next: CricketState) => {
     const over = cricketOver(next);
-    const after = buildCricketView(content, ui, ROUTES, next, {
-      phase: "called",
-      offerHighlight: false,
-    });
+    const after = build(next, { phase: "called", offerHighlight: false });
     const ball = next.balls.at(-1);
     const now = live.current;
     if (ball && ball.runs > 0) now.audio.play("bat");
@@ -94,9 +66,7 @@ export function CricketScreen() {
       timers.after(CRICKET_BEATS.callMs, () => commit({ phase: "ready" }));
       return;
     }
-    const { offerHighlight } = now.save({ score: after.saved, winner: cricketWinner(next)! });
-    commit({ game: next, phase: "verdict", offerHighlight });
-    timers.after(VERDICT_MS, () => commit({ phase: "end" }));
+    session.finish(next, cricketWinner(next)!, after.saved);
   };
 
   /** The ball from your hand to the bounce and on to the bat, along the tracer; then `done`. Nothing but transform and opacity moves. */
@@ -137,14 +107,12 @@ export function CricketScreen() {
     });
   };
 
-  const again = () => {
-    timers.clear();
-    flight.stop();
-    commit(START);
-    clock.restart();
-    if (desktop) say(ui.games.cricket.comm.start, { interrupt: true });
-    if (reduced) playOver();
-  };
+  const again = () =>
+    session.again(() => {
+      clock.restart();
+      if (desktop) say(ui.games.cricket.comm.start, { interrupt: true });
+      if (reduced) playOver();
+    });
 
   useGameKeys(
     { down: { " ": release, Enter: release } },
@@ -155,16 +123,7 @@ export function CricketScreen() {
   useArrival({ line: ui.games.cricket.comm.start, spoken: desktop, reduced });
 
   // Reduced motion: the over plays itself on arrival. Leaving, or the setting changing, ends it (and any ball in the air).
-  useEffect(() => {
-    if (!reduced) return;
-    playOver();
-    return () => {
-      timers.clear();
-      commit(START);
-    };
-    // The over starts when the setting turns on; its handlers are the latest by ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced]);
+  useAutoRally(session, { play: playOver });
 
   return (
     <CricketPage

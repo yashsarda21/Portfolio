@@ -1,6 +1,12 @@
 import { getInningsReveals, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
-import { buildGameChrome, type GameChrome } from "../frame/chrome";
+import {
+  buildGameChrome,
+  buildGameEnd,
+  sentenceCase,
+  type GameChrome,
+  type GameEndView,
+} from "../frame/chrome";
 import {
   CRICKET_BALLS,
   CRICKET_ZONES,
@@ -14,7 +20,6 @@ export type CricketPhase = "ready" | "flight" | "called" | "verdict" | "end";
 
 type Range = [number, number];
 type BallState = "for" | "against" | "current" | "pending";
-type Link = { label: string; to: string };
 
 /** A slot of the STADIUM SCREEN: what `RevealList` takes. */
 export type CricketSlot =
@@ -61,7 +66,7 @@ export interface CricketView {
   };
   bowl: { label: string; labelPhone: string; hint: string };
   /** What the end offers; null while the over is still being bowled. */
-  end: { primary: Link | null; claim?: Link; again?: string } | null;
+  end: GameEndView | null;
   /** The result saved to the match record and shown on the Hub: "14* NOT OUT" | "0 OUT". */
   saved: string;
   heading: string;
@@ -69,12 +74,6 @@ export interface CricketView {
   how: string;
   pitch: { yorker: string; good: string };
 }
-
-/** The route the claim goes to. */
-const CLAIM_TO = "giantKiller" as const;
-
-/** "INNINGS" → "Innings": the screen-reader sentence reads the copy in sentence case. */
-const sentence = (word: string) => word.charAt(0) + word.slice(1).toLowerCase();
 
 /** A zone as % of the track, rounded so 0.5 - 0.035 reads 46.5, not 46.50000000000001. */
 const zone = (half: number): Range => [pct(0.5 - half), pct(0.5 + half)];
@@ -135,9 +134,6 @@ export function buildCricketView(
   const calling = phase === "called" || phase === "verdict" || phase === "end";
 
   const ballNo = Math.min(bowled + 1, CRICKET_BALLS);
-  const loss = offerHighlight
-    ? { label: ui.games.highlight, to: chrome.content }
-    : { label: copy.see, to: chrome.content };
 
   return {
     chrome,
@@ -180,7 +176,7 @@ export function buildCricketView(
     comm: last ? copy.comm[last.line] : copy.comm.start,
     announce:
       last && newest
-        ? `${copy.calls[last.call]} ${sentence(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`
+        ? `${copy.calls[last.call]} ${sentenceCase(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`
         : "",
     meter: {
       labels: { start: copy.meter.short, target: copy.meter.yorker, end: copy.meter.full },
@@ -193,11 +189,14 @@ export function buildCricketView(
       },
     },
     bowl: { label: copy.bowl, labelPhone: copy.bowlPhone, hint: copy.touchHint },
-    end: !over
-      ? null
-      : state.won
-        ? { primary: null, claim: { label: copy.claim, to: routes[CLAIM_TO] } }
-        : { primary: loss, again: copy.again },
+    end: buildGameEnd(ui, routes, chrome, {
+      over,
+      won: state.won,
+      offerHighlight,
+      see: copy.see,
+      claim: copy.claim,
+      again: copy.again,
+    }),
     saved,
     heading: chrome.heading,
     headline: copy.headline,

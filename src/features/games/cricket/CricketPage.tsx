@@ -1,5 +1,5 @@
 import type { Ref } from "react";
-import { GameAnnouncer } from "../frame/GameAnnouncer";
+import { GamePage } from "../frame/GamePage";
 import { CricketColumn } from "./CricketColumn";
 import { CricketStage } from "./CricketStage";
 import type { CricketPhase, CricketView } from "./view";
@@ -31,8 +31,11 @@ export function CricketPage({
   ballRefs?: { stage: Ref<HTMLSpanElement>; column: Ref<HTMLSpanElement> };
 }) {
   return (
-    <>
-      <main id="main" ref={rootRef} data-game="" data-phase={phase}>
+    <GamePage
+      phase={phase}
+      announce={view.announce}
+      rootRef={rootRef}
+      stage={
         <CricketStage
           view={view}
           phase={phase}
@@ -41,6 +44,8 @@ export function CricketPage({
           onAgain={onAgain}
           ballRef={ballRefs?.stage}
         />
+      }
+      column={
         <CricketColumn
           view={view}
           phase={phase}
@@ -49,8 +54,7 @@ export function CricketPage({
           onAgain={onAgain}
           ballRef={ballRefs?.column}
         />
-      </main>
-      <GameAnnouncer line={view.announce} />
-    </>
+      }
+    />
   );
 }

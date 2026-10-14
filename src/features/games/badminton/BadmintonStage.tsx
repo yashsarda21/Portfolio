@@ -122,12 +122,7 @@ export function BadmintonStage({
 
       {phase === "end" && end ? (
         <div className="absolute inset-x-0 top-152.5 z-7 flex justify-center">
-          <GameEnd
-            size="stage"
-            primary={end.primary}
-            claim={end.claim}
-            again={end.again ? { label: end.again, onClick: onAgain } : undefined}
-          />
+          <GameEnd size="stage" end={end} onAgain={onAgain} />
         </div>
       ) : null}
     </GameStage>

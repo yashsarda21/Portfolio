@@ -1,7 +1,4 @@
-interface Point {
-  x: number;
-  y: number;
-}
+import { quad, type Point } from "../engine/geometry";
 
 /**
  * The shuttle's arc as Badminton-Play draws it, in the stage's design space (1440x900): from your ring, over the net,
@@ -21,11 +18,7 @@ export const PARKED: Point = { x: 676, y: 168 };
 /** The shuttle's place at `progress` (0 to 1) along the arc. */
 export function shuttleAt(progress: number): Point {
   const { from, via, to } = ARC;
-  const u = 1 - progress;
-  return {
-    x: u * u * from.x + 2 * u * progress * via.x + progress * progress * to.x,
-    y: u * u * from.y + 2 * u * progress * via.y + progress * progress * to.y,
-  };
+  return quad(from, via, to, progress);
 }
 
 /** The CSS transform that takes the parked shuttle to `progress` along the arc (a `<g>` is moved by `transform` only). */
