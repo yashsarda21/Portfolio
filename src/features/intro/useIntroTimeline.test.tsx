@@ -15,6 +15,12 @@ const loadRig = vi.hoisted(() => vi.fn());
 /** A test can hold GSAP back (as a slow network would) by putting a promise here. */
 const held = vi.hoisted(() => ({ gsap: null as Promise<unknown> | null }));
 vi.mock("./rig", () => ({ loadRig }));
+/** The sound the lights make is the only audio call the show makes: watch it, leave the rest of the service as is. */
+const play = vi.hoisted(() => vi.fn());
+vi.mock("@/shell/audio", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shell/audio")>()),
+  useAudio: () => ({ enabled: true, unlocked: true, toggle: vi.fn(), unlock: vi.fn(), play }),
+}));
 vi.mock("@/lib/motion", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/motion")>()),
   loadGsap: () => held.gsap ?? Promise.resolve(gsap),
@@ -102,6 +108,7 @@ beforeEach(() => {
   loadRig.mockReset();
   loadRig.mockReturnValue(Promise.resolve("ready"));
   onComm.mockReset();
+  play.mockReset();
 });
 afterEach(() => {
   gsap.globalTimeline.clear();
@@ -152,6 +159,34 @@ describe("useIntroTimeline", () => {
     for (let i = 0; i < 5; i++) act(() => api.replay());
     expect(timelines()).toHaveLength(1);
     expect(loadRig).toHaveBeenCalledTimes(1);
+  });
+
+  it("the floodlight sound plays once per show, though four banks light, and again on REPLAY", async () => {
+    situation("desktop");
+    await mount();
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    act(() => void tl.progress(1));
+    expect(play.mock.calls).toEqual([["floodlight"]]);
+    act(() => api.replay());
+    tl.pause();
+    act(() => void tl.progress(1));
+    expect(play.mock.calls).toEqual([["floodlight"], ["floodlight"]]);
+  });
+
+  it("the phone's cut lights the floodlights with the sound too; reduced motion has no beat, so none", async () => {
+    situation("mobile");
+    await mount();
+    const tl = timelines()[0] as gsap.core.Timeline;
+    tl.pause();
+    act(() => void tl.progress(1));
+    expect(play.mock.calls).toEqual([["floodlight"]]);
+  });
+
+  it("reduced motion makes no sound", async () => {
+    situation("reduce");
+    await mount();
+    expect(play).not.toHaveBeenCalled();
   });
 
   it("reduced motion: the end state at once, the rig never loaded, no timeline", async () => {

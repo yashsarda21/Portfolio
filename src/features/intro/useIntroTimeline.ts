@@ -74,6 +74,13 @@ export function useIntroTimeline(
   useEffect(() => {
     latest.current = { onComm, play: audio.play };
   });
+  // Four banks flicker on one after another, but the lights-on sound plays once per show: on the first.
+  const lit = useRef(false);
+  const lightsOn = useCallback(() => {
+    if (lit.current) return;
+    lit.current = true;
+    latest.current.play("floodlight");
+  }, []);
 
   const mark = useCallback(
     (next: IntroState) => rootRef.current?.setAttribute("data-hold", next),
@@ -108,12 +115,13 @@ export function useIntroTimeline(
           }
           const refs = collectIntroRefs(layout);
           if (!desktop) {
+            lit.current = false;
             const tl = createIntroTimeline(gsap, refs, {
               tier: "mobile",
               // No head turn on a phone: the rig is not loaded, the timeline never waits for it.
               rig: Promise.resolve("timeout"),
               onBeat: (beat) => {
-                if (beat === "bank") latest.current.play("floodlight");
+                if (beat === "bank") lightsOn();
                 else if (beat === "done") mark("done");
                 // "comm": phones are silent (L11), the column draws no commentary
               },
@@ -135,11 +143,12 @@ export function useIntroTimeline(
           void rig.then((result) => {
             if (root.hasAttribute("data-sprites")) root.setAttribute("data-sprites", result);
           });
+          lit.current = false;
           const tl = createIntroTimeline(gsap, refs, {
             tier: "desktop",
             rig,
             onBeat: (beat) => {
-              if (beat === "bank") latest.current.play("floodlight");
+              if (beat === "bank") lightsOn();
               else if (beat === "comm") latest.current.onComm();
               else mark("done");
             },
@@ -165,12 +174,13 @@ export function useIntroTimeline(
       mm?.revert();
       timeline.current = null;
     };
-  }, [rootRef, mark]);
+  }, [rootRef, mark, lightsOn]);
 
   const replay = useCallback(() => {
     const tl = timeline.current;
     if (!tl) return;
     mark("playing");
+    lit.current = false;
     tl.restart();
   }, [mark]);
 

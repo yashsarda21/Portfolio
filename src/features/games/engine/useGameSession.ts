@@ -61,7 +61,7 @@ export function useGameSession<R extends SessionRun, V>({
   );
 
   /**
-   * The game is over: save the result (once, here, the moment it is known: G8), show the verdict, and `VERDICT_MS`
+   * The game is over: save the result (once, here, the moment it is known: G8), the crowd reacts, show the verdict, and `VERDICT_MS`
    * later the end buttons. `extra` is whatever else the run changes with it.
    */
   const finish = (
@@ -70,6 +70,7 @@ export function useGameSession<R extends SessionRun, V>({
     extra: Partial<R> = {},
   ) => {
     const flags = live.current.save(result);
+    live.current.audio.play("crowd");
     commit({ game: next, phase: "verdict", ...flags, ...extra } as unknown as Partial<R>);
     timers.after(VERDICT_MS, () => commit({ phase: "end" } as unknown as Partial<R>));
   };

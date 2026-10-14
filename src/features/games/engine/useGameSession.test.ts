@@ -7,7 +7,8 @@ import { resetLosses } from "./session";
 import { useAutoRally, useGameSession } from "./useGameSession";
 import { NO_END_FLAGS, type EndFlags } from "./useMatchResult";
 
-vi.mock("@/shell/audio", () => ({ useAudio: () => ({ play: vi.fn() }) }));
+const play = vi.hoisted(() => vi.fn());
+vi.mock("@/shell/audio", () => ({ useAudio: () => ({ play }) }));
 vi.mock("@/shell/commentary", () => ({ useCommentary: () => ({ say: vi.fn() }) }));
 
 /** A `matchMedia` whose reduced-motion answer the test can flip. */
@@ -18,6 +19,7 @@ const setReduced = (value: boolean) => {
 };
 
 beforeEach(() => {
+  play.mockClear();
   vi.useFakeTimers();
   media.reduced = false;
   media.listeners.clear();
@@ -59,6 +61,7 @@ describe("useGameSession", () => {
     const { result } = setup();
     act(() => result.current.land());
     expect(useMatchRecord.getState().yashWins).toBe(1);
+    expect(play.mock.calls).toEqual([["crowd"]]);
     expect(result.current.session.run.phase).toBe("verdict");
     act(() => void vi.advanceTimersByTime(VERDICT_MS));
     expect(result.current.session.run.phase).toBe("end");
