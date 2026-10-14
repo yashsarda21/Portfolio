@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router build",
+    "build": "react-router build && node tools/postbuild.mjs",
     "preview": "sirv build/client --single __spa-fallback.html --port 4173 --host 127.0.0.1",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint . --max-warnings 0",
@@ -22,7 +22,8 @@
     "build-storybook": "storybook build --quiet",
     "references": "node tools/render-artboards/render.mjs",
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && VERIFY=1 pnpm test && pnpm references && pnpm build-storybook && VERIFY=1 pnpm test:stories && VERIFY=1 pnpm test:e2e",
-    "lighthouse": "node tools/lighthouse.mjs"
+    "lighthouse": "node tools/lighthouse.mjs",
+    "og-image": "node tools/og-image.mjs"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",

@@ -33,7 +33,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm build && pnpm preview",
+    // VITE_SITE_URL: a reserved test name, so the canonical / sitemap / robots specs have an address to check.
+    command: "VITE_SITE_URL=https://arena.example pnpm build && pnpm preview",
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !strict,
     timeout: 180_000,

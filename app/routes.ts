@@ -17,5 +17,7 @@ export default [
   route("team-up", "routes/team-up.tsx"),
   route("scout", "routes/scout.tsx"),
   route("404", "routes/not-found.tsx"),
+  route("sitemap.xml", "routes/sitemap[.]xml.ts"),
+  route("robots.txt", "routes/robots[.]txt.ts"),
   route("*", "routes/catch-all.tsx"),
 ] satisfies RouteConfig;

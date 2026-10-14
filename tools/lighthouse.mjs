@@ -2,6 +2,8 @@
 // Lighthouse budget for the pages that carry a promise: the recruiter page (/scout), the Landing (/), the
 // Player Intro (/intro), the Arena Hub (/arena), the three games (/arena/cricket, /tennis, /badminton) and Full Time (/arena/full-time). Not part of `pnpm verify` (slow): run it at a phase exit.
 // Usage: pnpm build && pnpm lighthouse
+// This script does not build: it reads whatever build/client holds. The SEO audit wants a canonical link, so build
+// with the test address (as `pnpm verify` and the e2e web server do): VITE_SITE_URL=https://arena.example pnpm build
 //
 // Serves build/client on port 4174 (the user's `pnpm preview` on 4173 is left alone), drives Playwright's
 // Chromium through chrome-launcher, and fails unless the budget below is met. Every page prints one table:

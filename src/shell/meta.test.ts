@@ -30,4 +30,44 @@ describe("pageMeta", () => {
     expect(pageMeta("scout").some((t) => "script:ld+json" in t)).toBe(false);
     expect(pageMeta("scout", { jsonLd })).toContainEqual({ "script:ld+json": jsonLd });
   });
+
+  describe("with a production address", () => {
+    const base = "https://a.example";
+    const tags = pageMeta("cricket", {}, base);
+
+    it("adds the canonical link, og:url and the share image", () => {
+      expect(tags).toContainEqual({
+        tagName: "link",
+        rel: "canonical",
+        href: "https://a.example/arena/cricket",
+      });
+      expect(find(tags, "property", "og:url")?.content).toBe("https://a.example/arena/cricket");
+      expect(find(tags, "property", "og:image")?.content).toBe("https://a.example/og.png");
+      expect(find(tags, "property", "og:image:width")?.content).toBe("1200");
+      expect(find(tags, "property", "og:image:height")?.content).toBe("630");
+      expect(find(tags, "property", "og:image:alt")?.content).toBe(ui.shareAlt);
+      expect(find(tags, "name", "twitter:card")?.content).toBe("summary_large_image");
+    });
+
+    it("gives the home page the bare address", () => {
+      expect(find(pageMeta("home", {}, base), "property", "og:url")?.content).toBe(
+        "https://a.example/",
+      );
+    });
+  });
+
+  it("without an address there is no canonical, og:url or og:image", () => {
+    const tags = pageMeta("cricket", {}, null);
+    expect(tags.some((t) => "tagName" in t || "href" in t)).toBe(false);
+    expect(find(tags, "property", "og:url")).toBeUndefined();
+    expect(find(tags, "property", "og:image")).toBeUndefined();
+    expect(find(tags, "name", "twitter:card")?.content).toBe("summary");
+  });
+
+  it("noindex adds the robots tag, and names no canonical address", () => {
+    const tags = pageMeta("notFound", { noindex: true }, "https://a.example");
+    expect(find(tags, "name", "robots")?.content).toBe("noindex");
+    expect(find(tags, "property", "og:url")).toBeUndefined();
+    expect(pageMeta("cricket", {}, null).some((t) => t.name === "robots")).toBe(false);
+  });
 });

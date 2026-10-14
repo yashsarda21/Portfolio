@@ -57,14 +57,11 @@ for (const path of ["/definitely-not-a-page", "/locker-room", "/arena/giant-kill
 }
 
 test("focus moves to the new heading after a wipe navigation", async ({ page }) => {
-  // Out of Bounds is the one placeholder left (it carries the site map).
+  // Out of Bounds is a page of its own; its way back to the Hub is a wipe navigation.
   await page.goto(ROUTES.notFound);
-  await page
-    .getByRole("navigation", { name: ui.placeholder.siteMap })
-    .getByRole("link", { name: ui.routes.highlights.heading })
-    .click();
+  await page.getByRole("link", { name: ui.notFound.hub }).click();
   await expect(page.locator("[data-wipe] > div").first()).toBeVisible();
-  await expect(page).toHaveURL(ROUTES.highlights);
+  await expect(page).toHaveURL(ROUTES.arena);
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   await expect(page.locator("[data-wipe] > div").first()).toBeHidden();
 });
@@ -73,12 +70,8 @@ test("focus lands on the rendered heading of the landing page, not its hidden tw
   page,
 }) => {
   // "/" holds two <h1>s (desktop Scoreboard, phone/tablet column); only one is rendered per breakpoint.
-  // Out of Bounds is the one placeholder left (it carries the site map).
   await page.goto(ROUTES.notFound);
-  await page
-    .getByRole("navigation", { name: ui.placeholder.siteMap })
-    .getByRole("link", { name: ui.routes.home.heading })
-    .click();
+  await page.getByRole("link", { name: ui.notFound.home }).click();
   await expect(page).toHaveURL(ROUTES.home);
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
@@ -94,12 +87,8 @@ test("journey: Landing → Quick View", async ({ page }, testInfo) => {
 
 test("reduced motion navigates without the wipe", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  // Out of Bounds is the one placeholder left (it carries the site map).
   await page.goto(ROUTES.notFound);
-  await page
-    .getByRole("navigation", { name: ui.placeholder.siteMap })
-    .getByRole("link", { name: ui.routes.scout.navLabel })
-    .click();
+  await page.getByRole("main").getByRole("link", { name: ui.hud.quickView }).click();
   await expect(page).toHaveURL(ROUTES.scout);
   await expect(page.locator("[data-wipe] > div").first()).toBeHidden();
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
