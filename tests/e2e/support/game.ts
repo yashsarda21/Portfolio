@@ -19,7 +19,7 @@ import { waitForHydration } from "./contentPage";
 /** Where fake time starts (2026-01-01T00:00:00Z, a number so the time zone cannot matter). */
 export const CLOCK_START = 1_767_225_600_000;
 
-/** Every Math.random() in the page returns `value` (0 → the luck roll lands; 0.99 → it never does). Call before `goto`. */
+/** Every Math.random() in the page returns `value` (it pins the draws that are left: tennis' open side and toss, and the dust canvas). Call before `goto`. */
 export const forceLuck = (page: Page, value: number) =>
   page.addInitScript((v) => {
     Math.random = () => v;

@@ -39,6 +39,18 @@ const shown = (locator: Locator) => locator.filter({ visible: true });
 const headline = (page: Page) => page.getByRole("heading", { level: 1 });
 const board = (page: Page) => page.getByRole("img", { name: new RegExp(`^${ft.board}`) });
 
+/** QUICK VIEW is on screen and at least 44px tall on the stage and the column alike (A5; on the stage in design space). */
+async function expectQuickView(page: Page, at: string) {
+  const quick = shown(page.getByRole("link", { name: ui.hud.quickView }));
+  await expect(quick, `${at}: QUICK VIEW is visible`).toBeVisible();
+  const height = await quick.evaluate((el) =>
+    el.closest("[data-stage]")
+      ? (el as HTMLElement).offsetHeight
+      : el.getBoundingClientRect().height,
+  );
+  expect(height, `${at}: QUICK VIEW height`).toBeGreaterThanOrEqual(TARGET);
+}
+
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -206,6 +218,14 @@ test("every width and height of Review Focus 5 (done, then early)", async ({ pag
     const box = (await board(page).boundingBox())!;
     expect(box.x, `${at}: the board's left edge`).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width, `${at}: the board's right edge`).toBeLessThanOrEqual(view.width);
+    // The headline is neither clipped inside its column nor pushed past the window (the longest one is NICE EFFORT.).
+    const h1 = await shown(headline(page)).evaluate((el) => ({
+      clipped: el.scrollWidth - el.clientWidth,
+      right: el.getBoundingClientRect().right,
+    }));
+    expect(h1.clipped, `${at}: the h1's clipped width (px)`).toBeLessThanOrEqual(1);
+    expect(h1.right, `${at}: the h1's right edge`).toBeLessThanOrEqual(view.width);
+    await expectQuickView(page, at);
     // Every link is at least 44px tall (on the stage: in the 1440×900 design space, which scales to the window).
     const heights = await page.locator("main a:visible").evaluateAll((links) =>
       links.map((a) => ({
@@ -248,5 +268,6 @@ test("early, at every width and height", async ({ page }) => {
     expect(box.x + box.width, `the board's right edge at ${width}x${height}`).toBeLessThanOrEqual(
       view.width,
     );
+    await expectQuickView(page, `early at ${width}x${height}`);
   }
 });

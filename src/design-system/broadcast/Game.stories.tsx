@@ -136,7 +136,7 @@ export const Calls: Story = {
     <div className="flex flex-col gap-8">
       <CallOverlay call="DOT BALL." tone="volt" size="stage" />
       <CallOverlay call="SIX." tone="floodlight" size="stage" />
-      <CallOverlay call="BOWLED HIM." tone="volt" size="column" />
+      <CallOverlay call="SIX." tone="volt" size="column" />
       <CallOverlay call="FOUR." tone="floodlight" size="column" />
     </div>
   ),

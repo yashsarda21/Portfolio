@@ -2,6 +2,7 @@ import {
   Button,
   FloorPool,
   Glass,
+  HUD,
   Heading,
   IconToast,
   MonoLabel,
@@ -12,6 +13,7 @@ import {
 } from "@/design-system";
 import { ArenaLink, TunnelLink } from "@/shell/ArenaLink";
 import { CommentarySlot } from "@/shell/commentary";
+import { QuickViewChip } from "@/shell/QuickViewChip";
 import type { CSSProperties } from "react";
 import type { FullTimeView } from "./view";
 
@@ -46,6 +48,8 @@ export function FullTimeStage({ view, ready }: { view: FullTimeView; ready: bool
           style={after(delay)}
         />
       ))}
+      {/* QUICK VIEW, top-right as on the Hub and the game stages (A5: the artboard draws none, every cinematic screen has one). */}
+      <HUD className="absolute inset-x-0 top-0 z-10" right={<QuickViewChip />} />
       <div
         className="absolute inset-x-0 top-10 flex animate-drop justify-center"
         style={after(0.4)}

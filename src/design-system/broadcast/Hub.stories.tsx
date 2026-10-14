@@ -231,6 +231,7 @@ const rail = (
       </RailSection>
     }
     footer={
+      // Parity only: these are the artboard's own words (Hub@1440x900 draws HIDDEN ACHIEVEMENTS); the app says FULL TIME.
       <RailSection label="HIDDEN ACHIEVEMENTS">
         <Text as="p" variant="body-sm" tone="secondary" leading="font">
           0 of 1 unlocked. Rumour says you have to beat him.

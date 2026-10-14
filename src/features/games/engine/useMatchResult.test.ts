@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useMatchRecord } from "@/shell/matchRecord";
 import { resetLosses } from "./session";
-import { useMatchResult } from "./useMatchResult";
+import { useMatchResult, type EndFlags } from "./useMatchResult";
 
 beforeEach(() => {
   useMatchRecord.getState().reset();
@@ -79,5 +79,36 @@ describe("useMatchResult", () => {
     } finally {
       useMatchRecord.setState({ completeMatch: original });
     }
+  });
+
+  it("the third venue's save, with the record throwing, does not throw and offers no Full Time", () => {
+    setup("cricket").save({ score: "14* NOT OUT", form: 0 });
+    setup("tennis").save({ score: "GAME YASH", form: 0 });
+    const original = useMatchRecord.getState().completeMatch;
+    useMatchRecord.setState({
+      completeMatch: () => {
+        throw new Error("blocked");
+      },
+    });
+    try {
+      let flags: EndFlags | undefined;
+      expect(() => {
+        flags = setup("badminton").save({ score: "21–19", form: 0.25 });
+      }).not.toThrow();
+      expect(flags).toEqual({ offerHighlight: false, fullTime: false });
+    } finally {
+      useMatchRecord.setState({ completeMatch: original });
+    }
+    expect(useMatchRecord.getState().venuesPlayed).toEqual(["cricket", "tennis"]);
+  });
+
+  // The in-memory path (storage blocked for the whole visit) is covered end to end by the full-matchday journey.
+  it("the third venue's save with storage throwing still completes the matchday (F3)", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+    setup("cricket").save({ score: "14* NOT OUT", form: 0 });
+    setup("tennis").save({ score: "GAME YASH", form: 0 });
+    expect(setup("badminton").save({ score: "21–19", form: 0.25 }).fullTime).toBe(true);
   });
 });

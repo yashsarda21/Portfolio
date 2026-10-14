@@ -45,7 +45,7 @@ const ARTBOARD = {
 const DONE = {
   ...ARTBOARD,
   venuesPlayed: ["cricket", "tennis", "badminton"],
-  lastScores: { cricket: "14* NOT OUT", tennis: "GAME YASH", badminton: "GAME YASH" },
+  lastScores: { cricket: "14* NOT OUT", tennis: "21–19", badminton: "21–19" },
   sectionsSeen: ["career", "highlights", "attributes", "trophies", "card", "teamUp", "scout"],
   yashWins: 3,
 };

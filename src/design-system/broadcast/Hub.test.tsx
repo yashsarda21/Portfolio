@@ -151,11 +151,15 @@ describe("IndexRail", () => {
         title="JUMP"
         links={links}
         header={<RailSection label="MATCHDAY CARD">1 OF 3 VENUES</RailSection>}
-        footer={<RailSection label="HIDDEN ACHIEVEMENTS">0 of 1 unlocked.</RailSection>}
+        footer={
+          <RailSection label="FULL TIME">
+            The final whistle blows after all three venues.
+          </RailSection>
+        }
       />,
     );
     const nav = screen.getByRole("navigation", { name: "Portfolio index" });
-    for (const text of ["MATCHDAY CARD", "1 OF 3 VENUES", "HIDDEN ACHIEVEMENTS"]) {
+    for (const text of ["MATCHDAY CARD", "1 OF 3 VENUES", "FULL TIME"]) {
       expect(screen.getByText(text)).toBeVisible();
       expect(nav).not.toContainElement(screen.getByText(text));
     }

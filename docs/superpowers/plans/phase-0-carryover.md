@@ -78,10 +78,10 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] Phase 7: audio files for the `bat`, `net` and `smash` slots (the games call `audio.play(...)`; silent until then, ruling G15).
 
 ## Phase 6 follow-ups (found in reviews; none blocking)
-- [ ] Full Time's stage has no HUD and no QUICK VIEW link (the Easter-Egg artboard draws none, so the stage follows it); the column has QUICK VIEW in its top row. Decide in the final review whether the stage should add the chip (A5, "one tap away on every screen").
+- [x] Full Time's stage now has QUICK VIEW top-right (A5, "one tap away on every screen"; the artboard draws none): `FullTimeStage` uses the Hub's `HUD` + `QuickViewChip`, its box is masked in `tests/stories/full-time.spec.ts` (§11.14 deviations, parity 0.52%), and `tests/e2e/full-time.spec.ts` asserts it is visible and at least 44px tall at every viewport. Fixed in the Phase 6 fix wave.
 - [ ] On a phone the Full Time toast eyebrow wraps to two lines ("MATCHDAY COMPLETE · " / "3 OF 3 VENUES"), by design (`text-balance`); look at it once on a real phone.
 - [ ] The Full Time board's loser score uses `text-dim` (#7D8893), not the drawn #5D6670 (A1 bans decoration greys as text). Logged in §11.14; revisit if the design ever adds a text-safe dark grey.
-- [ ] `tests/e2e/hub.spec.ts` seeds badminton's last score as `GAME YASH`; the game saves `21–19`. Cosmetic test data only.
+- [x] `tests/e2e/hub.spec.ts` now seeds badminton's last score as `21–19`, as the game saves it (Phase 6 fix wave).
 - [ ] Playwright quirk, not a page bug: with JavaScript off, a `click()` on a Full Time stage link during the 0.9s rise stalls ("not stable"); the JS-off test waits for finite animations first. Keep that wait in any new JS-off test of an animated page.
 - [ ] Phase 7: add `/arena/full-time` to the sitemap and the OG tags check (it is a page like the Hub; the old `/arena/giant-killer` and `/locker-room` addresses must not appear).
 

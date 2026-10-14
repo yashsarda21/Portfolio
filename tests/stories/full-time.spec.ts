@@ -20,9 +20,14 @@ test.describe("Easter-Egg.dc.html (1440 x 900)", () => {
       .locator("span")
       .last();
     console.log(`[mask] YASH name ${JSON.stringify(await yash.boundingBox())}`);
+    // QUICK VIEW (A5): the artboard draws none, the stage adds it top-right, so its box is masked.
+    const quickView = page.locator("#storybook-root [data-stage]").getByRole("link", {
+      name: "QUICK VIEW",
+    });
+    console.log(`[mask] QUICK VIEW chip ${JSON.stringify(await quickView.boundingBox())}`);
     const ratio = await expectMatchesArtboard(page, "Easter-Egg", {
       maxDiffRatio: 0.02,
-      mask: [yash],
+      mask: [yash, quickView],
       maskRects: [{ x: 36, y: 821, width: 508, height: 43 }],
     });
     console.log(`[ratio] Easter-Egg story ${ratio}`);

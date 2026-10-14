@@ -49,7 +49,7 @@ const build = (game: number, at: { phase: string } & EndFlags) => ({ game, ...at
 const setup = () =>
   renderHook(() => {
     const session = useGameSession({ venue: "cricket", start: START, build });
-    const land = () => session.finish(1, { score: "0 OUT", form: 0 });
+    const land = () => session.finish(1, { score: "4* NOT OUT", form: 0 });
     useAutoRally(session, { play: () => session.timers.after(1000, land) });
     return { session, land };
   });

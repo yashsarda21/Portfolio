@@ -13,7 +13,7 @@ export function CallOverlay({
   className,
 }: {
   call: string;
-  /** volt: a call for you (DOT BALL, BOWLED HIM); floodlight: his (FOUR, SIX). */
+  /** volt: a call for you (DOT BALL, PERFECT WEIGHT); floodlight: his (FOUR, SIX). */
   tone: "volt" | "floodlight";
   size: "stage" | "column";
   className?: string;
