@@ -34,14 +34,15 @@ export default defineConfig({
       },
     },
     {
-      // The real Safari engine at the phone's size (P10). It runs the one smoke spec: `playwright test --project=webkit`.
+      // The real Safari engine as a phone (P10, m-7): the iPhone preset is `isMobile`, so the viewport meta, touch and
+      // the mobile layout rules apply as on a device, at the 390×844 the other phone checks use. It runs the one smoke
+      // spec: `playwright test --project=webkit`.
       name: "webkit",
       testMatch: /webkit-smoke/,
       use: {
-        ...devices["Desktop Safari"],
+        ...devices["iPhone 13"],
         viewport: { width: 390, height: 844 },
         deviceScaleFactor: 1,
-        hasTouch: true,
       },
     },
   ],

@@ -10,50 +10,56 @@ const CAP = 80;
 interface Stop {
   /** A readable name for the failure message. */
   label: string;
+  /** The `data-sweep-id` the census stamped on the element (null for a stop the census did not list). */
+  id: string | null;
   problems: string[];
 }
 
-/** Judges the element holding focus: on screen, with a drawn size, not hidden, and with a focus ring. */
-function inspectFocus(): Stop | "body" {
-  const el = document.activeElement;
-  if (!el || el === document.body || el === document.documentElement) return "body";
-  const label = `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""} "${(
-    el.getAttribute("aria-label") ??
-    el.textContent ??
-    ""
-  )
-    .trim()
-    .replace(/\s+/g, " ")
-    .slice(0, 40)}"`;
-  const problems: string[] = [];
-  const rect = el.getBoundingClientRect();
-  const style = getComputedStyle(el);
-  if (style.visibility === "hidden") problems.push("visibility:hidden");
-  if (rect.width <= 0 || rect.height <= 0) problems.push("zero size");
-  const inView =
-    rect.bottom > 0 &&
-    rect.right > 0 &&
-    rect.top < window.innerHeight &&
-    rect.left < window.innerWidth;
-  if (!inView) problems.push("outside the viewport");
-  // The ring is the element's own outline, or one drawn by a part inside it (a Button's plate) or around it (a radio card).
-  const drawn = (node: Element) => {
-    const s = getComputedStyle(node);
-    return s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0;
-  };
-  let ring = drawn(el) || [...el.querySelectorAll("*")].some(drawn);
-  for (let up = el.parentElement, i = 0; !ring && up && i < 3; up = up.parentElement, i++) {
-    ring = drawn(up);
-  }
-  if (!ring) problems.push("no focus ring");
-  return { label, problems };
+interface Tabbable {
+  id: string;
+  label: string;
 }
 
-/** What Tab can reach right now: visible, enabled, tabindex not negative, outside a closed dialog. */
-function tabbableLabels(): string[] {
+type SweepWindow = Window & {
+  /** The element's outline signature (its own, its parts', and its three nearest ancestors'): what a focus ring changes. */
+  __ring: (el: Element) => string;
+  /** The signature of each element before it had focus, by `data-sweep-id`. */
+  __ringOff: Record<string, string>;
+};
+
+/**
+ * What Tab can reach right now: visible, enabled, tabindex not negative, outside a closed dialog. Each is stamped
+ * with a `data-sweep-id` (so two controls with the same label are two stops, not one), and its ring is recorded
+ * while nothing has focus, so a stop can be compared with its own unfocused self.
+ */
+function censusTabbables(): Tabbable[] {
+  const win = window as unknown as SweepWindow;
+  const outline = (node: Element) => {
+    const s = getComputedStyle(node);
+    return s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0
+      ? `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor} ${s.outlineOffset}`
+      : "-";
+  };
+  win.__ring = (el) => {
+    const parts = [outline(el), ...[...el.querySelectorAll("*")].map(outline)];
+    for (let up = el.parentElement, i = 0; up && i < 3; up = up.parentElement, i++) {
+      parts.push(outline(up));
+    }
+    return parts.join("|");
+  };
+  win.__ringOff = {};
+  const labelOf = (el: Element) =>
+    `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""} "${(
+      el.getAttribute("aria-label") ??
+      el.textContent ??
+      ""
+    )
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 40)}"`;
   const selector =
     "a[href], button, input:not([type=hidden]), select, textarea, summary, [tabindex], [contenteditable=true]";
-  const out: string[] = [];
+  const out: Tabbable[] = [];
   for (const el of document.querySelectorAll<HTMLElement>(selector)) {
     if (el.matches(":disabled") || el.tabIndex < 0) continue;
     if (el.closest("[inert], dialog:not([open])")) continue;
@@ -71,18 +77,46 @@ function tabbableLabels(): string[] {
       if (checked && checked !== el) continue;
       if (!checked && group[0] !== el) continue;
     }
-    out.push(
-      `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""} "${(
-        el.getAttribute("aria-label") ??
-        el.textContent ??
-        ""
-      )
-        .trim()
-        .replace(/\s+/g, " ")
-        .slice(0, 40)}"`,
-    );
+    const id = String(out.length);
+    el.dataset.sweepId = id;
+    win.__ringOff[id] = win.__ring(el);
+    out.push({ id, label: labelOf(el) });
   }
   return out;
+}
+
+/** Judges the element holding focus: on screen, with a drawn size, not hidden, and with a focus ring that its unfocused self lacked. */
+function inspectFocus(): Stop | "body" {
+  const el = document.activeElement;
+  if (!el || el === document.body || el === document.documentElement) return "body";
+  const win = window as unknown as SweepWindow;
+  const label = `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""} "${(
+    el.getAttribute("aria-label") ??
+    el.textContent ??
+    ""
+  )
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 40)}"`;
+  const id = el.getAttribute("data-sweep-id");
+  const problems: string[] = [];
+  const rect = el.getBoundingClientRect();
+  const style = getComputedStyle(el);
+  if (style.visibility === "hidden") problems.push("visibility:hidden");
+  if (rect.width <= 0 || rect.height <= 0) problems.push("zero size");
+  const inView =
+    rect.bottom > 0 &&
+    rect.right > 0 &&
+    rect.top < window.innerHeight &&
+    rect.left < window.innerWidth;
+  if (!inView) problems.push("outside the viewport");
+  // The ring appears on focus: the outlines around the element (its own, a part inside it such as a Button's plate,
+  // or one around it such as a radio card) are not what they were before it had focus. A permanent outline is not a ring.
+  const off = id === null ? undefined : win.__ringOff[id];
+  const on = win.__ring(el);
+  if (on === "-" || on.split("|").every((part) => part === "-")) problems.push("no focus ring");
+  else if (off !== undefined && off === on) problems.push("the outline is the same without focus");
+  return { label, id, problems };
 }
 
 /** Tabs from the top of the page until focus has gone round once. Returns what held focus, press by press. */
@@ -119,7 +153,7 @@ test.describe("keyboard sweep (1440x900)", () => {
       await page.goto(path);
       await waitForHydration(page);
       await waitForFiniteAnimations(page);
-      const reachable = await page.evaluate(tabbableLabels);
+      const reachable = await page.evaluate(censusTabbables);
       const { stops, wrapped } = await tabAround(page);
 
       expect(wrapped, `focus goes round within ${CAP} presses`).toBe(true);
@@ -129,9 +163,9 @@ test.describe("keyboard sweep (1440x900)", () => {
         bad.map((s) => `${s.label}: ${s.problems.join(", ")}`),
         "focused elements that are hidden or ringless",
       ).toEqual([]);
-      const reached = new Set(stops.map((s) => s.label));
+      const reached = new Set(stops.map((s) => s.id));
       expect(
-        reachable.filter((label) => !reached.has(label)),
+        reachable.filter(({ id }) => !reached.has(id)).map(({ label }) => label),
         "tabbable elements Tab never reached",
       ).toEqual([]);
     });
