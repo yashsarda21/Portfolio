@@ -5,13 +5,15 @@
 // This script does not build: it reads whatever build/client holds. The SEO audit wants a canonical link, so build
 // with the test address (as `pnpm verify` and the e2e web server do): VITE_SITE_URL=https://arena.example pnpm build
 //
-// Serves build/client on port 4174 (the user's `pnpm preview` on 4173 is left alone), drives Playwright's
-// Chromium through chrome-launcher, and fails unless the budget below is met. Every page prints one table:
+// Serves build/client on port 4174 (the user's `pnpm preview` on 4173 is left alone) with brotli-compressed
+// text responses, like the production host, drives Playwright's Chromium through chrome-launcher, and fails
+// unless the budget below is met. Every page prints one table:
 // performance / accessibility / best practices / SEO, plus FCP, LCP, CLS and TBT from the audits.
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { createServer } from "node:http";
+import { dirname, extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { brotliCompressSync, constants as zlib } from "node:zlib";
 import { chromium } from "@playwright/test";
 import { launch } from "chrome-launcher";
 import lighthouse from "lighthouse";
@@ -35,7 +37,7 @@ const MOBILE = { name: "mobile", config: undefined };
  * The pages. Landing (spec 11.11, ruling L13): the full-motion run is reported for performance (the 3 s name
  * reveal is the largest paint by design) and gated on everything else; the reduced-motion run, which
  * measures the code's real cost, is where performance >= .9 is gated. The Intro gates everything but
- * performance. /scout keeps its original gate: desktop in full, mobile accessibility only.
+ * performance. /scout: desktop in full, mobile accessibility only.
  */
 const PAGES = [
   {
@@ -103,10 +105,73 @@ async function answers(url) {
   }
 }
 
-async function waitForServer(url, server) {
+const TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
+  ".woff2": "font/woff2",
+  ".webp": "image/webp",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".ico": "image/x-icon",
+  ".pdf": "application/pdf",
+};
+const COMPRESSIBLE = /^(text\/|application\/(javascript|json|xml)|image\/svg\+xml)/;
+
+/** The file a URL names: the file itself, a folder's index.html, or the SPA fallback page. */
+function fileFor(pathname) {
+  const clean = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
+  for (const candidate of [clean, join(clean, "index.html"), `${clean}.html`]) {
+    const file = join(BUILD, candidate);
+    if (file.startsWith(BUILD) && existsSync(file) && statSync(file).isFile()) return file;
+  }
+  return join(BUILD, "__spa-fallback.html");
+}
+
+/**
+ * The static server, standing in for the production host (Vercel serves brotli): text responses are
+ * brotli-compressed, each file once and kept in memory; everything else is sent as is. Nothing is written into
+ * build/client. Without this the phone numbers are dominated by uncompressed transfer sizes.
+ */
+function createBrotliServer() {
+  const cache = new Map();
+  return createServer((req, res) => {
+    const file = fileFor(new URL(req.url ?? "/", ORIGIN).pathname);
+    const type = TYPES[extname(file)] ?? "application/octet-stream";
+    const headers = {
+      "content-type": type,
+      "cache-control": file.includes("/assets/")
+        ? "public, max-age=31536000, immutable"
+        : "no-cache",
+    };
+    const packed =
+      COMPRESSIBLE.test(type) && String(req.headers["accept-encoding"] ?? "").includes("br");
+    if (!packed) {
+      res.writeHead(200, { ...headers, "content-length": statSync(file).size });
+      res.end(readFileSync(file));
+      return;
+    }
+    let body = cache.get(file);
+    if (!body) {
+      body = brotliCompressSync(readFileSync(file), { params: { [zlib.BROTLI_PARAM_QUALITY]: 5 } });
+      cache.set(file, body);
+    }
+    res.writeHead(200, {
+      ...headers,
+      "content-encoding": "br",
+      "content-length": body.length,
+      vary: "Accept-Encoding",
+    });
+    res.end(body);
+  });
+}
+
+async function waitForServer(url) {
   for (let i = 0; i < 100; i++) {
-    if (server.exitCode !== null)
-      throw new Error(`Static server exited early (code ${server.exitCode}).`);
     if (await answers(url)) return;
     await new Promise((r) => setTimeout(r, 100));
   }
@@ -134,13 +199,13 @@ const cls = (value) => value.toFixed(3).padStart(8);
 
 function formatRow(label, scores, metrics) {
   return (
-    `${label.padEnd(30)}` +
+    `${label.padEnd(36)}` +
     `${pct(scores.performance)} ${pct(scores.accessibility)} ${pct(scores["best-practices"])} ${pct(scores.seo)}  ` +
     `${ms(metrics.fcp)} ${ms(metrics.lcp)} ${cls(metrics.cls)} ${ms(metrics.tbt)}`
   );
 }
 
-const TABLE_HEAD = `${"".padEnd(30)}perf a11y  bp seo       FCP      LCP      CLS      TBT`;
+const TABLE_HEAD = `${"".padEnd(36)}perf a11y  bp seo       FCP      LCP      CLS      TBT`;
 
 /** Runs one variant RUNS times in its own Chrome and returns the rows and the gated values. */
 async function measure(url, variant) {
@@ -179,20 +244,12 @@ async function main() {
 
   let server;
   try {
-    server = spawn(
-      join(ROOT, "node_modules/.bin/sirv"),
-      [
-        "build/client",
-        "--single",
-        "__spa-fallback.html",
-        "--port",
-        String(PORT),
-        "--host",
-        "127.0.0.1",
-      ],
-      { cwd: ROOT, stdio: "ignore" },
-    );
-    await waitForServer(`${ORIGIN}/scout`, server);
+    server = createBrotliServer();
+    await new Promise((ok, fail) => {
+      server.once("error", fail);
+      server.listen(PORT, "127.0.0.1", ok);
+    });
+    await waitForServer(`${ORIGIN}/scout`);
 
     // Lighthouse performance is noisy (the very first run after a build has scored Speed Index 0.02 once),
     // so performance and the timings are gated on the median of RUNS runs (CLS on the worst run).
@@ -253,7 +310,7 @@ async function main() {
     console.log("\nLighthouse budget met.");
     return 0;
   } finally {
-    if (server && server.exitCode === null) server.kill();
+    if (server) server.close();
   }
 }
 
