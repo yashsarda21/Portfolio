@@ -32,6 +32,7 @@ Anything you mark comes back to me as one follow-up task. Do these before step 1
 
 1. In Vercel choose **Add New, Project**, and pick the repository.
 2. Framework preset: **Other**. Leave the build settings alone: `vercel.json` already says `pnpm build`, the output folder `build/client`, and `pnpm install --frozen-lockfile`.
+3. If the install step fails on the pnpm version (an error that mentions `packageManager` or the lockfile), add the environment variable `ENABLE_EXPERIMENTAL_COREPACK` with the value `1` in Vercel, then redeploy. That makes Vercel use the pnpm version named in `package.json` (`packageManager`).
 
 ### 3. Set the two settings (Project, Settings, Environment Variables)
 
@@ -40,7 +41,7 @@ Anything you mark comes back to me as one follow-up task. Do these before step 1
 | `VITE_SITE_URL` | The final address, https only, e.g. `https://yash.dev` | Yes. Without it the site builds but has no canonical link, no share-image address and an empty sitemap. |
 | `VITE_FORM_ENDPOINT` | The form service's https address (Formspree style) | Optional. Without it the Team Up form opens the visitor's email app instead. |
 
-Both are read **at build time**, so changing either one means a new deploy.
+Both are read **at build time**, so changing either one means a new deploy. (On your own Mac they can also sit in a `.env` file in the project folder; the build reads that file too, including for the form's security policy.)
 
 ### 4. Deploy
 
@@ -69,10 +70,11 @@ Use the real address, and do these in order.
 
 ### 6. Later: a custom domain
 
-1. In Vercel, Project, Settings, Domains: add the domain and follow its DNS steps.
-2. Change `VITE_SITE_URL` to the final address.
-3. **Redeploy** (Deployments, the latest one, Redeploy). The address is baked into the pages at build time, so without a new deploy the canonical link, the share image address and the sitemap still show the old address.
-4. Repeat the share-preview and sitemap checks in step 5.
+1. **Before you point a domain at the site, check its subdomains.** The site's `Strict-Transport-Security` header has `includeSubDomains` and lasts two years, so browsers will force https on *every* subdomain of that domain (for example `old.yourname.dev`) for two years. If any subdomain must stay on plain http, tell me before you continue; do not just carry on.
+2. In Vercel, Project, Settings, Domains: add the domain and follow its DNS steps.
+3. Change `VITE_SITE_URL` to the final address.
+4. **Redeploy** (Deployments, the latest one, Redeploy). The address is baked into the pages at build time, so without a new deploy the canonical link, the share image address and the sitemap still show the old address.
+5. Repeat the share-preview and sitemap checks in step 5.
 
 ## If something is wrong
 

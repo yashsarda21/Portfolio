@@ -133,9 +133,15 @@ const TYPES = {
 };
 const COMPRESSIBLE = /^(text\/|application\/(javascript|json|xml)|image\/svg\+xml)/;
 
-/** The file a URL names: the file itself, a folder's index.html, or the SPA fallback page. */
+/** The file a URL names: the file itself, a folder's index.html, or the SPA fallback page. Null when the path is not valid text (a bad %-escape). */
 function fileFor(pathname) {
-  const clean = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
+  let decoded;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+  const clean = normalize(decoded).replace(/^(\.\.[/\\])+/, "");
   for (const candidate of [clean, join(clean, "index.html"), `${clean}.html`]) {
     const file = join(BUILD, candidate);
     if (file.startsWith(BUILD) && existsSync(file) && statSync(file).isFile()) return file;
@@ -152,6 +158,11 @@ function createBrotliServer() {
   const cache = new Map();
   return createServer((req, res) => {
     const file = fileFor(new URL(req.url ?? "/", ORIGIN).pathname);
+    if (!file) {
+      res.writeHead(400, { "content-type": "text/plain; charset=utf-8" });
+      res.end("Bad request");
+      return;
+    }
     const type = TYPES[extname(file)] ?? "application/octet-stream";
     const headers = {
       "content-type": type,
