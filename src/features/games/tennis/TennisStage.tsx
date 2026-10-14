@@ -60,7 +60,7 @@ export function TennisStage({
             {bug.you}
           </ScoreBug.Cell>
           <ScoreBug.Away tone="line">{bug.away}</ScoreBug.Away>
-          <ScoreBug.Status alert={bug.alert}>{bug.status}</ScoreBug.Status>
+          <ScoreBug.Status>{bug.status}</ScoreBug.Status>
         </ScoreBug>
       }
     >

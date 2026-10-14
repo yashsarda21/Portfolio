@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 import { ui } from "@/content";
 import { withShell } from "@/shell/storyDecorators";
-import { artboardTennisView, calledView, freshView, lostView, wonView } from "./tennis.fixture";
+import {
+  artboardTennisView,
+  calledView,
+  freshView,
+  fullTimeView,
+  lostView,
+} from "./tennis.fixture";
 import { TennisPage } from "./TennisPage";
 
 const tennis = ui.games.tennis;
@@ -59,11 +65,11 @@ export const Lost: StoryObj = {
   },
 };
 
-/** The 1 %: three perfect returns and the winner. Only the claim is offered. */
-export const Won: StoryObj = {
-  render: () => <TennisPage view={wonView} phase="end" />,
+/** All three venues played: SEE FULL TIME leads, the rematch stays. */
+export const FullTime: StoryObj = {
+  render: () => <TennisPage view={fullTimeView} phase="end" />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("link", { name: tennis.claim })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: ui.games.fullTime })).toBeVisible();
   },
 };

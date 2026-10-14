@@ -1,5 +1,6 @@
 import { getInningsReveals, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
+import type { EndFlags } from "../engine/useMatchResult";
 import {
   buildGameChrome,
   announceWith,
@@ -33,7 +34,7 @@ export interface CricketView {
     /** The group's accessible name. */
     label: string;
     name: string;
-    /** "6*" | "0 OUT" */
+    /** "6*" | "14*" */
     score: string;
     /** "BALL 2 OF 3" | "OVER COMPLETE" */
     meta: string;
@@ -68,7 +69,7 @@ export interface CricketView {
   bowl: { label: string; labelPhone: string; hint: string };
   /** What the end offers; null while the over is still being bowled. */
   end: GameEndView | null;
-  /** The result saved to the match record and shown on the Hub: "14* NOT OUT" | "0 OUT". */
+  /** The result saved to the match record and shown on the Hub: "14* NOT OUT" | "4* NOT OUT". */
   saved: string;
   heading: string;
   headline: string;
@@ -86,7 +87,7 @@ export function buildCricketView(
   ui: UiCopy,
   routes: typeof ROUTES,
   state: CricketState,
-  { phase, offerHighlight }: { phase: CricketPhase; offerHighlight: boolean },
+  { phase, offerHighlight, fullTime }: { phase: CricketPhase } & EndFlags,
 ): CricketView {
   const copy = ui.games.cricket;
   const sep = ui.glyph.sep;
@@ -96,8 +97,8 @@ export function buildCricketView(
   const over = cricketOver(state);
 
   const runs = cricketRuns(state);
-  const score = state.won ? `${runs} ${copy.out}` : `${runs}${copy.notOutMark}`;
-  const saved = state.won ? score : `${score} ${copy.notOut}`;
+  const score = `${runs}${copy.notOutMark}`;
+  const saved = `${score} ${copy.notOut}`;
 
   // G7: innings 01 and 02 are the first two roles, the third is the academy, however many roles the content grows.
   const reveals = getInningsReveals(content);
@@ -153,12 +154,7 @@ export function buildCricketView(
     balls: Array.from({ length: CRICKET_BALLS }, (_, i) => {
       const ball = state.balls[i];
       if (!ball) return { label: String(i + 1), state: i === bowled ? "current" : "pending" };
-      const label =
-        ball.call === "bowled"
-          ? copy.wicket
-          : ball.runs === 0
-            ? ui.glyph.bullet
-            : String(ball.runs);
+      const label = ball.runs === 0 ? ui.glyph.bullet : String(ball.runs);
       return { label, state: ball.forYou ? "for" : "against" };
     }),
     screen: {
@@ -181,7 +177,7 @@ export function buildCricketView(
             `${copy.calls[last.call]} ${sentenceCase(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`,
             // "Over complete. Yash 14 not out."
             over
-              ? `${sentenceCase(copy.over)}. ${sentenceCase(yash)} ${sentenceCase(`${runs} ${state.won ? copy.out : copy.notOut}`)}`
+              ? `${sentenceCase(copy.over)}. ${sentenceCase(yash)} ${sentenceCase(`${runs} ${copy.notOut}`)}`
               : null,
           )
         : "",
@@ -198,10 +194,9 @@ export function buildCricketView(
     bowl: { label: copy.bowl, labelPhone: copy.bowlPhone, hint: copy.touchHint },
     end: buildGameEnd(ui, routes, chrome, {
       over,
-      won: state.won,
       offerHighlight,
+      fullTime,
       see: copy.see,
-      claim: copy.claim,
       again: copy.again,
     }),
     saved,

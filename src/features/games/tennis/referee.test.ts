@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { MAX_GAME_MS, VERDICT_MS } from "../engine/beats";
-import type { Luck } from "../engine/types";
 import {
   SERVE_WINDOW_MS,
   TELL_MS,
@@ -8,12 +7,12 @@ import {
   TENNIS_BEATS,
   TENNIS_SERVES,
   TENNIS_START,
+  tennisOver,
   TOSS_MS,
   newServe,
   playReturn,
   returnQuality,
   tennisPoints,
-  tennisWinner,
   windowFor,
   type ReturnPick,
   type Side,
@@ -21,12 +20,8 @@ import {
 } from "./referee";
 
 /** Plays one serve whose open side is `open`, with the return picked at `atMs` on `side`. */
-const serveAndReturn = (
-  s: TennisState,
-  pick: ReturnPick,
-  luck: Luck,
-  open: Side = "right",
-): TennisState => playReturn({ ...s, serve: { open, tossMs: 500 } }, pick, "stage", luck);
+const serveAndReturn = (s: TennisState, pick: ReturnPick, open: Side = "right"): TennisState =>
+  playReturn({ ...s, serve: { open, tossMs: 500 } }, pick, "stage");
 
 describe("windowFor", () => {
   it("shrinks each serve and stretches on touch", () => {
@@ -48,7 +43,6 @@ describe("newServe", () => {
     const over: TennisState = {
       serve: null,
       returns: Array(TENNIS_SERVES).fill({ q: "good", call: "returned" }),
-      won: false,
     };
     expect(newServe(over, () => 0)).toBe(over);
   });
@@ -92,36 +86,27 @@ describe("returnQuality", () => {
 });
 
 describe("playReturn", () => {
-  it("serves 1-2: appends the return, clears the serve and never rolls luck", () => {
-    const luck = vi.fn(() => 0);
-    const s = serveAndReturn(TENNIS_START, { side: "right", atMs: 100 }, luck);
+  it("serves 1-2: appends the return and clears the serve", () => {
+    const s = serveAndReturn(TENNIS_START, { side: "right", atMs: 100 });
     expect(s.returns).toEqual([{ q: "perfect", call: "clean" }]);
     expect(s.serve).toBeNull();
-    const s2 = serveAndReturn(s, { side: "right", atMs: 600 }, luck);
+    const s2 = serveAndReturn(s, { side: "right", atMs: 600 });
     expect(s2.returns[1]).toEqual({ q: "good", call: "returned" });
-    expect(luck).not.toHaveBeenCalled();
   });
 
-  it("serve 3, forced win: three perfect returns and a low roll", () => {
-    const pick: ReturnPick = { side: "right", atMs: 50 };
-    const s = [0, 1, 2].reduce((acc) => serveAndReturn(acc, pick, () => 0), TENNIS_START);
-    expect(s.returns[2]).toEqual({ q: "perfect", call: "winner" });
-    expect(s.won).toBe(true);
-    expect(tennisWinner(s)).toBe("you");
-  });
-
-  it("serve 3, otherwise: it clips the line and Yash wins, even after a perfect run", () => {
-    const pick: ReturnPick = { side: "right", atMs: 50 };
-    const s = [0, 1, 2].reduce((acc) => serveAndReturn(acc, pick, () => 0.5), TENNIS_START);
-    expect(s.returns[2]!.call).toBe("line");
-    expect(s.won).toBe(false);
-    expect(tennisWinner(s)).toBe("yash");
+  it("three perfect returns: serve 3 still clips the line (F1)", () => {
+    let s = TENNIS_START;
+    for (let i = 0; i < TENNIS_SERVES; i++) {
+      s = newServe(s, () => 0); // open: left
+      s = playReturn(s, { side: "left", atMs: 1 }, "stage");
+    }
+    expect(s.returns.map((r) => r.call)).toEqual(["clean", "clean", "line"]);
+    expect(s.returns.every((r) => r.q === "perfect")).toBe(true);
+    expect(tennisOver(s)).toBe(true);
   });
 
   it("does nothing with no serve in play", () => {
-    expect(playReturn(TENNIS_START, { side: "right", atMs: 0 }, "stage", () => 0)).toBe(
-      TENNIS_START,
-    );
+    expect(playReturn(TENNIS_START, { side: "right", atMs: 0 }, "stage")).toBe(TENNIS_START);
   });
 });
 
@@ -129,9 +114,9 @@ describe("tennisPoints", () => {
   it("narrates Yash's service game", () => {
     const pick: ReturnPick = { side: "right", atMs: 600 };
     const s0 = TENNIS_START;
-    const s1 = serveAndReturn(s0, pick, () => 0.5);
-    const s2 = serveAndReturn(s1, pick, () => 0.5);
-    const s3 = serveAndReturn(s2, pick, () => 0.5);
+    const s1 = serveAndReturn(s0, pick);
+    const s2 = serveAndReturn(s1, pick);
+    const s3 = serveAndReturn(s2, pick);
     expect(tennisPoints(s0)).toEqual(["15", "15"]);
     expect(tennisPoints(s1)).toEqual(["30", "15"]);
     expect(tennisPoints(s2)).toEqual(["40", "30"]);
@@ -140,15 +125,14 @@ describe("tennisPoints", () => {
 });
 
 describe("the reduced-motion rally", () => {
-  it("picks the open side at 60 % of each window: good, good, line, and Yash wins", () => {
+  it("picks the open side at 60 % of each window: good, good, line", () => {
     let s = TENNIS_START;
     for (let i = 0; i < TENNIS_SERVES; i++) {
       const atMs = windowFor(i, "stage") * TENNIS_AUTO_SHARE;
-      s = serveAndReturn(s, { side: "right", atMs }, () => 0.5);
+      s = serveAndReturn(s, { side: "right", atMs });
     }
     expect(s.returns.map((r) => r.call)).toEqual(["returned", "returned", "line"]);
     expect(s.returns.map((r) => r.q)).toEqual(["good", "good", "good"]);
-    expect(tennisWinner(s)).toBe("yash");
   });
 });
 

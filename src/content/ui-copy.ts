@@ -248,6 +248,12 @@ export const ui = {
       heading: "SMASH OR CLEAR",
       phase: 5,
     },
+    fullTime: {
+      title: "Full Time — The Arena",
+      description: "Your matchday against Yash Sarda: the final score.",
+      heading: "FULL TIME",
+      phase: 6,
+    },
     giantKiller: {
       title: "Giant Killer — The Arena",
       description: "The rare result: you beat Yash.",
@@ -453,8 +459,8 @@ export const ui = {
     unlocked: "UNLOCKED",
     /** G9: after two losses at one venue. */
     highlight: "WATCH THE HIGHLIGHT INSTEAD",
-    /** Saved for Team Up on a win (spec §8 outcome; Phase 6 reads it). */
-    prefill: "I beat you.",
+    /** F3: the end's main button once all three venues are played. */
+    fullTime: "SEE FULL TIME",
     /** Shown by the column under the reveal chip until the first reveal (derived). */
     firstReveal: "EVERY INPUT UNLOCKS SOMETHING",
     /** The phone's SKIP chip: the long "SKIP TO …" is its accessible name (derived). */
@@ -479,14 +485,11 @@ export const ui = {
       of: "OF",
       over: "OVER COMPLETE",
       notOutMark: "*",
-      /** A wicket, in the over's tracker. */
-      wicket: "W",
       notOut: "NOT OUT",
-      out: "OUT",
       bowl: "BOWL · SPACE",
       bowlPhone: "TAP TO BOWL",
       touchHint: "WIDER YORKER ZONE ON TOUCH · HAPTIC ON RELEASE",
-      calls: { dot: "DOT BALL.", four: "FOUR.", six: "SIX.", bowled: "BOWLED HIM." },
+      calls: { dot: "DOT BALL.", four: "FOUR.", six: "SIX." },
       comm: {
         start: "Your ball. Let's see what you've got.",
         dot: "Yorker. Dug out. I respect that.",
@@ -495,11 +498,9 @@ export const ui = {
         lastPerfect: "Perfect yorker. Flicked off the toes anyway. Still not out.",
         lastGood: "Good ball. Better shot. Career high score updated.",
         lastSix: "Into the second tier. Still not out.",
-        bowled: "Middle stump. Okay… you got me. That doesn't happen often.",
       },
       see: "SEE THE FULL SCORECARD",
       again: "BOWL AGAIN",
-      claim: "CLAIM YOUR WICKET",
       skip: "SKIP TO CAREER STATS",
     },
     tennis: {
@@ -528,7 +529,7 @@ export const ui = {
         matchPoint: "MATCH POINT",
         allIn: "ALL THREE ON THE BIG SCREEN", // derived
       },
-      status: { game: "GAME YASH", broke: "BROKE SERVE" }, // derived
+      status: { game: "GAME YASH" }, // derived
       calls: {
         clean: "CLEAN RETURN.",
         returned: "RETURNED.",
@@ -536,7 +537,6 @@ export const ui = {
         wrong: "WRONG SIDE.",
         early: "TOO EARLY.",
         line: "ON THE LINE.",
-        winner: "RETURN WINNER.",
       }, // derived
       comm: {
         // start: content.commentary.entrance[0]
@@ -545,7 +545,6 @@ export const ui = {
         line: "Clipped the line. Still undefeated.", // derived
       },
       see: "SEE MATCH HIGHLIGHTS", // derived
-      claim: "CLAIM YOUR BREAK", // derived
       skip: "SKIP TO MATCH HIGHLIGHTS",
     },
     badminton: {
@@ -561,23 +560,21 @@ export const ui = {
       charged: "ATTRIBUTE CHARGED",
       upNext: "UP NEXT",
       matchPoint: "MATCH POINT",
-      status: { game: "GAME YASH", saved: "SAVED" }, // derived
+      status: { game: "GAME YASH" }, // derived
       calls: {
         smash: "HE READS IT.",
         clear: "BACK LINE. STILL HIS.",
         drop: "AT THE NET. STILL HIS.",
         perfect: "PERFECT WEIGHT.",
-        through: "IT GETS THROUGH.",
       }, // derived
       comm: {
         start: "Your serve. He's reading your grip.", // derived
         rally: "He reads it. Another attribute charged.", // derived
         perfect: "Perfect weight. He still got there.", // derived
         matchPoint: "Match point. He's done this before.",
-        // final loss: content.commentary.yashWins[0]; a win: content.commentary.visitorWins[0]
+        // the final rally: content.commentary.yashWins[0]
       },
       see: "SEE PLAYER ATTRIBUTES", // derived
-      claim: "CLAIM YOUR POINT", // derived
       skip: "SKIP TO PLAYER ATTRIBUTES",
     },
   },

@@ -18,9 +18,7 @@ export function HubScreen() {
       venuesPlayed: s.venuesPlayed,
       lastScores: s.lastScores,
       sectionsSeen: s.sectionsSeen,
-      record: s.record,
-      achievements: s.achievements,
-      lockerRoomUnlocked: s.lockerRoomUnlocked,
+      yashWins: s.yashWins,
     })),
   );
   const ready = useRecordReady();
@@ -29,7 +27,7 @@ export function HubScreen() {
   const desktop = useMediaQuery(MEDIA.lg);
   const view = useMemo(() => buildHubView(content, ui, ROUTES, record), [record]);
 
-  // Once the record is in: the line for it, and again only when it changes (a win). Only the stage speaks (L11).
+  // Once the record is in: the line for it, and again only when it changes. Only the stage speaks (L11).
   useEffect(() => {
     if (ready && desktop) say(view.comm, { interrupt: true });
   }, [ready, desktop, view.comm, say]);

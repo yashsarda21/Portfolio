@@ -8,7 +8,7 @@ import {
   lostView,
   phoneArtboardCricketView,
   playOver,
-  wonView,
+  fullTimeView,
 } from "./cricket.fixture";
 import { CricketPage } from "./CricketPage";
 
@@ -92,11 +92,11 @@ export const Offer: StoryObj = {
   },
 };
 
-/** The 1 %: dot, dot, wicket. Only the claim is offered. */
-export const Won: StoryObj = {
-  render: () => <CricketPage view={wonView} phase="end" />,
+/** All three venues played: SEE FULL TIME leads, play again stays. */
+export const FullTime: StoryObj = {
+  render: () => <CricketPage view={fullTimeView} phase="end" />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("link", { name: cricket.claim })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: ui.games.fullTime })).toBeVisible();
   },
 };

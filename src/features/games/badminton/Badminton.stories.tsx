@@ -7,7 +7,7 @@ import {
   calledView,
   freshView,
   lostView,
-  wonView,
+  fullTimeView,
 } from "./badminton.fixture";
 import { BadmintonPage } from "./BadmintonPage";
 
@@ -75,11 +75,11 @@ export const Lost: StoryObj = {
   },
 };
 
-/** The 1 %: the drop that gets through, 20–20. Only the claim is offered. */
-export const Won: StoryObj = {
-  render: () => <BadmintonPage view={wonView} phase="end" />,
+/** All three venues played: SEE FULL TIME leads, the rematch stays. */
+export const FullTime: StoryObj = {
+  render: () => <BadmintonPage view={fullTimeView} phase="end" />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("link", { name: badminton.claim })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: ui.games.fullTime })).toBeVisible();
   },
 };

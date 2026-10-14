@@ -138,43 +138,15 @@ async function perfectGame(page: Page) {
   await advanceTo(page, ["end"]);
 }
 
-test.describe("the forced win (the 1 %)", () => {
-  test("four perfect weights: IT GETS THROUGH., then CLAIM YOUR POINT, saved and unlocked", async ({
+test.describe("perfect play still loses (F1)", () => {
+  test("four perfect weights: 21–19, GAME YASH, the attributes, REMATCH, then PLAYED on the Hub", async ({
     page,
   }) => {
     await forceLuck(page, 0);
     await openFrozen(page, "/arena/badminton");
     await perfectGame(page);
-    await expect(call(page)).toHaveText(badminton.calls.through);
-    await expect(call(page)).toHaveAttribute("data-tone", "volt");
-    await expectCallFits(page, 2);
-    await expect(bug(page)).toContainText(badminton.status.saved);
-    const claim = page.getByRole("link", { name: badminton.claim });
-    await expect(claim).toBeVisible();
-    await expect(claim).toBeFocused();
-    await expect(page.getByRole("button", { name: ui.hud.rematch })).toHaveCount(0);
-
-    const state = await stored(page);
-    expect(state.record).toEqual({ yash: 0, you: 1 });
-    expect(state.lockerRoomUnlocked).toBe(true);
-    expect(state.teamUpPrefill).toBe("I beat you.");
-    expect(state.lastScores.badminton).toBe("20–20");
-    expect(state.achievements).toContain("giant-killer");
-
-    await page.clock.resume();
-    await claim.click();
-    await expect(page).toHaveURL(/\/arena\/giant-killer$/);
-  });
-});
-
-test.describe("the forced loss", () => {
-  test("four perfect weights and no luck: 21–19, GAME YASH, the attributes, REMATCH, then PLAYED on the Hub", async ({
-    page,
-  }) => {
-    await forceLuck(page, 0.99);
-    await openFrozen(page, "/arena/badminton");
-    await perfectGame(page);
-    // At match point the last rally is a perfect drop that does not get through: it is called as the shot.
+    await expect(page.getByText(/CLAIM/)).toHaveCount(0);
+    // At match point the last rally is a perfect drop that still loses: it is called as the shot.
     await expect(call(page)).toHaveText(badminton.calls.drop);
     await expectCallFits(page, 2);
     await expect(bug(page)).toContainText(badminton.status.game);
@@ -185,8 +157,9 @@ test.describe("the forced loss", () => {
     await expect(page.getByRole("button", { name: ui.hud.rematch })).toBeVisible();
 
     const state = await stored(page);
-    expect(state.record).toEqual({ yash: 1, you: 0 });
+    expect(state.yashWins).toBe(1);
     expect(state.lastScores.badminton).toBe("21–19");
+    expect(state.bestForm.badminton).toBe(1);
 
     // A client navigation, so the page and the record are the same ones: the stage's breadcrumb goes to the Hub; the
     // column has none (the board draws none), so it goes through SKIP and the tab bar.
@@ -232,7 +205,7 @@ test.describe("the forced loss", () => {
     await expect(highlight).toBeVisible();
     await expect(highlight).toHaveAttribute("href", "/attributes");
     await expect(page.getByRole("button", { name: ui.hud.rematch })).toBeVisible();
-    expect((await stored(page)).record).toEqual({ yash: 2, you: 0 });
+    expect((await stored(page)).yashWins).toBe(2);
   });
 });
 

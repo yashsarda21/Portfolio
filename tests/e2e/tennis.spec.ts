@@ -86,41 +86,14 @@ async function playGame(page: Page, key: "ArrowLeft" | "ArrowRight") {
   await advanceTo(page, ["end"]);
 }
 
-test.describe("the forced win (the 1 %)", () => {
-  test("three perfect returns: RETURN WINNER, then CLAIM YOUR BREAK, saved and unlocked", async ({
-    page,
-  }) => {
-    await forceLuck(page, 0); // every serve opens left, toss 400
-    await openFrozen(page, "/arena/tennis");
-    await playGame(page, "ArrowLeft");
-    await expect(call(page)).toHaveText(tennis.calls.winner);
-    await expect(call(page)).toHaveAttribute("data-tone", "volt");
-    await expect(bug(page)).toContainText(tennis.status.broke);
-    const claim = page.getByRole("link", { name: tennis.claim });
-    await expect(claim).toBeVisible();
-    await expect(claim).toBeFocused();
-    await expect(page.getByRole("button", { name: ui.hud.rematch })).toHaveCount(0);
-
-    const state = await stored(page);
-    expect(state.record).toEqual({ yash: 0, you: 1 });
-    expect(state.lockerRoomUnlocked).toBe(true);
-    expect(state.teamUpPrefill).toBe("I beat you.");
-    expect(state.lastScores.tennis).toBe("BROKE SERVE");
-    expect(state.achievements).toContain("giant-killer");
-
-    await page.clock.resume();
-    await claim.click();
-    await expect(page).toHaveURL(/\/arena\/giant-killer$/);
-  });
-});
-
-test.describe("the forced loss", () => {
+test.describe("perfect play still loses (F1)", () => {
   test("three perfect returns and the line: GAME YASH, the highlights, REMATCH, then PLAYED on the Hub", async ({
     page,
   }) => {
-    await forceLuck(page, 0.99); // every serve opens right
+    await forceLuck(page, 0); // every serve opens left
     await openFrozen(page, "/arena/tennis");
-    await playGame(page, "ArrowRight");
+    await playGame(page, "ArrowLeft");
+    await expect(page.getByText(/CLAIM/)).toHaveCount(0);
     await expect(call(page)).toHaveText(tennis.calls.line);
     await expect(call(page)).toHaveAttribute("data-tone", "floodlight");
     await expect(bug(page)).toContainText(tennis.status.game);
@@ -131,8 +104,9 @@ test.describe("the forced loss", () => {
     await expect(page.getByRole("button", { name: ui.hud.rematch })).toBeVisible();
 
     const state = await stored(page);
-    expect(state.record).toEqual({ yash: 1, you: 0 });
+    expect(state.yashWins).toBe(1);
     expect(state.lastScores.tennis).toBe("GAME YASH");
+    expect(state.bestForm.tennis).toBe(1);
 
     // A client navigation, so the page and the record are the same ones: the stage's breadcrumb goes to the Hub; the
     // column has none (the board draws none), so it goes through the highlights and the tab bar.
@@ -178,7 +152,7 @@ test.describe("the forced loss", () => {
     await expect(highlight).toBeVisible();
     await expect(highlight).toHaveAttribute("href", "/highlights");
     await expect(page.getByRole("button", { name: ui.hud.rematch })).toBeVisible();
-    expect((await stored(page)).record).toEqual({ yash: 2, you: 0 });
+    expect((await stored(page)).yashWins).toBe(2);
   });
 });
 
@@ -360,7 +334,7 @@ test.describe("hidden tab (Review Focus 2)", () => {
     await page.clock.runFor(20_000);
     await expect(game(page)).toHaveAttribute("data-phase", "ready");
     expect((await stored(page)).lastScores?.tennis).toBeUndefined();
-    expect((await stored(page)).record?.yash ?? 0).toBe(0);
+    expect((await stored(page)).yashWins ?? 0).toBe(0);
 
     await hide(false);
     await expect(game(page)).toHaveAttribute("data-phase", "tell");
@@ -380,7 +354,7 @@ test.describe("hidden tab (Review Focus 2)", () => {
     await page.clock.runFor(20_000);
     await expect(game(page)).toHaveAttribute("data-phase", "ready");
     expect((await stored(page)).lastScores?.tennis).toBeUndefined();
-    expect((await stored(page)).record?.yash ?? 0).toBe(0);
+    expect((await stored(page)).yashWins ?? 0).toBe(0);
 
     await hide(false);
     await expect(game(page)).toHaveAttribute("data-phase", "tell");

@@ -96,24 +96,23 @@ function Shape({ caption, children }: { caption: string; children: ReactNode }) 
 }
 
 /** The end of an over, as the cricket view builds it. */
-const end = (won: boolean, offerHighlight: boolean): GameEndView =>
+const end = (offerHighlight: boolean, fullTime: boolean): GameEndView =>
   buildGameEnd(ui, ROUTES, chrome, {
     over: true,
-    won,
     offerHighlight,
+    fullTime,
     see: cricket.see,
-    claim: cricket.claim,
     again: cricket.again,
   })!;
 
-/** The end buttons: a loss, the highlight offer after the second loss, and a win; on the stage and in the column. */
+/** The end buttons: the venue's page, the highlight offer after the second loss, and Full Time once all three are played; on the stage and in the column. */
 export const End: StoryObj = {
   parameters: { layout: "padded" },
   render: () => {
     const ends = [
-      ["Loss", end(false, false)],
-      ["Offer", end(false, true)],
-      ["Win", end(true, false)],
+      ["Page", end(false, false)],
+      ["Offer", end(true, false)],
+      ["Full time", end(false, true)],
     ] as const;
     return (
       <div className="flex flex-col gap-10 p-6">
@@ -139,7 +138,7 @@ export const End: StoryObj = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getAllByRole("link", { name: cricket.see })).toHaveLength(2);
-    await expect(canvas.getAllByRole("link", { name: cricket.claim })).toHaveLength(2);
+    await expect(canvas.getAllByRole("link", { name: ui.games.fullTime })).toHaveLength(2);
     await expect(canvas.getAllByRole("button", { name: cricket.again })).toHaveLength(4);
   },
 };

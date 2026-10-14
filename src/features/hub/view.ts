@@ -4,7 +4,7 @@ import type { ROUTES } from "@/shell/routes";
 
 export type HubRecord = Pick<
   MatchRecordData,
-  "venuesPlayed" | "lastScores" | "sectionsSeen" | "record" | "achievements" | "lockerRoomUnlocked"
+  "venuesPlayed" | "lastScores" | "sectionsSeen" | "yashWins"
 >;
 
 export interface HubVenue {
@@ -91,7 +91,7 @@ const FACILITIES = [
   { key: "card", to: "card", tone: "glass" },
   { key: "teamUp", to: "teamUp", tone: "volt" },
 ] as const satisfies readonly { key: HubFacility["key"]; to: Target; tone: HubFacility["tone"] }[];
-/** Index entries in order; each is "seen" with the section whose page it lives on. The Locker Room shows once unlocked. */
+/** Index entries in order; each is "seen" with the section whose page it lives on. */
 const INDEX = [
   { key: "career", seenWith: "career", to: "career" },
   { key: "highlights", seenWith: "highlights", to: "highlights" },
@@ -101,7 +101,6 @@ const INDEX = [
   { key: "card", seenWith: "card", to: "card" },
   { key: "teamUp", seenWith: "teamUp", to: "teamUp" },
   { key: "scout", seenWith: "scout", to: "scout" },
-  { key: "lockerRoom", seenWith: "lockerRoom", to: "lockerRoom" },
 ] as const;
 
 /** Everything the Hub shows, as plain words, from the content, the copy and the saved record (H3 to H8). */
@@ -158,9 +157,10 @@ export function buildHubView(
       to: target(routes, to),
     };
   };
-  const links = INDEX.filter((e) => e.key !== "lockerRoom" || record.lockerRoomUnlocked).map(link);
+  const links = INDEX.map(link);
 
-  const unlocked = ACHIEVEMENTS.filter((a) => record.achievements.includes(a)).length;
+  // The visitor never beats Yash (F1): the hidden achievement stays locked.
+  const unlocked = 0;
   const a = hub.achievements;
   const comms = [hub.comm.none, hub.comm.one, hub.comm.two, hub.comm.all];
 
@@ -181,7 +181,7 @@ export function buildHubView(
     brand: { mark: ui.brand.mark, label: ui.brand.wordmark, to: routes.home },
     record: {
       label: ui.record.yours,
-      value: `${hub.record.yash} ${record.record.yash} ${sep} ${hub.record.you} ${record.record.you}`,
+      value: `${hub.record.yash} ${record.yashWins} ${sep} ${hub.record.you} 0`,
     },
     matchday: {
       label: hub.matchday.label,
@@ -202,10 +202,7 @@ export function buildHubView(
       { ...trophies, label: f.trophies.labelPhone },
       { ...academy, title: f.academy.titlePhone },
     ],
-    comm:
-      record.record.you > 0
-        ? (content.commentary.visitorWins[0] ?? hub.comm.all)
-        : (comms[done] ?? hub.comm.none),
+    comm: comms[done] ?? hub.comm.none,
     commTag: ui.comm.tag,
     hint: { drag: hub.hint.drag, keys: hub.hint.keys, sep },
     quickView: ui.hud.quickView,

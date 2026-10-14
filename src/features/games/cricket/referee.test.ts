@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { seeded } from "@/lib/seeded";
+import { describe, expect, it } from "vitest";
 import { MAX_GAME_MS, VERDICT_MS } from "../engine/beats";
-import type { Luck, Quality } from "../engine/types";
+import type { Quality } from "../engine/types";
 import {
   CRICKET_AUTO,
   CRICKET_BALLS,
@@ -11,13 +10,11 @@ import {
   bowl,
   cricketOver,
   cricketRuns,
-  cricketWinner,
   lengthQuality,
   type CricketState,
 } from "./referee";
 
-const play = (qs: Quality[], luck: Luck = () => 0.99): CricketState =>
-  qs.reduce((s, q) => bowl(s, q, luck), CRICKET_START);
+const play = (qs: Quality[]): CricketState => qs.reduce((s, q) => bowl(s, q), CRICKET_START);
 
 describe("lengthQuality", () => {
   it("judges the stage zones", () => {
@@ -49,18 +46,13 @@ describe("bowl", () => {
     expect(play(["perfect", "miss"]).balls[1]).toMatchObject({ call: "six", runs: 6, line: "six" });
   });
 
-  it("ball 3, forced win: three perfect balls and a low roll bowl him", () => {
-    const s = play(["perfect", "perfect", "perfect"], () => 0);
-    expect(s.balls[2]).toMatchObject({ call: "bowled", runs: 0, forYou: true, line: "bowled" });
-    expect(s.won).toBe(true);
-    expect(cricketWinner(s)).toBe("you");
-  });
-
-  it("ball 3, forced loss: three perfect balls and a high roll still go for four", () => {
-    const s = play(["perfect", "perfect", "perfect"], () => 0.5);
-    expect(s.balls[2]).toMatchObject({ call: "four", line: "lastPerfect" });
-    expect(s.won).toBe(false);
-    expect(cricketWinner(s)).toBe("yash");
+  it("three perfect balls still end FOUR on the last: Yash is 4 not out (F1)", () => {
+    let s = CRICKET_START;
+    for (let i = 0; i < CRICKET_BALLS; i++) s = bowl(s, "perfect");
+    expect(s.balls.map((b) => b.call)).toEqual(["dot", "dot", "four"]);
+    expect(s.balls.at(-1)!.line).toBe("lastPerfect");
+    expect(cricketRuns(s)).toBe(4);
+    expect(cricketOver(s)).toBe(true);
   });
 
   it("ball 3 lines follow the quality", () => {
@@ -74,16 +66,10 @@ describe("bowl", () => {
     });
   });
 
-  it("never rolls luck unless the streak is perfect", () => {
-    const luck = vi.fn(() => 0);
-    play(["perfect", "good", "perfect"], luck);
-    expect(luck).not.toHaveBeenCalled();
-  });
-
   it("returns the same state after the over", () => {
     const s = play(["good", "good", "good"]);
     expect(cricketOver(s)).toBe(true);
-    expect(bowl(s, "perfect", () => 0)).toBe(s);
+    expect(bowl(s, "perfect")).toBe(s);
   });
 });
 
@@ -92,23 +78,8 @@ describe("the over", () => {
     expect(cricketRuns(play(["good", "miss", "good"]))).toBe(14);
   });
 
-  it("the reduced-motion over is 14* and Yash wins", () => {
-    const s = play(CRICKET_AUTO);
-    expect(cricketRuns(s)).toBe(14);
-    expect(cricketWinner(s)).toBe("yash");
-  });
-
-  it("has no winner until the over is done", () => {
-    expect(cricketWinner(play(["perfect"]))).toBeNull();
-  });
-
-  it("is the 1 %: an always-perfect player wins about 12 % of overs", () => {
-    const luck = seeded(42);
-    let wins = 0;
-    const overs = 20_000;
-    for (let i = 0; i < overs; i++) if (play(["perfect", "perfect", "perfect"], luck).won) wins++;
-    expect(wins / overs).toBeGreaterThan(0.1);
-    expect(wins / overs).toBeLessThan(0.14);
+  it("the reduced-motion over is 14*", () => {
+    expect(cricketRuns(play(CRICKET_AUTO))).toBe(14);
   });
 
   it("fits the 15 s fair-play cap", () => {

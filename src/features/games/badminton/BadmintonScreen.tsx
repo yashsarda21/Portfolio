@@ -2,15 +2,16 @@ import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { autoRallyTimes } from "../engine/beats";
+import { perfectShare } from "../engine/form";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
 import { useAutoRally, useGameSession } from "../engine/useGameSession";
 import { useGameKeys } from "../engine/useGameKeys";
+import { NO_END_FLAGS, type EndFlags } from "../engine/useMatchResult";
 import { BadmintonPage } from "./BadmintonPage";
 import { shuttleTransform } from "./flight";
 import {
   badmintonOver,
-  badmintonWinner,
   BADMINTON_AUTO,
   BADMINTON_BEATS,
   BADMINTON_START_STATE,
@@ -20,14 +21,13 @@ import {
 } from "./referee";
 import { buildBadmintonView, type BadmintonPhase } from "./view";
 
-interface Run {
+interface Run extends EndFlags {
   game: BadmintonState;
   phase: BadmintonPhase;
-  offerHighlight: boolean;
 }
-const START: Run = { game: BADMINTON_START_STATE, phase: "ready", offerHighlight: false };
+const START: Run = { game: BADMINTON_START_STATE, phase: "ready", ...NO_END_FLAGS };
 
-const build = (game: BadmintonState, at: { phase: BadmintonPhase; offerHighlight: boolean }) =>
+const build = (game: BadmintonState, at: { phase: BadmintonPhase } & EndFlags) =>
   buildBadmintonView(content, ui, ROUTES, game, at);
 
 /** The phases in which a hold can begin or end: the game is waiting for you. */
@@ -77,7 +77,7 @@ export function BadmintonScreen() {
   /** A rally has been played: the call, what it charged, the line; the game's end is saved at once (G8). */
   const land = (next: BadmintonState) => {
     const over = badmintonOver(next);
-    const after = build(next, { phase: "called", offerHighlight: false });
+    const after = build(next, { phase: "called", ...NO_END_FLAGS });
     const now = live.current;
     if (now.desktop) now.say(after.comm, { interrupt: true });
     if (!over) {
@@ -85,7 +85,7 @@ export function BadmintonScreen() {
       timers.after(BADMINTON_BEATS.callMs, ready);
       return;
     }
-    session.finish(next, badmintonWinner(next)!, after.saved);
+    session.finish(next, { score: after.saved, form: perfectShare(next.rallies) });
   };
 
   /** The shuttle from your ring over the net to Yash's, along the arc. Nothing but transform moves. */
@@ -115,7 +115,7 @@ export function BadmintonScreen() {
   const release = () => {
     if (latest.current.phase !== "charging") return;
     const power = powerAt(clock.elapsed());
-    const next = playRally(latest.current.game, power, Math.random);
+    const next = playRally(latest.current.game, power);
     commit({ phase: "flight" });
     if (!live.current.desktop) navigator.vibrate?.(20);
     if (next.rallies.at(-1)?.shot === "smash") live.current.audio.play("smash");
@@ -127,7 +127,7 @@ export function BadmintonScreen() {
     let game = BADMINTON_START_STATE;
     autoRallyTimes(BADMINTON_AUTO.length).forEach((at, i) => {
       timers.after(at, () => {
-        game = playRally(game, BADMINTON_AUTO[i]!, Math.random);
+        game = playRally(game, BADMINTON_AUTO[i]!);
         land(game);
       });
     });

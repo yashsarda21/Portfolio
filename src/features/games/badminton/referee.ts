@@ -1,6 +1,5 @@
 import { pingPong } from "../engine/clock";
-import { luckyWin } from "../engine/luck";
-import type { Luck, Quality, Winner } from "../engine/types";
+import type { Quality } from "../engine/types";
 
 export const BADMINTON_RALLIES = 4;
 /** Meter fill in % of its height, bottom up: 8 → 86 over 1.4 s, bouncing while held (spec §8.3). */
@@ -17,7 +16,7 @@ export const BADMINTON_BEATS = { flightMs: 600, callMs: 1200 } as const;
 export const BADMINTON_AUTO = [50, 85, 30, 30] as const;
 
 export type Shot = "smash" | "clear" | "drop";
-export type BadmintonCall = Shot | "perfect" | "through";
+export type BadmintonCall = Shot | "perfect";
 export interface BadmintonRally {
   shot: Shot;
   q: Quality;
@@ -25,9 +24,8 @@ export interface BadmintonRally {
 }
 export interface BadmintonState {
   rallies: BadmintonRally[];
-  won: boolean;
 }
-export const BADMINTON_START_STATE: BadmintonState = { rallies: [], won: false };
+export const BADMINTON_START_STATE: BadmintonState = { rallies: [] };
 
 export const powerAt = (elapsedMs: number) =>
   POWER.from + (POWER.to - POWER.from) * pingPong(elapsedMs, POWER.periodMs);
@@ -36,22 +34,20 @@ export const shotFor = (power: number): Shot =>
 export const weightQuality = (power: number): Quality =>
   power >= PERFECT_WEIGHT.from && power <= PERFECT_WEIGHT.to ? "perfect" : "good";
 export const badmintonOver = (s: BadmintonState) => s.rallies.length >= BADMINTON_RALLIES;
-export const badmintonWinner = (s: BadmintonState): Winner | null =>
-  badmintonOver(s) ? (s.won ? "you" : "yash") : null;
 export const matchPoint = (s: BadmintonState) => s.rallies.length === BADMINTON_RALLIES - 1;
+/** Yash takes every rally, the last one too: 17–19 becomes 21–19 (F1). */
 export function badmintonScore(s: BadmintonState): { yash: number; you: number } {
-  const yashPoints =
-    Math.min(s.rallies.length, BADMINTON_RALLIES - 1) + (badmintonOver(s) && !s.won ? 1 : 0);
-  return { yash: BADMINTON_START.yash + yashPoints, you: BADMINTON_START.you + (s.won ? 1 : 0) };
+  return {
+    yash: BADMINTON_START.yash + Math.min(s.rallies.length, BADMINTON_RALLIES),
+    you: BADMINTON_START.you,
+  };
 }
 
-/** One rally. Yash wins rallies 1–3 whatever you play; at 20–19 only a perfect drop after a perfect run, plus the 1 %, gets through. */
-export function playRally(s: BadmintonState, power: number, luck: Luck): BadmintonState {
+/** One rally. Yash always wins (F1): every rally is his, and at match point the call is the shot, however perfect the run. */
+export function playRally(s: BadmintonState, power: number): BadmintonState {
   if (badmintonOver(s)) return s;
   const shot = shotFor(power);
   const q = weightQuality(power);
-  const call: BadmintonCall = q === "perfect" ? "perfect" : shot;
-  if (!matchPoint(s)) return { rallies: [...s.rallies, { shot, q, call }], won: false };
-  const won = luckyWin(q === "perfect" && s.rallies.every((r) => r.q === "perfect"), luck);
-  return { rallies: [...s.rallies, { shot, q, call: won ? "through" : shot }], won };
+  const call: BadmintonCall = q === "perfect" && !matchPoint(s) ? "perfect" : shot;
+  return { rallies: [...s.rallies, { shot, q, call }] };
 }

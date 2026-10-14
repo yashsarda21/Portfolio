@@ -8,17 +8,18 @@ import { buildCricketView, type CricketPhase } from "./view";
 /** The phone's quiet third link at the end. */
 const HUB = { label: "BACK TO THE HUB", to: "/arena" };
 
-/** Plays qualities in order. `luck` decides the 1 % on the last ball (0 lands it, 0.99 never does). */
-const play = (qualities: Quality[], luck = 0.99): CricketState =>
-  qualities.reduce((s, q) => bowl(s, q, () => luck), CRICKET_START);
+/** Plays qualities in order. */
+const play = (qualities: Quality[]): CricketState =>
+  qualities.reduce((s, q) => bowl(s, q), CRICKET_START);
 const view = (
   state: CricketState,
-  opts: { phase?: CricketPhase; offerHighlight?: boolean } = {},
+  opts: { phase?: CricketPhase; offerHighlight?: boolean; fullTime?: boolean } = {},
   c = content,
 ) =>
   buildCricketView(c, ui, ROUTES, state, {
     phase: opts.phase ?? "called",
     offerHighlight: opts.offerHighlight ?? false,
+    fullTime: opts.fullTime ?? false,
   });
 
 describe("buildCricketView", () => {
@@ -143,24 +144,31 @@ describe("buildCricketView", () => {
     });
   });
 
-  it("a win (dot, dot, wicket): 0 out, and only the claim", () => {
-    const state = play(["perfect", "perfect", "perfect"], 0);
-    const v = view(state, { phase: "end" });
+  it("three perfect balls: dot, dot, then FOUR, and Yash is 4 not out (F1)", () => {
+    const v = view(play(["perfect", "perfect", "perfect"]), { phase: "end" });
     expect(v.balls.map((b) => [b.label, b.state])).toEqual([
       ["•", "for"],
       ["•", "for"],
-      ["W", "for"],
+      ["4", "against"],
     ]);
-    expect(v.bug.score).toBe("0 OUT");
-    expect(v.onStrike).toBe("YASH · ON STRIKE · 0 OUT");
-    expect(v.saved).toBe("0 OUT");
-    expect(v.call).toEqual({ text: "BOWLED HIM.", tone: "volt" });
-    expect(v.comm).toBe(ui.games.cricket.comm.bowled);
-    expect(v.end).toEqual({
-      primary: null,
-      claim: { label: "CLAIM YOUR WICKET", to: "/arena/giant-killer" },
-      hub: HUB,
-    });
+    expect(v.bug.score).toBe("4*");
+    expect(v.onStrike).toBe("YASH · ON STRIKE · 4*");
+    expect(v.saved).toBe("4* NOT OUT");
+    expect(v.call).toEqual({ text: "FOUR.", tone: "floodlight" });
+    expect(v.comm).toBe(ui.games.cricket.comm.lastPerfect);
+    expect(v.end?.primary).toEqual({ label: "SEE THE FULL SCORECARD", to: "/career" });
+    expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
+  });
+
+  it("once all three venues are played, the main button is SEE FULL TIME, ahead of the highlight (F3)", () => {
+    const state = play(["good", "miss", "good"]);
+    for (const offerHighlight of [false, true]) {
+      expect(view(state, { phase: "end", offerHighlight, fullTime: true }).end).toEqual({
+        primary: { label: "SEE FULL TIME", to: "/arena/full-time" },
+        again: "BOWL AGAIN",
+        hub: HUB,
+      });
+    }
   });
 
   it("with a third career role the over still reveals innings 01, 02, then the academy", () => {
@@ -190,8 +198,8 @@ describe("buildCricketView", () => {
     expect(first).not.toMatch(/over complete/i);
     const done = view(play(["good", "miss", "good"]), { phase: "verdict" }).announce;
     expect(done).toMatch(/\. Over complete\. Yash 14 not out\.$/);
-    expect(view(play(["perfect", "perfect", "perfect"], 0), { phase: "verdict" }).announce).toMatch(
-      /\. Over complete\. Yash 0 out\.$/,
+    expect(view(play(["perfect", "perfect", "perfect"]), { phase: "verdict" }).announce).toMatch(
+      /\. Over complete\. Yash 4 not out\.$/,
     );
     // The end buttons appear on the same words: nothing is said again.
     expect(view(play(["good", "miss", "good"]), { phase: "end" }).announce).toBe(done);

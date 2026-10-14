@@ -11,15 +11,15 @@ export { MATCH_RECORD_KEY };
 export interface MatchRecordData {
   venuesPlayed: Venue[];
   lastScores: Partial<Record<Venue, string>>;
+  /** Each venue's best perfect share (F4), 0 to 1. */
+  bestForm: Partial<Record<Venue, number>>;
   sectionsSeen: string[];
-  record: { yash: number; you: number };
-  achievements: string[];
-  lockerRoomUnlocked: boolean;
-  teamUpPrefill: string | null;
+  /** Every finished game: the visitor never wins (F1). */
+  yashWins: number;
 }
 
 interface MatchRecordActions {
-  completeMatch(m: { venue: Venue; score: string; winner: "yash" | "you"; prefill?: string }): void;
+  completeMatch(m: { venue: Venue; score: string; form: number }): void;
   markSeen(section: string): void;
   reset(): void;
 }
@@ -27,11 +27,9 @@ interface MatchRecordActions {
 const initial: MatchRecordData = {
   venuesPlayed: [],
   lastScores: {},
+  bestForm: {},
   sectionsSeen: [],
-  record: { yash: 0, you: 0 },
-  achievements: [],
-  lockerRoomUnlocked: false,
-  teamUpPrefill: null,
+  yashWins: 0,
 };
 
 const isVenue = (v: unknown): v is Venue => VENUES.includes(v as Venue);
@@ -48,20 +46,25 @@ export function sanitizeRecord(raw: unknown): MatchRecordData {
     string,
     unknown
   >;
-  const tally = (r.record && typeof r.record === "object" ? r.record : {}) as Record<
+  const forms = (r.bestForm && typeof r.bestForm === "object" ? r.bestForm : {}) as Record<
     string,
     unknown
   >;
+  // A Phase 5 record kept the tally as `record.yash`; the visitor's side (`you`) is gone with the win.
+  const oldTally = (r.record && typeof r.record === "object" ? r.record : undefined) as
+    { yash?: unknown } | undefined;
   return {
     venuesPlayed: [...new Set(strings(r.venuesPlayed).filter(isVenue))],
     lastScores: Object.fromEntries(
       Object.entries(scores).filter(([k, v]) => isVenue(k) && typeof v === "string"),
     ) as MatchRecordData["lastScores"],
+    bestForm: Object.fromEntries(
+      Object.entries(forms)
+        .filter(([k, v]) => isVenue(k) && typeof v === "number" && Number.isFinite(v))
+        .map(([k, v]) => [k, Math.min(1, Math.max(0, v as number))]),
+    ) as MatchRecordData["bestForm"],
     sectionsSeen: [...new Set(strings(r.sectionsSeen))],
-    record: { yash: count(tally.yash), you: count(tally.you) },
-    achievements: [...new Set(strings(r.achievements))],
-    lockerRoomUnlocked: r.lockerRoomUnlocked === true,
-    teamUpPrefill: typeof r.teamUpPrefill === "string" ? r.teamUpPrefill : null,
+    yashWins: count(r.yashWins ?? oldTally?.yash),
   };
 }
 
@@ -70,23 +73,15 @@ export const useMatchRecord = create<MatchRecordData & MatchRecordActions>()(
   persist(
     (set) => ({
       ...initial,
-      completeMatch: ({ venue, score, winner, prefill }) =>
-        set((s) => {
-          const won = winner === "you";
-          return {
-            venuesPlayed: s.venuesPlayed.includes(venue)
-              ? s.venuesPlayed
-              : [...s.venuesPlayed, venue],
-            lastScores: { ...s.lastScores, [venue]: score },
-            record: { yash: s.record.yash + (won ? 0 : 1), you: s.record.you + (won ? 1 : 0) },
-            achievements:
-              won && !s.achievements.includes("giant-killer")
-                ? [...s.achievements, "giant-killer"]
-                : s.achievements,
-            lockerRoomUnlocked: s.lockerRoomUnlocked || won,
-            teamUpPrefill: won && prefill ? prefill : s.teamUpPrefill,
-          };
-        }),
+      completeMatch: ({ venue, score, form }) =>
+        set((s) => ({
+          venuesPlayed: s.venuesPlayed.includes(venue)
+            ? s.venuesPlayed
+            : [...s.venuesPlayed, venue],
+          lastScores: { ...s.lastScores, [venue]: score },
+          bestForm: { ...s.bestForm, [venue]: Math.max(s.bestForm[venue] ?? 0, form) },
+          yashWins: s.yashWins + 1,
+        })),
       markSeen: (section) =>
         set((s) =>
           s.sectionsSeen.includes(section) ? s : { sectionsSeen: [...s.sectionsSeen, section] },
@@ -95,7 +90,7 @@ export const useMatchRecord = create<MatchRecordData & MatchRecordActions>()(
     }),
     {
       name: MATCH_RECORD_KEY,
-      version: 1,
+      version: 2,
       merge: (persisted, current) => ({ ...current, ...sanitizeRecord(persisted) }),
       // A future version bump lands here.
       migrate: (persisted) => sanitizeRecord(persisted),
@@ -104,6 +99,10 @@ export const useMatchRecord = create<MatchRecordData & MatchRecordActions>()(
     },
   ),
 );
+
+/** All three venues played: Full Time is open (F3, F6). */
+export const matchdayComplete = (r: Pick<MatchRecordData, "venuesPlayed">) =>
+  VENUES.every((v) => r.venuesPlayed.includes(v));
 
 /** Mount once in the shell: loads the saved record after hydration (no SSR mismatch). */
 export function MatchRecordHydrator() {

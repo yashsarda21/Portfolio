@@ -5,17 +5,16 @@ import { useAudio } from "@/shell/audio";
 import { useCommentary } from "@/shell/commentary";
 import type { Venue } from "@/shell/matchRecord";
 import { VERDICT_MS } from "./beats";
-import type { GameLayout, Winner } from "./types";
+import type { GameLayout } from "./types";
 import { useFlight } from "./useFlight";
-import { useMatchResult } from "./useMatchResult";
+import { useMatchResult, type EndFlags } from "./useMatchResult";
 import { useRun } from "./useRun";
 import { useTimers } from "./useTimers";
 
-/** What every game's run holds, whatever else it adds: the game so far, the phase, and whether the highlight is offered (G9). */
-interface SessionRun {
+/** What every game's run holds, whatever else it adds: the game so far, the phase, and what the end offers (G9, F3). */
+interface SessionRun extends EndFlags {
   game: unknown;
   phase: string;
-  offerHighlight: boolean;
 }
 
 /**
@@ -32,7 +31,7 @@ export function useGameSession<R extends SessionRun, V>({
   venue: Venue;
   start: R;
   /** The game's view builder, with the content, the copy and the routes already given. */
-  build: (game: R["game"], at: { phase: R["phase"]; offerHighlight: boolean }) => V;
+  build: (game: R["game"], at: { phase: R["phase"] } & EndFlags) => V;
 }) {
   const { run, latest, commit } = useRun<R>(start);
   const flight = useFlight();
@@ -52,7 +51,12 @@ export function useGameSession<R extends SessionRun, V>({
   });
 
   const view = useMemo(
-    () => build(run.game, { phase: run.phase, offerHighlight: run.offerHighlight }),
+    () =>
+      build(run.game, {
+        phase: run.phase,
+        offerHighlight: run.offerHighlight,
+        fullTime: run.fullTime,
+      }),
     [run, build],
   );
 
@@ -60,9 +64,13 @@ export function useGameSession<R extends SessionRun, V>({
    * The game is over: save the result (once, here, the moment it is known: G8), show the verdict, and `VERDICT_MS`
    * later the end buttons. `extra` is whatever else the run changes with it.
    */
-  const finish = (next: R["game"], winner: Winner, saved: string, extra: Partial<R> = {}) => {
-    const { offerHighlight } = live.current.save({ score: saved, winner });
-    commit({ game: next, phase: "verdict", offerHighlight, ...extra } as unknown as Partial<R>);
+  const finish = (
+    next: R["game"],
+    result: { score: string; form: number },
+    extra: Partial<R> = {},
+  ) => {
+    const flags = live.current.save(result);
+    commit({ game: next, phase: "verdict", ...flags, ...extra } as unknown as Partial<R>);
     timers.after(VERDICT_MS, () => commit({ phase: "end" } as unknown as Partial<R>));
   };
 

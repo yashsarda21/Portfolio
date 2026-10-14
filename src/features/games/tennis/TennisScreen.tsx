@@ -3,10 +3,12 @@ import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { useArenaTransition } from "@/shell/transition";
 import { autoRallyTimes } from "../engine/beats";
+import { perfectShare } from "../engine/form";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
 import { useAutoRally, useGameSession } from "../engine/useGameSession";
 import { useGameKeys } from "../engine/useGameKeys";
+import { NO_END_FLAGS, type EndFlags } from "../engine/useMatchResult";
 import { returnAt, serveDrawn } from "./flight";
 import {
   newServe,
@@ -17,7 +19,6 @@ import {
   TENNIS_SERVES,
   TENNIS_START,
   tennisOver,
-  tennisWinner,
   windowFor,
   type Side,
   type TennisState,
@@ -25,16 +26,15 @@ import {
 import { TennisPage } from "./TennisPage";
 import { buildTennisView, LIVE_PHASES, type TennisPhase } from "./view";
 
-interface Run {
+interface Run extends EndFlags {
   game: TennisState;
   phase: TennisPhase;
-  offerHighlight: boolean;
   /** The side the last return was sent to (null: none, or the serve went by). */
   shot: Side | null;
 }
-const START: Run = { game: TENNIS_START, phase: "ready", offerHighlight: false, shot: null };
+const START: Run = { game: TENNIS_START, phase: "ready", ...NO_END_FLAGS, shot: null };
 
-const build = (game: TennisState, at: { phase: TennisPhase; offerHighlight: boolean }) =>
+const build = (game: TennisState, at: { phase: TennisPhase } & EndFlags) =>
   buildTennisView(content, ui, ROUTES, game, at);
 
 /**
@@ -98,7 +98,7 @@ export function TennisScreen() {
   /** A return has been judged: the call, what it unlocked, the sound and the line; the game's end is saved at once (G8). */
   const land = (next: TennisState, side: Side | null) => {
     const over = tennisOver(next);
-    const after = build(next, { phase: "called", offerHighlight: false });
+    const after = build(next, { phase: "called", ...NO_END_FLAGS });
     const last = next.returns.at(-1);
     const now = live.current;
     if (last && last.q !== "miss") now.audio.play("net");
@@ -111,7 +111,7 @@ export function TennisScreen() {
       timers.after(TENNIS_BEATS.callMs, beginServe);
       return;
     }
-    session.finish(next, tennisWinner(next)!, after.saved, { shot: side });
+    session.finish(next, { score: after.saved, form: perfectShare(next.returns) }, { shot: side });
   };
 
   /** The window is over and nobody picked: Yash's serve was an ace. */
@@ -171,7 +171,7 @@ export function TennisScreen() {
         : cur.phase === "window" && hitAt.current !== null
           ? clock.elapsed() - hitAt.current
           : -1;
-    land(playReturn(cur.game, { side, atMs }, serve.current.layout, Math.random), side);
+    land(playReturn(cur.game, { side, atMs }, serve.current.layout), side);
   }
 
   /** G10: with reduced motion the game plays itself, no movement: each return lands on the open side at 60 % of its window. */
@@ -186,7 +186,6 @@ export function TennisScreen() {
           served,
           { side, atMs: windowFor(served.returns.length, where) * TENNIS_AUTO_SHARE },
           where,
-          Math.random,
         );
         land(game, side);
       });

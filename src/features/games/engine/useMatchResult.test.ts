@@ -1,6 +1,5 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ui } from "@/content";
 import { useMatchRecord } from "@/shell/matchRecord";
 import { resetLosses } from "./session";
 import { useMatchResult } from "./useMatchResult";
@@ -14,30 +13,43 @@ const setup = (venue: "cricket" | "tennis" | "badminton" = "cricket") =>
   renderHook(() => useMatchResult(venue)).result.current;
 
 describe("useMatchResult", () => {
-  it("saves a Yash win to the record and offers the highlight on the second loss, not the first", () => {
+  it("saves the score and form, and says when the matchday is complete (F3)", () => {
+    const { save } = setup("cricket");
+    expect(save({ score: "14* NOT OUT", form: 0 })).toEqual({
+      offerHighlight: false,
+      fullTime: false,
+    });
+    setup("tennis").save({ score: "GAME YASH", form: 1 / 3 });
+    expect(setup("badminton").save({ score: "21–19", form: 0.25 })).toEqual({
+      offerHighlight: false,
+      fullTime: true,
+    });
+    expect(useMatchRecord.getState().bestForm).toEqual({
+      cricket: 0,
+      tennis: 1 / 3,
+      badminton: 0.25,
+    });
+  });
+
+  it("offers the highlight on the second loss, not the first, and saves each game", () => {
     const { save } = setup();
-    expect(save({ score: "14* NOT OUT", winner: "yash" })).toEqual({ offerHighlight: false });
-    expect(save({ score: "0 OUT", winner: "yash" })).toEqual({ offerHighlight: true });
+    expect(save({ score: "14* NOT OUT", form: 0 })).toEqual({
+      offerHighlight: false,
+      fullTime: false,
+    });
+    expect(save({ score: "4* NOT OUT", form: 1 / 3 })).toEqual({
+      offerHighlight: true,
+      fullTime: false,
+    });
     const s = useMatchRecord.getState();
-    expect(s.record).toEqual({ yash: 2, you: 0 });
+    expect(s.yashWins).toBe(2);
     expect(s.venuesPlayed).toEqual(["cricket"]);
-    expect(s.lastScores.cricket).toBe("0 OUT");
+    expect(s.lastScores.cricket).toBe("4* NOT OUT");
   });
 
   it("counts losses per venue", () => {
-    setup("cricket").save({ score: "a", winner: "yash" });
-    expect(setup("tennis").save({ score: "b", winner: "yash" })).toEqual({ offerHighlight: false });
-  });
-
-  it("a visitor win unlocks the Locker Room, the achievement and the Team Up prefill, and offers nothing", () => {
-    const result = setup().save({ score: "BOWLED HIM", winner: "you" });
-    const s = useMatchRecord.getState();
-    expect(result).toEqual({ offerHighlight: false });
-    expect(s.record).toEqual({ yash: 0, you: 1 });
-    expect(s.lockerRoomUnlocked).toBe(true);
-    expect(s.achievements).toEqual(["giant-killer"]);
-    expect(s.teamUpPrefill).toBe(ui.games.prefill);
-    expect(s.teamUpPrefill).toBe("I beat you.");
+    setup("cricket").save({ score: "a", form: 0 });
+    expect(setup("tennis").save({ score: "b", form: 0 }).offerHighlight).toBe(false);
   });
 
   it("still returns, and the store holds the result, when storage throws", () => {
@@ -45,20 +57,25 @@ describe("useMatchResult", () => {
       throw new Error("QuotaExceededError");
     });
     const { save } = setup();
-    expect(save({ score: "14* NOT OUT", winner: "yash" })).toEqual({ offerHighlight: false });
-    expect(useMatchRecord.getState().record.yash).toBe(1);
+    expect(save({ score: "14* NOT OUT", form: 0 })).toEqual({
+      offerHighlight: false,
+      fullTime: false,
+    });
+    expect(useMatchRecord.getState().yashWins).toBe(1);
   });
 
-  it("never throws out of save, even if the record itself fails", () => {
+  it("still ends the game when the record throws: no full time from a failed save", () => {
     const original = useMatchRecord.getState().completeMatch;
     useMatchRecord.setState({
       completeMatch: () => {
-        throw new Error("boom");
+        throw new Error("blocked");
       },
     });
     try {
-      const { save } = setup();
-      expect(() => save({ score: "x", winner: "yash" })).not.toThrow();
+      expect(setup("cricket").save({ score: "14* NOT OUT", form: 0 })).toEqual({
+        offerHighlight: false,
+        fullTime: false,
+      });
     } finally {
       useMatchRecord.setState({ completeMatch: original });
     }

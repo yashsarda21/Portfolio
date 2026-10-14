@@ -1,5 +1,6 @@
 import { getHighlights, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
+import type { EndFlags } from "../engine/useMatchResult";
 import {
   buildGameChrome,
   announceWith,
@@ -59,12 +60,10 @@ export interface TennisView {
     /** Your points: "30". */
     you: string;
     away: string;
-    /** "RALLY 3" | "GAME YASH" | "BROKE SERVE" */
+    /** "RALLY 3" | "GAME YASH" */
     status: string;
-    /** The phone's meta: "RALLY 3/3" | "GAME YASH" | "BROKE SERVE" */
+    /** The phone's meta: "RALLY 3/3" | "GAME YASH" */
     statusPhone: string;
-    /** The status is drawn as an alert once you have broken serve. */
-    alert: boolean;
   };
   /** "YASH · SERVING · 194 KM/H" */
   serving: string;
@@ -88,13 +87,13 @@ export interface TennisView {
   announce: string;
   /** What the end offers; null while the game is still being played. */
   end: GameEndView | null;
-  /** The result saved to the match record and shown on the Hub: "GAME YASH" | "BROKE SERVE". */
+  /** The result saved to the match record and shown on the Hub: "GAME YASH". */
   saved: string;
   heading: string;
 }
 
 /** The calls that go your way. */
-const FOR_YOU = new Set(["clean", "returned", "winner"]);
+const FOR_YOU = new Set(["clean", "returned"]);
 /** The phases in which a serve is in play: the open side is lit and a side can be picked (before the hit it is TOO EARLY). */
 export const LIVE_PHASES: readonly TennisPhase[] = ["tell", "toss", "window"];
 
@@ -106,7 +105,7 @@ export function buildTennisView(
   ui: UiCopy,
   routes: typeof ROUTES,
   state: TennisState,
-  { phase, offerHighlight }: { phase: TennisPhase; offerHighlight: boolean },
+  { phase, offerHighlight, fullTime }: { phase: TennisPhase } & EndFlags,
 ): TennisView {
   const copy = ui.games.tennis;
   const sep = ui.glyph.sep;
@@ -146,19 +145,16 @@ export function buildTennisView(
     };
   };
 
-  const won = state.won;
-  const status = won ? copy.status.broke : copy.status.game;
+  const status = copy.status.game;
   const calling = phase === "called" || phase === "verdict" || phase === "end";
 
   const comm = !last
     ? content.commentary.entrance[0]!
-    : last.call === "winner"
-      ? content.commentary.visitorWins[0]!
-      : last.call === "line"
-        ? copy.comm.line
-        : last.q === "miss"
-          ? copy.comm.missed
-          : copy.comm.shipped;
+    : last.call === "line"
+      ? copy.comm.line
+      : last.q === "miss"
+        ? copy.comm.missed
+        : copy.comm.shipped;
 
   const marqueeNext =
     played >= TENNIS_SERVES
@@ -177,7 +173,6 @@ export function buildTennisView(
       away: ui.hub.record.you,
       status: over ? status : `${ui.games.rally} ${rally}`,
       statusPhone: over ? status : `${ui.games.rally} ${rally}/${TENNIS_SERVES}`,
-      alert: over && won,
     },
     serving: [
       ui.hub.record.yash,
@@ -230,10 +225,9 @@ export function buildTennisView(
         : "",
     end: buildGameEnd(ui, routes, chrome, {
       over,
-      won,
       offerHighlight,
+      fullTime,
       see: copy.see,
-      claim: copy.claim,
       again: ui.hud.rematch,
     }),
     saved: status,

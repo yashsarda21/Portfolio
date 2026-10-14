@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { MAX_GAME_MS, VERDICT_MS } from "../engine/beats";
-import type { Luck } from "../engine/types";
 import {
   BADMINTON_AUTO,
   BADMINTON_BEATS,
@@ -8,7 +7,6 @@ import {
   BADMINTON_START_STATE,
   POWER,
   badmintonScore,
-  badmintonWinner,
   matchPoint,
   playRally,
   powerAt,
@@ -17,8 +15,8 @@ import {
   type BadmintonState,
 } from "./referee";
 
-const play = (powers: readonly number[], luck: Luck = () => 0.99): BadmintonState =>
-  powers.reduce((s, p) => playRally(s, p, luck), BADMINTON_START_STATE);
+const play = (powers: readonly number[]): BadmintonState =>
+  powers.reduce((s, p) => playRally(s, p), BADMINTON_START_STATE);
 
 describe("powerAt", () => {
   it("bounces the meter between 8 and 86", () => {
@@ -66,31 +64,21 @@ describe("playRally", () => {
     ]);
   });
 
-  it("rally 4, forced win: perfect drops all the way and a low roll get through", () => {
-    const s = play([22, 22, 22, 22], () => 0);
-    expect(s.rallies[3]!.call).toBe("through");
-    expect(s.won).toBe(true);
-    expect(badmintonScore(s)).toEqual({ yash: 20, you: 20 });
-    expect(badmintonWinner(s)).toBe("you");
-  });
-
-  it("rally 4, otherwise: 21-19 and the call follows the shot", () => {
-    const s = play([22, 22, 22, 85], () => 0);
-    expect(s.rallies[3]!.call).toBe("smash");
+  it("four perfect drops: match point still goes to Yash, 21–19 (F1)", () => {
+    let s = BADMINTON_START_STATE;
+    for (let i = 0; i < BADMINTON_RALLIES; i++) s = playRally(s, 23);
+    expect(s.rallies.every((r) => r.q === "perfect")).toBe(true);
+    expect(s.rallies.at(-1)!.call).toBe("drop");
     expect(badmintonScore(s)).toEqual({ yash: 21, you: 19 });
-    expect(badmintonWinner(s)).toBe("yash");
-    expect(play([22, 22, 22, 22], () => 0.5).rallies[3]!.call).toBe("drop");
   });
 
-  it("does not roll luck unless the streak is perfect", () => {
-    const luck = vi.fn(() => 0);
-    play([22, 50, 22, 22], luck);
-    expect(luck).not.toHaveBeenCalled();
+  it("rally 4: the call follows the shot", () => {
+    expect(play([22, 22, 22, 85]).rallies[3]!.call).toBe("smash");
   });
 
   it("returns the same state after the game", () => {
     const s = play([50, 50, 50, 50]);
-    expect(playRally(s, 22, () => 0)).toBe(s);
+    expect(playRally(s, 22)).toBe(s);
   });
 });
 
@@ -107,11 +95,10 @@ describe("matchPoint", () => {
 });
 
 describe("the reduced-motion rally", () => {
-  it("is clear, smash, drop, drop, 21-19, and Yash wins", () => {
+  it("is clear, smash, drop, drop, 21-19", () => {
     const s = play(BADMINTON_AUTO);
     expect(s.rallies.map((r) => r.call)).toEqual(["clear", "smash", "drop", "drop"]);
     expect(badmintonScore(s)).toEqual({ yash: 21, you: 19 });
-    expect(badmintonWinner(s)).toBe("yash");
   });
 });
 

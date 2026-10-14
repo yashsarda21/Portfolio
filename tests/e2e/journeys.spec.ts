@@ -147,7 +147,7 @@ test.describe("SKIP on every game goes to its page", () => {
   }
 });
 
-test("the forced win: CLAIM YOUR WICKET → Giant Killer, and the Hub lists the Locker Room", async ({
+test("perfect play still loses: SEE THE FULL SCORECARD, no claim, and the Hub lists no Locker Room", async ({
   page,
 }, testInfo) => {
   const phone = isPhone(testInfo);
@@ -155,22 +155,22 @@ test("the forced win: CLAIM YOUR WICKET → Giant Killer, and the Hub lists the 
   await forceLuck(page, 0);
   await openFrozen(page, "/arena/cricket");
   await perfectOver(page);
-  const claim = page.getByRole("link", { name: cricket.claim });
-  await expect(claim).toBeFocused();
-  expect((await stored(page)).lockerRoomUnlocked).toBe(true);
+  await expect(page.getByText(/CLAIM/)).toHaveCount(0);
+  const see = page.getByRole("link", { name: cricket.see });
+  await expect(see).toBeFocused();
+  const state = await stored(page);
+  expect(state.lastScores.cricket).toBe("4* NOT OUT");
+  expect(state.yashWins).toBe(1);
 
   await page.clock.resume();
-  await claim.click();
-  await expect(page).toHaveURL(/\/arena\/giant-killer$/);
-  // Phase 6 builds this screen; until then it is the placeholder, with its way back to the Hub.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.giantKiller.heading);
+  await see.click();
+  await expect(page).toHaveURL(/\/career$/);
 
-  // The placeholder's HUD mark goes to the Hub on every layout (it has no tab bar).
-  await backToHub(page, false);
+  await backToHub(page, phone);
   const index = await openIndex(page, phone);
-  const locker = index.getByRole("link", { name: new RegExp(ui.hub.index.links.lockerRoom.label) });
-  await expect(locker).toBeVisible();
-  await expect(locker).toContainText(ui.hub.index.links.lockerRoom.tag);
+  await expect(
+    index.getByRole("link", { name: new RegExp(ui.hub.index.links.lockerRoom.label) }),
+  ).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

@@ -8,6 +8,7 @@ export default [
   route("arena/cricket", "routes/arena.cricket.tsx"),
   route("arena/tennis", "routes/arena.tennis.tsx"),
   route("arena/badminton", "routes/arena.badminton.tsx"),
+  route("arena/full-time", "routes/arena.full-time.tsx"),
   route("arena/giant-killer", "routes/arena.giant-killer.tsx"),
   route("career", "routes/career.tsx"),
   route("highlights", "routes/highlights.tsx"),

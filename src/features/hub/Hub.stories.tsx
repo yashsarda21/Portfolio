@@ -19,18 +19,14 @@ const fresh = buildHubView(content, ui, ROUTES, {
   venuesPlayed: [],
   lastScores: {},
   sectionsSeen: [],
-  record: { yash: 0, you: 0 },
-  achievements: [],
-  lockerRoomUnlocked: false,
+  yashWins: 0,
 });
 const unlocked = buildHubView(content, ui, ROUTES, {
   ...artboardRecord,
   venuesPlayed: ["cricket", "tennis", "badminton"],
-  lastScores: { cricket: "14* NOT OUT", tennis: "WON 2-1", badminton: "WON 15-9" },
+  lastScores: { cricket: "14* NOT OUT", tennis: "GAME YASH", badminton: "21–19" },
   sectionsSeen: ["career", "highlights", "attributes", "trophies", "card", "teamUp", "scout"],
-  record: { yash: 2, you: 1 },
-  achievements: ["giant-killer"],
-  lockerRoomUnlocked: true,
+  yashWins: 3,
 });
 
 /** The artboard's state: cricket played, record 1 to 0, Career seen. */
@@ -56,7 +52,7 @@ export const Fresh: StoryObj = {
   render: () => <HubPage view={fresh} />,
 };
 
-/** After a win: all three played, the Locker Room listed, the achievement open. */
+/** All three played, every section seen. */
 export const Unlocked: StoryObj = {
   render: () => <HubPage view={unlocked} />,
 };

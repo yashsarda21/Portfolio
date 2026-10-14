@@ -8,6 +8,7 @@ export const ROUTES: Record<RouteKey, string> = {
   cricket: "/arena/cricket",
   tennis: "/arena/tennis",
   badminton: "/arena/badminton",
+  fullTime: "/arena/full-time",
   giantKiller: "/arena/giant-killer",
   career: "/career",
   highlights: "/highlights",

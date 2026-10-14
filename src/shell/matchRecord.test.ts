@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   MATCH_RECORD_KEY,
+  matchdayComplete,
   sanitizeRecord,
   useMatchRecord,
   useRecordReady,
@@ -11,30 +12,21 @@ import {
 describe("match record", () => {
   beforeEach(() => useMatchRecord.getState().reset());
 
-  it("records a played venue, its score and Yash's win", () => {
-    useMatchRecord.getState().completeMatch({ venue: "cricket", score: "14*", winner: "yash" });
+  it("counts every finished game as Yash's win and keeps each venue's best form", () => {
     const s = useMatchRecord.getState();
-    expect(s.venuesPlayed).toEqual(["cricket"]);
-    expect(s.lastScores.cricket).toBe("14*");
-    expect(s.record).toEqual({ yash: 1, you: 0 });
-    expect(s.lockerRoomUnlocked).toBe(false);
-  });
-
-  it("a visitor win unlocks the Giant Killer achievement, Locker Room and Team Up prefill", () => {
-    useMatchRecord
-      .getState()
-      .completeMatch({ venue: "tennis", score: "BOWLED", winner: "you", prefill: "I beat you." });
-    const s = useMatchRecord.getState();
-    expect(s.record).toEqual({ yash: 0, you: 1 });
-    expect(s.achievements).toContain("giant-killer");
-    expect(s.lockerRoomUnlocked).toBe(true);
-    expect(s.teamUpPrefill).toBe("I beat you.");
+    s.completeMatch({ venue: "cricket", score: "14* NOT OUT", form: 1 / 3 });
+    s.completeMatch({ venue: "cricket", score: "4* NOT OUT", form: 0 });
+    const r = useMatchRecord.getState();
+    expect(r.yashWins).toBe(2);
+    expect(r.lastScores.cricket).toBe("4* NOT OUT");
+    expect(r.bestForm.cricket).toBeCloseTo(1 / 3);
+    expect(r.venuesPlayed).toEqual(["cricket"]);
   });
 
   it("does not duplicate venues or seen sections", () => {
     const { completeMatch, markSeen } = useMatchRecord.getState();
-    completeMatch({ venue: "cricket", score: "6*", winner: "yash" });
-    completeMatch({ venue: "cricket", score: "10*", winner: "yash" });
+    completeMatch({ venue: "cricket", score: "6*", form: 0 });
+    completeMatch({ venue: "cricket", score: "10*", form: 0 });
     markSeen("career");
     markSeen("career");
     const s = useMatchRecord.getState();
@@ -58,10 +50,8 @@ describe("sanitizeRecord", () => {
     venuesPlayed: [],
     lastScores: {},
     sectionsSeen: [],
-    record: { yash: 0, you: 0 },
-    achievements: [],
-    lockerRoomUnlocked: false,
-    teamUpPrefill: null,
+    bestForm: {},
+    yashWins: 0,
   };
   it.each([undefined, null, 42, "x", [], { state: 1 }])("treats %p as a fresh visitor", (raw) => {
     expect(sanitizeRecord(raw)).toEqual(fresh);
@@ -71,8 +61,9 @@ describe("sanitizeRecord", () => {
       ...fresh,
       venuesPlayed: ["cricket"],
       lastScores: { cricket: "14* NOT OUT" },
+      bestForm: { cricket: 0.5 },
       sectionsSeen: ["career"],
-      record: { yash: 1, you: 0 },
+      yashWins: 1,
     };
     expect(sanitizeRecord(ok)).toEqual(ok);
   });
@@ -86,23 +77,42 @@ describe("sanitizeRecord", () => {
     expect(r.lastScores).toEqual({ tennis: "6-4" });
   });
   it("floors the tally at whole non-negative numbers", () => {
-    expect(sanitizeRecord({ ...fresh, record: { yash: -3, you: "2" } }).record).toEqual({
-      yash: 0,
-      you: 0,
-    });
-    expect(sanitizeRecord({ ...fresh, record: { yash: 2.7, you: 1 } }).record).toEqual({
-      yash: 2,
-      you: 1,
+    expect(sanitizeRecord({ ...fresh, yashWins: -3 }).yashWins).toBe(0);
+    expect(sanitizeRecord({ ...fresh, yashWins: "2" }).yashWins).toBe(0);
+    expect(sanitizeRecord({ ...fresh, yashWins: 2.7 }).yashWins).toBe(2);
+  });
+  it("keeps only string sections", () => {
+    expect(sanitizeRecord({ ...fresh, sectionsSeen: ["career", 3] }).sectionsSeen).toEqual([
+      "career",
+    ]);
+  });
+  it("migrates a Phase 5 record: keeps venues, scores, sections and Yash's wins; drops the win path", () => {
+    expect(
+      sanitizeRecord({
+        venuesPlayed: ["cricket", "tennis"],
+        lastScores: { cricket: "0 OUT", tennis: "GAME YASH" },
+        sectionsSeen: ["career", "lockerRoom"],
+        record: { yash: 2, you: 1 },
+        achievements: ["giant-killer"],
+        lockerRoomUnlocked: true,
+        teamUpPrefill: "I beat you.",
+      }),
+    ).toEqual({
+      venuesPlayed: ["cricket", "tennis"],
+      lastScores: { cricket: "0 OUT", tennis: "GAME YASH" },
+      bestForm: {},
+      sectionsSeen: ["career", "lockerRoom"],
+      yashWins: 2,
     });
   });
-  it("keeps only string sections and achievements", () => {
-    const r = sanitizeRecord({
-      ...fresh,
-      sectionsSeen: ["career", 3],
-      achievements: [null, "giant-killer"],
-    });
-    expect(r.sectionsSeen).toEqual(["career"]);
-    expect(r.achievements).toEqual(["giant-killer"]);
+  it("keeps only finite forms between 0 and 1, for real venues", () => {
+    expect(
+      sanitizeRecord({ bestForm: { cricket: 0.5, tennis: 7, badminton: "x", golf: 0.2 } }).bestForm,
+    ).toEqual({ cricket: 0.5, tennis: 1 });
+  });
+  it("says when the matchday is complete", () => {
+    expect(matchdayComplete({ venuesPlayed: ["cricket", "tennis"] })).toBe(false);
+    expect(matchdayComplete({ venuesPlayed: ["badminton", "cricket", "tennis"] })).toBe(true);
   });
   it("lists the venues in the Hub's order", () =>
     expect(VENUES).toEqual(["cricket", "tennis", "badminton"]));
@@ -133,7 +143,7 @@ describe("a malformed saved record", () => {
     expect(useMatchRecord.persist.hasHydrated()).toBe(true);
     expect(result.current).toBe(true);
     expect(useMatchRecord.getState().venuesPlayed).toEqual([]);
-    expect(useMatchRecord.getState().record).toEqual({ yash: 0, you: 0 });
+    expect(useMatchRecord.getState().yashWins).toBe(0);
     expect(localStorage.getItem(MATCH_RECORD_KEY)).toBeNull();
   });
 });

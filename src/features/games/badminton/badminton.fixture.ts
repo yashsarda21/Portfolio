@@ -6,17 +6,18 @@ import { buildBadmintonView, type BadmintonPhase } from "./view";
 /** Powers that land in each zone; none of them is the perfect weight (20 to 26 %). */
 export const POWERS = { smash: 85, clear: 50, drop: 30, perfect: 23 } as const;
 
-/** A game played rally by rally. `luck` is the roll the last rally's 1 % takes (0 lands it, the default never does). */
-export const playGame = (powers: number[], luck = 0.99): BadmintonState =>
-  powers.reduce((state, power) => playRally(state, power, () => luck), BADMINTON_START_STATE);
+/** A game played rally by rally. */
+export const playGame = (powers: number[]): BadmintonState =>
+  powers.reduce((state, power) => playRally(state, power), BADMINTON_START_STATE);
 
 export const badmintonView = (
   state: BadmintonState,
   {
     phase = "ready",
     offerHighlight = false,
-  }: { phase?: BadmintonPhase; offerHighlight?: boolean } = {},
-) => buildBadmintonView(content, ui, ROUTES, state, { phase, offerHighlight });
+    fullTime = false,
+  }: { phase?: BadmintonPhase; offerHighlight?: boolean; fullTime?: boolean } = {},
+) => buildBadmintonView(content, ui, ROUTES, state, { phase, offerHighlight, fullTime });
 
 /** A fresh game: 17-19, rally 1. */
 export const freshView = badmintonView(BADMINTON_START_STATE);
@@ -38,7 +39,8 @@ export const lostView = (offerHighlight = false) =>
     offerHighlight,
   });
 
-/** The end of the 1 %: four perfect weights and the point that gets through, 20-20. */
-export const wonView = badmintonView(playGame(Array(4).fill(POWERS.perfect), 0), {
-  phase: "end",
-});
+/** The end once all three venues are played: the main button is SEE FULL TIME. */
+export const fullTimeView = badmintonView(
+  playGame([POWERS.clear, POWERS.smash, POWERS.drop, POWERS.drop]),
+  { phase: "end", fullTime: true },
+);

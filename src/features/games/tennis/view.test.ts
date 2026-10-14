@@ -11,10 +11,10 @@ const ACE: ReturnPick = { side: null, atMs: 9999 };
 /** The phone's quiet third link at the end. */
 const HUB = { label: "BACK TO THE HUB", to: "/arena" };
 
-/** Plays picks in order on serves that open on `open`; `luck` is the roll the last return's 1 % takes. */
-const play = (picks: ReturnPick[], luck = 0.99, open: Side = "right"): TennisState =>
+/** Plays picks in order on serves that open on `open`. */
+const play = (picks: ReturnPick[], open: Side = "right"): TennisState =>
   picks.reduce(
-    (s, pick) => playReturn({ ...s, serve: { open, tossMs: 500 } }, pick, "stage", () => luck),
+    (s, pick) => playReturn({ ...s, serve: { open, tossMs: 500 } }, pick, "stage"),
     TENNIS_START,
   );
 /** A serve in the air on top of what has been played. */
@@ -25,12 +25,13 @@ const serving = (s: TennisState, open: Side = "right"): TennisState => ({
 
 const view = (
   state: TennisState,
-  opts: { phase?: TennisPhase; offerHighlight?: boolean } = {},
+  opts: { phase?: TennisPhase; offerHighlight?: boolean; fullTime?: boolean } = {},
   c = content,
 ) =>
   buildTennisView(c, ui, ROUTES, state, {
     phase: opts.phase ?? "tell",
     offerHighlight: opts.offerHighlight ?? false,
+    fullTime: opts.fullTime ?? false,
   });
 
 describe("buildTennisView", () => {
@@ -43,7 +44,6 @@ describe("buildTennisView", () => {
       away: "YOU",
       status: "RALLY 1",
       statusPhone: "RALLY 1/3",
-      alert: false,
     });
     expect(v.serving).toBe("YASH · SERVING · 178 KM/H");
     expect(v.cards).toEqual([]);
@@ -195,14 +195,13 @@ describe("buildTennisView", () => {
     expect(v.cards.map((c) => c.moved)).toEqual([true, false, false]);
   });
 
-  it("a loss: GAME YASH, saved, and the highlights with a rematch", () => {
+  it("the game ends GAME YASH, saved, with the highlights and a rematch", () => {
     const v = view(play([GOOD, GOOD, GOOD]), { phase: "end" });
     expect(v.bug).toMatchObject({
       yash: "40",
       you: "30",
       status: "GAME YASH",
       statusPhone: "GAME YASH",
-      alert: false,
     });
     expect(v.saved).toBe("GAME YASH");
     expect(v.call).toEqual({ text: "ON THE LINE.", tone: "floodlight" });
@@ -221,17 +220,25 @@ describe("buildTennisView", () => {
     });
   });
 
-  it("a win: BROKE SERVE, and only the claim", () => {
-    const v = view(play([PERFECT, PERFECT, PERFECT], 0), { phase: "end" });
-    expect(v.bug).toMatchObject({ status: "BROKE SERVE", statusPhone: "BROKE SERVE", alert: true });
-    expect(v.saved).toBe("BROKE SERVE");
-    expect(v.call).toEqual({ text: "RETURN WINNER.", tone: "volt" });
-    expect(v.comm).toBe(content.commentary.visitorWins[0]);
-    expect(v.end).toEqual({
-      primary: null,
-      claim: { label: "CLAIM YOUR BREAK", to: "/arena/giant-killer" },
-      hub: HUB,
-    });
+  it("three perfect returns still end ON THE LINE., GAME YASH (F1)", () => {
+    const v = view(play([PERFECT, PERFECT, PERFECT]), { phase: "end" });
+    expect(v.bug).toMatchObject({ status: "GAME YASH", statusPhone: "GAME YASH" });
+    expect(v.saved).toBe("GAME YASH");
+    expect(v.call).toEqual({ text: "ON THE LINE.", tone: "floodlight" });
+    expect(v.comm).toBe(ui.games.tennis.comm.line);
+    expect(v.end?.primary).toEqual({ label: "SEE MATCH HIGHLIGHTS", to: "/highlights" });
+    expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
+  });
+
+  it("once all three venues are played, the main button is SEE FULL TIME, ahead of the highlight (F3)", () => {
+    const state = play([GOOD, GOOD, GOOD]);
+    for (const offerHighlight of [false, true]) {
+      expect(view(state, { phase: "end", offerHighlight, fullTime: true }).end).toEqual({
+        primary: { label: "SEE FULL TIME", to: "/arena/full-time" },
+        again: "REMATCH",
+        hub: HUB,
+      });
+    }
   });
 
   it("the second loss swaps the primary for the highlight, rematch stays", () => {
@@ -243,12 +250,12 @@ describe("buildTennisView", () => {
     });
   });
   it("m-4: the announcer says how the game ended, once it is over, and not before", () => {
-    expect(view(play([GOOD]), { phase: "called" }).announce).not.toMatch(/game yash|broke serve/i);
+    expect(view(play([GOOD]), { phase: "called" }).announce).not.toMatch(/game yash/i);
     expect(view(play([GOOD, GOOD, GOOD]), { phase: "verdict" }).announce).toMatch(
       /\. Game yash\.$/,
     );
-    expect(view(play([PERFECT, PERFECT, PERFECT], 0), { phase: "verdict" }).announce).toMatch(
-      /\. Broke serve\.$/,
+    expect(view(play([PERFECT, PERFECT, PERFECT]), { phase: "verdict" }).announce).toMatch(
+      /\. Game yash\.$/,
     );
   });
 });

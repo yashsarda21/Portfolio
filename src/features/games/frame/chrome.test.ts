@@ -34,31 +34,28 @@ describe("buildGameChrome", () => {
 
 describe("buildGameEnd", () => {
   const chrome = buildGameChrome(ui, ROUTES, "tennis");
-  const words = { see: "SEE IT", claim: "CLAIM", again: "AGAIN" };
-  const end = (over: boolean, won: boolean, offerHighlight: boolean) =>
-    buildGameEnd(ui, ROUTES, chrome, { over, won, offerHighlight, ...words });
+  const words = { see: "SEE IT", again: "AGAIN" };
+  const end = (over: boolean, offerHighlight: boolean, fullTime = false) =>
+    buildGameEnd(ui, ROUTES, chrome, { over, offerHighlight, fullTime, ...words });
 
   it("offers nothing while the game is on", () => {
-    expect(end(false, false, false)).toBeNull();
+    expect(end(false, false)).toBeNull();
   });
 
-  it("a win offers only the claim, to the Giant Killer", () => {
-    expect(end(true, true, false)).toEqual({
-      primary: null,
-      claim: { label: "CLAIM", to: ROUTES.giantKiller },
-      hub: { label: ui.games.backToHub, to: ROUTES.arena },
-    });
-  });
-
-  it("a loss offers the venue's page and play again; after the second loss, the highlight", () => {
-    expect(end(true, false, false)).toEqual({
+  it("offers the venue's page and play again; after the second loss, the highlight", () => {
+    expect(end(true, false)).toEqual({
       primary: { label: "SEE IT", to: chrome.content },
       again: "AGAIN",
       hub: { label: ui.games.backToHub, to: ROUTES.arena },
     });
-    expect(end(true, false, true)?.primary).toEqual({
-      label: ui.games.highlight,
-      to: chrome.content,
+    expect(end(true, true)?.primary).toEqual({ label: ui.games.highlight, to: chrome.content });
+  });
+
+  it("offers SEE FULL TIME once the matchday is complete, ahead of the highlight (F3)", () => {
+    expect(end(true, true, true)).toEqual({
+      primary: { label: ui.games.fullTime, to: ROUTES.fullTime },
+      again: "AGAIN",
+      hub: { label: ui.games.backToHub, to: ROUTES.arena },
     });
   });
 });

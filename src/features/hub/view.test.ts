@@ -7,16 +7,14 @@ const fresh: HubRecord = {
   venuesPlayed: [],
   lastScores: {},
   sectionsSeen: [],
-  record: { yash: 0, you: 0 },
-  achievements: [],
-  lockerRoomUnlocked: false,
+  yashWins: 0,
 };
 const artboard: HubRecord = {
   ...fresh,
   venuesPlayed: ["cricket"],
   lastScores: { cricket: "14* NOT OUT" },
   sectionsSeen: ["career"],
-  record: { yash: 1, you: 0 },
+  yashWins: 1,
 };
 const view = (r: HubRecord) => buildHubView(content, ui, ROUTES, r);
 
@@ -95,20 +93,11 @@ describe("buildHubView", () => {
     expect(show(false, true)).toBe("DRAG TO ORBIT");
     expect(show(true, true)).toBe("");
   });
-  it("after a visitor win: the Locker Room joins the index and the line changes", () => {
-    const v = view({
-      ...artboard,
-      record: { yash: 1, you: 1 },
-      achievements: ["giant-killer"],
-      lockerRoomUnlocked: true,
-    });
-    expect(v.index.links.at(-1)).toMatchObject({
-      label: "Locker Room",
-      tag: "UNLOCKED",
-      to: "/locker-room",
-    });
-    expect(v.achievements.text).toBe("1 of 1 unlocked. Giant Killer. The Locker Room is open.");
-    expect(v.comm).toBe(content.commentary.visitorWins[0]);
+  it("the Locker Room is never listed, and the record reads Yash's wins against YOU 0", () => {
+    const v = view({ ...artboard, yashWins: 5, sectionsSeen: ["lockerRoom"] });
+    expect(v.index.links.map((l) => l.label)).not.toContain("Locker Room");
+    expect(v.record.value).toBe("YASH 5 · YOU 0");
+    expect(v.achievements.text).toBe("0 of 1 unlocked. Rumour says you have to beat him.");
   });
   it("Training Academy is seen with the trophy room and links to its section", () => {
     const v = view({ ...fresh, sectionsSeen: ["trophies"] });

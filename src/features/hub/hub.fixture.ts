@@ -7,9 +7,7 @@ export const artboardRecord: HubRecord = {
   venuesPlayed: ["cricket"],
   lastScores: { cricket: "14* NOT OUT" },
   sectionsSeen: ["career"],
-  record: { yash: 1, you: 0 },
-  achievements: [],
-  lockerRoomUnlocked: false,
+  yashWins: 1,
 };
 
 export const artboardHubView = buildHubView(content, ui, ROUTES, artboardRecord);

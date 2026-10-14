@@ -10,11 +10,10 @@ export const PICKS = {
   ace: { side: null, atMs: 9999 },
 } as const satisfies Record<string, ReturnPick>;
 
-/** A game played serve by serve. `luck` is the roll the last return's 1 % takes (0 lands it, the default never does). */
-export const playGame = (picks: ReturnPick[], luck = 0.99, open: Side = "right"): TennisState =>
+/** A game played serve by serve. */
+export const playGame = (picks: ReturnPick[], open: Side = "right"): TennisState =>
   picks.reduce(
-    (state, pick) =>
-      playReturn({ ...state, serve: { open, tossMs: 500 } }, pick, "stage", () => luck),
+    (state, pick) => playReturn({ ...state, serve: { open, tossMs: 500 } }, pick, "stage"),
     TENNIS_START,
   );
 
@@ -29,8 +28,9 @@ export const tennisView = (
   {
     phase = "tell",
     offerHighlight = false,
-  }: { phase?: TennisPhase; offerHighlight?: boolean } = {},
-) => buildTennisView(content, ui, ROUTES, state, { phase, offerHighlight });
+    fullTime = false,
+  }: { phase?: TennisPhase; offerHighlight?: boolean; fullTime?: boolean } = {},
+) => buildTennisView(content, ui, ROUTES, state, { phase, offerHighlight, fullTime });
 
 /** A fresh game, before the first serve. */
 export const freshView = tennisView(TENNIS_START, { phase: "ready" });
@@ -47,7 +47,8 @@ export const calledView = tennisView(playGame([PICKS.good, PICKS.perfect]), { ph
 export const lostView = (offerHighlight = false) =>
   tennisView(playGame([PICKS.good, PICKS.good, PICKS.good]), { phase: "end", offerHighlight });
 
-/** The end of the 1 %: three perfect returns and the winner. */
-export const wonView = tennisView(playGame([PICKS.perfect, PICKS.perfect, PICKS.perfect], 0), {
+/** The end once all three venues are played: the main button is SEE FULL TIME. */
+export const fullTimeView = tennisView(playGame([PICKS.good, PICKS.good, PICKS.good]), {
   phase: "end",
+  fullTime: true,
 });

@@ -1,6 +1,7 @@
 import { getAttributeGroups, type Content, type UiCopy } from "@/content";
 import type { AttributeToastProps } from "@/design-system";
 import type { ROUTES } from "@/shell/routes";
+import type { EndFlags } from "../engine/useMatchResult";
 import {
   buildGameChrome,
   announceWith,
@@ -35,13 +36,13 @@ export interface BadmintonView {
     /** Your points: "19". */
     you: string;
     away: string;
-    /** "RALLY 2" | "MATCH POINT" | "GAME YASH" | "SAVED" */
+    /** "RALLY 2" | "MATCH POINT" | "GAME YASH" */
     status: string;
-    /** The phone's: "RALLY 2/4" | "MATCH POINT" | "GAME YASH" | "SAVED" */
+    /** The phone's: "RALLY 2/4" | "MATCH POINT" | "GAME YASH" */
     statusPhone: string;
     /** The phone draws match point and the end as the status badge, and the other rallies as its quiet meta. */
     phoneBadge: boolean;
-    /** Drawn as an alert: match point (A4) and the point you saved. */
+    /** Drawn as an alert at match point (A4). */
     alert: boolean;
   };
   /** The power meter's zones (in power %, from the bottom, as the referee counts) and its legend. */
@@ -68,13 +69,13 @@ export interface BadmintonView {
   announce: string;
   /** What the end offers; null while the game is still being played. */
   end: GameEndView | null;
-  /** The result saved to the match record and shown on the Hub: "21–19" | "20–20". */
+  /** The result saved to the match record and shown on the Hub: "21–19". */
   saved: string;
   heading: string;
 }
 
 /** The calls that go your way. */
-const FOR_YOU = new Set(["perfect", "through"]);
+const FOR_YOU = new Set(["perfect"]);
 
 /** Everything the badminton game shows, as plain words, from the content, the copy and the game so far (G6, G7, G8). */
 export function buildBadmintonView(
@@ -82,7 +83,7 @@ export function buildBadmintonView(
   ui: UiCopy,
   routes: typeof ROUTES,
   state: BadmintonState,
-  { phase, offerHighlight }: { phase: BadmintonPhase; offerHighlight: boolean },
+  { phase, offerHighlight, fullTime }: { phase: BadmintonPhase } & EndFlags,
 ): BadmintonView {
   const copy = ui.games.badminton;
   const sep = ui.glyph.sep;
@@ -114,14 +115,12 @@ export function buildBadmintonView(
   const newest = charged.at(-1);
   const last = state.rallies.at(-1);
 
-  const status = over ? (state.won ? copy.status.saved : copy.status.game) : null;
+  const status = over ? copy.status.game : null;
   const atMatchPoint = !over && matchPoint(state);
   const calling = phase === "called" || phase === "verdict" || phase === "end";
 
   const comm = over
-    ? state.won
-      ? content.commentary.visitorWins[0]!
-      : content.commentary.yashWins[0]!
+    ? content.commentary.yashWins[0]!
     : !last
       ? copy.comm.start
       : atMatchPoint
@@ -142,7 +141,7 @@ export function buildBadmintonView(
       statusPhone:
         status ?? (atMatchPoint ? copy.matchPoint : `${rallyName(rally)}/${BADMINTON_RALLIES}`),
       phoneBadge: over || atMatchPoint,
-      alert: atMatchPoint || (over && state.won),
+      alert: atMatchPoint,
     },
     meter: {
       label: copy.power,
@@ -179,10 +178,9 @@ export function buildBadmintonView(
         : "",
     end: buildGameEnd(ui, routes, chrome, {
       over,
-      won: state.won,
       offerHighlight,
+      fullTime,
       see: copy.see,
-      claim: copy.claim,
       again: ui.hud.rematch,
     }),
     saved: `${score.yash}–${score.you}`,

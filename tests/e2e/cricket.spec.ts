@@ -80,40 +80,14 @@ test.describe("route matches Cricket-Play", () => {
   });
 });
 
-test.describe("the forced win (the 1 %)", () => {
-  test("dot, dot, wicket: BOWLED HIM, then CLAIM YOUR WICKET, saved and unlocked", async ({
+test.describe("perfect play still loses (F1)", () => {
+  test("three perfect balls and a FOUR: the scorecard, BOWL AGAIN, then PLAYED on the Hub", async ({
     page,
   }) => {
     await forceLuck(page, 0);
     await openFrozen(page, "/arena/cricket");
     await perfectOver(page);
-    await expect(call(page)).toHaveText(cricket.calls.bowled);
-    await expect(call(page)).toHaveAttribute("data-tone", "volt");
-    const claim = page.getByRole("link", { name: cricket.claim });
-    await expect(claim).toBeVisible();
-    await expect(claim).toBeFocused();
-    await expect(page.getByRole("button", { name: cricket.again })).toHaveCount(0);
-
-    const state = await stored(page);
-    expect(state.record).toEqual({ yash: 0, you: 1 });
-    expect(state.lockerRoomUnlocked).toBe(true);
-    expect(state.teamUpPrefill).toBe("I beat you.");
-    expect(state.lastScores.cricket).toBe("0 OUT");
-    expect(state.achievements).toContain("giant-killer");
-
-    await page.clock.resume();
-    await claim.click();
-    await expect(page).toHaveURL(/\/arena\/giant-killer$/);
-  });
-});
-
-test.describe("the forced loss", () => {
-  test("three perfect balls and a FOUR: the scorecard, BOWL AGAIN, then PLAYED on the Hub", async ({
-    page,
-  }) => {
-    await forceLuck(page, 0.99);
-    await openFrozen(page, "/arena/cricket");
-    await perfectOver(page);
+    await expect(page.getByText(/CLAIM/)).toHaveCount(0);
     await expect(call(page)).toHaveText(cricket.calls.four);
     await expect(call(page)).toHaveAttribute("data-tone", "floodlight");
     const see = page.getByRole("link", { name: cricket.see });
@@ -122,8 +96,9 @@ test.describe("the forced loss", () => {
     await expect(page.getByRole("button", { name: cricket.again })).toBeVisible();
 
     const state = await stored(page);
-    expect(state.record).toEqual({ yash: 1, you: 0 });
+    expect(state.yashWins).toBe(1);
     expect(state.lastScores.cricket).toBe("4* NOT OUT");
+    expect(state.bestForm.cricket).toBe(1);
 
     // A client navigation, so the page and the record are the same ones: the stage's breadcrumb goes to the Hub; the
     // column has none (the board draws none), so it goes through SKIP and the tab bar.
@@ -168,8 +143,42 @@ test.describe("the forced loss", () => {
     await expect(highlight).toBeVisible();
     await expect(highlight).toHaveAttribute("href", "/career");
     await expect(page.getByRole("button", { name: cricket.again })).toBeVisible();
-    expect((await stored(page)).record).toEqual({ yash: 2, you: 0 });
+    expect((await stored(page)).yashWins).toBe(2);
   });
+});
+
+test("with tennis and badminton already played, the over's end leads to SEE FULL TIME (F3)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "arena:v1",
+      JSON.stringify({
+        state: {
+          venuesPlayed: ["tennis", "badminton"],
+          lastScores: { tennis: "GAME YASH", badminton: "21–19" },
+          bestForm: { tennis: 0, badminton: 0 },
+          sectionsSeen: [],
+          yashWins: 2,
+        },
+        version: 2,
+      }),
+    );
+  });
+  await forceLuck(page, 0);
+  await openFrozen(page, "/arena/cricket");
+  await perfectOver(page);
+  const fullTime = page.getByRole("link", { name: ui.games.fullTime });
+  await expect(fullTime).toBeVisible();
+  await expect(fullTime).toHaveAttribute("href", "/arena/full-time");
+  await expect(fullTime).toBeFocused();
+  await expect(page.getByRole("link", { name: cricket.see })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: cricket.again })).toBeVisible();
+  expect((await stored(page)).venuesPlayed).toEqual(["tennis", "badminton", "cricket"]);
+
+  await page.clock.resume();
+  await fullTime.click();
+  await expect(page).toHaveURL(/\/arena\/full-time$/);
 });
 
 test("every input reveals: three misses open three innings, and each is announced", async ({

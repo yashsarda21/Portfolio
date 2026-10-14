@@ -3,10 +3,12 @@ import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { autoRallyTimes } from "../engine/beats";
 import { pingPong } from "../engine/clock";
+import { perfectShare } from "../engine/form";
 import type { GameLayout } from "../engine/types";
 import { useGameClock } from "../engine/useGameClock";
 import { useArrival } from "../engine/useArrival";
 import { useAutoRally, useGameSession } from "../engine/useGameSession";
+import { NO_END_FLAGS, type EndFlags } from "../engine/useMatchResult";
 import { useGameKeys } from "../engine/useGameKeys";
 import { ballAt, bounceOf } from "./flight";
 import { CricketPage } from "./CricketPage";
@@ -17,20 +19,18 @@ import {
   CRICKET_PERIOD_MS,
   CRICKET_START,
   cricketOver,
-  cricketWinner,
   lengthQuality,
   type CricketState,
 } from "./referee";
 import { buildCricketView, type CricketPhase } from "./view";
 
-interface Run {
+interface Run extends EndFlags {
   game: CricketState;
   phase: CricketPhase;
-  offerHighlight: boolean;
 }
-const START: Run = { game: CRICKET_START, phase: "ready", offerHighlight: false };
+const START: Run = { game: CRICKET_START, phase: "ready", ...NO_END_FLAGS };
 
-const build = (game: CricketState, at: { phase: CricketPhase; offerHighlight: boolean }) =>
+const build = (game: CricketState, at: { phase: CricketPhase } & EndFlags) =>
   buildCricketView(content, ui, ROUTES, game, at);
 
 /**
@@ -56,7 +56,7 @@ export function CricketScreen() {
   /** A ball has been bowled and judged: the call, what it unlocked, the sound and the line; the over's end is saved at once (G8). */
   const land = (next: CricketState) => {
     const over = cricketOver(next);
-    const after = build(next, { phase: "called", offerHighlight: false });
+    const after = build(next, { phase: "called", ...NO_END_FLAGS });
     const ball = next.balls.at(-1);
     const now = live.current;
     if (ball && ball.runs > 0) now.audio.play("bat");
@@ -66,7 +66,7 @@ export function CricketScreen() {
       timers.after(CRICKET_BEATS.callMs, () => commit({ phase: "ready" }));
       return;
     }
-    session.finish(next, cricketWinner(next)!, after.saved);
+    session.finish(next, { score: after.saved, form: perfectShare(next.balls) });
   };
 
   /** The ball from your hand to the bounce and on to the bat, along the tracer; then `done`. Nothing but transform and opacity moves. */
@@ -91,7 +91,7 @@ export function CricketScreen() {
     if (latest.current.phase !== "ready" || reduced) return;
     const at = pingPong(clock.elapsed(), CRICKET_PERIOD_MS);
     const quality = lengthQuality(at, layout);
-    const next = bowl(latest.current.game, quality, Math.random);
+    const next = bowl(latest.current.game, quality);
     commit({ phase: "flight" });
     if (!desktop) navigator.vibrate?.(20);
     fly(layout, bounceOf(layout, quality, at), () => land(next));
@@ -102,7 +102,7 @@ export function CricketScreen() {
     let game = CRICKET_START;
     autoRallyTimes(CRICKET_AUTO.length).forEach((at, i) => {
       timers.after(at, () => {
-        game = bowl(game, CRICKET_AUTO[i]!, Math.random);
+        game = bowl(game, CRICKET_AUTO[i]!);
         land(game);
       });
     });

@@ -14,18 +14,19 @@ const DROP = 30;
 /** A drop in the perfect-weight band. */
 const PERFECT = 23;
 
-/** Plays powers in order; `luck` is the roll the 1 % takes (0 lands it, the default never does). */
-const play = (powers: number[], luck = 0.99): BadmintonState =>
-  powers.reduce((s, p) => playRally(s, p, () => luck), BADMINTON_START_STATE);
+/** Plays powers in order. */
+const play = (powers: number[]): BadmintonState =>
+  powers.reduce((s, p) => playRally(s, p), BADMINTON_START_STATE);
 
 const view = (
   state: BadmintonState,
-  opts: { phase?: BadmintonPhase; offerHighlight?: boolean } = {},
+  opts: { phase?: BadmintonPhase; offerHighlight?: boolean; fullTime?: boolean } = {},
   c = content,
 ) =>
   buildBadmintonView(c, ui, ROUTES, state, {
     phase: opts.phase ?? "ready",
     offerHighlight: opts.offerHighlight ?? false,
+    fullTime: opts.fullTime ?? false,
   });
 
 describe("buildBadmintonView", () => {
@@ -186,24 +187,25 @@ describe("buildBadmintonView", () => {
     expect(v.end?.again).toBe("REMATCH");
   });
 
-  it("ends the 1 %: 20-20, SAVED as an alert, IT GETS THROUGH., the claim", () => {
-    const v = view(play([PERFECT, PERFECT, PERFECT, PERFECT], 0), { phase: "end" });
-    expect(v.bug).toMatchObject({
-      yash: "20",
-      you: "20",
-      status: "SAVED",
-      statusPhone: "SAVED",
-      phoneBadge: true,
-      alert: true,
-    });
-    expect(v.saved).toBe("20–20");
-    expect(v.call).toEqual({ text: "IT GETS THROUGH.", tone: "volt" });
-    expect(v.end).toEqual({
-      primary: null,
-      claim: { label: "CLAIM YOUR POINT", to: ROUTES.giantKiller },
-      hub: HUB,
-    });
-    expect(v.comm).toBe(content.commentary.visitorWins[0]);
+  it("four perfect drops still end 21–19: the last call is the shot (F1)", () => {
+    const v = view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "end" });
+    expect(v.bug).toMatchObject({ yash: "21", you: "19", status: "GAME YASH", alert: false });
+    expect(v.saved).toBe("21–19");
+    expect(v.call).toEqual({ text: "AT THE NET. STILL HIS.", tone: "floodlight" });
+    expect(v.end?.primary).toEqual({ label: "SEE PLAYER ATTRIBUTES", to: ROUTES.attributes });
+    expect(v.comm).toBe(content.commentary.yashWins[0]);
+    expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
+  });
+
+  it("once all three venues are played, the main button is SEE FULL TIME, ahead of the highlight (F3)", () => {
+    const state = play([CLEAR, SMASH, DROP, DROP]);
+    for (const offerHighlight of [false, true]) {
+      expect(view(state, { phase: "end", offerHighlight, fullTime: true }).end).toEqual({
+        primary: { label: "SEE FULL TIME", to: "/arena/full-time" },
+        again: "REMATCH",
+        hub: HUB,
+      });
+    }
   });
 
   it("takes the groups from the content, in its order, however many there are", () => {
@@ -227,7 +229,7 @@ describe("buildBadmintonView", () => {
       play([CLEAR]),
       play([CLEAR, SMASH, DROP]),
       play([CLEAR, SMASH, DROP, DROP]),
-      play([PERFECT, PERFECT, PERFECT, PERFECT], 0),
+      play([PERFECT, PERFECT, PERFECT, PERFECT]),
     ];
     const phases: BadmintonPhase[] = ["ready", "charging", "flight", "called", "verdict", "end"];
     for (const state of states) {
@@ -241,8 +243,8 @@ describe("buildBadmintonView", () => {
     expect(view(play([CLEAR, SMASH, DROP, DROP]), { phase: "verdict" }).announce).toMatch(
       /\. Game yash\. 21–19\.$/,
     );
-    expect(
-      view(play([PERFECT, PERFECT, PERFECT, PERFECT], 0), { phase: "verdict" }).announce,
-    ).toMatch(/\. Saved\. 20–20\.$/);
+    expect(view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "verdict" }).announce).toMatch(
+      /\. Game yash\. 21–19\.$/,
+    );
   });
 });

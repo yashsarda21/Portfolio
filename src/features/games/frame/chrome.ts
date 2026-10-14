@@ -40,12 +40,10 @@ type Link = { label: string; to: string };
 
 /** What a game offers when it is over: `GameEnd` draws it as it is. */
 export interface GameEndView {
-  /** The venue's page, or after the second loss the highlight (G9); null after a win. */
-  primary: Link | null;
-  /** A win: on to the Giant Killer. */
-  claim?: Link;
-  /** Play again (a loss only). */
-  again?: string;
+  /** SEE FULL TIME once all three venues are played (F3); else the venue's page, or after the second loss the highlight (G9). */
+  primary: Link;
+  /** Play again. */
+  again: string;
   /** Back to the Hub: the phone's column draws it as a quiet third link (the stage has the breadcrumb). */
   hub: Link;
 }
@@ -58,8 +56,8 @@ export const announceWith = (line: string, outcome: string | null) =>
   outcome ? `${line}. ${outcome}.` : line;
 
 /**
- * The end of a game, the same in all three: nothing while it is on; a win offers only CLAIM; a loss offers the
- * venue's page (`see`), or the highlight once `offerHighlight` (G9), and play again.
+ * The end of a game, the same in all three: nothing while it is on; then play again and a main button: SEE FULL
+ * TIME once the matchday is complete (F3), else the venue's page (`see`), or the highlight once `offerHighlight` (G9).
  */
 export function buildGameEnd(
   ui: UiCopy,
@@ -67,26 +65,18 @@ export function buildGameEnd(
   chrome: GameChrome,
   {
     over,
-    won,
     offerHighlight,
+    fullTime,
     see,
-    claim,
     again,
-  }: {
-    over: boolean;
-    won: boolean;
-    offerHighlight: boolean;
-    see: string;
-    claim: string;
-    again: string;
-  },
+  }: { over: boolean; offerHighlight: boolean; fullTime: boolean; see: string; again: string },
 ): GameEndView | null {
   if (!over) return null;
-  const hub = { label: ui.games.backToHub, to: routes.arena };
-  if (won) return { primary: null, claim: { label: claim, to: routes.giantKiller }, hub };
   return {
-    primary: { label: offerHighlight ? ui.games.highlight : see, to: chrome.content },
+    primary: fullTime
+      ? { label: ui.games.fullTime, to: routes.fullTime }
+      : { label: offerHighlight ? ui.games.highlight : see, to: chrome.content },
     again,
-    hub,
+    hub: { label: ui.games.backToHub, to: routes.arena },
   };
 }
