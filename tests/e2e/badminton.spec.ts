@@ -667,6 +667,32 @@ test.describe("viewports (Review Focus 5)", () => {
   });
 });
 
+/** A phone held sideways: short and wide. SKIP, QUICK VIEW and the call must not hide behind the thumb zone (G11). */
+const SIDEWAYS = [
+  [844, 390],
+  [667, 375],
+] as const;
+for (const [width, height] of SIDEWAYS) {
+  test.describe(`a phone held sideways, ${width}x${height}`, () => {
+    test.use({ viewport: { width, height }, hasTouch: true });
+
+    test("fresh and after one input the call, SKIP and QUICK VIEW stay clear of the thumb zone", async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "desktop", "sets its own size");
+      await forceLuck(page, 0.99);
+      await openFrozen(page, "/arena/badminton");
+      await expectGameViewport(page);
+      await holdSpace(page, PERFECT);
+      await pass(page, ["called"]);
+      await expect(call(page)).toBeVisible();
+      // The reveal and the call pop in: judge them once they have settled.
+      await waitForFiniteAnimations(page);
+      await expectGameViewport(page);
+    });
+  });
+}
+
 test.describe("the phone's court (D-9)", () => {
   test("Yash's ring and the tag stand where the stage draws them, scaled with the court, at any width", async ({
     page,

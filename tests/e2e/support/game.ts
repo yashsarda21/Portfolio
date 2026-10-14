@@ -102,6 +102,9 @@ export const VIEWPORTS = [
   [390, 844],
   [375, 667],
   [360, 640],
+  // A phone held sideways: short, so the column's compact rule applies.
+  [844, 390],
+  [667, 375],
 ] as const;
 
 /** Mono text is never drawn under 11 px on screen (A2); this leaves room for rounding. */
@@ -123,7 +126,8 @@ interface Box {
  *  - any visible mono text renders under 11 px (the size after the stage's scale is applied);
  *  - SKIP or QUICK VIEW is missing, under 44 px tall, or the two overlap. On the stage the 44 px is judged in the
  *    1440×900 design space (the stage is a picture that scales to the window); in the column it is judged on screen;
- *  - on the column, the thumb zone or the meter (`[data-game-column] [data-part=thumb]`) reaches outside the viewport.
+ *  - on the column, the thumb zone or the meter (`[data-game-column] [data-part=thumb]`) reaches outside the viewport;
+ *  - on the column, SKIP, QUICK VIEW or the call (when one is shown) is under the thumb zone's controls, or the call is off screen.
  */
 export async function expectGameViewport(page: Page) {
   const overflow = await page.evaluate(
@@ -193,5 +197,31 @@ export async function expectGameViewport(page: Page) {
       view.height + 0.5,
     );
     expect(box!.y, "the thumb zone's top edge").toBeGreaterThanOrEqual(0);
+
+    // What is drawn in the thumb zone is its first child (the zone itself is a fade that spans more).
+    const controls = await thumb.locator("> div").boundingBox();
+    expect(controls, "the thumb controls have a box").not.toBeNull();
+    const under = (what: string, b: Box) =>
+      expect(
+        b.y + b.height <= controls!.y + 0.5 ||
+          b.y >= controls!.y + controls!.height ||
+          b.x + b.width <= controls!.x ||
+          b.x >= controls!.x + controls!.width,
+        `${what} (${JSON.stringify(b)}) is under the thumb controls (${JSON.stringify(controls)})`,
+      ).toBe(true);
+    under("SKIP", a);
+    under("QUICK VIEW", b);
+
+    const calls = page.locator("[data-game] [data-tone]:visible");
+    if ((await calls.count()) > 0) {
+      const at = await calls.first().boundingBox();
+      expect(at, "the call has a box").not.toBeNull();
+      expect(at!.y, "the call's top edge").toBeGreaterThanOrEqual(0);
+      expect(at!.y + at!.height, "the call's bottom edge").toBeLessThanOrEqual(view.height);
+      expect(
+        at!.y + at!.height,
+        `the call (bottom ${at!.y + at!.height}) is under the thumb controls (top ${controls!.y})`,
+      ).toBeLessThanOrEqual(controls!.y + 0.5);
+    }
   }
 }

@@ -213,7 +213,8 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-/* The call on the phone's game column (derived; the board draws none): type-call at 64px. */
+/* The call on the phone's game column (derived; the board draws none): type-call at 64px, 40px on a short screen
+   (a phone held sideways), where it must fit between the reveal and the thumb zone. */
 @utility type-call-sm {
   font-family: var(--font-display);
   font-weight: 900;
@@ -221,6 +222,9 @@
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  @media (max-height: 500px) {
+    font-size: 40px;
+  }
 }
 /* The page title one step above d1: 96px at .85 (Team-Up). On the phone it is d1's 48px. */
 @utility type-d0 {

@@ -145,16 +145,16 @@ export function TennisColumn({
             >
               {view.serving}
             </PlayerTag>
-            {call ? (
-              <CallOverlay
-                key={view.returned}
-                call={call.text}
-                tone={call.tone}
-                size="column"
-                className="absolute inset-x-0 top-44"
-              />
-            ) : null}
           </CourtBox>
+          {call ? (
+            <CallOverlay
+              key={view.returned}
+              call={call.text}
+              tone={call.tone}
+              size="column"
+              className="absolute inset-x-0 top-94 short:top-48"
+            />
+          ) : null}
         </div>
       }
       thumb={
@@ -162,7 +162,12 @@ export function TennisColumn({
           <GameEnd size="column" end={end} onAgain={onAgain} />
         ) : reduced ? null : (
           <>
-            <MonoLabel variant="mono-chip" tone="label" className="text-center text-balance">
+            <MonoLabel
+              data-part="hint"
+              variant="mono-chip"
+              tone="label"
+              className="text-center text-balance"
+            >
               {instructions.phoneHint}
             </MonoLabel>
             <div className="flex w-full gap-3">

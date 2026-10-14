@@ -71,7 +71,7 @@ export function CricketColumn({
               call={call.text}
               tone={call.tone}
               size="column"
-              className="absolute inset-x-0 top-70"
+              className="absolute inset-x-0 top-70 short:top-48"
             />
           ) : null}
         </div>
@@ -82,7 +82,12 @@ export function CricketColumn({
         ) : reduced ? null : (
           <>
             <TimingMeter size="column" zones={view.meter.zones.column} />
-            <MonoLabel variant="mono-chip" tone="label" className="text-center text-balance">
+            <MonoLabel
+              data-part="hint"
+              variant="mono-chip"
+              tone="label"
+              className="text-center text-balance"
+            >
               {view.bowl.hint}
             </MonoLabel>
             <Button

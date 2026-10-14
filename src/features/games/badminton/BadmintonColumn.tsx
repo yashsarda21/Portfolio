@@ -83,16 +83,16 @@ export function BadmintonColumn({
             >
               {view.reading}
             </PlayerTag>
-            {call ? (
-              <CallOverlay
-                key={view.played}
-                call={call.text}
-                tone={call.tone}
-                size="column"
-                className="absolute inset-x-0 top-32"
-              />
-            ) : null}
           </CourtBox>
+          {call ? (
+            <CallOverlay
+              key={view.played}
+              call={call.text}
+              tone={call.tone}
+              size="column"
+              className="absolute inset-x-0 top-82 short:top-48"
+            />
+          ) : null}
         </div>
       }
       thumb={
@@ -103,7 +103,7 @@ export function BadmintonColumn({
             {/* In the thumb zone's own layer, so the zone's fade does not dim it: just above the hint, at the right edge. */}
             <div
               aria-hidden="true"
-              className="absolute right-3 bottom-48 flex h-60 gap-2 md:right-5"
+              className="absolute right-3 bottom-48 flex h-60 gap-2 md:right-5 short:bottom-20 short:h-32"
             >
               <div className="flex flex-col items-end justify-between">
                 <MonoLabel variant="mono-tag" tone="volt">
@@ -115,7 +115,12 @@ export function BadmintonColumn({
               </div>
               <PowerMeter zones={meter.zones} legend={meter.legend} size="column" />
             </div>
-            <MonoLabel variant="mono-chip" tone="label" className="text-center text-balance">
+            <MonoLabel
+              data-part="hint"
+              variant="mono-chip"
+              tone="label"
+              className="text-center text-balance"
+            >
               {hold.phoneHint}
             </MonoLabel>
             <HoldButton

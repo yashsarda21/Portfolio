@@ -35,8 +35,8 @@ export const buttonVariants = cva(
         bar: "h-13.5 w-full px-4 type-btn-bar",
         // The phone landing's call to action: the full-width bar at 64px, 22px heavy label (Mobile-Landing).
         "bar-lg": "h-16 w-full px-4 type-btn-bar-lg",
-        // The phone game's thumb button (Mobile-Game TAP TO BOWL): 110px tall, full width, 34px label.
-        tap: "h-27.5 w-full px-4 type-btn-tap",
+        // The phone game's thumb button (Mobile-Game TAP TO BOWL): 110px tall (64px on a short screen), full width, 34px label.
+        tap: "h-27.5 w-full px-4 type-btn-tap short:h-16",
       },
     },
     compoundVariants: [

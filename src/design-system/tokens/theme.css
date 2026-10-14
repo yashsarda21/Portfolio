@@ -52,6 +52,9 @@
   --perspective-courtside: 900px;
 }
 
+/* A phone held sideways (or any screen this short): the games' column compacts its thumb zone and moves QUICK VIEW up. */
+@custom-variant short (@media (max-height: 500px));
+
 @theme inline {
   /* grounds & surfaces */
   --color-ground: var(--surface-ground);
