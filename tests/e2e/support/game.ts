@@ -119,24 +119,8 @@ interface Box {
   height: number;
 }
 
-/**
- * What a game screen must hold at the current viewport (Review Focus 5). It fails with a readable list if:
- *  - the page scrolls sideways;
- *  - the page does not have exactly one rendered `h1` (an h1 hidden by CSS does not count; a screen-reader-only one does);
- *  - any visible mono text renders under 11 px (the size after the stage's scale is applied);
- *  - SKIP or QUICK VIEW is missing, under 44 px tall, or the two overlap. On the stage the 44 px is judged in the
- *    1440×900 design space (the stage is a picture that scales to the window); in the column it is judged on screen;
- *  - on the column, the thumb zone or the meter (`[data-game-column] [data-part=thumb]`) reaches outside the viewport;
- *  - on the column, SKIP, QUICK VIEW or the call (when one is shown) is under the thumb zone's controls, or the call is off screen.
- */
-export async function expectGameViewport(page: Page) {
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow, "horizontal overflow (px)").toBeLessThanOrEqual(0);
-
-  await expect(page.getByRole("heading", { level: 1 }), "rendered h1s").toHaveCount(1);
-
+/** No visible mono text renders under 11 px (the size after the stage's scale is applied; A2). */
+export async function expectMonoFloor(page: Page) {
   const small = await page.evaluate((floor) => {
     const mono = getComputedStyle(document.documentElement)
       .getPropertyValue("--font-mono")
@@ -163,6 +147,27 @@ export async function expectGameViewport(page: Page) {
     return offenders;
   }, MONO_FLOOR);
   expect(small, "mono text under 11px").toEqual([]);
+}
+
+/**
+ * What a game screen must hold at the current viewport (Review Focus 5). It fails with a readable list if:
+ *  - the page scrolls sideways;
+ *  - the page does not have exactly one rendered `h1` (an h1 hidden by CSS does not count; a screen-reader-only one does);
+ *  - any visible mono text renders under 11 px (the size after the stage's scale is applied);
+ *  - SKIP or QUICK VIEW is missing, under 44 px tall, or the two overlap. On the stage the 44 px is judged in the
+ *    1440×900 design space (the stage is a picture that scales to the window); in the column it is judged on screen;
+ *  - on the column, the thumb zone or the meter (`[data-game-column] [data-part=thumb]`) reaches outside the viewport;
+ *  - on the column, SKIP, QUICK VIEW or the call (when one is shown) is under the thumb zone's controls, or the call is off screen.
+ */
+export async function expectGameViewport(page: Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow, "horizontal overflow (px)").toBeLessThanOrEqual(0);
+
+  await expect(page.getByRole("heading", { level: 1 }), "rendered h1s").toHaveCount(1);
+
+  await expectMonoFloor(page);
 
   const skip = page.getByRole("link", { name: new RegExp(`^${ui.hub.venue.skip}`) });
   const quick = page.getByRole("link", { name: ui.hud.quickView });

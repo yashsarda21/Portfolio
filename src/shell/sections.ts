@@ -12,6 +12,7 @@ export const SECTIONS = [
   "card",
   "teamUp",
   "scout",
+  "fullTime",
   "lockerRoom",
 ] as const;
 export type SectionKey = (typeof SECTIONS)[number];

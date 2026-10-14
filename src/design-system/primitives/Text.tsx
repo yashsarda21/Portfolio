@@ -80,6 +80,11 @@ export const textVariants = cva("", {
       caption: "type-caption",
       comm: "type-comm",
       challenge: "type-challenge",
+      "mono-toast": "type-mono-toast",
+      "title-toast": "type-title-toast",
+      "title-board": "type-title-board",
+      "hero-verdict": "type-hero-verdict",
+      "verdict-line": "type-verdict-line",
     },
     tone: {
       primary: "text-floodlight",

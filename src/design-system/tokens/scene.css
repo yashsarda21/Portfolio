@@ -663,3 +663,15 @@
 @utility game-fill-surface {
   fill: var(--game-surface);
 }
+
+/* Full Time's one spotlight (Easter-Egg): a volt cone from a narrow top (44% to 56%) widening to the whole foot,
+   .16 fading to .04. Unblurred, unlike scene-cone. Size and place it with classes. */
+@utility scene-beam-volt {
+  background: linear-gradient(180deg, rgb(var(--rgb-volt) / 0.16), rgb(var(--rgb-volt) / 0.04));
+  clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+}
+/* The pool of light where the beam lands: an ellipse of volt at .22 fading out by 70%. */
+@utility scene-pool-volt {
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(var(--rgb-volt) / 0.22), transparent 70%);
+}

@@ -578,6 +578,47 @@ export const ui = {
       skip: "SKIP TO PLAYER ATTRIBUTES",
     },
   },
+  /** The Full Time page (Phase 6): every string is derived, the one artboard (Easter-Egg) is the Giant Killer's flip. */
+  fullTime: {
+    eyebrow: { done: "MATCHDAY COMPLETE", pending: "MATCHDAY IN PROGRESS" }, // derived
+    /** The scoreboard's name for screen readers: "Final score: You 0, Yash 3". */
+    board: "Final score", // derived
+    grades: {
+      goodTry: {
+        headline: "GOOD TRY.", // derived
+        line: "Three venues, three losses. He's had a lot of practice.", // derived
+      },
+      niceEffort: {
+        headline: "NICE EFFORT.", // derived
+        line: "Three venues, three losses. But you made him work for it.", // derived
+      },
+      soClose: {
+        headline: "SO CLOSE.", // derived
+        line: "Three venues, three losses. You had him worried there.", // derived
+      },
+    },
+    pending: {
+      headline: "NOT YET.", // derived
+      /** "1 of 3 venues played. The final whistle blows after all three." */
+      of: "of", // derived
+      played: "venues played.", // derived
+      tail: "The final whistle blows after all three.", // derived
+    },
+    teamUp: {
+      eyebrow: "NEXT FIXTURE · OFF THE PITCH", // derived
+      title: "TEAM UP WITH YASH", // derived
+      body: "Hiring, building something, or just want a rematch? Send him a line.", // derived
+      cta: "TEAM UP", // derived
+    },
+    next: { eyebrow: "NEXT VENUE", cta: "PLAY" }, // derived
+    again: "PLAY AGAIN", // derived
+    card: "SEE THE PLAYER CARD", // derived
+    comm: {
+      done: "The crowd's on its feet for the challenger.", // derived
+      pending: "Half-time. The rest of the matchday is waiting.", // derived
+    },
+    note: "SAVED TO YOUR RECORD", // derived
+  },
   // Shared by every screen. Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one, and says so.
   a11y: { newTab: "(opens in a new tab)", copied: "Scouting link copied" },
   glyph: { next: "→", prev: "←", external: "↗", download: "↓", sep: "·", bullet: "•", period: "." },

@@ -987,6 +987,51 @@
   line-height: 1;
   text-transform: uppercase;
 }
+/* The Full Time page (artboard Easter-Egg, the Giant Killer flipped). */
+/* The achievement toast's eyebrow: 11px at .22em on the font's own line box (type-mono-round is .18em, type-mono-kicker 12px). */
+@utility type-mono-toast {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  --mono-s: 11;
+  @apply mono-fit;
+  line-height: normal;
+  --mono-t: 0.22;
+  text-transform: uppercase;
+}
+/* The achievement toast's title: 26px heavy at .06em on the font's own line box (type-title-legend is untracked at line 1). */
+@utility type-title-toast {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 26px;
+  line-height: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* A side's name on the result board: 30px heavy at .06em on the font's own line box (type-title-matchday is untracked at line 1). */
+@utility type-title-board {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 30px;
+  line-height: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* The verdict's headline: 150px at .85, untracked (type-hero is the Landing's 156px, tracked .02em). */
+@utility type-hero-verdict {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 150px;
+  line-height: 0.85;
+  text-transform: uppercase;
+}
+/* The line under the verdict: 28px italic on the font's own line box (type-lede is upright and fluid). */
+@utility type-verdict-line {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-style: italic;
+  font-size: 28px;
+  line-height: normal;
+}
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -999,6 +1044,10 @@
 }
 @utility glow-volt {
   text-shadow: 0 0 18px rgb(var(--rgb-volt) / 0.45);
+}
+/* The verdict's headline glow (Easter-Egg): a wide, faint volt halo (glow-volt is the tight 18px one). */
+@utility glow-volt-wide {
+  text-shadow: 0 0 50px rgb(var(--rgb-volt) / 0.25);
 }
 /* The big call lifts off a busy scene on a dark halo (Cricket-Play). */
 @utility glow-call {

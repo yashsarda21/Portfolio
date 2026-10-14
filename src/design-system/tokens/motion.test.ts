@@ -24,6 +24,7 @@ describe("entrance presets never leave a hidden part focusable", () => {
     ["fade-in", motion, "from"],
     ["rise-in", motion, "from"],
     ["slide-in", motion, "from"],
+    ["drop-in", motion, "from"],
     ["boot-scan", motion, "0%"],
     ["bank-flicker", scene, "0%"],
   ])("%s: its first frame is visibility: hidden", (name, css, first) => {
@@ -36,6 +37,9 @@ describe("entrance presets never leave a hidden part focusable", () => {
 describe("the name and subtitle stay in the page", () => {
   it("boot-name does not hide its first frame: the page heading must stay readable and focusable during the boot", () => {
     expect(keyframes(motion, "boot-name")).not.toMatch(/visibility/);
+  });
+  it("rise-text (the Full Time headline) does not hide its first frame either", () => {
+    expect(keyframes(motion, "rise-text")).not.toMatch(/visibility/);
   });
 });
 

@@ -440,3 +440,86 @@
     animation: none;
   }
 }
+
+/* The Full Time page (Easter-Egg). The achievement toast drops in from above (stagger with --d); like the other
+   entrances its first frame is hidden, so a part that has not arrived cannot take focus. */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+    visibility: hidden;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility animate-drop {
+  animation: drop-in 700ms var(--ease-follow) both;
+  animation-delay: var(--d, 0s);
+}
+/* A heading's rise (rise-in's 18px and 0.9s), but never hidden: like boot-name, the page heading must stay readable
+   and focusable from the first frame (a screen reader hears it, a route change can focus it). */
+@keyframes rise-text {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility animate-rise-text {
+  animation: rise-text 0.9s var(--ease-follow) both;
+  animation-delay: var(--d, 0s);
+}
+/* The result board's glitch: every 3.2s it twitches left, then right, then settles (steps, no easing). Reduced
+   motion: it stands still. */
+@keyframes glitch {
+  0%,
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+  8% {
+    transform: translateX(-3px);
+    opacity: 0.7;
+  }
+  10% {
+    transform: translateX(2px);
+  }
+  12% {
+    transform: none;
+    opacity: 1;
+  }
+}
+@utility animate-glitch {
+  animation: glitch 3.2s steps(1) infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+/* A mote of dust rising through the beam: up 120px over 5s, fading in and out; stagger with --d. It rests
+   invisible, so reduced motion (no animation) shows none. */
+@keyframes mote-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-120px);
+    opacity: 0;
+  }
+}
+@utility animate-mote {
+  opacity: 0;
+  animation: mote-rise 5s linear infinite;
+  animation-delay: var(--d, 0s);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

@@ -14,12 +14,15 @@ test.describe("without JavaScript", () => {
       await page.goto(path);
       // The card page is "PLAYER CARD" in the trail and the title, and "PLAYER PROFILE" on the board's h1.
       // The Intro's h1 is the name, on the stage and in the phone's column alike.
+      // Full Time's h1 is the verdict: "NOT YET." for the prerender (no record).
       const heading =
         key === "card"
           ? ui.pages.card.titleLines.join(" ")
           : key === "intro"
             ? ui.routes.home.heading
-            : ui.routes[key].heading;
+            : key === "fullTime"
+              ? ui.fullTime.pending.headline
+              : ui.routes[key].heading;
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading, {
         ignoreCase: true,
       });

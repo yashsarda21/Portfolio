@@ -180,6 +180,11 @@ export const TOKEN_CATALOG = {
     "type-title-chip",
     "type-title-card",
     "type-title-legend",
+    "type-mono-toast",
+    "type-title-toast",
+    "type-title-board",
+    "type-hero-verdict",
+    "type-verdict-line",
   ],
   shadows: [
     { name: "board", className: "shadow-board" },
