@@ -56,7 +56,7 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [x] Hub tablet treatment (drawer, §12) and the stage mono floor at Hub scale (`--stage-mono-min`, §11.11 L2). → §11.12 H1, H2, H13 (`mono-fit`)
 
 ## Phase 5 / 6
-- [ ] Phase 6: Count-up has no controlled trigger for tiles already in view at mount (they show the final value). The Hub does not need one (H11: its 0 to 3 numbers fill as bars instead). The games do not need one either (ruling G14: score digits swap with the 200ms snap, §11.13); build it for the Locker Room record (Phase 6).
+- [x] Closed unbuilt: no Locker Room, nothing counts up (Phase 6, §11.14). Phase 6: Count-up has no controlled trigger for tiles already in view at mount (they show the final value). The Hub does not need one (H11: its 0 to 3 numbers fill as bars instead). The games do not need one either (ruling G14: score digits swap with the 200ms snap, §11.13); build it for the Locker Room record (Phase 6).
 - [x] The Hub's PLAY / REMATCH go to `/arena/cricket`, `/arena/tennis`, `/arena/badminton`, which are still placeholders (Phase 5). The Hub's seeded states (`artboardRecord`) stand in for a real saved match until `completeMatch` is wired from the games. → the three games are built and call `completeMatch` the moment the result is known (`useMatchResult`, §11.13 G8); the journeys play cricket from the Hub and back (`tests/e2e/journeys.spec.ts`)
 - [x] Phase 5: a played venue's last score (`PLAYED · <score>`) is whatever the game saves; agree the score string format with the game screens. → cricket `14* NOT OUT` / `0 OUT`, tennis `GAME YASH` / `BROKE SERVE`, badminton `21–19` / `20–20` (§11.13 G8)
 
@@ -77,6 +77,14 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] Derived game copy (tennis `missed` / `line` COMM lines, badminton `start` / `rally` / `perfect` COMM lines, the phone hints, SEE / CLAIM labels, the `SAVED` and `GAME YASH` statuses) is flagged for Yash's review (§12).
 - [ ] Phase 7: audio files for the `bat`, `net` and `smash` slots (the games call `audio.play(...)`; silent until then, ruling G15).
 
+## Phase 6 follow-ups (found in reviews; none blocking)
+- [ ] Full Time's stage has no HUD and no QUICK VIEW link (the Easter-Egg artboard draws none, so the stage follows it); the column has QUICK VIEW in its top row. Decide in the final review whether the stage should add the chip (A5, "one tap away on every screen").
+- [ ] On a phone the Full Time toast eyebrow wraps to two lines ("MATCHDAY COMPLETE · " / "3 OF 3 VENUES"), by design (`text-balance`); look at it once on a real phone.
+- [ ] The Full Time board's loser score uses `text-dim` (#7D8893), not the drawn #5D6670 (A1 bans decoration greys as text). Logged in §11.14; revisit if the design ever adds a text-safe dark grey.
+- [ ] `tests/e2e/hub.spec.ts` seeds badminton's last score as `GAME YASH`; the game saves `21–19`. Cosmetic test data only.
+- [ ] Playwright quirk, not a page bug: with JavaScript off, a `click()` on a Full Time stage link during the 0.9s rise stalls ("not stable"); the JS-off test waits for finite animations first. Keep that wait in any new JS-off test of an animated page.
+- [ ] Phase 7: add `/arena/full-time` to the sitemap and the OG tags check (it is a page like the Hub; the old `/arena/giant-killer` and `/locker-room` addresses must not appear).
+
 ## When a git remote is added (Phase 7 at latest)
 - [ ] CI: add `permissions: contents: read`, a concurrency cancel group, and `if-no-files-found` on artifact upload; confirm the workflow passes on Ubuntu.
 
@@ -92,9 +100,11 @@ Items found during Phase 0A reviews that belong to later plans. Each plan below 
 - [ ] **Discuss in detail with Yash before planning Phase 8** (owner request 2026-10-14). Phase 5 games are rule-driven (fixed referee outcomes) with linear, scripted motion; Yash wants instead:
   - the **real game flow** of all three sports in 3D, with **players playing in real time** (not scripted beats);
   - the opponent as a **bot** that plays every time (owner's words: "my user as bot who will everytime" — confirm: Yash's bot that (almost) always wins, keeping the ~1 % rule?);
+  - **Settled by the owner on 2026-10-14 (§11.14):** the bot always wins, with no 1 % rule. See the first row below.
   - natural, non-linear motion (physics-like ball and shuttle flight, animated full-body players, camera tracking).
   Open questions for that discussion: how the real-time play keeps "every input reveals content" and the 15 s fair-play bound; bot difficulty and the 1 % win; phones; reduced motion; what stays of the Phase 5 referees.
 3D only for the three games (cricket, tennis, badminton); every other screen stays as built. React Three Fiber in the Stage backdrop slot (spec D1), with the 2D board as first paint and fallback.
+- [ ] The opponent is a Yash bot that always wins (owner decision 2026-10-14, §11.14): a 3D visitor win must never exist. The 3D games keep saving a per-venue form (the share of perfect inputs, `bestForm`) so Full Time can still grade how close the visitor came.
 - [ ] Cricket: realistic bowling speed and bounce; an animated 3D batsman holding the bat; natural full-body swings; aerial trajectories for sixes; ground-level fours; smooth camera tracking; responsive play.
 - [ ] Tennis and badminton: the same 3D treatment (players, shot trajectories, camera).
 - [ ] Skills to load (compatible with the stack): react-three-fiber-game, threejs-react, threejs-animation, threejs-loaders, threejs-camera, threejs-lighting, threejs-materials, threejs-performance; threejs-physics only if an engine is chosen over referee-driven paths.

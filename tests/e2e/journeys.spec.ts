@@ -4,6 +4,10 @@ import { advanceTo, game, pass, perfectOver, stored } from "./support/cricket";
 import { waitForHydration } from "./support/contentPage";
 import { cssVar, forceLuck, freezeClock, openFrozen, pauseClock, stepUntil } from "./support/game";
 
+const tennis = ui.games.tennis;
+const badminton = ui.games.badminton;
+const fullTime = ui.fullTime;
+
 /*
  * Cross-page journeys (spec 9.1). Each walks the real site from one page to the next, the way a visitor does,
  * with the games on the fake clock (support/game.ts): the pages before and after a game run in real time (the
@@ -50,10 +54,10 @@ function watchErrors(page: Page): string[] {
 }
 
 /** Once the route has changed and the wipe has gone, waits for the game to take input, then stops its clock. */
-async function arriveAndFreeze(page: Page, path: RegExp) {
+async function arriveAndFreeze(page: Page, path: RegExp, phase: RegExp = /^ready$/) {
   await expect(page).toHaveURL(path);
   await expect(wipe(page)).toBeHidden();
-  await expect(game(page)).toHaveAttribute("data-phase", "ready");
+  await expect(game(page)).toHaveAttribute("data-phase", phase);
   await pauseClock(page);
 }
 
@@ -82,6 +86,167 @@ async function backToHub(page: Page, tabs: boolean) {
   }).toPass({ timeout: 10_000 });
 }
 
+/** Runs the paused clock in `step` ms until the game is in one of `phases` (the tennis window needs a finer step than 100 ms). */
+async function advanceGame(page: Page, phases: string[], maxMs = 8000, step = 100) {
+  for (let spent = 0; spent <= maxMs; spent += step) {
+    const phase = await game(page).getAttribute("data-phase");
+    if (phase && phases.includes(phase)) return;
+    await page.clock.runFor(step);
+  }
+  throw new Error(`the game never reached ${phases.join(" / ")}`);
+}
+
+/** Leaves a finished game for the Hub: the stage's HUD link, or the phone's BACK TO THE HUB at the end. */
+async function leaveGameForHub(page: Page, phone: boolean) {
+  await page.clock.resume();
+  const link = phone
+    ? page.getByRole("link", { name: ui.games.backToHub })
+    : page.locator("a[href='/arena']:visible").first();
+  await expect(async () => {
+    await link.click({ timeout: 1000 });
+    await expect(page).toHaveURL(/\/arena$/, { timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
+}
+
+/** Cricket from the Hub: three balls of any quality. */
+async function playCricketFromHub(page: Page) {
+  await pressPlay(page, ui.venues.cricket);
+  await arriveAndFreeze(page, /\/arena\/cricket$/);
+  for (let ball = 0; ball < 3; ball++) await bowlAnyBall(page, "click");
+  await advanceTo(page, ["end"]);
+}
+
+/** Tennis from the Hub: three returns of any quality (the key is the side the serve opens on, with luck forced). */
+async function playTennisFromHub(page: Page) {
+  await pressPlay(page, ui.venues.tennis);
+  await arriveAndFreeze(page, /\/arena\/tennis$/, /./);
+  for (let serve = 0; serve < 3; serve++) {
+    await advanceGame(page, ["window"], 5000, 20);
+    await page.keyboard.press("ArrowRight");
+    await expect(game(page)).not.toHaveAttribute("data-phase", /^(ready|tell|toss|window)$/);
+    await advanceGame(page, ["tell", "verdict", "end"]);
+  }
+  await advanceGame(page, ["end"]);
+}
+
+/** Badminton from the Hub: four held shots of any weight. */
+async function playBadmintonFromHub(page: Page) {
+  await pressPlay(page, ui.venues.badminton);
+  await arriveAndFreeze(page, /\/arena\/badminton$/, /./);
+  for (let rally = 0; rally < 4; rally++) {
+    await page.keyboard.down("Space");
+    await stepUntil(
+      page,
+      () => cssVar(page, "--power"),
+      (v) => v >= 0.45,
+    );
+    await page.keyboard.up("Space");
+    await expect(game(page)).not.toHaveAttribute("data-phase", /^(ready|charging)$/);
+    await advanceGame(page, ["ready", "verdict", "end"]);
+  }
+  await advanceGame(page, ["end"]);
+}
+
+/**
+ * The matchday up to the third game's end, from the Hub, on the fake clock: cricket, then tennis, then badminton.
+ * The first two ends still lead to their pages (F3); it returns with the clock paused on the badminton end.
+ */
+async function playMatchday(page: Page, phone: boolean) {
+  await page.goto("/arena");
+  await waitForHydration(page);
+  await playCricketFromHub(page);
+  await expect(page.getByRole("link", { name: cricket.see })).toBeVisible();
+  await expect(page.getByRole("link", { name: ui.games.fullTime })).toHaveCount(0);
+  await leaveGameForHub(page, phone);
+
+  await playTennisFromHub(page);
+  await expect(page.getByRole("link", { name: tennis.see })).toBeVisible();
+  await expect(page.getByRole("link", { name: ui.games.fullTime })).toHaveCount(0);
+  await leaveGameForHub(page, phone);
+
+  await playBadmintonFromHub(page);
+}
+
+/** What Full Time must say in a finished matchday: the done state, the score, a grade, the Team Up card. */
+async function expectFullTimeDone(page: Page) {
+  await expect(page).toHaveURL(/\/arena\/full-time$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    new RegExp(
+      `^(${Object.values(fullTime.grades)
+        .map((g) => g.headline.replace(".", "\\."))
+        .join("|")})$`,
+    ),
+  );
+  await expect(page.getByRole("img", { name: `${fullTime.board}: You 0, Yash 3` })).toBeVisible();
+  await expect(
+    page.getByText(`${fullTime.eyebrow.done} · 3 OF 3 VENUES`).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(page.getByText(fullTime.pending.headline)).toHaveCount(0);
+}
+
+test("the full matchday: cricket, tennis, badminton → SEE FULL TIME → YOU 0 · 3 YASH → Team Up says Good game, Yash. → the index lists Full Time", async ({
+  page,
+}, testInfo) => {
+  const phone = isPhone(testInfo);
+  const errors = watchErrors(page);
+  await forceLuck(page, 0.99);
+  await freezeClock(page);
+  await playMatchday(page, phone);
+
+  // The third end: SEE FULL TIME leads, and the venue's own page is gone from the end (SKIP still goes to it).
+  const seeFullTime = page.getByRole("link", { name: ui.games.fullTime });
+  await expect(seeFullTime).toBeVisible();
+  await expect(seeFullTime).toHaveAttribute("href", "/arena/full-time");
+  await expect(page.getByRole("link", { name: badminton.see })).toHaveCount(0);
+  expect((await stored(page)).venuesPlayed).toEqual(["cricket", "tennis", "badminton"]);
+
+  await page.clock.resume();
+  await seeFullTime.click();
+  await expectFullTimeDone(page);
+  await expect(page.getByText(fullTime.note).filter({ visible: true })).toBeVisible();
+
+  // The wipe from the game page swallows a press that lands while it still covers the screen: press again until it takes.
+  await expect(async () => {
+    await page
+      .getByRole("link", { name: fullTime.teamUp.cta, exact: true })
+      .click({ timeout: 1000 });
+    await expect(page).toHaveURL(/\/team-up$/, { timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
+  await expect(page.getByLabel(ui.pages.teamUp.fields.message, { exact: true })).toHaveValue(
+    ui.pages.teamUp.prefill,
+  );
+
+  await backToHub(page, phone);
+  const index = await openIndex(page, phone);
+  const entry = index.getByRole("link", { name: new RegExp(ui.hub.index.links.fullTime.label) });
+  await expect(entry).toHaveAttribute("href", "/arena/full-time");
+  await expect(entry).toContainText(ui.hub.index.seen);
+  expect(errors).toEqual([]);
+});
+
+test("the full matchday with storage blocked: SEE FULL TIME still ends the third game and Full Time shows done in that visit", async ({
+  page,
+}, testInfo) => {
+  const phone = isPhone(testInfo);
+  const errors = watchErrors(page);
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = () => {
+      throw new DOMException("blocked", "SecurityError");
+    };
+  });
+  await forceLuck(page, 0.99);
+  await freezeClock(page);
+  await playMatchday(page, phone);
+
+  // Nothing is written, so the matchday lives in memory: the third end knows all three venues are played.
+  const seeFullTime = page.getByRole("link", { name: ui.games.fullTime });
+  await expect(seeFullTime).toBeVisible();
+  await page.clock.resume();
+  await seeFullTime.click();
+  await expectFullTimeDone(page);
+  expect(errors).toEqual([]);
+});
+
 test("Landing → Intro → Hub → Cricket → three balls → the scorecard → Career → the Hub remembers", async ({
   page,
 }, testInfo) => {
@@ -104,7 +269,7 @@ test("Landing → Intro → Hub → Cricket → three balls → the scorecard �
 
   for (let ball = 0; ball < 3; ball++) await bowlAnyBall(page, "click");
   await advanceTo(page, ["end"]);
-  // Three misses: SIX, SIX, SIX (the last is a FOUR or SIX, never the 1 %): 18* NOT OUT.
+  // Three misses: SIX, SIX, SIX (the last is a FOUR or SIX, F1): 18* NOT OUT.
   expect((await stored(page)).lastScores.cricket).toBe("18* NOT OUT");
   const see = page.getByRole("link", { name: cricket.see });
   await expect(see).toHaveAttribute("href", "/career");
