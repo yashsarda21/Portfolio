@@ -6,21 +6,6 @@ import { seedFullMatchday } from "./support/matchday";
 
 // P10: the real Safari engine (WebKit) at the phone's size. The "webkit" project in playwright.config.ts runs only this file.
 
-// The pages' CSP says `upgrade-insecure-requests`. On the https site that does nothing, but WebKit also applies it to the
-// plain-http test server (even localhost) and loads every script over https, which fails. So the test serves the page
-// without that one directive; the policy that ships (tools/csp.mjs, ruling P5) is untouched and csp.spec.ts still checks it.
-test.beforeEach(async ({ page }) => {
-  await page.route(
-    (url) => !url.pathname.includes(".") || url.pathname.endsWith(".html"),
-    async (route) => {
-      if (route.request().resourceType() !== "document") return route.fallback();
-      const response = await route.fetch();
-      const body = (await response.text()).replace(/;\s*upgrade-insecure-requests/g, "");
-      await route.fulfill({ response, body });
-    },
-  );
-});
-
 /** The page never scrolls sideways, and it has exactly one rendered h1. */
 async function expectPhoneBasics(page: Page) {
   await expect(page.getByRole("heading", { level: 1 }), "rendered h1s").toHaveCount(1);

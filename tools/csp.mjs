@@ -11,6 +11,8 @@ export function hashScript(source) {
  * The policy for one page. `scriptHashes` are the page's inline scripts (already in `hashScript` form);
  * `formOrigin` is the Team Up form service's origin, or null while the site has none (the mail-app fallback).
  * Styles allow 'unsafe-inline' because React writes `style` attributes; scripts never do.
+ * `upgrade-insecure-requests` is not here on purpose (ruling R2): Safari/WebKit would also upgrade the local http preview
+ * and break it. It ships in vercel.json's Content-Security-Policy header instead, beside `frame-ancestors`.
  */
 export function buildCsp({ scriptHashes, formOrigin }) {
   const origin = formOrigin ? [formOrigin] : [];
@@ -25,7 +27,6 @@ export function buildCsp({ scriptHashes, formOrigin }) {
     ["form-action", "'self'", "mailto:", ...origin],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],
-    ["upgrade-insecure-requests"],
   ];
   return directives.map((parts) => parts.join(" ")).join("; ");
 }

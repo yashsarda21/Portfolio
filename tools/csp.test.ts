@@ -37,7 +37,6 @@ describe("buildCsp", () => {
     "form-action",
     "object-src",
     "base-uri",
-    "upgrade-insecure-requests",
   ])("has %s exactly once", (name) => {
     expect(directive(csp, name)).toHaveLength(1);
   });
@@ -46,9 +45,12 @@ describe("buildCsp", () => {
     expect(csp).toBe(
       "default-src 'self'; script-src 'self' 'sha256-aaa=' 'sha256-bbb='; " +
         "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self' https:; " +
-        "connect-src 'self'; form-action 'self' mailto:; object-src 'none'; base-uri 'self'; " +
-        "upgrade-insecure-requests",
+        "connect-src 'self'; form-action 'self' mailto:; object-src 'none'; base-uri 'self'",
     );
+  });
+
+  it("leaves upgrade-insecure-requests to the host header (R2)", () => {
+    expect(csp).not.toContain("upgrade-insecure-requests");
   });
 
   it("joins the hashes with spaces", () => {
