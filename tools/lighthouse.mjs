@@ -7,7 +7,8 @@
 //
 // Serves build/client on port 4174 (the user's `pnpm preview` on 4173 is left alone) with brotli-compressed
 // text responses, like the production host, drives Playwright's Chromium through chrome-launcher, and fails
-// unless the budget below is met. Every page prints one table:
+// unless the budget below is met. Phones (the default mobile profile) are gated at performance 0.8 wherever
+// desktop performance is gated (the Landing: on its reduced-motion run). Every page prints one table:
 // performance / accessibility / best practices / SEO, plus FCP, LCP, CLS and TBT from the audits.
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
@@ -32,19 +33,23 @@ const RUNS = 3;
 const FRESH = { performance: 0.9, accessibility: 1, "best-practices": 0.9, seo: 0.9 };
 const DESKTOP = { name: "desktop", config: desktopConfig };
 const MOBILE = { name: "mobile", config: undefined };
+// Phones (spec P7): a page whose desktop performance is gated also gates mobile performance at 80 (the
+// phone profile is Lighthouse's default: a slow-4G network and a 4x slower CPU).
+const PHONE_FLOOR = 0.8;
+const MOBILE_FAST = { ...MOBILE, gate: { performance: PHONE_FLOOR } };
 
 /**
  * The pages. Landing (spec 11.11, ruling L13): the full-motion run is reported for performance (the 3 s name
  * reveal is the largest paint by design) and gated on everything else; the reduced-motion run, which
- * measures the code's real cost, is where performance >= .9 is gated. The Intro gates everything but
- * performance. /scout: desktop in full, mobile accessibility only.
+ * measures the code's real cost, is where performance >= .9 is gated, and its phone run with reduced motion is gated at .8. The Intro gates everything but
+ * performance. /scout: desktop in full, mobile accessibility and performance .8.
  */
 const PAGES = [
   {
     path: "/scout",
     variants: [
       { ...DESKTOP, gate: FRESH },
-      { ...MOBILE, gate: { accessibility: 1 } },
+      { ...MOBILE, gate: { accessibility: 1, performance: PHONE_FLOOR } },
     ],
   },
   {
@@ -61,6 +66,12 @@ const PAGES = [
         gate: { ...FRESH, fcp: 1500, cls: 0.1 },
       },
       MOBILE,
+      {
+        ...MOBILE,
+        name: "mobile, reduced motion",
+        chromeFlags: ["--force-prefers-reduced-motion"],
+        gate: { performance: PHONE_FLOOR },
+      },
     ],
   },
   {
@@ -70,18 +81,18 @@ const PAGES = [
   {
     // The Hub (spec 11.12, H15): a calm page with no long reveal, so desktop is gated in full.
     path: "/arena",
-    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE],
+    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   },
   // The three games (spec 11.13, G17): a game waits for the visitor and moves by transform only, so desktop
   // carries the Hub's gates. Mobile is reported.
   ...["/arena/cricket", "/arena/tennis", "/arena/badminton"].map((path) => ({
     path,
-    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE],
+    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   })),
   // Full Time (spec 11.14, F13): the matchday's last page, entered by CSS keyframes only, so desktop carries the Hub's gates.
   {
     path: "/arena/full-time",
-    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE],
+    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   },
 ];
 
