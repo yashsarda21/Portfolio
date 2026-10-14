@@ -58,6 +58,8 @@ export function TennisScreen() {
   // The serve in play: when the window opened on the game clock, and how long it is (the layout it began in).
   const hitAt = useRef<number | null>(null);
   const serve = useRef({ windowMs: 0, layout });
+  // A serve is due but the tab is hidden: it is served when the tab is visible again (G2).
+  const waiting = useRef(false);
   const clock = useGameClock(root, {
     cssVar: "--serve",
     value: (t) => serveDrawn(t, hitAt.current, serve.current.windowMs),
@@ -109,8 +111,24 @@ export function TennisScreen() {
   /** The window is over and nobody picked: Yash's serve was an ace. */
   const timeOut = () => judge(null);
 
+  /**
+   * G2: nothing is served, tossed or judged while the tab is hidden (timers still fire in a hidden tab). If it is, the
+   * serve in play is dropped, the game waits at ready, and the visible tab serves again.
+   */
+  const holdIfHidden = () => {
+    if (document.visibilityState !== "hidden") return false;
+    timers.clear();
+    hitAt.current = null;
+    clearLines();
+    const cur = latest.current;
+    commit({ game: { ...cur.game, serve: null }, phase: "ready", shot: null });
+    waiting.current = true;
+    return true;
+  };
+
   /** The window opens at Yash's hit: the clock's time now is the zero every pick is measured from. */
   const openWindow = () => {
+    if (holdIfHidden()) return;
     hitAt.current = clock.elapsed();
     commit({ phase: "window" });
     timers.after(serve.current.windowMs, timeOut);
@@ -118,6 +136,8 @@ export function TennisScreen() {
 
   /** Serve: the open side is drawn and lit (the tell), then the toss, then the hit (G5). */
   function beginServe() {
+    if (holdIfHidden()) return;
+    waiting.current = false;
     const next = newServe(latest.current.game, Math.random);
     if (!next.serve) return;
     hitAt.current = null;
@@ -128,6 +148,7 @@ export function TennisScreen() {
     clearLines();
     commit({ game: next, phase: "tell", shot: null });
     timers.after(TELL_MS, () => {
+      if (holdIfHidden()) return;
       commit({ phase: "toss" });
       timers.after(next.serve!.tossMs, openWindow);
     });
@@ -189,21 +210,14 @@ export function TennisScreen() {
   // The game starts on arrival, and again when the setting changes. Leaving ends it (and any ball in the air).
   useAutoRally(session, { play: playRally, otherwise: serveFirst });
 
-  // G2: a hidden tab ends the serve in play and serves again when it is visible; time away is never judged.
+  // G2: a hidden tab drops the serve in play and the game serves again when it is visible; time away is never judged.
   useEffect(() => {
     if (reduced) return;
-    let cancelled = false;
     const onVisibility = () => {
-      const cur = latest.current;
       if (document.visibilityState === "hidden") {
-        if (!LIVE_PHASES.includes(cur.phase)) return;
-        timers.clear();
-        hitAt.current = null;
-        clearLines();
-        commit({ game: { ...cur.game, serve: null }, phase: "ready" });
-        cancelled = true;
-      } else if (cancelled) {
-        cancelled = false;
+        if (LIVE_PHASES.includes(latest.current.phase)) holdIfHidden();
+      } else if (waiting.current) {
+        waiting.current = false;
         if (latest.current.phase === "ready") beginServe();
       }
     };

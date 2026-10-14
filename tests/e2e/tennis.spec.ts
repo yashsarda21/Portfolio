@@ -290,12 +290,11 @@ test.describe("racing inputs (Review Focus 1)", () => {
   });
 });
 
-test.describe("hidden mid-serve (Review Focus 2)", () => {
-  test("the serve is cancelled, never judged, and served again when the tab is back", async ({
-    page,
-  }) => {
-    await page.addInitScript(() => {
-      let hidden = false;
+test.describe("hidden tab (Review Focus 2)", () => {
+  /** A page whose visibility the test owns: `startHidden` is how it opens. Returns `hide(true | false)`. */
+  async function ownVisibility(page: Page, startHidden = false) {
+    await page.addInitScript((initial) => {
+      let hidden = initial;
       Object.defineProperty(document, "visibilityState", {
         configurable: true,
         get: () => (hidden ? "hidden" : "visible"),
@@ -305,12 +304,18 @@ test.describe("hidden mid-serve (Review Focus 2)", () => {
         hidden = h;
         document.dispatchEvent(new Event("visibilitychange"));
       };
-    });
-    const hide = (hidden: boolean) =>
+    }, startHidden);
+    return (hidden: boolean) =>
       page.evaluate(
         (h) => (window as unknown as { __hide: (h: boolean) => void }).__hide(h),
         hidden,
       );
+  }
+
+  test("the serve is cancelled, never judged, and served again when the tab is back", async ({
+    page,
+  }) => {
+    const hide = await ownVisibility(page);
     await forceLuck(page, 0.99);
     await openFrozen(page, "/arena/tennis");
     await toWindow(page);
@@ -329,6 +334,50 @@ test.describe("hidden mid-serve (Review Focus 2)", () => {
     await page.keyboard.press("ArrowRight");
     await expect(call(page)).toHaveText(tennis.calls.clean);
     await expectUnlocked(page, 1);
+  });
+
+  test("hidden during the call: the next serve does not run, nothing is saved, and it serves when the tab is back", async ({
+    page,
+  }) => {
+    const hide = await ownVisibility(page);
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/tennis");
+    await toWindow(page);
+    await page.keyboard.press("ArrowRight");
+    await advanceTo(page, ["called"]);
+
+    await hide(true);
+    // Past the call, three serves and the end: with the tab hidden the game only waits.
+    await page.clock.runFor(20_000);
+    await expect(game(page)).toHaveAttribute("data-phase", "ready");
+    expect((await stored(page)).lastScores?.tennis).toBeUndefined();
+    expect((await stored(page)).record?.yash ?? 0).toBe(0);
+
+    await hide(false);
+    await expect(game(page)).toHaveAttribute("data-phase", "tell");
+    await toWindow(page);
+    await page.keyboard.press("ArrowLeft");
+    await expectUnlocked(page, 2);
+    await expect(game(page)).not.toHaveAttribute("data-phase", "end");
+  });
+
+  test("opened hidden: it stays ready and saves nothing, then starts when the tab is visible", async ({
+    page,
+  }) => {
+    const hide = await ownVisibility(page, true);
+    await forceLuck(page, 0.99);
+    await openFrozen(page, "/arena/tennis");
+
+    await page.clock.runFor(20_000);
+    await expect(game(page)).toHaveAttribute("data-phase", "ready");
+    expect((await stored(page)).lastScores?.tennis).toBeUndefined();
+    expect((await stored(page)).record?.yash ?? 0).toBe(0);
+
+    await hide(false);
+    await expect(game(page)).toHaveAttribute("data-phase", "tell");
+    await toWindow(page);
+    await page.keyboard.press("ArrowRight");
+    await expect(call(page)).toHaveText(tennis.calls.clean);
   });
 });
 
