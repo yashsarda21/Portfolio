@@ -10,6 +10,7 @@ import { buildFullTimeView, type FullTimeView } from "./view";
  */
 export const artboardView: FullTimeView = {
   state: "done",
+  brand: { mark: ui.brand.mark, label: ui.brand.wordmark, to: ROUTES.home },
   toast: { eyebrow: "HIDDEN ACHIEVEMENT UNLOCKED", title: "GIANT KILLER" },
   board: {
     label: "Final score: You 1, Yash 0",

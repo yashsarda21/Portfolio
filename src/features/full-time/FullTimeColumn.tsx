@@ -11,7 +11,6 @@ import {
 } from "@/design-system";
 import { ArenaLink, TunnelLink } from "@/shell/ArenaLink";
 import { QuickViewChip } from "@/shell/QuickViewChip";
-import { ui } from "@/content";
 import type { FullTimeView } from "./view";
 
 /**
@@ -29,7 +28,7 @@ export function FullTimeColumn({ view, ready }: { view: FullTimeView; ready: boo
       data-full-time-column=""
       top={
         <>
-          <BrandLockup mark={ui.brand.mark} size="sm" />
+          <BrandLockup mark={view.brand.mark} size="sm" />
           <QuickViewChip tone="glass-line" />
         </>
       }
@@ -49,9 +48,11 @@ export function FullTimeColumn({ view, ready }: { view: FullTimeView; ready: boo
               </Button>
             ))}
           </div>
-          <Text as="p" variant="mono-nav" tone="dim" className="text-center">
-            {view.note}
-          </Text>
+          {view.note ? (
+            <Text as="p" variant="mono-nav" tone="dim" className="text-center">
+              {view.note}
+            </Text>
+          ) : null}
         </>
       }
     >

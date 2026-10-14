@@ -15,7 +15,7 @@ describe("buildFullTimeView: all three venues played", () => {
   it("is the verdict: YOU 0, YASH 3, and the grade for the forms", () => {
     expect(view.state).toBe("done");
     expect(view.toast).toEqual({
-      eyebrow: "MATCHDAY COMPLETE · 3 OF 3 VENUES",
+      eyebrow: "MATCHDAY COMPLETE\u00a0· 3 OF 3 VENUES",
       title: "FULL TIME",
     });
     expect(view.board).toEqual({
@@ -37,6 +37,7 @@ describe("buildFullTimeView: all three venues played", () => {
       { label: "BACK TO THE HUB", to: "/arena" },
     ]);
     expect(view.comm).toBe(ui.fullTime.comm.done);
+    expect(view.note).toBe("SAVED TO YOUR RECORD");
   });
 
   it("grades by how close the visitor came", () => {
@@ -45,11 +46,18 @@ describe("buildFullTimeView: all three venues played", () => {
   });
 });
 
+describe("buildFullTimeView: the brand", () => {
+  it("is the site's mark and wordmark, linking home, in both states", () => {
+    for (const view of [build([]), build(["cricket", "tennis", "badminton"])])
+      expect(view.brand).toEqual({ mark: "YS", label: "THE ARENA", to: "/" });
+  });
+});
+
 describe("buildFullTimeView: opened early", () => {
   it("with tennis played, it is NOT YET. and names cricket next", () => {
     const view = build(["tennis"]);
     expect(view.state).toBe("pending");
-    expect(view.toast.eyebrow).toBe("MATCHDAY IN PROGRESS · 1 OF 3 VENUES");
+    expect(view.toast.eyebrow).toBe("MATCHDAY IN PROGRESS\u00a0· 1 OF 3 VENUES");
     expect(view.board.away.score).toBe("1");
     expect(view.board.label).toBe("Final score: You 0, Yash 1");
     expect(view.headline).toBe("NOT YET.");
@@ -62,6 +70,8 @@ describe("buildFullTimeView: opened early", () => {
     });
     expect(view.links).toEqual([{ label: "BACK TO THE HUB", to: "/arena" }]);
     expect(view.comm).toBe(ui.fullTime.comm.pending);
+    // Nothing is saved for a visitor mid-matchday, so the page says so nowhere.
+    expect(view.note).toBeNull();
   });
 
   it("with cricket and tennis played, the next venue is the badminton hall", () => {
@@ -73,7 +83,7 @@ describe("buildFullTimeView: opened early", () => {
   it("with nothing played, it is 0 of 3 and cricket is next", () => {
     const view = build([]);
     expect(view.state).toBe("pending");
-    expect(view.toast.eyebrow).toBe("MATCHDAY IN PROGRESS · 0 OF 3 VENUES");
+    expect(view.toast.eyebrow).toBe("MATCHDAY IN PROGRESS\u00a0· 0 OF 3 VENUES");
     expect(view.line).toBe("0 of 3 venues played. The final whistle blows after all three.");
     expect(view.card.title).toBe("CRICKET GROUND");
   });

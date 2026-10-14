@@ -118,14 +118,16 @@ export function FullTimeStage({ view, ready }: { view: FullTimeView; ready: bool
         ))}
       </div>
       <CommentarySlot tag={view.commTag} className="absolute bottom-9 left-9" />
-      <Text
-        as="span"
-        variant="mono-nav"
-        tone="dim"
-        className="absolute right-9 bottom-12 whitespace-nowrap"
-      >
-        {view.note}
-      </Text>
+      {view.note ? (
+        <Text
+          as="span"
+          variant="mono-nav"
+          tone="dim"
+          className="absolute right-9 bottom-12 whitespace-nowrap"
+        >
+          {view.note}
+        </Text>
+      ) : null}
     </Stage>
   );
 }

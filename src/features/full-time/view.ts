@@ -5,6 +5,7 @@ import { gradeFor } from "./grade";
 
 export interface FullTimeView {
   state: "done" | "pending";
+  brand: { mark: string; label: string; to: string };
   toast: { eyebrow: string; title: string };
   board: {
     label: string;
@@ -18,7 +19,8 @@ export interface FullTimeView {
   links: { label: string; to: string }[];
   comm: string;
   commTag: string;
-  note: string;
+  /** Said only once the matchday is done: a first-time visitor has nothing saved yet. */
+  note: string | null;
 }
 
 export type FullTimeRecord = Pick<MatchRecordData, "venuesPlayed" | "bestForm">;
@@ -47,8 +49,10 @@ export function buildFullTimeView(
   const yashScore = String(played);
   const back = { label: ui.games.backToHub, to: routes.arena };
   const common = {
+    brand: { mark: ui.brand.mark, label: ui.brand.wordmark, to: routes.home },
     toast: {
-      eyebrow: `${done ? copy.eyebrow.done : copy.eyebrow.pending} ${sep} ${played} ${hub.matchday.of} ${total} ${hub.matchday.venues}`,
+      // A no-break space before the separator: when the eyebrow wraps (a phone), no line begins with it.
+      eyebrow: `${done ? copy.eyebrow.done : copy.eyebrow.pending}\u00a0${sep} ${played} ${hub.matchday.of} ${total} ${hub.matchday.venues}`,
       title: ui.routes.fullTime.heading,
     },
     board: {
@@ -58,7 +62,6 @@ export function buildFullTimeView(
       winner: "away" as const,
     },
     commTag: ui.comm.tag,
-    note: copy.note,
   };
 
   if (done) {
@@ -80,6 +83,7 @@ export function buildFullTimeView(
         back,
       ],
       comm: copy.comm.done,
+      note: copy.note,
     };
   }
 
@@ -97,5 +101,6 @@ export function buildFullTimeView(
     },
     links: [back],
     comm: copy.comm.pending,
+    note: null,
   };
 }

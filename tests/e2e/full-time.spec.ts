@@ -65,6 +65,8 @@ test("no record: NOT YET., 0 of 3 played, the card sends you to cricket", async 
     "href",
     "/arena",
   );
+  // Nothing is saved for a first-time visitor, so the page does not say it is.
+  await expect(page.getByText(ft.note)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -96,6 +98,7 @@ test("all three played: the grade, YOU 0 · 3 YASH, Team Up and PLAY AGAIN", asy
   );
   await expect(page.getByRole("link", { name: ft.card })).toHaveAttribute("href", "/card");
   await expect(page.getByText(ft.pending.headline)).toHaveCount(0);
+  await expect(shown(page.getByText(ft.note))).toBeVisible();
 });
 
 test("a returning visitor with three venues never sees NOT YET. (H5)", async ({ page }) => {
