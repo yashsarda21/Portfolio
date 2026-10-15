@@ -3,5 +3,3 @@ allowBuilds:
   esbuild: false
   # the unrs-resolver binary arrives via its per-platform optional dependency, so the install script is not needed
   unrs-resolver: false
-minimumReleaseAgeExclude:
-  - '@react-three/fiber@9.8.2'

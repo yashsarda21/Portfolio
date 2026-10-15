@@ -21,6 +21,7 @@ interface GateState<T> {
   value: T | null;
 }
 
+const LOADING: GateState<never> = { status: "loading", progress: 0, value: null };
 const OFF = { status: "off", progress: 0, value: null } as const;
 
 /**
@@ -35,7 +36,7 @@ export function useThreeGate<T>({
   reduced: boolean;
   load: (onProgress: (fraction: number) => void) => Promise<T>;
 }): ThreeGate<T> {
-  const [state, setState] = useState<GateState<T>>({ status: "loading", progress: 0, value: null });
+  const [state, setState] = useState<GateState<T>>(LOADING);
   // WebGL2 is probed once per gate. The server (and the hydrating client) assume yes, so both start at "loading".
   const [probe] = useState<{ webgl2?: boolean }>(() => ({}));
   const supported = useSyncExternalStore(
@@ -74,7 +75,11 @@ export function useThreeGate<T>({
         stop();
         setState({ status: "ready", progress: 1, value });
       }, off);
-    return stop;
+    return () => {
+      stop();
+      // A fresh load starts from "loading", not from an "off" left by the last one (a ready scene is kept).
+      setState((s) => (s.status === "ready" ? s : LOADING));
+    };
   }, [unavailable]);
 
   const fail = useCallback(() => setState({ status: "off", progress: 0, value: null }), []);

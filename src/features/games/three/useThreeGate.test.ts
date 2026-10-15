@@ -70,4 +70,22 @@ describe("useThreeGate", () => {
     act(() => result.current.fail());
     expect(result.current.status).toBe("off");
   });
+
+  it("after reduced turns off again, it loads again", async () => {
+    vi.spyOn(support, "canUse3d").mockReturnValue(true);
+    let resolve!: (v: string) => void;
+    const pending = () => new Promise<string>((r) => (resolve = r));
+    const { result, rerender } = renderHook(
+      (p: { reduced: boolean; load: () => Promise<string> }) => useThreeGate(p),
+      { initialProps: { reduced: false, load: () => Promise.reject(new Error("404")) } },
+    );
+    await act(async () => {});
+    expect(result.current.status).toBe("off");
+    rerender({ reduced: true, load: pending });
+    expect(result.current.status).toBe("off");
+    rerender({ reduced: false, load: pending });
+    expect(result.current.status).toBe("loading");
+    await act(async () => resolve("world"));
+    expect(result.current).toMatchObject({ status: "ready", value: "world" });
+  });
 });
