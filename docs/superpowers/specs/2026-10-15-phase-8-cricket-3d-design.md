@@ -31,7 +31,7 @@ Turn "Bowl at Me" into a proper playable 3D mini-game. You bowl three balls at Y
 | B5 | Build split | Three separate cycles: (1) 3D groundwork + cricket, (2) tennis, (3) badminton. Each game designed on its own; only plumbing is shared. |
 | B6 | Assets | **Free only, now and later.** No paid packs or tools. Licences must allow a public website (CC0 preferred). |
 | B7 | Balls | 3 balls (Yash has 3 career pieces to show), and the rhythm must still show. |
-| B8 | Motion source | Option A: a free CC0 athlete body and everyday moves (idle, walk, run, cheer) from Quaternius; the cricket moves (batting shots, bowling action, keeper take, fielder dive) built in code from key poses. |
+| B8 | Motion source | Option A: a free CC0 athlete body and everyday moves (idle, walk, jog, sprint, crouch) from Quaternius; the cricket moves (batting shots, bowling action, keeper take, fielder dive) built in code from key poses. |
 | B9 | 2D or 3D | Always 3D, with a loader while it downloads. The existing 2D game is kept only for: reduced motion, no WebGL, or a failed download (§6.2). |
 | B10 | Physics | No physics engine. The ball's flight is our own small maths (§5). |
 
@@ -71,7 +71,7 @@ The line can be changed until BOWL is pressed. All new labels (line names, RELEA
 
 ### 3.5 What the 3D scene replaces
 
-In 3D the canvas takes the place of the drawn backdrop (`GameBackdrop` turf) on both layouts, under the HUD. The drawn pitch marks (tracer path, tracking rings, the YORKER / GOOD LENGTH labels, the static bat) are not shown in 3D: the 3D pitch has the yorker and good-length bands painted on it, and the YASH · ON STRIKE tag floats above Yash (drei `Html`, the same `PlayerTag` component). The 2D board keeps all of them for its fallback.
+In 3D the canvas takes the place of the drawn backdrop (`GameBackdrop` turf) on both layouts, under the HUD. The drawn pitch marks (tracer path, tracking rings, the YORKER / GOOD LENGTH labels, the static bat) are not shown in 3D: the 3D pitch has the yorker and good-length bands painted on it. No tags float in the 3D scene (the score bug already says who is on strike). While 3D is still loading, the 2D board is shown as today, with the loader in BOWL's place; when 3D is ready it fades in over it. The 2D board keeps all of its marks for the fallback.
 
 ## 4. Game rules
 
@@ -89,21 +89,24 @@ In 3D the canvas takes the place of the drawn backdrop (`GameBackdrop` turf) on 
 
 - **Length:** where the ball pitches comes from `p` (early → short, centre → yorker, late → full toss; a full toss does not bounce before the bat).
 - **Line:** OFF / MIDDLE / LEG, plus a small random scatter for good and miss balls.
-- The speed is shown in the HUD as a small broadcast chip (new `ui` label).
+- The speed is shown as a small mono line just above the timing meter ("143 KM/H"), from the release until the next ball. Its space is kept empty before the first ball, so nothing moves.
 
 ### 4.3 Yash's answer (the "director")
 
-A pure function picks Yash's shot from the referee's result plus the ball's line and length. The result never changes; only how it looks does. One option is picked at random (injectable random source, so tests are fixed) among those that fit the ball.
+A pure function picks Yash's shot from the referee's result plus the ball's line and length. The result never changes; only how it looks does. The shot is chosen so that **what you see always matches the commentary line** (the prototype's lines, G4); only the exact direction inside a range is random (injectable random source, so tests are fixed). Yash bats **right-handed** (owner, 2026-10-15).
 
 | Referee result | Options (each must fit the ball) |
 |---|---|
-| DOT (perfect, balls 1–2; a perfect ball is always a yorker) | **Dug out:** the yorker jammed into the pitch at the last second. **Beaten:** a play-and-miss, the ball passes the bat and misses the stump by a hair, crowd "ooh", keeper takes it. |
-| FOUR | **Drive** along the ground through the gap; the nearest fielder dives and misses. **Edge:** a thick outside edge racing past the slip (only on an OFF line). |
-| SIX | **Pull** over midwicket (short balls). **Loft** straight into the crowd (full balls and full tosses). |
+| Referee result | What you see | Commentary |
+|---|---|---|
+| DOT, OFF line (a perfect ball is always a yorker) | **Beaten:** a play-and-miss; the ball passes the bat and just misses off stump; the crowd goes "ooh"; the keeper takes it. | new derived line `comm.beaten`: "Beaten! Missed off stump by a whisker." |
+| DOT, MIDDLE or LEG line | **Dug out:** the yorker jammed into the pitch at the last second. | `comm.dot` (as today) |
+| FOUR | **Drive** along the ground through the gap (OFF → cover, MIDDLE → straight past the bowler, LEG → midwicket); the nearest fielder dives and misses. | `comm.four` / `comm.lastGood` (as today) |
+| FOUR on a perfect ball 3 | **Flick** off the toes through midwicket. | `comm.lastPerfect` ("Perfect yorker. Flicked off the toes anyway.") |
+| SIX from a short ball (an early miss) | **Pull** over midwicket. | `comm.six` / `comm.lastSix` (as today) |
+| SIX from a full toss (a late miss) | **Loft** into the crowd (OFF → long-off, MIDDLE → straight, LEG → long-on). | balls 1–2: new derived line `comm.sixFull`: "Full toss. Thank you very much."; ball 3: `comm.lastSix` |
 
-Ball 3 is never a DOT (the referee already ensures this); a perfect ball 3 is shown as the Edge on an OFF line, otherwise a squeezed Drive.
-
-Shot direction fits the line: OFF → cover / straight side, MIDDLE → straight, LEG → midwicket / square leg.
+Ball 3 is never a DOT (the referee already ensures this). The two new lines are derived copy for Yash's copy review. The 2D game keeps today's lines.
 
 ## 5. Ball flight (our own maths, no engine)
 
@@ -114,16 +117,18 @@ One pure TypeScript module, unit-tested, all in metres and seconds.
 - **Off the bat:**
   - FOUR: launch angle under 5°, about 28m/s, then rolling friction; it must cross the rope (about 65m).
   - SIX: launch 30 to 40°, enough speed to land beyond the rope (about 75m).
-  - DOT: dies at the batter's feet (dug out, defended) or carries to the keeper (beaten).
+  - DOT: dies at the batter's feet (dug out) or carries to the keeper (beaten).
 - **Contact timing:** the shot clip is started so the bat meets the ball exactly at the contact moment (we control both, so this always lines up).
 
 ## 6. Technical design
 
 ### 6.1 Libraries and files
 
-- New: `three`, `@react-three/fiber` (v9; works with React 19.3) and `@react-three/drei`. No physics, post-processing or shader libraries.
-- Free CC0 assets from Quaternius: one base body from "Universal Base Characters" and the clips idle, walk, run and cheer from "Universal Animation Library" (same rig, so no retargeting). Shipped as GLB, trimmed to what we use and compressed with glTF-Transform (meshopt). Credits go in a `CREDITS.md` beside them, like the audio.
-- The stadium is built in code from simple shapes: ground, pitch, stumps, boundary rope, stands, floodlight towers, one instanced crowd. The bat, pads, gloves and helmet are simple code-built meshes attached to the body's bones. Kits are colour tints (Yash: dark with volt; the bowler and fielders: light with dark trim).
+- New: `three` and `@react-three/fiber` (v9; works with React 19.3). No drei, physics, post-processing or other 3D libraries.
+- Free CC0 assets from Quaternius (downloaded by Yash, 2026-10-15): the `Superhero_Male_FullBody` body from "Universal Base Characters [Standard]" and these clips from "Universal Animation Library [Standard]" (`UAL1_Standard.glb`, no root motion): `Idle_Loop`, `Walk_Loop`, `Jog_Fwd_Loop`, `Sprint_Loop`, `Crouch_Idle_Loop` (the keeper), plus `Sword_Idle` / `Sword_Attack` if they make a better base for the batting stance and shots. Both use the same 65-bone skeleton with the same bone names, so the clips play on the body directly. There is no cheer clip in the free pack.
+- Shipped as `public/models/athlete.glb` (the body, no textures), `public/models/athlete-skin.jpg` (the body's colour texture, 1024px) and `public/models/moves.glb` (the chosen clips only), trimmed with glTF-Transform. **No compression that needs a decoder** (no Draco, no Meshopt) and **no images inside a GLB**: the site's CSP (`script-src` without `wasm-unsafe-eval`; `img-src` / `connect-src` without `blob:`) stays unchanged. Credits go in `public/models/CREDITS.md`, like the audio.
+- **Kits are painted in code:** the free body comes almost unclothed, so a small material patch colours the shirt and trousers regions (chosen by height and reach on the body's rest pose) and keeps the skin texture elsewhere. Yash: a dark kit with a volt helmet; the bowler and fielders: a light kit with dark trousers. Pads, gloves, the bat, the helmet and the fielders' caps are simple code-built meshes attached to the body's bones.
+- The stadium is built in code from simple shapes: ground, pitch, stumps, boundary rope, stands, floodlight towers, one instanced crowd.
 - Players on the field: Yash, the bowler, a keeper and four fielders (seven bodies), the same count on every device.
 
 ### 6.2 Loading and the one fallback rule
@@ -164,7 +169,7 @@ Two settings only, chosen by the existing `MEDIA.lg` query:
 
 ### 6.5 Sound
 
-New game sounds, free only (CC0 files or made in code, as in Phase 7):
+New game sounds, made in code like the other game sounds (`src/shell/synth.ts`, Phase 7):
 - bat crack
 - ball bounce
 - a clap per stride during the run-up
