@@ -204,4 +204,15 @@ describe("buildCricketView", () => {
     // The end buttons appear on the same words: nothing is said again.
     expect(view(play(["good", "miss", "good"]), { phase: "end" }).announce).toBe(done);
   });
+
+  it("3D: a beaten dot on OFF and a full-toss six have their own commentary; 2D keeps the old lines", () => {
+    const comm = ui.games.cricket.comm;
+    const beaten = bowl(CRICKET_START, "perfect", { aim: "off", full: false });
+    expect(view(beaten).comm).toBe(comm.beaten);
+    const dug = bowl(CRICKET_START, "perfect", { aim: "middle", full: false });
+    expect(view(dug).comm).toBe(comm.dot);
+    const full = bowl(CRICKET_START, "miss", { aim: "leg", full: true });
+    expect(view(full).comm).toBe(comm.sixFull);
+    expect(view(play(["miss"])).comm).toBe(comm.six);
+  });
 });

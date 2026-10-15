@@ -14,8 +14,16 @@ import {
   CRICKET_ZONES,
   cricketOver,
   cricketRuns,
+  type CricketBall,
   type CricketState,
 } from "./referee";
+
+/** The line for a ball: as the referee says, except a 3D dot on an OFF line (beaten) and a 3D full toss for six (spec §4.3). */
+function commFor(comm: UiCopy["games"]["cricket"]["comm"], ball: CricketBall): string {
+  if (ball.call === "dot" && ball.aim === "off") return comm.beaten;
+  if (ball.line === "six" && ball.full) return comm.sixFull;
+  return comm[ball.line];
+}
 
 /** Where the game is: waiting for the bowl, the ball in the air, the call, the 2 s verdict, the end buttons. */
 export type CricketPhase = "ready" | "flight" | "called" | "verdict" | "end";
@@ -170,7 +178,7 @@ export function buildCricketView(
         }
       : null,
     call: calling ? call : null,
-    comm: last ? copy.comm[last.line] : copy.comm.start,
+    comm: last ? commFor(copy.comm, last) : copy.comm.start,
     announce:
       last && newest
         ? announceWith(

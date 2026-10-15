@@ -71,6 +71,12 @@ describe("bowl", () => {
     expect(cricketOver(s)).toBe(true);
     expect(bowl(s, "perfect")).toBe(s);
   });
+
+  it("records the line and a late release when given (3D), and judges exactly as before", () => {
+    const s = bowl(CRICKET_START, "perfect", { aim: "off", full: false });
+    expect(s.balls[0]).toMatchObject({ call: "dot", runs: 0, aim: "off", full: false });
+    expect(bowl(CRICKET_START, "perfect").balls[0]).not.toHaveProperty("aim");
+  });
 });
 
 describe("the over", () => {

@@ -4,7 +4,7 @@ These are the words that are **not** in the design files or in your `content.jso
 
 **How to use this list.** Read each row on the page where it shows. If you want different words, type them in the last column. If it is fine, leave the box empty. Send the list back and the changes go in as one copy task before launch.
 
-**How it was made.** A script read `src/content/ui-copy.ts` and collected every entry marked `// derived` (or inside a block whose comment says derived), plus the strings spec section 12 calls derived that the code does not mark (the Source column says which), plus the trophy descriptions `content.json` flags with `draftCopy: true`. Count: 59 marked in the code, 21 more named in spec section 12, 4 trophy descriptions.
+**How it was made.** A script read `src/content/ui-copy.ts` and collected every entry marked `// derived` (or inside a block whose comment says derived), plus the strings spec section 12 calls derived that the code does not mark (the Source column says which), plus the trophy descriptions `content.json` flags with `draftCopy: true`. Count: 61 marked in the code, 21 more named in spec section 12, 4 trophy descriptions.
 
 Two things to keep in mind while you read: letters in capitals are drawn in capitals (the spoken text is the same words), and a few lines are built from parts, so the page shows them joined (for example "2 of 3 venues played. The final whistle blows after all three.").
 
@@ -52,6 +52,13 @@ Two things to keep in mind while you read: letters in capitals are drawn in capi
 | `hub.comm.all` | Full matchday. Still undefeated. | Commentary bar when all three are played (H7). | spec 12 | |
 | `hub.drawer.open` | INDEX | The INDEX button in the top row that opens the drawer (H2). | spec 12 | |
 | `hub.drawer.close` | Close the index | The drawer's close button, spoken name (H2). | spec 12 | |
+
+## Cricket (3D commentary)
+
+| Key | Wording now | Where it shows | Source | Yash's wording |
+|---|---|---|---|---|
+| `games.cricket.comm.beaten` | Beaten! Missed off stump by a whisker. | The commentary line after a 3D dot ball bowled on the OFF line (Yash misses it). | code mark | |
+| `games.cricket.comm.sixFull` | Full toss. Thank you very much. | The commentary line after a 3D six off a full toss. | code mark | |
 
 ## Centre Court (tennis)
 

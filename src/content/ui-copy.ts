@@ -480,6 +480,8 @@ export const ui = {
         lastPerfect: "Perfect yorker. Flicked off the toes anyway. Still not out.",
         lastGood: "Good ball. Better shot. Career high score updated.",
         lastSix: "Into the second tier. Still not out.",
+        beaten: "Beaten! Missed off stump by a whisker.", // derived (Phase 8)
+        sixFull: "Full toss. Thank you very much.", // derived (Phase 8)
       },
       see: "SEE THE FULL SCORECARD",
       again: "BOWL AGAIN",

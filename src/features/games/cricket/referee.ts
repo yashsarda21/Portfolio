@@ -13,6 +13,7 @@ export const CRICKET_BEATS = { flightMs: 450, callMs: 1200 } as const;
 /** G10: the reduced-motion over (FOUR, SIX, FOUR = 14*). */
 export const CRICKET_AUTO: Quality[] = ["good", "miss", "good"];
 
+export type CricketAim = "off" | "middle" | "leg";
 export type CricketCall = "dot" | "four" | "six";
 export type CricketLine = "dot" | "four" | "six" | "lastPerfect" | "lastGood" | "lastSix";
 export interface CricketBall {
@@ -21,6 +22,9 @@ export interface CricketBall {
   runs: 0 | 4 | 6;
   forYou: boolean;
   line: CricketLine;
+  /** 3D only: the line it was bowled on and whether it was released late. */
+  aim?: CricketAim;
+  full?: boolean;
 }
 export interface CricketState {
   balls: CricketBall[];
@@ -37,7 +41,11 @@ export const cricketOver = (s: CricketState) => s.balls.length >= CRICKET_BALLS;
 export const cricketRuns = (s: CricketState) => s.balls.reduce((sum, b) => sum + b.runs, 0);
 
 /** One ball. Yash always wins (F1): balls 1–2 judge the length; ball 3 is always a FOUR or SIX, whatever came before. */
-export function bowl(s: CricketState, q: Quality): CricketState {
+export function bowl(
+  s: CricketState,
+  q: Quality,
+  how?: { aim: CricketAim; full: boolean },
+): CricketState {
   if (cricketOver(s)) return s;
   const last = s.balls.length === CRICKET_BALLS - 1;
   const ball: CricketBall =
@@ -52,5 +60,5 @@ export function bowl(s: CricketState, q: Quality): CricketState {
             line: last ? (q === "perfect" ? "lastPerfect" : "lastGood") : "four",
           }
         : { q, call: "dot", runs: 0, forYou: true, line: "dot" };
-  return { balls: [...s.balls, ball] };
+  return { balls: [...s.balls, { ...ball, ...how }] };
 }
