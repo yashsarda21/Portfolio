@@ -259,6 +259,8 @@ Resolved token drift (audit §2.10):
 
 ### 8.1 Cricket: Bowl at Me (from the working prototype)
 
+> **Phase 8 (2026-10-15):** cricket becomes a 3D game; see [`2026-10-15-phase-8-cricket-3d-design.md`](2026-10-15-phase-8-cricket-3d-design.md), which wins over this section and §11.13 for cricket. The rules below stay.
+
 - 3 balls. The meter cursor ping-pongs every 1.1s.
 - Zones: perfect = centre ±3.5%, good = ±12% on desktop; mobile ±5% / ±14%, as drawn.
 - Balls 1–2: perfect → DOT, good → FOUR, miss → SIX.
