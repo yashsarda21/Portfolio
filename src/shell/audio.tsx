@@ -209,28 +209,33 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       const show: ActiveShow = { bus: null, sources: [], stopped: false };
       showRef.current = show;
       document.documentElement.dataset.showScheduled = String(schedule.length);
-      const names = [...new Set(schedule.map((cue) => cue.sound))];
-      void Promise.all(names.map((name) => load(ctx, name))).then((decoded) => {
-        if (show.stopped || ctxRef.current !== ctx || !enabledRef.current) return;
+      // The bus exists before any file does, so both sounds join the same one and stopShow can fade it at any time.
+      let bus: GainNode;
+      try {
+        bus = ctx.createGain();
+        bus.gain.value = SHOW_LEVELS.bus;
+        bus.connect(master);
+        show.bus = bus;
+      } catch {
+        return;
+      }
+      /** Places one sound's cues the moment its own file is decoded (the small clunks never wait for the crowd). */
+      const place = (sound: ShowSoundName, buffer: AudioBuffer | null) => {
+        if (!buffer || show.stopped || ctxRef.current !== ctx || !enabledRef.current) return;
         try {
           // Where the show has got to by now (decoding took time), on the same clock the animations run on.
           const elapsed = (performance.now() - origin) / 1000;
           const now = ctx.currentTime;
-          const bus = ctx.createGain();
-          bus.gain.value = SHOW_LEVELS.bus;
-          bus.connect(master);
-          show.bus = bus;
           for (const cue of schedule) {
-            const buffer = decoded[names.indexOf(cue.sound)];
+            if (cue.sound !== sound) continue;
             // Past its moment: a clunk is skipped, never played late; a crowd whose run is over has nothing to add.
-            if (!buffer || (cue.sound === "light" ? cue.at < elapsed : cueEnd(cue) <= elapsed))
-              continue;
+            if (sound === "light" ? cue.at < elapsed : cueEnd(cue) <= elapsed) continue;
             const out = ctx.createGain();
             out.connect(bus);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
             source.connect(out);
-            if (cue.sound === "light") {
+            if (sound === "light") {
               out.gain.value = SHOW_LEVELS.light;
               source.start(now + (cue.at - elapsed));
             } else {
@@ -257,7 +262,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         } catch {
           /* a show that cannot play is a silent show, not an error */
         }
-      });
+      };
+      for (const sound of new Set(schedule.map((cue) => cue.sound)))
+        void load(ctx, sound).then((buffer) => place(sound, buffer));
     },
     [load, stopShow, wake],
   );

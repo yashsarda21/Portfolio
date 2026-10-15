@@ -32,6 +32,8 @@ const rig = {
   decodeFails: false,
   fetches: [] as string[],
   fetchFails: false,
+  /** A file whose fetch waits here (by path) until the test lets it go. */
+  gates: {} as Record<string, Promise<void>>,
 };
 
 const makeGain = (): Gain => ({
@@ -93,15 +95,16 @@ beforeEach(() => {
   rig.decodeFails = false;
   rig.fetches = [];
   rig.fetchFails = false;
+  rig.gates = {};
   delete document.documentElement.dataset.showScheduled;
   vi.stubGlobal("AudioContext", FakeAudioContext);
   vi.stubGlobal(
     "fetch",
     vi.fn((url: string) => {
       rig.fetches.push(url);
-      return rig.fetchFails
-        ? Promise.reject(new Error("offline"))
-        : Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) });
+      if (rig.fetchFails) return Promise.reject(new Error("offline"));
+      const response = { ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) };
+      return (rig.gates[url] ?? Promise.resolve()).then(() => response);
     }),
   );
 });
@@ -174,6 +177,42 @@ describe("playShow", () => {
     expect(ramps[1]![0]).toBe(0);
     expect(ramps[1]![1]).toBeCloseTo(106.0, 1);
     expect(SHOW_LEVELS.crowd).toBe(1);
+  });
+
+  it("schedules each sound as soon as its own file is ready: the clunks never wait for the crowd", async () => {
+    let release!: () => void;
+    rig.gates[SHOW_FILES.crowd] = new Promise<void>((resolve) => (release = resolve));
+    const { result } = unlocked();
+    act(() => result.current.playShow(LAND, performance.now()));
+    await settle();
+    // The crowd is still on its way: the four clunks are already placed, on a bus that already exists.
+    expect(rig.sources).toHaveLength(4);
+    expect(starts()[0]).toBeCloseTo(100.6, 1);
+    const bus = rig.gains[1]!;
+    expect(bus.gain!.value).toBe(SHOW_LEVELS.bus);
+    expect(bus.connect).toHaveBeenCalledWith(rig.gains[0]);
+    release();
+    await settle();
+    // Then the crowd joins the same bus.
+    expect(rig.sources).toHaveLength(5);
+    expect(starts()[4]).toBeCloseTo(102.4, 1);
+    expect(rig.gains.filter((g) => g.connect.mock.calls.some(([to]) => to === bus))).toHaveLength(
+      5,
+    );
+    expect(rig.gains.filter((g) => g.gain!.value === SHOW_LEVELS.bus)).toHaveLength(1);
+  });
+
+  it("a show stopped while the crowd is still on its way never starts the crowd, and fades the bus", async () => {
+    let release!: () => void;
+    rig.gates[SHOW_FILES.crowd] = new Promise<void>((resolve) => (release = resolve));
+    const { result } = unlocked();
+    act(() => result.current.playShow(LAND, performance.now()));
+    await settle();
+    act(() => result.current.stopShow());
+    expect(rig.gains[1]!.gain!.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 100.3);
+    release();
+    await settle();
+    expect(rig.sources).toHaveLength(4);
   });
 
   it("skips a clunk whose time has already passed, because the file was still decoding", async () => {
