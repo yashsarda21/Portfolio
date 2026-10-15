@@ -518,3 +518,72 @@ Publishing waits for his separate "publish".
   | 3 | Task 2 unit + e2e |
   | 4 | Task 4 verify |
   | 5 | Task 2 e2e |
+
+---
+
+## Task 7 (owner add-on, 2026-10-15): the Home and Intro sound show
+
+Yash on the Home page and the Intro: "When the four lights turn on one by one, add a realistic sound effect for each light turning on. After that, when my name appears and the stadium is revealed, add a loud crowd cheering sound… all sounds properly synchronized with the animations." The game sounds are left as they are (the next phase). His choices:
+- real CC0 recordings, which he picks by ear
+- a **first-visit start screen**, because browsers allow no sound before a click
+- return visits keep the fast, silent show
+
+| # | Decision | Why |
+|---|---|---|
+| S1 | **Two recordings:**<br>• `public/audio/light.mp3`, a floodlight clunk, played once per bank<br>• `public/audio/crowd.mp3`, a stadium roar<br>Both are CC0, credited in `public/audio/CREDITS.md`. They are fetched and decoded only after the visitor's click, so first-load Lighthouse is unchanged. | Real recordings beat synthesis for a crowd. |
+| S2 | **First-visit start screen.**<br>• **When it shows:** only when the Landing has never been seen (no `arena:landing-seen`; CSS `:root.js:not([data-return-visit])`, so the prerendered HTML never flashes it, and visitors with JavaScript off never see it).<br>• **What it says:** the brand, a volt **KICK OFF · SOUND ON** button (focused) and a quiet **KICK OFF IN SILENCE** link.<br>• **What it does:** the Landing's boot waits under it (CSS animations paused) and starts on either choice. SOUND ON unlocks audio; IN SILENCE turns the sound toggle off.<br>• **How it looks:** a full-viewport dark overlay with the arena's ground and one volt spotlight, from existing tokens and components. Once gone it never returns in that browser. | The only way to have sound on the very first show. |
+| S3 | **Sync.** Sounds are scheduled on the `AudioContext` clock from the same beat tables the animations use (`LANDING_BEATS` × pace; `INTRO_BEATS[tier]`), not by timers. A clunk whose time has already passed, because the file was still decoding, is skipped, never played late. | "Properly synchronized". |
+| S4 | **The Home show (after the start screen):**<br>• a clunk at each of the 4 bank beats `[0.6, 1.1, 1.6, 2.0]`<br>• the crowd fades in from `field` (2.4 s) to full at `name` (3.0 s), holds, then fades out over 1.5 s from `ctas` (4.5 s)<br>**Return visits:** fast pace and silent, except when sound is already unlocked in this page session (the visitor came back to Home by clicking inside the site). Then only the cheer plays, at the scaled `name` beat. | Yash: "on refresh … only crowd cheering". |
+| S5 | **The Intro show (after ENTER THE ARENA, always unlocked):**<br>• a clunk per bank at `banks + i × bankGap` (desktop 0.2 / 0.45 / 0.7 / 0.95; phone 0.075 + i × 0.3), replacing today's single synthesised floodlight<br>• **Desktop crowd:** starts at `name` (3.1), swells to full by `flash` (5.0, the stadium reveal), fades over 1.2 s from `cta` (5.7)<br>• **Phone crowd:** starts at `name` (0.9), full by `title` (1.65), fades from `cta` (2.25)<br>REPLAY plays the show again. | Matches the drawn beats. |
+| S6 | **Loudness.**<br>• The show plays through its own **show bus** (gain 0.8, so "loud") into the existing limiter and master mute.<br>• Clunks sit at about 0.6 of the bus. The crowd peaks at 1.0 of the bus.<br>• Turning sound off silences everything at once.<br>• SKIP, leaving the page or switching tabs fades the show out over 300 ms. | Yash: "loud crowd". |
+| S7 | **Reduced motion:** no show, so no show sounds. The start screen still appears on a first visit (it is the only gesture, and the end-state page then shows at once). | Sound follows the show. |
+
+**Files:**
+- Create:
+  - audio files: `public/audio/{light.mp3,crowd.mp3,CREDITS.md}` (from the owner's picks)
+  - shell: `src/shell/showSound.ts` (+ test)
+  - landing: `src/features/landing/StartScreen.tsx` (+ story), the start screen's tests
+- Modify:
+  - `src/shell/audio.tsx` (load and play buffers through the show bus; keep the synth for the game slots)
+  - landing: `src/features/landing/{LandingScreen.tsx,LandingPage.tsx,LandingColumn.tsx,pace.css}`
+  - intro: `src/features/intro/useIntroTimeline.ts`
+  - `src/content/ui-copy.ts`
+  - e2e: `tests/e2e/{landing,intro}.spec.ts` (plus any parity test whose fresh Landing load now meets the start screen: dismiss it with IN SILENCE in the test, never mask it)
+
+**Interfaces:**
+- `showSchedule(kind: "landing" | "intro", { tier, pace, firstShow }): { at: number; sound: "light" | "crowd"; fadeIn?: number; holdUntil?: number; fadeOut?: number }[]`: pure, from the beat tables
+- `useAudio().playShow(schedule, startAt)` and `useAudio().stopShow(fadeMs = 300)`
+
+**Copy** (in `ui.landing.start`; derived, flagged for Yash):
+```ts
+start: {
+  label: "Start the show",
+  soundOn: "KICK OFF · SOUND ON",
+  silent: "KICK OFF IN SILENCE",
+  note: "Best with sound. You can switch it off any time.",
+},
+```
+
+- [ ] **Step 1: Failing tests.**
+  - **`showSchedule` (unit):**
+    - Landing first show: 4 lights at the bank beats; the crowd at field / name / ctas.
+    - Landing return visit with sound unlocked: the crowd only, times scaled by pace.
+    - Intro desktop and phone: as in S5.
+  - **`audio` (unit):**
+    - `playShow` decodes each file once and schedules on `ctx.currentTime + at`; it skips past-due clunks
+    - `stopShow` ramps the show bus to 0 over the fade
+    - muted → nothing
+    - a fetch or decode failure stays silent
+  - **e2e:**
+    - a fresh profile shows the start screen with focus on SOUND ON, and the boot is held (a part with a known delay is still hidden after 1 s)
+    - SOUND ON starts the boot and unlocks audio; IN SILENCE starts it with the toggle off
+    - a reload shows no start screen (fast pace)
+    - JavaScript off shows none
+    - axe is clean with it open
+    - the Intro after ENTER calls the schedule (spy on `playShow` through a test hook, or assert on a `data-show-scheduled` attribute)
+- [ ] **Step 2: Build** `showSound.ts`, the audio additions, `StartScreen` and the wiring, per S1–S7. Copy only in `ui-copy.ts`. Tokens only. One `h1` (the start screen uses none, or the page's own stays the only one).
+- [ ] **Step 3: Verify.**
+  - Run the full `pnpm verify` (4183 config) and `pnpm lighthouse`: budgets met, phones ≥ 0.8.
+  - Landing parity stays inside its limit, with tests dismissing the start screen.
+  - **Shots:** the start screen at 1440×900 and 390×844.
+  - Commit `feat(sound): the Home and Intro show with real light clunks and a stadium roar; a first-visit start screen (S1–S7)`.
