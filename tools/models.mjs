@@ -15,7 +15,8 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Extension, NodeIO } from "@gltf-transform/core";
+import { NodeIO } from "@gltf-transform/core";
+import { KHRMeshQuantization } from "@gltf-transform/extensions";
 import { dedup, prune, quantize, resample } from "@gltf-transform/functions";
 
 const src = process.argv[2];
@@ -25,18 +26,7 @@ if (!src) {
 }
 const out = resolve(dirname(fileURLToPath(import.meta.url)), "../public/models");
 mkdirSync(out, { recursive: true });
-// Lets the writer declare KHR_mesh_quantization (the extensions package is not a direct dependency). Three reads it with no decoder.
-class MeshQuantization extends Extension {
-  extensionName = "KHR_mesh_quantization";
-  static EXTENSION_NAME = "KHR_mesh_quantization";
-  read() {
-    return this;
-  }
-  write() {
-    return this;
-  }
-}
-const io = new NodeIO().registerExtensions([MeshQuantization]);
+const io = new NodeIO().registerExtensions([KHRMeshQuantization]);
 
 // The clips we keep. Repeated from LIBRARY_CLIPS in src/features/games/three/rig.ts: keep the two in step.
 const KEEP_CLIPS = ["Idle_Loop", "Walk_Loop", "Jog_Fwd_Loop", "Sprint_Loop", "Crouch_Idle_Loop"];
@@ -77,7 +67,7 @@ await body.transform(
   quantize({ pattern: /^(?!POSITION$)/ }),
 );
 // Quantized normals, UVs and colours need the extension declared (quantize() only declares it when POSITION is quantized).
-body.createExtension(MeshQuantization).setRequired(true);
+body.createExtension(KHRMeshQuantization).setRequired(true);
 await io.write(join(out, "athlete.glb"), body);
 
 // --- Moves --------------------------------------------------------------
@@ -88,6 +78,20 @@ for (const a of moves.getRoot().listAnimations()) {
   a.listChannels().forEach((c) => c.dispose());
   a.listSamplers().forEach((s) => s.dispose());
   a.dispose();
+}
+// The clips key every bone's position and scale. Keeping those would overwrite the body's own bone lengths with the
+// mannequin's, so only the root and the pelvis keep a position track (the stance height), and no scale tracks stay.
+for (const a of moves.getRoot().listAnimations()) {
+  for (const c of a.listChannels()) {
+    const path = c.getTargetPath();
+    const name = c.getTargetNode()?.getName();
+    const keep =
+      path === "rotation" || (path === "translation" && (name === "root" || name === "pelvis"));
+    if (keep) continue;
+    const sampler = c.getSampler();
+    c.dispose();
+    sampler?.dispose();
+  }
 }
 for (const n of moves.getRoot().listNodes()) {
   const mesh = n.getMesh();

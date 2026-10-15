@@ -24,6 +24,14 @@ describe("the shipped models (spec §6.1, CSP-safe)", () => {
     for (const name of Object.values(BONES)) expect(nodeNames(moves)).toContain(name);
     expect(moves.meshes ?? []).toEqual([]);
   });
+  it("the moves keep the body's own bone lengths: only root and pelvis move by position", () => {
+    for (const anim of moves.animations) {
+      for (const c of anim.channels) {
+        if (c.target.path !== "translation") continue;
+        expect(["root", "pelvis"]).toContain(moves.nodes[c.target.node].name);
+      }
+    }
+  });
   it("stays small", () => {
     expect(statSync("public/models/athlete.glb").size).toBeLessThan(700_000);
     expect(statSync("public/models/moves.glb").size).toBeLessThan(1_500_000);
