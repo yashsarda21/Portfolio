@@ -3,10 +3,9 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
-import { gotoLanding } from "./support/startScreen";
 
 test("home page renders its heading", async ({ page }) => {
-  await gotoLanding(page);
+  await page.goto("/");
   // The name is in the page from the first frame, at opacity 0 (readable and focusable), and fades in at its turn in the boot (3 s).
   await expect(page.getByRole("heading", { level: 1, name: ui.routes.home.heading })).toBeVisible({
     timeout: 10_000,
@@ -14,7 +13,7 @@ test("home page renders its heading", async ({ page }) => {
 });
 
 test("home page has no accessibility violations", async ({ page }) => {
-  await gotoLanding(page);
+  await page.goto("/");
   // Axe judges the board at rest: wait for the boot to end.
   await page.evaluate(async () => {
     const group = document.querySelector("a[href='/intro']")?.parentElement?.parentElement;

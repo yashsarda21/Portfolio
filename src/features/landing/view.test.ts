@@ -49,12 +49,6 @@ describe("buildLandingView", () => {
     expect(view.skip).toEqual({ label: ui.hud.skipIntro, to: ROUTES.arena });
   });
 
-  it("the first-visit start screen's words come from ui.landing.start", () => {
-    expect(view.start).toEqual(ui.landing.start);
-    expect(view.start.soundOn).toBe("KICK OFF · SOUND ON");
-    expect(view.start.silent).toBe("KICK OFF IN SILENCE");
-  });
-
   it("the hint, the first entrance line, the audio toggle and the brand", () => {
     expect(view.hint).toBe(ui.landing.hint);
     expect(view.comm).toBe(content.commentary.entrance[0]);

@@ -4,7 +4,6 @@ import { ROUTES } from "../../src/shell/routes";
 import { waitForFiniteAnimations } from "../support/animations";
 import { expectNoA11yViolations } from "../support/a11y";
 import { expectMatchesArtboard } from "../support/visual";
-import { dismissStart, gotoLanding } from "./support/startScreen";
 
 const entries = Object.entries(ROUTES) as [keyof typeof ROUTES, string][];
 
@@ -74,14 +73,12 @@ test("focus lands on the rendered heading of the landing page, not its hidden tw
   await page.goto(ROUTES.notFound);
   await page.getByRole("link", { name: ui.notFound.home }).click();
   await expect(page).toHaveURL(ROUTES.home);
-  // A first visit to the Landing meets the start screen; when it goes, focus lands on the name like any arrival.
-  await dismissStart(page);
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
 
 test("journey: Landing → Quick View", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "the Landing CTAs are the desktop Scoreboard");
-  await gotoLanding(page);
+  await page.goto(ROUTES.home);
   await page.getByRole("link", { name: ui.landing.view }).click();
   await expect(page).toHaveURL(ROUTES.scout);
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
@@ -150,7 +147,7 @@ test("stage mono labels stay at 11px or more on screen (L2)", async ({ page }, t
 
 test("home matches the Main artboard", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Main is a 1440×900 board");
-  await gotoLanding(page);
+  await page.goto("/");
   // The boot is over when the CTA group, the last scoreboard-area part to enter, has finished its entrance.
   // (Playwright's animations: "disabled" would also run the finite animations to their last frame; waiting
   // for the real end makes the check say the show itself ends on Main's board.)

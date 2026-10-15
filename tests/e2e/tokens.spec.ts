@@ -37,8 +37,7 @@ test.describe("design tokens", () => {
   });
 
   test("keyboard focus shows the volt ring", async ({ page }) => {
-    // Any page has the skip link as its first stop; the Landing's is shut behind the start screen on a first visit.
-    await page.goto("/arena");
+    await page.goto("/");
     await page.keyboard.press("Tab"); // first stop is the skip link
     await expect(page.getByRole("link", { name: ui.skipToContent })).toBeFocused();
     const ring = await page.evaluate(() => {

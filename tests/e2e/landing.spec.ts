@@ -8,7 +8,6 @@ import {
   expectLightsBelowTopRow,
 } from "./support/columnLayout";
 import { expectNoHorizontalOverflow, waitForHydration } from "./support/contentPage";
-import { gotoLanding } from "./support/startScreen";
 
 const enter = (page: Page) => page.getByRole("link", { name: ui.landing.enter });
 const quick = (page: Page) => page.getByRole("link", { name: ui.landing.view });
@@ -51,7 +50,7 @@ test.describe("desktop", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 1200, "the desktop Landing");
 
   test("the four banks clear the HUD (the stage layout is unchanged)", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(name(page)).toBeVisible();
     await expectBanksClearOfHud(page, page.locator("[data-stage]"), 4);
   });
@@ -60,7 +59,7 @@ test.describe("desktop", () => {
     test("at 0.2 s the name is faded out and the calls to action cannot take focus", async ({
       page,
     }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await waitForHydration(page);
       await seekBoot(page, 200);
       const visibility = (sel: string) =>
@@ -82,7 +81,7 @@ test.describe("desktop", () => {
     test("the scenery enters on Main's beats: dark at 0.5 s, fully lit at the end", async ({
       page,
     }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await waitForHydration(page);
       const opacity = (part: string) =>
         page.evaluate(
@@ -117,7 +116,7 @@ test.describe("desktop", () => {
     });
 
     test("after the boot, Tab reaches both calls to action", async ({ page }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await bootDone(page);
       await expect(name(page)).toBeVisible();
       const stops = await tabStops(page, 8);
@@ -126,7 +125,7 @@ test.describe("desktop", () => {
     });
 
     test("the board has no accessibility violations at the end of the boot", async ({ page }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await bootDone(page);
       await expectNoA11yViolations(page);
     });
@@ -152,7 +151,7 @@ test.describe("desktop", () => {
     });
 
     test("coming back in the same session plays the cut-down too", async ({ page }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await waitForHydration(page);
       await bootDone(page);
       // The commentary line is the last beat; it marks the boot as played.
@@ -175,7 +174,7 @@ test.describe("desktop", () => {
     });
 
     test("the first visit marks the browser, so the next one is quick", async ({ page }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await expect
         .poll(() => page.evaluate(() => localStorage.getItem("arena:landing-seen")))
         .toBe("1");
@@ -184,12 +183,11 @@ test.describe("desktop", () => {
 
   test.describe("shortcuts (A8)", () => {
     test("Enter plays and Q opens Quick View", async ({ page }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await waitForHydration(page);
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL("/intro");
 
-      // The second visit is a return visit: no start screen.
       await page.goto("/");
       await waitForHydration(page);
       await page.keyboard.press("q");
@@ -199,7 +197,7 @@ test.describe("desktop", () => {
     test("Ctrl+Q and Alt+Enter do nothing: only the plain Enter that follows goes anywhere", async ({
       page,
     }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await waitForHydration(page);
       const visited: string[] = [];
       page.on("framenavigated", (frame) => visited.push(new URL(frame.url()).pathname));
@@ -213,7 +211,7 @@ test.describe("desktop", () => {
     });
 
     test("Enter on VIEW PORTFOLIO is that link's own action, once", async ({ page }) => {
-      await gotoLanding(page);
+      await page.goto("/");
       await waitForHydration(page);
       await bootDone(page);
       await quick(page).focus();
@@ -248,7 +246,7 @@ test.describe("desktop", () => {
     test("everything is there at once and no rig frames are requested", async ({ page }) => {
       const strips: string[] = [];
       page.on("request", (r) => /turn_[012][^/]*\.webp/.test(r.url()) && strips.push(r.url()));
-      await gotoLanding(page);
+      await page.goto("/");
       await expect(name(page)).toBeVisible();
       for (const target of [name(page), enter(page), quick(page)]) {
         await expect(target).toBeVisible();
@@ -261,7 +259,7 @@ test.describe("desktop", () => {
   });
 
   test("the intro's head-turn frames are fetched after the page has loaded", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     // The browser's own record: every strip's request starts, and the page's load event.
     const strips = () =>
       page.evaluate(() =>
@@ -295,9 +293,7 @@ test.describe("desktop", () => {
       [390, 844],
     ] as const) {
       await page.setViewportSize({ width, height });
-      // The first load meets the start screen; every later one is a return visit.
-      if (width === 1440) await gotoLanding(page);
-      else await page.goto("/");
+      await page.goto("/");
       await expect(page.getByRole("heading", { level: 1 }), `${width}px`).toHaveCount(1);
     }
   });
@@ -313,7 +309,7 @@ test.describe("phone", () => {
   test("matches the Mobile-Landing artboard where it was left alone, and at the new places of what moved (D-2, D-3)", async ({
     page,
   }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await waitForHydration(page);
     await seekBoot(page, 6000); // measured at the boot's last frame (the calls to action rise 18px into place)
     const ratios = await expectMobileLandingFidelity(page, column(page), {
@@ -328,15 +324,14 @@ test.describe("phone", () => {
   });
 
   test("one h1, the stacked name, and nothing sideways", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(name(page)).toBeVisible();
     await expectNoHorizontalOverflow(page, [390], 844);
   });
 
   test("the sound toggle starts on (L5), labelled SOUND", async ({ page }) => {
-    // KICK OFF · SOUND ON leaves it on; KICK OFF IN SILENCE would turn it off.
-    await gotoLanding(page, "sound");
+    await page.goto("/");
     await waitForHydration(page);
     const toggle = soundToggle(page);
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
@@ -348,7 +343,7 @@ test.describe("phone", () => {
   });
 
   test("the two calls to action, ENTER with the phone sub-line", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(enter(page)).toBeVisible();
     await expect(enter(page)).toContainText(ui.landing.enterSubPhone);
     await expect(enter(page)).not.toContainText(ui.landing.enterSub);
@@ -361,7 +356,7 @@ test.describe("phone", () => {
   });
 
   test("silent: no commentary, no keyboard hint, no SKIP INTRO", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await waitForHydration(page);
     await page.waitForTimeout(6000); // past the desktop's commentary beat
     await expect(page.locator("[data-commentary-bar]")).toHaveCount(0);
@@ -371,13 +366,13 @@ test.describe("phone", () => {
   });
 
   test("has no accessibility violations", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(name(page)).toBeVisible();
     await expectNoA11yViolations(page);
   });
 
   test("ENTER THE ARENA goes to the intro", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await waitForHydration(page);
     await enter(page).click();
     await expect(page).toHaveURL("/intro");
@@ -389,7 +384,7 @@ test.describe("tablet", () => {
   test.use({ viewport: { width: 768, height: 1024 } });
 
   test("is the same column, centred, one rendered h1", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     const col = (await column(page).locator("h1").boundingBox())!;
     expect(Math.abs(col.x + col.width / 2 - 384)).toBeLessThan(2);
@@ -402,7 +397,7 @@ test.describe("tablet", () => {
   test("portrait: the board and the challenge line sit together, not a screen apart", async ({
     page,
   }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(name(page)).toBeVisible();
     const board = (await column(page).locator("[data-part='board']").boundingBox())!;
     const challenge = (await column(page).getByText(ui.landing.challenge).boundingBox())!;
@@ -417,7 +412,7 @@ test.describe("tablet", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(name(page)).toBeVisible();
     const board = (await column(page).locator("[data-part='board']").boundingBox())!;
     for (const side of ["bank-1", "bank-2"]) {
@@ -429,7 +424,7 @@ test.describe("tablet", () => {
   });
 
   test("has no accessibility violations", async ({ page }) => {
-    await gotoLanding(page);
+    await page.goto("/");
     await expect(name(page)).toBeVisible();
     await expectNoA11yViolations(page);
   });
@@ -453,7 +448,7 @@ test.describe("the column's lights and spacing (D-2, D-3)", () => {
       page,
     }) => {
       await page.setViewportSize({ width, height });
-      await gotoLanding(page);
+      await page.goto("/");
       await expect(name(page)).toBeVisible();
       await seekBoot(page, 6000); // the boot's last frame: the calls to action have risen into place
       await expectLightsBelowTopRow(page, column(page));
@@ -508,7 +503,7 @@ test.describe("the column fits a tablet, landscape too (no vertical scroll)", ()
       page,
     }) => {
       await page.setViewportSize({ width, height });
-      await gotoLanding(page);
+      await page.goto("/");
       await expect(name(page)).toBeVisible();
       await seekBoot(page, 6000);
       const scroll = await page.evaluate(
@@ -552,7 +547,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
       test("the top row is there from the first frame; the scene and the board start dark", async ({
         page,
       }) => {
-        await gotoLanding(page);
+        await page.goto("/");
         await waitForHydration(page);
         await seekBoot(page, 0);
         for (const sel of ["[data-part='top'] > *", "[data-part='top'] button"]) {
@@ -567,7 +562,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
       test("at 0.5 s the name and the calls to action are not shown (and cannot take focus), the sky and crowd are not up", async ({
         page,
       }) => {
-        await gotoLanding(page);
+        await page.goto("/");
         await waitForHydration(page);
         await seekBoot(page, 350);
         // The crowd's turn is .3 s: it has barely begun.
@@ -591,7 +586,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
       test("the banks flicker on left then right (.6 s, 1.1 s); sky, glow and the board follow on their beats", async ({
         page,
       }) => {
-        await gotoLanding(page);
+        await page.goto("/");
         await waitForHydration(page);
         await seekBoot(page, 1000);
         expect((await look(page, "bank-1")).visibility).toBe("visible");
@@ -615,7 +610,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
       });
 
       test("at the end everything is shown and both calls to action take Tab", async ({ page }) => {
-        await gotoLanding(page);
+        await page.goto("/");
         await waitForHydration(page);
         await seekBoot(page, 6000);
         for (const p of ["sky", "crowd", "venue", "bank-1", "bank-2", "board-header"])
@@ -650,7 +645,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
         // The page's timers run on a clock the test steps: the 5.2 s beat that marks the boot as played
         // fires at once, with no wait. (The CSS animations ignore it.)
         await page.clock.install();
-        await gotoLanding(page);
+        await page.goto("/");
         await waitForHydration(page);
         await page.clock.fastForward(6000);
         await page.clock.resume();
@@ -671,7 +666,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
       test.describe("reduced motion", () => {
         test.use({ reducedMotion: "reduce" });
         test("everything is shown at once", async ({ page }) => {
-          await gotoLanding(page);
+          await page.goto("/");
           await waitForHydration(page);
           await page.waitForTimeout(100);
           for (const p of ["sky", "crowd", "venue", "bank-1", "bank-2", "board-header"])
@@ -688,9 +683,7 @@ test.describe("the column plays the boot on Main's beats (D-4)", () => {
 
   test.describe("without JavaScript", () => {
     test.use({ javaScriptEnabled: false });
-    test("the CSS boot still ends with the column in place (and there is no start screen to press)", async ({
-      page,
-    }) => {
+    test("the CSS boot still ends with the column in place", async ({ page }) => {
       await page.goto("/");
       await expect(enter(page)).toBeVisible({ timeout: 10_000 });
       await expect(quick(page)).toBeVisible();
@@ -712,7 +705,7 @@ test.describe("every viewport below the stage (Review Focus 5)", () => {
   ] as const) {
     test(`${width}×${height}: nothing clipped, one h1, mono at 11px or more`, async ({ page }) => {
       await page.setViewportSize({ width, height });
-      await gotoLanding(page);
+      await page.goto("/");
       await expect(name(page)).toBeVisible();
       await expectNoHorizontalOverflow(page, [width], height);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);

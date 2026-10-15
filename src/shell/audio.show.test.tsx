@@ -110,7 +110,11 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-const LAND = showSchedule("landing", { pace: 1, firstShow: true });
+/** A fixed show to test the service with: four clunks, then a crowd (the Home's first-show timings, as numbers). */
+const LAND: ShowCue[] = [
+  ...[0.6, 1.1, 1.6, 2.0].map((at): ShowCue => ({ at, sound: "light" })),
+  { at: 2.4, sound: "crowd", fadeIn: 0.6, holdUntil: 4.5, fadeOut: 1.5 },
+];
 
 function unlocked() {
   const hook = renderHook(() => useAudio(), { wrapper });
@@ -277,7 +281,7 @@ describe("playShow", () => {
 
   it("plays only the crowd of a return visit's cheer", async () => {
     const { result } = unlocked();
-    const cues = showSchedule("landing", { pace: 0.25, firstShow: false });
+    const cues = showSchedule("landing", { pace: 0.25 });
     act(() => result.current.playShow(cues, performance.now()));
     await settle();
     expect(rig.fetches).toEqual([SHOW_FILES.crowd]);

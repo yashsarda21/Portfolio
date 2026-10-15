@@ -27,6 +27,11 @@ interface AudioApi {
    * because the file was still decoding, is skipped, never played late. Needs an unlock and the sound on.
    */
   playShow(schedule: readonly ShowCue[], startAt?: number): void;
+  /**
+   * Starts fetching the show's recordings (the bytes only: no sound context is made, so no gesture is needed), so
+   * they are ready when a show plays. Cheap to call again: each file is fetched once.
+   */
+  prefetchShow(): void;
   /** Fades the show out over `fadeMs` (default 300): SKIP, leaving the page, switching tabs. */
   stopShow(fadeMs?: number): void;
 }
@@ -85,6 +90,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterRef = useRef<GainNode | null>(null);
   const lastPlayed = useRef<Partial<Record<SoundName, number>>>({});
+  const bytes = useRef<Partial<Record<ShowSoundName, Promise<ArrayBuffer | null>>>>({});
   const buffers = useRef<Partial<Record<ShowSoundName, Promise<AudioBuffer | null>>>>({});
   const showRef = useRef<ActiveShow | null>(null);
 
@@ -157,26 +163,54 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     [wake],
   );
 
-  /** Fetches and decodes a recording once; a failure is a missing sound and is tried again next time. */
-  const load = useCallback((ctx: AudioContext, name: ShowSoundName) => {
-    let loading = buffers.current[name];
+  /** Fetches a recording's bytes once (no context needed); a failure is a missing sound and is tried again next time. */
+  const fetchBytes = useCallback((name: ShowSoundName) => {
+    let loading = bytes.current[name];
     if (!loading) {
       loading = (async () => {
         try {
           const response = await fetch(SHOW_FILES[name]);
-          if (!response.ok) return null;
-          return await ctx.decodeAudioData(await response.arrayBuffer());
+          return response.ok ? await response.arrayBuffer() : null;
         } catch {
           return null;
         }
-      })().then((buffer) => {
-        if (!buffer) delete buffers.current[name];
-        return buffer;
+      })().then((data) => {
+        if (!data) delete bytes.current[name];
+        return data;
       });
-      buffers.current[name] = loading;
+      bytes.current[name] = loading;
     }
     return loading;
   }, []);
+
+  const prefetchShow = useCallback(() => {
+    if (typeof window === "undefined") return;
+    for (const name of Object.keys(SHOW_FILES) as ShowSoundName[]) void fetchBytes(name);
+  }, [fetchBytes]);
+
+  /** Decodes a recording once per context, from the prefetched bytes (or fetching them now). A failure stays silent. */
+  const load = useCallback(
+    (ctx: AudioContext, name: ShowSoundName) => {
+      let loading = buffers.current[name];
+      if (!loading) {
+        loading = (async () => {
+          try {
+            const data = await fetchBytes(name);
+            // decodeAudioData takes its input apart: give it a copy, so a failed decode can be tried again.
+            return data ? await ctx.decodeAudioData(data.slice(0)) : null;
+          } catch {
+            return null;
+          }
+        })().then((buffer) => {
+          if (!buffer) delete buffers.current[name];
+          return buffer;
+        });
+        buffers.current[name] = loading;
+      }
+      return loading;
+    },
+    [fetchBytes],
+  );
 
   const stopShow = useCallback((fadeMs = 300) => {
     const show = showRef.current;
@@ -282,8 +316,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [stopShow]);
 
   const api = useMemo(
-    () => ({ enabled, unlocked, toggle, unlock, play, playShow, stopShow }),
-    [enabled, unlocked, toggle, unlock, play, playShow, stopShow],
+    () => ({ enabled, unlocked, toggle, unlock, play, playShow, prefetchShow, stopShow }),
+    [enabled, unlocked, toggle, unlock, play, playShow, prefetchShow, stopShow],
   );
   return <AudioCtx.Provider value={api}>{children}</AudioCtx.Provider>;
 }

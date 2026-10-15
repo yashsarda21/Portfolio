@@ -15,8 +15,6 @@ export interface LandingView {
   enter: { label: string; sub: string; subPhone: string; to: string };
   view: { label: string; sub: string; to: string };
   hint: string;
-  /** The first-visit start screen. */
-  start: { label: string; soundOn: string; silent: string; note: string };
   /** The first line of the entrance commentary. */
   comm: string;
   commTag: string;
@@ -49,7 +47,6 @@ export function buildLandingView(
     enter: { label: l.enter, sub: l.enterSub, subPhone: l.enterSubPhone, to: routes.intro },
     view: { label: l.view, sub: l.viewSub, to: routes.scout },
     hint: l.hint,
-    start: l.start,
     comm: content.commentary.entrance[0]!,
     commTag: ui.comm.tag,
     skip: { label: ui.hud.skipIntro, to: routes.arena },

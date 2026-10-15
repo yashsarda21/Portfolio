@@ -29,7 +29,7 @@ export function LandingPage({ view }: { view: LandingView }) {
 
   // One <main>; the stage (its title is the h1) and the phone/tablet column are mutually exclusive by breakpoint.
   return (
-    <main id="main" data-landing="">
+    <main id="main">
       <Stage
         from="lg"
         backdrop={<ArenaBackdrop bleed dust boot={beat} />}

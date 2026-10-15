@@ -24,12 +24,6 @@ export const artboardLandingView: LandingView = {
   },
   view: { label: "VIEW PORTFOLIO", sub: "RECRUITER VIEW · 90 SEC", to: "/scout" },
   hint: "ENTER ↵ TO PLAY · Q FOR QUICK VIEW",
-  start: {
-    label: "Start the show",
-    soundOn: "KICK OFF · SOUND ON",
-    silent: "KICK OFF IN SILENCE",
-    note: "Best with sound. You can switch it off any time.",
-  },
   comm: "New challenger enters the arena.",
   commTag: "COMM",
   skip: { label: "SKIP INTRO", to: "/arena" },

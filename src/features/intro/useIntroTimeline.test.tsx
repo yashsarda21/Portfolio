@@ -28,6 +28,7 @@ vi.mock("@/shell/audio", async (importOriginal) => ({
     unlock: vi.fn(),
     play: vi.fn(),
     playShow,
+    prefetchShow: vi.fn(),
     stopShow,
   }),
 }));
@@ -179,7 +180,7 @@ describe("useIntroTimeline", () => {
     const [schedule, startAt] = playShow.mock.calls[0]!;
     expect(schedule).toEqual(showSchedule("intro", { tier: "desktop" }));
     expect(startAt).toBeCloseTo(performance.now(), -3);
-    act(() => api.replay());
+    await act(async () => api.replay());
     expect(playShow).toHaveBeenCalledTimes(2);
     expect(playShow.mock.calls[1]![0]).toEqual(showSchedule("intro", { tier: "desktop" }));
   });
@@ -189,7 +190,7 @@ describe("useIntroTimeline", () => {
     await mount();
     expect(playShow).toHaveBeenCalledTimes(1);
     expect(playShow.mock.calls[0]![0]).toEqual(showSchedule("intro", { tier: "mobile" }));
-    act(() => api.replay());
+    await act(async () => api.replay());
     expect(playShow.mock.calls[1]![0]).toEqual(showSchedule("intro", { tier: "mobile" }));
   });
 

@@ -208,13 +208,6 @@ export const ui = {
     view: "VIEW PORTFOLIO",
     viewSub: "RECRUITER VIEW · 90 SEC",
     hint: "ENTER ↵ TO PLAY · Q FOR QUICK VIEW",
-    /** The first-visit start screen: browsers allow no sound before a click, so this click starts the show. (Derived, flagged for Yash.) */
-    start: {
-      label: "Start the show",
-      soundOn: "KICK OFF · SOUND ON",
-      silent: "KICK OFF IN SILENCE",
-      note: "Best with sound. You can switch it off any time.",
-    },
   },
   intro: {
     live: "LIVE · PLAYER INTRODUCTION",

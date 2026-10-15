@@ -4,6 +4,7 @@ import { MEDIA } from "@/lib/breakpoints";
 import { loadGsap } from "@/lib/motion";
 import { useAudio } from "@/shell/audio";
 import { showSchedule } from "@/shell/showSound";
+import { useShowSound } from "@/shell/useShowSound";
 import { RIG_STRIPS } from "@/assets/rig";
 import { INTRO_BEATS } from "./beats";
 import { collectIntroRefs } from "./refs";
@@ -71,9 +72,10 @@ export function useIntroTimeline(
   const [canReplay, setCanReplay] = useState(false);
   const timeline = useRef<{ restart: () => unknown } | null>(null);
   // What the timeline's beats call is read at the beat, so a new callback never rebuilds the show.
-  const latest = useRef({ onComm, playShow: audio.playShow, stopShow: audio.stopShow });
+  const { arm } = useShowSound();
+  const latest = useRef({ onComm, stopShow: audio.stopShow });
   useEffect(() => {
-    latest.current = { onComm, playShow: audio.playShow, stopShow: audio.stopShow };
+    latest.current = { onComm, stopShow: audio.stopShow };
   });
   /**
    * The show's sound: a clunk per bank and the crowd, placed on the audio clock from the beat table (never timers
@@ -81,10 +83,13 @@ export function useIntroTimeline(
    * leaving the page or a tab switch (the service fades it out).
    */
   const tier = useRef<"desktop" | "mobile">("desktop");
-  const startSound = useCallback((which: "desktop" | "mobile") => {
-    tier.current = which;
-    latest.current.playShow(showSchedule("intro", { tier: which }), performance.now());
-  }, []);
+  const startSound = useCallback(
+    (which: "desktop" | "mobile") => {
+      tier.current = which;
+      arm(showSchedule("intro", { tier: which }), performance.now());
+    },
+    [arm],
+  );
 
   const mark = useCallback(
     (next: IntroState) => rootRef.current?.setAttribute("data-hold", next),

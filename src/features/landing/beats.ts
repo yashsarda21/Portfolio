@@ -45,7 +45,7 @@ const BOOT_KEYFRAMES = new Set(["fade-in", "rise-in", "boot-name", "boot-scan"])
 /**
  * How far into the boot the page is, in milliseconds, read from the boot's own animations (their clock, so a
  * sound placed from it stays in step with what is on screen even when the page took a while to start up).
- * 0 when none is running (a start screen is holding them, or they are all done and gone).
+ * 0 when none is running.
  */
 export function bootElapsedMs(): number {
   if (typeof document === "undefined" || typeof document.getAnimations !== "function") return 0;
@@ -55,13 +55,4 @@ export function bootElapsedMs(): number {
       return animation.currentTime;
   }
   return 0;
-}
-
-/** True while the first-visit start screen holds the boot: scripts are running, this is no return visit, and no button has been pressed. */
-export function bootIsHeld(root: HTMLElement = document.documentElement): boolean {
-  return (
-    root.classList.contains("js") &&
-    !root.hasAttribute("data-return-visit") &&
-    !root.hasAttribute("data-started")
-  );
 }

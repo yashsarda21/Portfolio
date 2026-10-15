@@ -25,12 +25,10 @@ export interface ShowCue {
 }
 
 export interface ShowOptions {
-  /** Which layout plays: the stage (desktop, from 1200px) or the column (below it). The Landing's column has two banks. */
+  /** The Intro's layout: the stage (desktop, from 1200px) or the column (below it). */
   tier?: "desktop" | "mobile";
-  /** The Landing's multiplier on every beat (its `--pace`); 0 is reduced motion, which has no show. The Intro ignores it. */
+  /** The Home's multiplier on every beat (its `--pace`); 0 is reduced motion, which has no show. The Intro ignores it. */
   pace?: number;
-  /** The Landing only. true: the whole show (clunks and crowd). false (a return visit): the crowd alone. */
-  firstShow?: boolean;
 }
 
 /** How long the Home crowd takes to fall away after its hold, in seconds at full pace. */
@@ -40,20 +38,19 @@ const INTRO_FADE_OUT = 1.2;
 
 const round = (seconds: number) => Math.round(seconds * 1e6) / 1e6;
 
-function landingShow({ tier = "desktop", pace = 1, firstShow = true }: ShowOptions): ShowCue[] {
+/** The Home's cheer (a return visit): the crowd alone, every beat times the pace. A first visit is silent. */
+function landingShow({ pace = 1 }: ShowOptions): ShowCue[] {
   if (pace <= 0) return [];
   const b = LANDING_BEATS;
-  const crowd: ShowCue = {
-    at: round(b.field * pace),
-    sound: "crowd",
-    fadeIn: round((b.name - b.field) * pace),
-    holdUntil: round(b.ctas * pace),
-    fadeOut: round(LANDING_FADE_OUT * pace),
-  };
-  if (!firstShow) return [crowd];
-  // The column draws two banks, lit at the first two bank beats; the stage draws four.
-  const banks = tier === "mobile" ? b.banks.slice(0, 2) : b.banks;
-  return [...banks.map((beat): ShowCue => ({ at: round(beat * pace), sound: "light" })), crowd];
+  return [
+    {
+      at: round(b.field * pace),
+      sound: "crowd",
+      fadeIn: round((b.name - b.field) * pace),
+      holdUntil: round(b.ctas * pace),
+      fadeOut: round(LANDING_FADE_OUT * pace),
+    },
+  ];
 }
 
 function introShow({ tier = "desktop" }: ShowOptions): ShowCue[] {
@@ -87,7 +84,8 @@ function introShow({ tier = "desktop" }: ShowOptions): ShowCue[] {
 
 /**
  * The sound of a show as a list of cues, worked out from the same beat tables the animations use (never from
- * timers of its own): a clunk as each floodlight bank comes on, then the crowd swelling as the name appears.
+ * timers of its own). The Intro: a clunk as each floodlight bank comes on, then the crowd swelling as the name
+ * appears. The Home: the crowd alone, on a return visit.
  */
 export function showSchedule(kind: "landing" | "intro", options: ShowOptions = {}): ShowCue[] {
   return kind === "landing" ? landingShow(options) : introShow(options);
