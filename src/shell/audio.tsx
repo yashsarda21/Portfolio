@@ -12,7 +12,8 @@ import { safeStorage } from "@/lib/storage";
 import { SHOW_FILES, SHOW_LEVELS, cueEnd, type ShowCue, type ShowSoundName } from "./showSound";
 import { MASTER_GAIN, RECIPES } from "./synth";
 
-export type SoundName = "crowd" | "floodlight" | "bat" | "net" | "smash";
+export type SoundName =
+  "crowd" | "floodlight" | "bat" | "net" | "smash" | "clap" | "bounce" | "ooh";
 
 interface AudioApi {
   enabled: boolean;

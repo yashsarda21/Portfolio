@@ -82,6 +82,9 @@ const CAPS: Record<SoundName, number> = {
   smash: 0.2,
   floodlight: 0.6,
   crowd: 1.8,
+  clap: 0.07,
+  bounce: 0.06,
+  ooh: 0.9,
 };
 const AT = 2;
 
