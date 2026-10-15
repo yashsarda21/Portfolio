@@ -49,8 +49,9 @@ export const KIT_REGIONS = {
   hip: 0.949,
   // neck_01 bone y.
   neck: 1.52,
-  // |x| halfway between upperarm_l (x 0.212) and lowerarm_l (x 0.463).
-  sleeve: 0.3375,
+  // |x| a little short of lowerarm_l (x 0.463): sleeves to just above the elbow (halfway, 0.3375, left skin showing
+  // on top of the shoulders once the arms come down).
+  sleeve: 0.42,
 } as const;
 
 /** Turns the model to face +z (0 if it already does): the toes (ball_l - foot_l) and the eyes both point to +z at rest. */

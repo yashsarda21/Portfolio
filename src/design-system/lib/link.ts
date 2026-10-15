@@ -15,14 +15,17 @@ export interface LinkSpec extends LinkTarget {
   label: string;
 }
 
-/** `as` (an anchor unless told otherwise) and only the attributes that are set, ready to spread on the element. */
+/**
+ * `as` (an anchor unless told otherwise) and only the attributes that are set, ready to spread on the element. (`as`
+ * is typed once, not as `ElementType & ElementType`: with three.js's JSX tags that intersection is too large for tsc.)
+ */
 export function linkProps({
   as,
   href,
   to,
   onClick,
   draggable,
-}: LinkTarget): { as: ElementType } & LinkTarget {
+}: LinkTarget): Omit<LinkTarget, "as"> & { as: ElementType } {
   return {
     as: as ?? "a",
     ...(href !== undefined ? { href } : {}),

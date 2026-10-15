@@ -70,8 +70,16 @@ export function faceOf(id: ActorId): number {
   return Math.atan2(bx - hx, bz - hz);
 }
 
-/** The TV view from behind the bowler (tuned in Task 6 against the stage and the column), and each layout's lens. */
+/**
+ * The TV view: high behind the bowler, on a long lens (tuned in Task 6). The stage keeps Yash, the stumps and the keeper
+ * between its side panels with the bowler at his mark under the BOWL button; the column tips the same view down a little
+ * so all of it sits above the thumb zone.
+ */
 export const CAMERA = {
-  aim: { position: [0, 6.2, 42], target: [0, 0.9, 2] } as CameraPose,
-  fov: { stage: 20, column: 34 },
+  aim: { position: [0, 8, 54], target: [0, 0, 8] } as CameraPose,
+  fov: { stage: 16, column: 26 },
+  /** The wider lens the camera opens to as it leaves the TV view to follow the ball (it is close to the ball there). */
+  followFov: { stage: 34, column: 46 },
+  /** Degrees the camera tips down from that view on each layout. */
+  tilt: { stage: 0, column: 4.5 },
 };

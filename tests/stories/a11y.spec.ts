@@ -19,7 +19,7 @@ if (!existsSync(INDEX)) {
 }
 const entries = Object.values(
   (JSON.parse(readFileSync(INDEX, "utf8")) as { entries: Record<string, IndexEntry> }).entries,
-).filter((e) => e.type === "story");
+).filter((e) => e.type === "story" && !e.id.startsWith("dev-")); // dev-only tools (the Pose Lab) are not gated
 
 test("the story index is not empty", () => {
   expect(entries.length).toBeGreaterThan(0);

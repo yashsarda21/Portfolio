@@ -3,3 +3,7 @@ allowBuilds:
   esbuild: false
   # the unrs-resolver binary arrives via its per-platform optional dependency, so the install script is not needed
   unrs-resolver: false
+# fiber 9.8.2's own type fix, back-ported to 9.8.1 (9.8.2 is newer than the release-age policy): its JSX tags list only
+# three.js classes, so `never` tags no longer break the design system's polymorphic `as` components. Drop on upgrading.
+patchedDependencies:
+  "@react-three/fiber@9.8.1": patches/@react-three__fiber@9.8.1.patch
