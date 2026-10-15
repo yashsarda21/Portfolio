@@ -1,6 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 4173;
+// The 2D projects switch WebGL off, so every existing spec keeps testing the 2D game; the -3d specs get software GL.
+const NO_3D = { args: ["--disable-3d-apis"] };
+const SOFTWARE_GL = { args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"] };
+const DESKTOP = {
+  ...devices["Desktop Chrome"],
+  viewport: { width: 1440, height: 900 },
+  deviceScaleFactor: 1,
+};
+const MOBILE = {
+  ...devices["Desktop Chrome"],
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 1,
+  hasTouch: true,
+};
 // `pnpm verify` is the only merge gate: never reuse a stale server, never allow focused tests.
 const strict = !!process.env.CI || process.env.VERIFY === "1";
 
@@ -15,23 +29,28 @@ export default defineConfig({
   use: { baseURL: `http://127.0.0.1:${PORT}`, trace: "retain-on-failure" },
   projects: [
     {
+      // The 2D game on a desktop: WebGL is off, so the 3D scene never loads.
       name: "desktop",
-      testIgnore: /webkit-smoke/,
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1440, height: 900 },
-        deviceScaleFactor: 1,
-      },
+      testIgnore: [/webkit-smoke/, /-3d\.spec/],
+      use: { ...DESKTOP, launchOptions: NO_3D },
     },
     {
+      // The 2D game on a phone: WebGL is off, so the 3D scene never loads.
       name: "mobile",
-      testIgnore: /webkit-smoke/,
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 390, height: 844 },
-        deviceScaleFactor: 1,
-        hasTouch: true,
-      },
+      testIgnore: [/webkit-smoke/, /-3d\.spec/],
+      use: { ...MOBILE, launchOptions: NO_3D },
+    },
+    {
+      // The 3D game on a desktop: software WebGL2, so the -3d specs run on any machine.
+      name: "desktop-3d",
+      testMatch: /-3d\.spec/,
+      use: { ...DESKTOP, launchOptions: SOFTWARE_GL },
+    },
+    {
+      // The 3D game on a phone: software WebGL2, so the -3d specs run on any machine.
+      name: "mobile-3d",
+      testMatch: /-3d\.spec/,
+      use: { ...MOBILE, launchOptions: SOFTWARE_GL },
     },
     {
       // The real Safari engine as a phone (P10, m-7): the iPhone preset is `isMobile`, so the viewport meta, touch and

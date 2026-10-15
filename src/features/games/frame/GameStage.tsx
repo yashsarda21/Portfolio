@@ -15,16 +15,23 @@ export function GameStage({
   chrome,
   venue,
   bug,
+  scene,
   children,
 }: {
   chrome: GameChrome;
   venue: "turf" | "court" | "hall";
   bug: ReactNode;
+  /** The 3D scene, when there is one: it replaces the backdrop and fills the viewport under the board. */
+  scene?: ReactNode;
   children: ReactNode;
 }) {
   const audio = useAudio();
   return (
-    <Stage from="lg" backdrop={<GameBackdrop venue={venue} frame="stage" />}>
+    <Stage
+      from="lg"
+      underlay={scene}
+      backdrop={scene ? undefined : <GameBackdrop venue={venue} frame="stage" />}
+    >
       <HUD
         fade
         // The boards space the three groups out (justify-content: space-between), so the score bug sits where the

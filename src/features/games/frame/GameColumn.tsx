@@ -22,6 +22,7 @@ export function GameColumn({
   field,
   thumb,
   heading,
+  scene,
 }: {
   chrome: GameChrome;
   venue: "turf" | "court" | "hall";
@@ -30,11 +31,14 @@ export function GameColumn({
   field?: ReactNode;
   thumb: ReactNode;
   heading: string;
+  /** The 3D scene, when there is one: it replaces the backdrop and fills the screen's width. */
+  scene?: ReactNode;
 }) {
   return (
     <div data-game-column="" className="relative h-dvh overflow-hidden bg-night lg:hidden">
+      {scene ? <div className="absolute inset-0">{scene}</div> : null}
       <div className="relative mx-auto h-full max-w-160">
-        <GameBackdrop venue={venue} frame="column" />
+        {scene ? null : <GameBackdrop venue={venue} frame="column" />}
         <h1 className="sr-only">{heading}</h1>
         <div
           data-part="top"

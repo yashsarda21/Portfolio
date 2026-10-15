@@ -1,4 +1,5 @@
 import type { ReactNode, Ref } from "react";
+import type { ThreeStatus } from "../three/useThreeGate";
 import { GameAnnouncer } from "./GameAnnouncer";
 
 /**
@@ -12,6 +13,7 @@ export function GamePage({
   rootRef,
   stage,
   column,
+  three,
 }: {
   phase: string;
   /** What a screen reader hears: change it to say it. */
@@ -19,10 +21,12 @@ export function GamePage({
   rootRef?: Ref<HTMLElement>;
   stage: ReactNode;
   column: ReactNode;
+  /** The 3D gate's state, for tests and styles. */
+  three?: ThreeStatus;
 }) {
   return (
     <>
-      <main id="main" ref={rootRef} data-game="" data-phase={phase}>
+      <main id="main" ref={rootRef} data-game="" data-phase={phase} data-three={three}>
         {stage}
         {column}
       </main>

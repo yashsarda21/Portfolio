@@ -5,6 +5,8 @@ import { SkyGlow } from "../scene/SkyGlow";
 interface StageProps {
   /** Scene drawn beneath the UI in the same 1440×900 space (e.g. <ArenaBackdrop bleed />). */
   backdrop?: ReactNode;
+  /** A full-bleed layer under the stage, not scaled with it (e.g. a 3D canvas that fills the viewport). */
+  underlay?: ReactNode;
   /**
    * The width from which the stage shows (spec D2): "md" hides it below 768px (default), "lg" below
    * 1200px, null always shows it. Cinematic screens render their own layout where it is hidden.
@@ -20,6 +22,7 @@ interface StageProps {
 /** Fixed 1440×900 design space scaled to fit the viewport; the scene bleeds into the letterbox (spec §4.4). */
 export function Stage({
   backdrop,
+  underlay,
   from = "md",
   className,
   skyClassName,
@@ -37,6 +40,7 @@ export function Stage({
       )}
     >
       <SkyGlow data-part="letterbox-sky" className={skyClassName} style={skyStyle} />
+      {underlay ? <div className="absolute inset-0">{underlay}</div> : null}
       <div
         data-stage
         className="absolute top-1/2 left-1/2 h-225 w-360 [transform:translate(-50%,-50%)_scale(var(--stage-scale,1))] [--stage-body-min:calc(14px/var(--stage-scale,1))] [--stage-fit:var(--stage-scale,1)] [--stage-mono-min:calc(11px/var(--stage-scale,1))]"
