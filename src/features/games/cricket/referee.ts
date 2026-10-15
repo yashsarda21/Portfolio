@@ -10,10 +10,14 @@ export const CRICKET_ZONES: Record<GameLayout, { perfect: number; good: number }
 };
 /** The ball's flight to the batter, then how long the call holds before the next ball. */
 export const CRICKET_BEATS = { flightMs: 450, callMs: 1200 } as const;
+/** 3D: the call holds while everyone walks back to their places. */
+export const CRICKET_3D_BEATS = { calledMs: 3000 } as const;
 /** G10: the reduced-motion over (FOUR, SIX, FOUR = 14*). */
 export const CRICKET_AUTO: Quality[] = ["good", "miss", "good"];
 
 export type CricketAim = "off" | "middle" | "leg";
+/** The 3D lines, off side first (← moves toward OFF, → toward LEG). */
+export const LINES = ["off", "middle", "leg"] as const satisfies readonly CricketAim[];
 export type CricketCall = "dot" | "four" | "six";
 export type CricketLine = "dot" | "four" | "six" | "lastPerfect" | "lastGood" | "lastSix";
 export interface CricketBall {

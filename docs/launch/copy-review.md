@@ -53,12 +53,21 @@ Two things to keep in mind while you read: letters in capitals are drawn in capi
 | `hub.drawer.open` | INDEX | The INDEX button in the top row that opens the drawer (H2). | spec 12 | |
 | `hub.drawer.close` | Close the index | The drawer's close button, spoken name (H2). | spec 12 | |
 
-## Cricket (3D commentary)
+## Cricket (3D)
 
 | Key | Wording now | Where it shows | Source | Yash's wording |
 |---|---|---|---|---|
 | `games.cricket.comm.beaten` | Beaten! Missed off stump by a whisker. | The commentary line after a 3D dot ball bowled on the OFF line (Yash misses it). | code mark | |
 | `games.cricket.comm.sixFull` | Full toss. Thank you very much. | The commentary line after a 3D six off a full toss. | code mark | |
+| `games.cricket.release` | RELEASE · SPACE | The 3D game's BOWL button while the bowler runs in (desktop). | code mark | |
+| `games.cricket.releasePhone` | TAP TO RELEASE | The same button on a phone. | code mark | |
+| `games.cricket.line.label` | LINE | The name of the OFF / MIDDLE / LEG control beside BOWL (3D). | code mark | |
+| `games.cricket.line.keys` | ← → | The keys that change the line, shown after LINE (desktop). | code mark | |
+| `games.cricket.line.off` | OFF | The line buttons (3D). | code mark | |
+| `games.cricket.line.middle` | MIDDLE | The line buttons (3D). | code mark | |
+| `games.cricket.line.leg` | LEG | The line buttons (3D). | code mark | |
+| `games.cricket.loading` | PREPARING THE PITCH | The loading bar while the 3D ground downloads, in BOWL's place. | code mark | |
+| `games.cricket.how3d` | Pick a line, run in, and release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career. | The how-to-play text in the left panel of the 3D game (desktop). | code mark | |
 
 ## Centre Court (tennis)
 

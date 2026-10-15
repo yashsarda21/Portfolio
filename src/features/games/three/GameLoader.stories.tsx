@@ -5,8 +5,7 @@ import { GameLoader } from "./GameLoader";
 const meta: Meta<typeof GameLoader> = {
   title: "Features/Games/Three",
   component: GameLoader,
-  // A stand-in label: the game's own loading line comes with the scene.
-  args: { label: ui.venues.cricket, progress: 0.35 },
+  args: { label: ui.games.cricket.loading, progress: 0.35 },
 };
 export default meta;
 type Story = StoryObj<typeof GameLoader>;

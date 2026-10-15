@@ -1,9 +1,7 @@
 import { useRef } from "react";
-import { content, ui } from "@/content";
-import { ROUTES } from "@/shell/routes";
+import { ui } from "@/content";
 import { autoRallyTimes } from "../engine/beats";
 import { pingPong } from "../engine/clock";
-import { perfectShare } from "../engine/form";
 import type { GameLayout } from "../engine/types";
 import { useGameClock } from "../engine/useGameClock";
 import { useArrival } from "../engine/useArrival";
@@ -18,20 +16,17 @@ import {
   CRICKET_BEATS,
   CRICKET_PERIOD_MS,
   CRICKET_START,
-  cricketOver,
   lengthQuality,
   type CricketState,
 } from "./referee";
-import { buildCricketView, type CricketPhase } from "./view";
+import { buildCricket, useCricketCalls } from "./useCricketCalls";
+import type { CricketPhase } from "./view";
 
 interface Run extends EndFlags {
   game: CricketState;
   phase: CricketPhase;
 }
 const START: Run = { game: CRICKET_START, phase: "ready", ...NO_END_FLAGS };
-
-const build = (game: CricketState, at: { phase: CricketPhase } & EndFlags) =>
-  buildCricketView(content, ui, ROUTES, game, at);
 
 /**
  * The cricket route: it holds the over, runs the meter's clock, judges a release by it and walks the phases
@@ -40,7 +35,7 @@ const build = (game: CricketState, at: { phase: CricketPhase } & EndFlags) =>
  * click and a key in the same frame, or a press during the flight cannot bowl a second.
  */
 export function CricketScreen() {
-  const session = useGameSession({ venue: "cricket", start: START, build });
+  const session = useGameSession({ venue: "cricket", start: START, build: buildCricket });
   // `latest` is the run as timers and handlers that were made before the last render must read it.
   const { run, latest, commit, view, timers, flight, live, desktop, reduced, layout, say } =
     session;
@@ -53,21 +48,9 @@ export function CricketScreen() {
     running: run.phase === "ready" && !reduced,
   });
 
-  /** A ball has been bowled and judged: the call, what it unlocked, the sound and the line; the over's end is saved at once (G8). */
-  const land = (next: CricketState) => {
-    const over = cricketOver(next);
-    const after = build(next, { phase: "called", ...NO_END_FLAGS });
-    const ball = next.balls.at(-1);
-    const now = live.current;
-    if (ball && ball.runs > 0) now.audio.play("bat");
-    if (now.desktop) now.say(after.comm, { interrupt: true });
-    if (!over) {
-      commit({ game: next, phase: "called" });
-      timers.after(CRICKET_BEATS.callMs, () => commit({ phase: "ready" }));
-      return;
-    }
-    session.finish(next, { score: after.saved, form: perfectShare(next.balls) });
-  };
+  const { land: call } = useCricketCalls(session);
+  /** A ball has been bowled and judged: called as the 2D game always has (the bat cracks as it lands). */
+  const land = (next: CricketState) => call(next, { callMs: CRICKET_BEATS.callMs, bat: true });
 
   /** The ball from your hand to the bounce and on to the bat, along the tracer; then `done`. Nothing but transform and opacity moves. */
   const fly = (where: GameLayout, bounce: { x: number; y: number }, done: () => void) => {

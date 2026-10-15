@@ -177,7 +177,7 @@ export function buildTennisView(
     serving: [
       ui.hub.record.yash,
       copy.serving,
-      `${SERVE_KMH[Math.min(played, SERVE_KMH.length - 1)]} ${copy.kmh}`,
+      `${SERVE_KMH[Math.min(played, SERVE_KMH.length - 1)]} ${ui.games.kmh}`,
     ].join(` ${sep} `),
     returned: played,
     aims: [aim("left"), aim("right")],

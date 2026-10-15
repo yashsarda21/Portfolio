@@ -3,7 +3,7 @@ import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import type { Quality } from "../engine/types";
 import { bowl, CRICKET_START, type CricketState } from "./referee";
-import { buildCricketView, type CricketPhase } from "./view";
+import { buildCricket3dControls, buildCricketView, type CricketPhase } from "./view";
 
 /** The phone's quiet third link at the end. */
 const HUB = { label: "BACK TO THE HUB", to: "/arena" };
@@ -214,5 +214,31 @@ describe("buildCricketView", () => {
     const full = bowl(CRICKET_START, "miss", { aim: "leg", full: true });
     expect(view(full).comm).toBe(comm.sixFull);
     expect(view(play(["miss"])).comm).toBe(comm.six);
+  });
+});
+
+describe("buildCricket3dControls", () => {
+  const copy = ui.games.cricket;
+
+  it("BOWL reads RELEASE during the run-up, and the picked line is the pressed one", () => {
+    const ready = buildCricket3dControls(ui, { phase: "ready", aim: "middle", speedKmh: null });
+    expect(ready.bowl).toEqual({ label: copy.bowl, labelPhone: copy.bowlPhone });
+    expect(ready.lines.options.map((o) => [o.label, o.pressed])).toEqual([
+      [copy.line.off, false],
+      [copy.line.middle, true],
+      [copy.line.leg, false],
+    ]);
+    const runup = buildCricket3dControls(ui, { phase: "runup", aim: "off", speedKmh: null });
+    expect(runup.bowl).toEqual({ label: copy.release, labelPhone: copy.releasePhone });
+    expect(runup.lines.options.find((o) => o.pressed)?.id).toBe("off");
+  });
+
+  it("the speed gun reads 143 KM/H once a ball is bowled, and nothing before", () => {
+    expect(
+      buildCricket3dControls(ui, { phase: "ready", aim: "leg", speedKmh: null }).speed,
+    ).toBeNull();
+    expect(buildCricket3dControls(ui, { phase: "flight", aim: "leg", speedKmh: 143 }).speed).toBe(
+      `143 ${ui.games.kmh}`,
+    );
   });
 });

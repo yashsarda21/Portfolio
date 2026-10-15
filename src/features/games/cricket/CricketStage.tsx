@@ -13,16 +13,24 @@ import {
   TracerPath,
   TrackingRing,
 } from "@/design-system";
+import { cn } from "@/lib/cn";
 import { GameEnd } from "../frame/GameEnd";
 import { GameStage } from "../frame/GameStage";
+import { GameLoader } from "../three/GameLoader";
 import { BowlButton } from "./BowlButton";
+import type { CricketThree } from "./CricketPage";
 import { TRACER } from "./flight";
+import { LinePicker } from "./LinePicker";
 import type { CricketPhase, CricketView } from "./view";
 
 /**
  * Cricket from 1200px (Cricket-Play, 1440×900): you bowl from the near end, Yash bats at the far one. The over and
  * the STADIUM SCREEN flank the pitch; the length meter and the BOWL button (or the end) sit below it.
  * Every part is at its board coordinate. `reduced` has no live game, so no meter and no BOWL.
+ *
+ * With `three` (the 3D game): while it loads, the board as always with the loader in place of the meter and BOWL;
+ * once it is ready, the scene replaces the backdrop and the drawn marks, and the line picker and the speed gun join
+ * the meter and BOWL.
  */
 export function CricketStage({
   view,
@@ -31,6 +39,7 @@ export function CricketStage({
   onBowl,
   onAgain,
   ballRef,
+  three,
 }: {
   view: CricketView;
   phase: CricketPhase;
@@ -38,12 +47,15 @@ export function CricketStage({
   onBowl: () => void;
   onAgain: () => void;
   ballRef?: Ref<HTMLSpanElement>;
+  three?: CricketThree;
 }) {
   const { bug, call, end } = view;
+  const ready = three?.status === "ready";
   return (
     <GameStage
       chrome={view.chrome}
       venue="turf"
+      scene={ready ? three.scene : null}
       bug={
         <ScoreBug label={bug.label} size="md">
           <ScoreBug.Name>{bug.name}</ScoreBug.Name>
@@ -53,45 +65,47 @@ export function CricketStage({
         </ScoreBug>
       }
     >
-      <div aria-hidden="true" className="absolute inset-0">
-        <TracerPath
-          d={TRACER.stage.d}
-          viewBox={TRACER.stage.viewBox}
-          size="stage"
-          bounce={TRACER.stage.bounce}
-        />
-        <MonoLabel
-          variant="mono-tag"
-          tone="volt"
-          className="absolute top-86.5 left-190.5 whitespace-nowrap"
-        >
-          {view.pitch.yorker}
-        </MonoLabel>
-        <MonoLabel
-          variant="mono-tag"
-          tone="label"
-          className="absolute top-94.5 left-191.5 whitespace-nowrap"
-        >
-          {view.pitch.good}
-        </MonoLabel>
-        <TrackingRing who="yash" size="stage" className="top-80.5 left-172.5" />
-        <PlayerTag className="absolute top-61 left-162.5 whitespace-nowrap">
-          {view.onStrike}
-        </PlayerTag>
-        <TrackingRing who="you" size="stage" className="top-207 left-169.5" />
-        <MonoLabel
-          variant="mono-tag"
-          tone="primary"
-          className="absolute top-207.5 left-190 whitespace-nowrap"
-        >
-          {view.youTag}
-        </MonoLabel>
-        <span
-          ref={ballRef}
-          data-part="ball"
-          className="absolute top-0 left-0 -mt-1.5 -ml-1.5 size-3 rounded-full bg-floodlight opacity-0"
-        />
-      </div>
+      {ready ? null : (
+        <div aria-hidden="true" className="absolute inset-0">
+          <TracerPath
+            d={TRACER.stage.d}
+            viewBox={TRACER.stage.viewBox}
+            size="stage"
+            bounce={TRACER.stage.bounce}
+          />
+          <MonoLabel
+            variant="mono-tag"
+            tone="volt"
+            className="absolute top-86.5 left-190.5 whitespace-nowrap"
+          >
+            {view.pitch.yorker}
+          </MonoLabel>
+          <MonoLabel
+            variant="mono-tag"
+            tone="label"
+            className="absolute top-94.5 left-191.5 whitespace-nowrap"
+          >
+            {view.pitch.good}
+          </MonoLabel>
+          <TrackingRing who="yash" size="stage" className="top-80.5 left-172.5" />
+          <PlayerTag className="absolute top-61 left-162.5 whitespace-nowrap">
+            {view.onStrike}
+          </PlayerTag>
+          <TrackingRing who="you" size="stage" className="top-207 left-169.5" />
+          <MonoLabel
+            variant="mono-tag"
+            tone="primary"
+            className="absolute top-207.5 left-190 whitespace-nowrap"
+          >
+            {view.youTag}
+          </MonoLabel>
+          <span
+            ref={ballRef}
+            data-part="ball"
+            className="absolute top-0 left-0 -mt-1.5 -ml-1.5 size-3 rounded-full bg-floodlight opacity-0"
+          />
+        </div>
+      )}
 
       <Glass
         as="section"
@@ -106,7 +120,7 @@ export function CricketStage({
         </Text>
         <BallTracker balls={view.balls} />
         <Text as="p" variant="body-cell" tone="secondary">
-          {view.how}
+          {three ? three.controls.how : view.how}
         </Text>
       </Glass>
 
@@ -129,23 +143,54 @@ export function CricketStage({
 
       {reduced && phase !== "end" ? null : (
         <div className="absolute inset-x-100 top-152.5 z-7 flex flex-col items-center gap-3.5">
-          {reduced ? null : (
-            <TimingMeter size="stage" labels={view.meter.labels} zones={view.meter.zones.stage} />
-          )}
-          {phase === "end" && end ? (
-            <GameEnd size="stage" end={end} onAgain={onAgain} />
-          ) : reduced ? null : (
-            <BowlButton
-              size="m"
-              skew
-              pulse="ring"
-              glow={false}
-              disabled={phase !== "ready"}
-              onBowl={onBowl}
-              className="px-11 type-btn-xl"
-            >
-              {view.bowl.label}
-            </BowlButton>
+          {three && !ready && phase !== "end" ? (
+            <GameLoader label={three.controls.loading} progress={three.progress} size="stage" />
+          ) : (
+            <>
+              {three ? (
+                // At the end it keeps its place, unseen, so the meter and the end buttons stay off the pitch.
+                <LinePicker
+                  lines={three.controls.lines}
+                  disabled={phase !== "ready"}
+                  onLine={three.onLine}
+                  size="stage"
+                  className={phase === "end" ? "invisible" : undefined}
+                />
+              ) : null}
+              {three ? (
+                // The speed gun keeps its line while empty, so nothing moves when the first ball is bowled.
+                <MonoLabel
+                  data-part="speed"
+                  variant="mono-label"
+                  tone="primary"
+                  className={cn("block min-h-[1lh]", three.controls.speed ? "" : "invisible")}
+                >
+                  {three.controls.speed}
+                </MonoLabel>
+              ) : null}
+              {reduced ? null : (
+                <TimingMeter
+                  size="stage"
+                  labels={view.meter.labels}
+                  zones={view.meter.zones.stage}
+                />
+              )}
+              {phase === "end" && end ? (
+                <GameEnd size="stage" end={end} onAgain={onAgain} />
+              ) : reduced ? null : (
+                <BowlButton
+                  size="m"
+                  skew
+                  pulse="ring"
+                  glow={false}
+                  disabled={three ? phase !== "ready" && phase !== "runup" : phase !== "ready"}
+                  onBowl={onBowl}
+                  className="px-11 type-btn-xl"
+                >
+                  {three ? three.controls.bowl.label : view.bowl.label}
+                </BowlButton>
+              )}
+            </>
           )}
         </div>
       )}

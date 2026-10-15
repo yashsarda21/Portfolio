@@ -377,7 +377,7 @@ export const ui = {
       cricket: {
         blurb: "Bowl me a 3-ball over. Every ball you bowl unlocks an innings of my career.",
         reveals: "CAREER STATS",
-        duration: "~10s",
+        duration: "~30s",
         category: "CAREER",
         see: "SEE STATS",
       },
@@ -451,6 +451,8 @@ export const ui = {
     hubLabel: HUB,
     /** The column's quiet third link at the end of a game, where the desktop has the breadcrumb (derived, m-8). */
     backToHub: BACK_TO_HUB,
+    /** The speed gun's unit: tennis's serve line and cricket's 3D speed line. */
+    kmh: "KM/H",
     cricket: {
       headline: "3 BALLS. ONE BATTER WHO HATES GETTING OUT.",
       how: "Release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.",
@@ -470,6 +472,12 @@ export const ui = {
       notOut: "NOT OUT",
       bowl: "BOWL · SPACE",
       bowlPhone: "TAP TO BOWL",
+      release: "RELEASE · SPACE", // derived (Phase 8)
+      releasePhone: "TAP TO RELEASE", // derived (Phase 8)
+      line: { label: "LINE", keys: "← →", off: "OFF", middle: "MIDDLE", leg: "LEG" }, // derived (Phase 8)
+      loading: "PREPARING THE PITCH", // derived (Phase 8)
+      how3d:
+        "Pick a line, run in, and release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.", // derived (Phase 8)
       touchHint: "WIDER YORKER ZONE ON TOUCH · HAPTIC ON RELEASE",
       calls: { dot: "DOT BALL.", four: "FOUR.", six: "SIX." },
       comm: {
@@ -493,7 +501,6 @@ export const ui = {
       tap: "or tap a side.",
       phoneHint: "SWIPE OR TAP THE OPEN SIDE", // derived
       serving: "SERVING",
-      kmh: "KM/H",
       aim: {
         left: "LEFT",
         right: "RIGHT",

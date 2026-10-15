@@ -1,8 +1,22 @@
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
+import type { GameLayout } from "../engine/types";
 import { GamePage } from "../frame/GamePage";
+import type { ThreeStatus } from "../three/useThreeGate";
 import { CricketColumn } from "./CricketColumn";
 import { CricketStage } from "./CricketStage";
-import type { CricketPhase, CricketView } from "./view";
+import type { CricketAim } from "./referee";
+import type { Cricket3dControls, CricketPhase, CricketView } from "./view";
+
+/** The 3D game's part of the board: the gate, the scene (for the layout on screen only) and its controls. */
+export interface CricketThree {
+  status: ThreeStatus;
+  progress: number;
+  /** Drawn by `layout`'s board only, so there is one canvas. */
+  scene: ReactNode | null;
+  layout: GameLayout;
+  controls: Cricket3dControls;
+  onLine(line: CricketAim): void;
+}
 
 const none = () => {};
 
@@ -19,6 +33,7 @@ export function CricketPage({
   onAgain = none,
   rootRef,
   ballRefs,
+  three,
 }: {
   view: CricketView;
   phase: CricketPhase;
@@ -29,12 +44,17 @@ export function CricketPage({
   rootRef?: Ref<HTMLElement>;
   /** The ball dot of each layout, which the flight moves. */
   ballRefs?: { stage: Ref<HTMLSpanElement>; column: Ref<HTMLSpanElement> };
+  /** The 3D game: without it, the 2D board exactly as it always was. */
+  three?: CricketThree;
 }) {
+  const on = (layout: GameLayout) =>
+    three && { ...three, scene: three.layout === layout ? three.scene : null };
   return (
     <GamePage
       phase={phase}
       announce={view.announce}
       rootRef={rootRef}
+      three={three?.status}
       stage={
         <CricketStage
           view={view}
@@ -43,6 +63,7 @@ export function CricketPage({
           onBowl={onBowl}
           onAgain={onAgain}
           ballRef={ballRefs?.stage}
+          three={on("stage")}
         />
       }
       column={
@@ -53,6 +74,7 @@ export function CricketPage({
           onBowl={onBowl}
           onAgain={onAgain}
           ballRef={ballRefs?.column}
+          three={on("column")}
         />
       }
     />

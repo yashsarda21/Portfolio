@@ -38,7 +38,7 @@ describe("buildHubView", () => {
       status: "PLAYED · 14* NOT OUT",
       statusPhone: "14* NOT OUT",
       meta: "VENUE 01 · CAREER",
-      reveals: "REVEALS · CAREER STATS · ~10s",
+      reveals: "REVEALS · CAREER STATS · ~30s",
       play: { label: "REMATCH", to: "/arena/cricket" },
       skip: { label: "SKIP", labelPhone: "SEE STATS", to: "/career" },
       shortcut: "1",

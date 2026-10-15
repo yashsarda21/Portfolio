@@ -48,6 +48,9 @@ test.describe("first load", () => {
   const read = (file: string) => readFileSync(join(assets, file), "utf8");
   const gsapChunks = () =>
     readdirSync(assets).filter((f) => f.endsWith(".js") && read(f).includes("autoSleep:120"));
+  // three.js is found by its renderer's own messages ("THREE.WebGLRenderer: …"), which minifying keeps.
+  const threeChunks = () =>
+    readdirSync(assets).filter((f) => f.endsWith(".js") && read(f).includes("THREE.WebGLRenderer"));
 
   function firstLoadGraph(page: string): Set<string> {
     const html = readFileSync(join(client, page, "index.html"), "utf8");
@@ -78,4 +81,13 @@ test.describe("first load", () => {
       expect([...graph].filter((f) => gsapChunks().includes(f))).toEqual([]);
     });
   }
+
+  // three.js and the 3D scene come only through the game's dynamic import, after the page is up (spec §6.2).
+  test("/arena/cricket first-load chunks do not contain three", () => {
+    const three = threeChunks();
+    expect(three.length).toBeGreaterThan(0);
+    const graph = firstLoadGraph("arena/cricket");
+    expect(graph.size).toBeGreaterThan(3);
+    expect([...graph].filter((f) => three.includes(f))).toEqual([]);
+  });
 });

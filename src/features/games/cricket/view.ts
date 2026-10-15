@@ -12,8 +12,10 @@ import {
 import {
   CRICKET_BALLS,
   CRICKET_ZONES,
+  LINES,
   cricketOver,
   cricketRuns,
+  type CricketAim,
   type CricketBall,
   type CricketState,
 } from "./referee";
@@ -25,8 +27,11 @@ function commFor(comm: UiCopy["games"]["cricket"]["comm"], ball: CricketBall): s
   return comm[ball.line];
 }
 
-/** Where the game is: waiting for the bowl, the ball in the air, the call, the 2 s verdict, the end buttons. */
-export type CricketPhase = "ready" | "flight" | "called" | "verdict" | "end";
+/**
+ * Where the game is: waiting for the bowl, the bowler running in (3D only: the meter sweeps once), the ball in the
+ * air, the call, the 2 s verdict, the end buttons. The run-up draws like the flight: no call yet.
+ */
+export type CricketPhase = "ready" | "runup" | "flight" | "called" | "verdict" | "end";
 
 type Range = [number, number];
 type BallState = "for" | "against" | "current" | "pending";
@@ -212,5 +217,41 @@ export function buildCricketView(
     headline: copy.headline,
     how: copy.how,
     pitch: { yorker: copy.pitch.yorker, good: copy.pitch.good },
+  };
+}
+
+/** What the 3D game adds to the board: the line picker, BOWL's labels (RELEASE in the run-up), the speed gun, the loader. */
+export interface Cricket3dControls {
+  lines: {
+    label: string;
+    keys: string;
+    options: { id: CricketAim; label: string; pressed: boolean }[];
+  };
+  bowl: { label: string; labelPhone: string };
+  /** "143 KM/H" from the release until the next one; null before the first ball. */
+  speed: string | null;
+  loading: string;
+  how: string;
+}
+
+/** The 3D game's controls as plain words, from the copy and where the ball is (spec §3.2, §4.2). */
+export function buildCricket3dControls(
+  ui: UiCopy,
+  { phase, aim, speedKmh }: { phase: CricketPhase; aim: CricketAim; speedKmh: number | null },
+): Cricket3dControls {
+  const copy = ui.games.cricket;
+  const runup = phase === "runup";
+  return {
+    lines: {
+      label: copy.line.label,
+      keys: copy.line.keys,
+      options: LINES.map((id) => ({ id, label: copy.line[id], pressed: id === aim })),
+    },
+    bowl: runup
+      ? { label: copy.release, labelPhone: copy.releasePhone }
+      : { label: copy.bowl, labelPhone: copy.bowlPhone },
+    speed: speedKmh === null ? null : `${speedKmh} ${ui.games.kmh}`,
+    loading: copy.loading,
+    how: copy.how3d,
   };
 }
