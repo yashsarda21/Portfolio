@@ -7,6 +7,7 @@ import { ROUTES } from "@/shell/routes";
 import { WithShell } from "@/shell/storyDecorators";
 import { INTRO_BEATS } from "./beats";
 import { IntroPage } from "./IntroPage";
+import { showSchedule } from "@/shell/showSound";
 import { RIG_WAIT_MS } from "./rigGate";
 import { useIntroTimeline } from "./useIntroTimeline";
 import { buildIntroView } from "./view";
@@ -15,11 +16,20 @@ const loadRig = vi.hoisted(() => vi.fn());
 /** A test can hold GSAP back (as a slow network would) by putting a promise here. */
 const held = vi.hoisted(() => ({ gsap: null as Promise<unknown> | null }));
 vi.mock("./rig", () => ({ loadRig }));
-/** The sound the lights make is the only audio call the show makes: watch it, leave the rest of the service as is. */
-const play = vi.hoisted(() => vi.fn());
+/** The show's sound is the only audio call the show makes: watch it, leave the rest of the service as is. */
+const playShow = vi.hoisted(() => vi.fn());
+const stopShow = vi.hoisted(() => vi.fn());
 vi.mock("@/shell/audio", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shell/audio")>()),
-  useAudio: () => ({ enabled: true, unlocked: true, toggle: vi.fn(), unlock: vi.fn(), play }),
+  useAudio: () => ({
+    enabled: true,
+    unlocked: true,
+    toggle: vi.fn(),
+    unlock: vi.fn(),
+    play: vi.fn(),
+    playShow,
+    stopShow,
+  }),
 }));
 vi.mock("@/lib/motion", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/motion")>()),
@@ -108,7 +118,8 @@ beforeEach(() => {
   loadRig.mockReset();
   loadRig.mockReturnValue(Promise.resolve("ready"));
   onComm.mockReset();
-  play.mockReset();
+  playShow.mockReset();
+  stopShow.mockReset();
 });
 afterEach(() => {
   gsap.globalTimeline.clear();
@@ -161,32 +172,39 @@ describe("useIntroTimeline", () => {
     expect(loadRig).toHaveBeenCalledTimes(1);
   });
 
-  it("the floodlight sound plays once per show, though four banks light, and again on REPLAY", async () => {
+  it("the desktop show's sound is scheduled with the timeline from the beat table, and again on REPLAY", async () => {
     situation("desktop");
     await mount();
-    const tl = timelines()[0] as gsap.core.Timeline;
-    tl.pause();
-    act(() => void tl.progress(1));
-    expect(play.mock.calls).toEqual([["floodlight"]]);
+    expect(playShow).toHaveBeenCalledTimes(1);
+    const [schedule, startAt] = playShow.mock.calls[0]!;
+    expect(schedule).toEqual(showSchedule("intro", { tier: "desktop" }));
+    expect(startAt).toBeCloseTo(performance.now(), -3);
     act(() => api.replay());
-    tl.pause();
-    act(() => void tl.progress(1));
-    expect(play.mock.calls).toEqual([["floodlight"], ["floodlight"]]);
+    expect(playShow).toHaveBeenCalledTimes(2);
+    expect(playShow.mock.calls[1]![0]).toEqual(showSchedule("intro", { tier: "desktop" }));
   });
 
-  it("the phone's cut lights the floodlights with the sound too; reduced motion has no beat, so none", async () => {
+  it("the phone's cut schedules its own beats, with the crowd from the name at 0.9 s", async () => {
     situation("mobile");
     await mount();
-    const tl = timelines()[0] as gsap.core.Timeline;
-    tl.pause();
-    act(() => void tl.progress(1));
-    expect(play.mock.calls).toEqual([["floodlight"]]);
+    expect(playShow).toHaveBeenCalledTimes(1);
+    expect(playShow.mock.calls[0]![0]).toEqual(showSchedule("intro", { tier: "mobile" }));
+    act(() => api.replay());
+    expect(playShow.mock.calls[1]![0]).toEqual(showSchedule("intro", { tier: "mobile" }));
+  });
+
+  it("leaving the page fades the show out", async () => {
+    situation("desktop");
+    const { unmount } = await mount();
+    stopShow.mockClear();
+    unmount();
+    expect(stopShow).toHaveBeenCalledWith(300);
   });
 
   it("reduced motion makes no sound", async () => {
     situation("reduce");
     await mount();
-    expect(play).not.toHaveBeenCalled();
+    expect(playShow).not.toHaveBeenCalled();
   });
 
   it("reduced motion: the end state at once, the rig never loaded, no timeline", async () => {

@@ -6,6 +6,7 @@
 @import "../src/design-system/tokens/motion.css";
 @import "../src/design-system/tokens/scene.css";
 @import "../src/features/landing/pace.css";
+@import "../src/features/landing/start.css";
 
 /* Scan only our own code (source(none) turns off automatic detection of the whole repo). */
 @source "../app";

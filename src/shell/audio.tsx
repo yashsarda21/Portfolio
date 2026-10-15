@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { safeStorage } from "@/lib/storage";
+import { SHOW_FILES, SHOW_LEVELS, cueEnd, type ShowCue, type ShowSoundName } from "./showSound";
 import { MASTER_GAIN, RECIPES } from "./synth";
 
 export type SoundName = "crowd" | "floodlight" | "bat" | "net" | "smash";
@@ -20,6 +21,21 @@ interface AudioApi {
   /** Call from a user gesture (ENTER THE ARENA, the sound toggle, a game's first input): browsers block audio before one. */
   unlock(): void;
   play(name: SoundName): void;
+  /**
+   * Plays a show (`showSchedule`): recorded clunks and a crowd, each placed on the audio clock from `startAt`, the
+   * `performance.now()` moment the show's animations began (default: now). A clunk whose time has already passed,
+   * because the file was still decoding, is skipped, never played late. Needs an unlock and the sound on.
+   */
+  playShow(schedule: readonly ShowCue[], startAt?: number): void;
+  /** Fades the show out over `fadeMs` (default 300): SKIP, leaving the page, switching tabs. */
+  stopShow(fadeMs?: number): void;
+}
+
+/** A show in flight: its own bus (so it can be faded as one) and everything playing through it. */
+interface ActiveShow {
+  bus: GainNode | null;
+  sources: AudioBufferSourceNode[];
+  stopped: boolean;
 }
 
 const AudioCtx = createContext<AudioApi | null>(null);
@@ -46,7 +62,21 @@ function limiterFor(ctx: AudioContext): AudioNode | null {
   }
 }
 
-/** The five sounds are made in code, not loaded (spec §4.6, P1); see `synth.ts` for the recipes. */
+/** The loudness of the crowd (gain 0 to 1) at `t` seconds into its cue: rising, held, then falling away. */
+function crowdLevel(cue: ShowCue, t: number): number {
+  const rise = cue.fadeIn ?? 0;
+  const hold = cue.holdUntil ?? cue.at + rise;
+  const fall = cue.fadeOut ?? 0;
+  if (t < cue.at) return 0;
+  if (t < cue.at + rise) return (t - cue.at) / rise;
+  if (t < hold || fall <= 0) return t < hold ? 1 : 0;
+  return Math.max(0, 1 - (t - hold) / fall);
+}
+
+/**
+ * The game sounds are made in code, not loaded (spec §4.6, P1); see `synth.ts` for the recipes. The Home and Intro
+ * show is the one exception: two CC0 recordings (public/audio), fetched and decoded after the first unlock.
+ */
 export function AudioProvider({ children }: { children: ReactNode }) {
   // Starts enabled so prerender and first client render match; the saved mute is applied after mount.
   const [enabled, setEnabled] = useState(true);
@@ -55,6 +85,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterRef = useRef<GainNode | null>(null);
   const lastPlayed = useRef<Partial<Record<SoundName, number>>>({});
+  const buffers = useRef<Partial<Record<ShowSoundName, Promise<AudioBuffer | null>>>>({});
+  const showRef = useRef<ActiveShow | null>(null);
 
   /** Every sound passes through this gain, so muting is one change and silences a sound already playing. */
   const setMaster = useCallback((on: boolean) => {
@@ -125,9 +157,126 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     [wake],
   );
 
+  /** Fetches and decodes a recording once; a failure is a missing sound and is tried again next time. */
+  const load = useCallback((ctx: AudioContext, name: ShowSoundName) => {
+    let loading = buffers.current[name];
+    if (!loading) {
+      loading = (async () => {
+        try {
+          const response = await fetch(SHOW_FILES[name]);
+          if (!response.ok) return null;
+          return await ctx.decodeAudioData(await response.arrayBuffer());
+        } catch {
+          return null;
+        }
+      })().then((buffer) => {
+        if (!buffer) delete buffers.current[name];
+        return buffer;
+      });
+      buffers.current[name] = loading;
+    }
+    return loading;
+  }, []);
+
+  const stopShow = useCallback((fadeMs = 300) => {
+    const show = showRef.current;
+    const ctx = ctxRef.current;
+    showRef.current = null;
+    if (!show) return;
+    show.stopped = true;
+    if (!show.bus || !ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const end = now + fadeMs / 1000;
+      const gain = show.bus.gain;
+      gain.cancelScheduledValues(now);
+      gain.setValueAtTime(gain.value, now);
+      gain.linearRampToValueAtTime(0, end);
+      for (const source of show.sources) source.stop(end + 0.02);
+    } catch {
+      /* a show that cannot be faded is cut when its files end */
+    }
+  }, []);
+
+  const playShow = useCallback(
+    (schedule: readonly ShowCue[], startAt?: number) => {
+      const ctx = ctxRef.current;
+      const master = masterRef.current;
+      if (!enabledRef.current || !ctx || !master || schedule.length === 0) return;
+      const origin = startAt ?? performance.now();
+      stopShow(30);
+      wake(ctx);
+      const show: ActiveShow = { bus: null, sources: [], stopped: false };
+      showRef.current = show;
+      document.documentElement.dataset.showScheduled = String(schedule.length);
+      const names = [...new Set(schedule.map((cue) => cue.sound))];
+      void Promise.all(names.map((name) => load(ctx, name))).then((decoded) => {
+        if (show.stopped || ctxRef.current !== ctx || !enabledRef.current) return;
+        try {
+          // Where the show has got to by now (decoding took time), on the same clock the animations run on.
+          const elapsed = (performance.now() - origin) / 1000;
+          const now = ctx.currentTime;
+          const bus = ctx.createGain();
+          bus.gain.value = SHOW_LEVELS.bus;
+          bus.connect(master);
+          show.bus = bus;
+          for (const cue of schedule) {
+            const buffer = decoded[names.indexOf(cue.sound)];
+            // Past its moment: a clunk is skipped, never played late; a crowd whose run is over has nothing to add.
+            if (!buffer || (cue.sound === "light" ? cue.at < elapsed : cueEnd(cue) <= elapsed))
+              continue;
+            const out = ctx.createGain();
+            out.connect(bus);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(out);
+            if (cue.sound === "light") {
+              out.gain.value = SHOW_LEVELS.light;
+              source.start(now + (cue.at - elapsed));
+            } else {
+              // Joins the swell where it has got to if decoding was slow; the crowd is steady noise, so nothing is missed.
+              const end = cueEnd(cue);
+              const from = Math.max(cue.at, elapsed);
+              const rise = cue.at + (cue.fadeIn ?? 0);
+              const hold = cue.holdUntil ?? rise;
+              const at = (t: number) => now + (t - elapsed);
+              const peak = SHOW_LEVELS.crowd;
+              out.gain.setValueAtTime(crowdLevel(cue, from) * peak, at(from));
+              if (rise > from) out.gain.linearRampToValueAtTime(peak, at(rise));
+              if (hold > Math.max(from, rise)) out.gain.setValueAtTime(peak, at(hold));
+              out.gain.linearRampToValueAtTime(0, at(end));
+              source.start(at(from));
+              source.stop(at(end) + 0.05);
+            }
+            source.onended = () => {
+              source.disconnect();
+              out.disconnect();
+            };
+            show.sources.push(source);
+          }
+        } catch {
+          /* a show that cannot play is a silent show, not an error */
+        }
+      });
+    },
+    [load, stopShow, wake],
+  );
+
+  // Switching tabs or minimising ends the show: nothing should roar from a page nobody is looking at.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) stopShow(300);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      stopShow(0);
+    };
+  }, [stopShow]);
+
   const api = useMemo(
-    () => ({ enabled, unlocked, toggle, unlock, play }),
-    [enabled, unlocked, toggle, unlock, play],
+    () => ({ enabled, unlocked, toggle, unlock, play, playShow, stopShow }),
+    [enabled, unlocked, toggle, unlock, play, playShow, stopShow],
   );
   return <AudioCtx.Provider value={api}>{children}</AudioCtx.Provider>;
 }

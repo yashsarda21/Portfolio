@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
 import { waitForHydration } from "./support/contentPage";
+import { dismissStart } from "./support/startScreen";
 
 /*
  * A game reached directly (a shared link) has had no Landing or Intro click, so the sound must start from its own
@@ -63,6 +64,9 @@ test("the sound toggle starts the sound when it turns it on (before any call to 
   await countAudioContexts(page);
   await page.goto(ROUTES.home);
   await waitForHydration(page);
+  // The first visit's start screen: in silence leaves the saved "off" alone and makes no audio context.
+  await dismissStart(page);
+  expect(await contexts(page)).toBe(0);
   const toggle = page.getByRole("button", {
     name: new RegExp(`${ui.audio.label}|${ui.audio.labelPhone}`),
   });

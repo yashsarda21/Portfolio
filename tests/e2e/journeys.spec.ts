@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { advanceTo, game, pass, perfectOver, stored } from "./support/cricket";
 import { waitForHydration } from "./support/contentPage";
+import { dismissStart } from "./support/startScreen";
 import { cssVar, forceLuck, freezeClock, openFrozen, pauseClock, stepUntil } from "./support/game";
 
 const tennis = ui.games.tennis;
@@ -257,6 +258,7 @@ test("Landing → Intro → Hub → Cricket → three balls → the scorecard �
 
   await page.goto("/");
   await waitForHydration(page);
+  await dismissStart(page);
   await page.getByRole("link", { name: ui.landing.enter }).click();
   await expect(page).toHaveURL(/\/intro$/);
   // The Intro's call to action appears when the show reaches it.

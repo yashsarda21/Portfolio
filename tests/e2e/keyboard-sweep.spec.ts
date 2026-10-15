@@ -3,6 +3,7 @@ import { ui } from "../../src/content/ui-copy";
 import { waitForFiniteAnimations } from "../support/animations";
 import { waitForHydration } from "./support/contentPage";
 import { ALL_PATHS } from "./support/matchday";
+import { dismissStart } from "./support/startScreen";
 
 /** Most Tab presses a page may take before focus has gone round (a page with more than this is a finding). */
 const CAP = 80;
@@ -124,6 +125,11 @@ async function tabAround(page: Page) {
   // Start from the top of the document, as a visitor arriving on the page does.
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
+    // Put the Tab starting point back at the top of the page (a page that took focus, such as the Landing's name
+    // after its start screen, would otherwise leave it there).
+    document.body.setAttribute("tabindex", "-1");
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
     window.scrollTo(0, 0);
   });
   const stops: Stop[] = [];
@@ -152,6 +158,8 @@ test.describe("keyboard sweep (1440x900)", () => {
     }) => {
       await page.goto(path);
       await waitForHydration(page);
+      // The Landing's first visit waits behind the start screen (its own keyboard checks are in start-screen.spec.ts).
+      if (path === "/") await dismissStart(page);
       await waitForFiniteAnimations(page);
       const reachable = await page.evaluate(censusTabbables);
       const { stops, wrapped } = await tabAround(page);

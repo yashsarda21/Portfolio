@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
 import { waitForHydration } from "./support/contentPage";
+import { dismissStart } from "./support/startScreen";
 
 /*
  * Every prerendered page carries its own Content-Security-Policy <meta> (tools/postbuild.mjs). The browser
@@ -108,10 +109,19 @@ test.describe("every page, as served", () => {
 });
 
 test.describe("no page breaks its own policy", () => {
-  test("the landing, once it has booted", async ({ page }) => {
+  test("the landing, once it has booted (the start screen too)", async ({ page }) => {
     const messages = await watch(page);
     await page.goto(ROUTES.home);
     await waitForHydration(page);
+    await expectClean(page, messages, "the start screen");
+    // With sound: the show's two recordings are fetched under the policy (connect-src 'self') and decoded.
+    const recordings = Promise.all(
+      ["/audio/light.mp3", "/audio/crowd.mp3"].map((path) =>
+        page.waitForResponse((r) => new URL(r.url()).pathname === path && r.ok()),
+      ),
+    );
+    await dismissStart(page, "sound");
+    await recordings;
     await expect(page.getByRole("link", { name: ui.landing.enter })).toBeVisible();
     await page.waitForTimeout(500);
     await expectClean(page, messages, ROUTES.home);

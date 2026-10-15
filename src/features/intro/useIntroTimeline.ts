@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
 import { MEDIA } from "@/lib/breakpoints";
 import { loadGsap } from "@/lib/motion";
 import { useAudio } from "@/shell/audio";
+import { showSchedule } from "@/shell/showSound";
 import { RIG_STRIPS } from "@/assets/rig";
 import { INTRO_BEATS } from "./beats";
 import { collectIntroRefs } from "./refs";
@@ -70,16 +71,19 @@ export function useIntroTimeline(
   const [canReplay, setCanReplay] = useState(false);
   const timeline = useRef<{ restart: () => unknown } | null>(null);
   // What the timeline's beats call is read at the beat, so a new callback never rebuilds the show.
-  const latest = useRef({ onComm, play: audio.play });
+  const latest = useRef({ onComm, playShow: audio.playShow, stopShow: audio.stopShow });
   useEffect(() => {
-    latest.current = { onComm, play: audio.play };
+    latest.current = { onComm, playShow: audio.playShow, stopShow: audio.stopShow };
   });
-  // Four banks flicker on one after another, but the lights-on sound plays once per show: on the first.
-  const lit = useRef(false);
-  const lightsOn = useCallback(() => {
-    if (lit.current) return;
-    lit.current = true;
-    latest.current.play("floodlight");
+  /**
+   * The show's sound: a clunk per bank and the crowd, placed on the audio clock from the beat table (never timers
+   * of its own), starting with the timeline. Called where a timeline is built or restarted, and ended by SKIP,
+   * leaving the page or a tab switch (the service fades it out).
+   */
+  const tier = useRef<"desktop" | "mobile">("desktop");
+  const startSound = useCallback((which: "desktop" | "mobile") => {
+    tier.current = which;
+    latest.current.playShow(showSchedule("intro", { tier: which }), performance.now());
   }, []);
 
   const mark = useCallback(
@@ -115,21 +119,21 @@ export function useIntroTimeline(
           }
           const refs = collectIntroRefs(layout);
           if (!desktop) {
-            lit.current = false;
             const tl = createIntroTimeline(gsap, refs, {
               tier: "mobile",
               // No head turn on a phone: the rig is not loaded, the timeline never waits for it.
               rig: Promise.resolve("timeout"),
               onBeat: (beat) => {
-                if (beat === "bank") lightsOn();
-                else if (beat === "done") mark("done");
-                // "comm": phones are silent (L11), the column draws no commentary
+                if (beat === "done") mark("done");
+                // "bank": the clunks are scheduled with the show (startSound); "comm": phones are silent (L11), the column draws no commentary
               },
             });
             timeline.current = tl;
+            startSound("mobile");
             setCanReplay(true);
             mark("playing");
             return () => {
+              latest.current.stopShow(300);
               timeline.current = null;
               setCanReplay(false);
             };
@@ -143,21 +147,21 @@ export function useIntroTimeline(
           void rig.then((result) => {
             if (root.hasAttribute("data-sprites")) root.setAttribute("data-sprites", result);
           });
-          lit.current = false;
           const tl = createIntroTimeline(gsap, refs, {
             tier: "desktop",
             rig,
             onBeat: (beat) => {
-              if (beat === "bank") lightsOn();
-              else if (beat === "comm") latest.current.onComm();
-              else mark("done");
+              if (beat === "comm") latest.current.onComm();
+              else if (beat === "done") mark("done");
             },
           });
           timeline.current = tl;
+          startSound("desktop");
           setCanReplay(true);
           // After the timeline has hidden what it will reveal, so the CSS hold can let go without a flash.
           mark("playing");
           return () => {
+            latest.current.stopShow(300);
             timeline.current = null;
             setCanReplay(false);
             root.removeAttribute("data-sprites");
@@ -174,15 +178,15 @@ export function useIntroTimeline(
       mm?.revert();
       timeline.current = null;
     };
-  }, [rootRef, mark, lightsOn]);
+  }, [rootRef, mark, startSound]);
 
   const replay = useCallback(() => {
     const tl = timeline.current;
     if (!tl) return;
     mark("playing");
-    lit.current = false;
     tl.restart();
-  }, [mark]);
+    startSound(tier.current);
+  }, [mark, startSound]);
 
   return { replay, canReplay };
 }
