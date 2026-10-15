@@ -89,6 +89,13 @@ test("an over: a beaten dot on OFF, a FOUR, a SIX off a short one; 10 not out is
   if (desktop) await page.keyboard.press("ArrowLeft");
   else await line(page, cricket.line.off).tap({ force: true });
   await expect(line(page, cricket.line.off)).toHaveAttribute("aria-pressed", "true");
+  if (desktop) {
+    // A click picks a line without taking the focus: the next Space bowls (it does not press OFF again).
+    await line(page, cricket.line.middle).click({ force: true });
+    await line(page, cricket.line.off).click({ force: true });
+    await expect(line(page, cricket.line.off)).toHaveAttribute("aria-pressed", "true");
+    await expect(line(page, cricket.line.off)).not.toBeFocused();
+  }
   await expectBallNo(page, 1);
 
   await bowlAt(page, perfect, press);

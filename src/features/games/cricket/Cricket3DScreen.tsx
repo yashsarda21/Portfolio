@@ -189,7 +189,12 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     },
     { active: ready && (run.phase === "ready" || run.phase === "runup") },
   );
-  useArrival({ line: ui.games.cricket.comm.start, spoken: desktop, reduced: false });
+  useArrival({
+    line: ui.games.cricket.comm.start,
+    spoken: desktop,
+    reduced: false,
+    warm: false,
+  });
 
   const controls = buildCricket3dControls(ui, {
     phase: run.phase,

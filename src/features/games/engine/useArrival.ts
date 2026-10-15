@@ -11,10 +11,13 @@ export function useArrival({
   line,
   spoken,
   reduced,
+  warm = true,
 }: {
   line: string;
   spoken: boolean;
   reduced: boolean;
+  /** False for a game whose flights do not use GSAP (the 3D scene draws its own): nothing is fetched. */
+  warm?: boolean;
 }): void {
   const { say } = useCommentary();
   const arrived = useRef(false);
@@ -25,6 +28,6 @@ export function useArrival({
   }, [spoken, say, line]);
 
   useEffect(() => {
-    if (!reduced) void loadGsap().catch(() => {});
-  }, [reduced]);
+    if (!reduced && warm) void loadGsap().catch(() => {});
+  }, [reduced, warm]);
 }

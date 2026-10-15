@@ -148,22 +148,15 @@ export function CricketStage({
           ) : (
             <>
               {three ? (
-                // At the end it keeps its place, unseen, so the meter and the end buttons stay off the pitch.
-                <LinePicker
-                  lines={three.controls.lines}
-                  disabled={phase !== "ready"}
-                  onLine={three.onLine}
-                  size="stage"
-                  className={phase === "end" ? "invisible" : undefined}
-                />
-              ) : null}
-              {three ? (
-                // The speed gun keeps its line while empty, so nothing moves when the first ball is bowled.
+                // The speed gun, just above the meter's right end, out of the flow: the block is as tall as the 2D one.
                 <MonoLabel
                   data-part="speed"
                   variant="mono-label"
                   tone="primary"
-                  className={cn("block min-h-[1lh]", three.controls.speed ? "" : "invisible")}
+                  className={cn(
+                    "absolute right-0 bottom-full mb-2.5 whitespace-nowrap",
+                    three.controls.speed ? "" : "invisible",
+                  )}
                 >
                   {three.controls.speed}
                 </MonoLabel>
@@ -177,17 +170,40 @@ export function CricketStage({
               )}
               {phase === "end" && end ? (
                 <GameEnd size="stage" end={end} onAgain={onAgain} />
-              ) : reduced ? null : (
+              ) : reduced ? null : three ? (
+                // BOWL on the board's centre line, the line picker beside it on the left, inside the meter's span.
+                <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+                  <LinePicker
+                    lines={three.controls.lines}
+                    disabled={phase !== "ready"}
+                    onLine={three.onLine}
+                    size="stage"
+                    className="justify-self-end"
+                  />
+                  <BowlButton
+                    size="m"
+                    skew
+                    pulse="ring"
+                    glow={false}
+                    disabled={phase !== "ready" && phase !== "runup"}
+                    onBowl={onBowl}
+                    // As wide as RELEASE · SPACE, so the picker beside it never moves when the label changes.
+                    className="min-w-66 px-8 type-btn-xl"
+                  >
+                    {three.controls.bowl.label}
+                  </BowlButton>
+                </div>
+              ) : (
                 <BowlButton
                   size="m"
                   skew
                   pulse="ring"
                   glow={false}
-                  disabled={three ? phase !== "ready" && phase !== "runup" : phase !== "ready"}
+                  disabled={phase !== "ready"}
                   onBowl={onBowl}
                   className="px-11 type-btn-xl"
                 >
-                  {three ? three.controls.bowl.label : view.bowl.label}
+                  {view.bowl.label}
                 </BowlButton>
               )}
             </>
