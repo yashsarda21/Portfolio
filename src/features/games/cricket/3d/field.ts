@@ -1,7 +1,9 @@
 import type { CricketAim } from "../referee";
+import type { Vec3 } from "../../three/track";
 
-/** Metres and seconds. +z runs from Yash's stumps (z 0) to the bowler's (z 20.12); +x is the right of the TV picture, the leg side of a right-handed batter (Yash); y is up. */
-export type Vec3 = readonly [x: number, y: number, z: number];
+export type { Vec3 };
+
+/** Positions are metres and seconds. +z runs from Yash's stumps (z 0) to the bowler's (z 20.12); +x is the right of the TV picture, the leg side of a right-handed batter (Yash); y is up. */
 export interface CameraPose {
   position: Vec3;
   target: Vec3;
