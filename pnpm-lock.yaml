@@ -162,9 +162,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@react-three/fiber@9.8.1': ce88ed56426abffe3c65a30399750825c7671f1eb1ea0ae5b252b80fc3fcdf8d
-
 importers:
 
   .:
@@ -185,8 +182,8 @@ importers:
         specifier: ^8.4.0
         version: 8.4.0(react-router@8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(typescript@5.9.3)
       '@react-three/fiber':
-        specifier: ~9.8.1
-        version: 9.8.1(patch_hash=ce88ed56426abffe3c65a30399750825c7671f1eb1ea0ae5b252b80fc3fcdf8d)(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(three@0.186.1)
+        specifier: ~9.8.2
+        version: 9.8.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(three@0.186.1)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1473,8 +1470,8 @@ packages:
       typescript:
         optional: true
 
-  '@react-three/fiber@9.8.1':
-    resolution: {integrity: sha512-GbNP4r6F/gpclFKkLGHzXcuwFWAzLyKsmrQGcDuwK3wQnwLH6F1TfGtEYjHy8OQoGsajwT19B9jtVLLjjfH09w==}
+  '@react-three/fiber@9.8.2':
+    resolution: {integrity: sha512-6s0ejw0bT1myQ/aLLugcil8/zBmNnnHw/AISWF1yfDLOxfX3yYaTS+0IkpJITEnm/SSMLtxje6CJDt0i5Wu1Sw==}
     peerDependencies:
       expo: '>=43.0'
       expo-asset: '>=8.4'
@@ -5243,7 +5240,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  '@react-three/fiber@9.8.1(patch_hash=ce88ed56426abffe3c65a30399750825c7671f1eb1ea0ae5b252b80fc3fcdf8d)(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(three@0.186.1)':
+  '@react-three/fiber@9.8.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(three@0.186.1)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@types/webxr': 0.5.24
