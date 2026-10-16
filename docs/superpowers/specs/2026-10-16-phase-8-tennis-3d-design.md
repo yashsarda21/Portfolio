@@ -55,7 +55,7 @@ Turn "Return of Serve" into a proper game of tennis in 3D. Yash serves one real 
 
 ### 3.2 How a point ends
 
-Every point ends within 4 shots. "Late" means no pick by the time the ball reaches your player. "Early" means a pick before Yash's hit.
+Every point ends within 4 shots. "Late" means no pick by the time your forward swing must start (the end of the window, §3.3). "Early" means a pick before Yash's hit.
 
 | What happened | Shots | Point | Call | What you see |
 |---|---|---|---|---|
@@ -84,7 +84,7 @@ Every point ends within 4 shots. "Late" means no pick by the time the ball reach
 | Serve speed on the gun | 178 km/h | 184 km/h | 190 km/h | 196 km/h |
 
   - On the phone every window is 25% longer (`TOUCH_STRETCH`, as today). The ball in the scene simply flies 25% slower there.
-  - **The window is the ball's flight time**, from Yash's contact to your player's contact. What you see is what is judged.
+  - **The window runs from Yash's contact until your forward swing must start**, 0.2 s before your racket meets the ball (a real swing needs that long). The ball's flight to your contact is the window plus those 0.2 s. What you see is what is judged: a pick in time starts the swing that meets the ball; no pick by then, and the swing comes late.
 - **Length.** About 25 s (four aces) to about 50 s (six full points), plus the arrival beat and the verdict.
 - **The end.** After the last point, the call holds for `VERDICT_MS` (2 s), then the end buttons appear, as today. Yash gives a small fist pump at GAME.
 - **What is saved** (as soon as GAME is known):
