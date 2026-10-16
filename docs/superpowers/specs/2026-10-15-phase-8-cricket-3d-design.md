@@ -95,29 +95,31 @@ In 3D the canvas takes the place of the drawn backdrop (`GameBackdrop` turf) on 
 
 A pure function picks Yash's shot from the referee's result plus the ball's line and length. The result never changes; only how it looks does. The shot is chosen so that **what you see always matches the commentary line** (the prototype's lines, G4); only the exact direction inside a range is random (injectable random source, so tests are fixed). Yash bats **right-handed** (owner, 2026-10-15).
 
-| Referee result | Options (each must fit the ball) |
-|---|---|
+**The side rule (owner, 2026-10-16):** the shot goes to the side the ball was bowled. An OFF ball only ever goes to the off side (a negative bearing), a LEG ball only to the leg side; a MIDDLE ball may go either way (straight, or pulled when short). A dot is played straight back (bearing 0) on every line.
+
 | Referee result | What you see | Commentary |
 |---|---|---|
 | DOT, OFF line (a perfect ball is always a yorker) | **Beaten:** a play-and-miss; the ball passes the bat and just misses off stump; the crowd goes "ooh"; the keeper takes it. | new derived line `comm.beaten`: "Beaten! Missed off stump by a whisker." |
 | DOT, MIDDLE or LEG line | **Dug out:** the yorker jammed into the pitch at the last second. | `comm.dot` (as today) |
 | FOUR | **Drive** along the ground through the gap (OFF → cover, MIDDLE → straight past the bowler, LEG → midwicket); the nearest fielder dives and misses. | `comm.four` / `comm.lastGood` (as today) |
-| FOUR on a perfect ball 3 | **Flick** off the toes through midwicket. | `comm.lastPerfect` ("Perfect yorker. Flicked off the toes anyway.") |
-| SIX from a short ball (an early miss) | **Pull** over midwicket. | `comm.six` / `comm.lastSix` (as today) |
+| FOUR on a perfect ball 3, MIDDLE or LEG line | **Flick** off the toes through midwicket. | `comm.lastPerfect` ("Perfect yorker. Flicked off the toes anyway.") |
+| FOUR on a perfect ball 3, OFF line | The yorker **squeezed out through point** (the drive's motion, along the ground, bearing −95 to −75). | new derived line `comm.lastPerfectOff`: "Perfect yorker. Squeezed through point anyway. Still not out." |
+| SIX from a short ball (an early miss), MIDDLE or LEG line | **Pull** over midwicket. | `comm.six` / `comm.lastSix` (as today) |
+| SIX from a short ball, OFF line | **Cut:** back and across, a slash with the arms out and the face open, up over point and third man (bearing −110 to −80). | `comm.six` / `comm.lastSix` (both fit a short ball) |
 | SIX from a full toss (a late miss) | **Loft** into the crowd (OFF → long-off, MIDDLE → straight, LEG → long-on). | balls 1–2: new derived line `comm.sixFull`: "Full toss. Thank you very much."; ball 3: `comm.lastSix` |
 
-Ball 3 is never a DOT (the referee already ensures this). The two new lines are derived copy for Yash's copy review. The 2D game keeps today's lines.
+Ball 3 is never a DOT (the referee already ensures this). The three new lines are derived copy for Yash's copy review. The 2D game keeps today's lines.
 
 ## 5. Ball flight (our own maths, no engine)
 
 One pure TypeScript module, unit-tested, all in metres and seconds.
 
-- Pitch 20.12m; release height about 2.2m; gravity 9.81.
-- **To the batter:** the launch is solved so the ball pitches at the chosen length and line at the delivery speed. Bounce: vertical speed × 0.45, horizontal speed × 0.9, plus a small sideways seam nudge (up to ±0.1m by the bat). A full toss skips the bounce.
+- Pitch 20.12m; gravity 9.81. The ball leaves the bowler's right hand where he is when he lets go (about 1.98 m up and 1.06 m in front of him, measured on the rig at the release key), not from a fixed point.
+- **To the batter:** the launch is solved so the ball pitches at the chosen length and line at the delivery speed. Bounce: vertical speed × 0.45, horizontal speed × 0.9, plus a small sideways seam nudge (up to ±0.1m by the bat; none on a perfect ball, which is right on the spot). A full toss skips the bounce.
 - **Off the bat:**
   - FOUR: launch angle under 5°, about 28m/s, then rolling friction; it must cross the rope (about 65m).
   - SIX: launch 30 to 40°, enough speed to land beyond the rope (about 75m).
-  - DOT: dies at the batter's feet (dug out) or carries to the keeper (beaten).
+  - DOT: dies at the batter's feet (dug out) or carries to the keeper (beaten). A beaten ball is aimed past the bat, not carried on along its line: it passes the stumps at x −0.26 (clear of off stump at the drawn size) and ends in the keeper's gloves.
 - **Contact timing:** the shot clip is started so the bat meets the ball exactly at the contact moment (we control both, so this always lines up).
 
 ## 6. Technical design
@@ -169,14 +171,9 @@ Two settings only, chosen by the existing `MEDIA.lg` query:
 
 ### 6.5 Sound
 
-New game sounds, made in code like the other game sounds (`src/shell/synth.ts`, Phase 7):
-- bat crack
-- ball bounce
-- a clap per stride during the run-up
-- an "ooh" on a play-and-miss
-- the existing crowd cheer on FOUR and SIX
-
-All of them go through the existing audio system and mute toggle. Yash listens and approves them at review.
+Game sounds, through the existing audio system and mute toggle:
+- made in code (`src/shell/synth.ts`, Phase 7): the ball's bounce and a clap per stride during the run-up;
+- CC0 recordings Yash picked by ear (`src/shell/gameSound.ts`, `public/audio`, credited in `public/audio/CREDITS.md`): the bat on the ball, the crowd's "ooh" at a play-and-miss, the cheer for a FOUR or SIX (and every game's end), and a soft stadium hum under the 3D game only. Each is fetched ahead and decoded once a gesture has made the sound context; until then (or if a file cannot load) the code-made sound plays. The hum fades in when the 3D game is on screen and sound is unlocked and on; it fades out when sound is turned off, the tab is hidden, or the page is left.
 
 ### 6.6 Edge cases
 
@@ -234,7 +231,7 @@ Gates: desktop performance ≥ 90, phone ≥ 80, accessibility 100, best practic
 - After the three files arrive, the clips are built (all 10 made clips and the 5 free ones, once, shared by the seven players) and the body's skinned bounds are measured once (each clone copies them), each in a task of its own.
 - The scene then mounts **hidden** over the 2D board, and `renderer.compileAsync` compiles every shader in a task of its own before the first frame; the loader stays up until it resolves. Where the browser has `KHR_parallel_shader_compile` (Chrome on the M1 does; SwiftShader does not), the compile no longer freezes the page.
 - The phone's thumb zone keeps the controls' place (unseen) while the loader shows, so nothing moves when the 3D arrives (the 0.081 layout shift is gone).
-- No allocation per frame in the camera rig or in `applyClips`.
+- The camera rig and `applyClips` make no new objects per frame; the shotlist's own per-frame reads (`camera()`, `sampleTrack`) still make a few small arrays, a negligible cost.
 - Unused JavaScript: no cheap win. R3F imports the whole of `three` (`import * as THREE`), so naming fewer imports would not shrink the chunk.
 
 Long tasks (Chrome CPU profile, a fresh browser each run, until 5 s after the 3D shows; "phone" = 390×844 with the CPU slowed 4×):
@@ -268,8 +265,10 @@ The models are sent as they are (`application/octet-stream`, like Vercel), so af
 
 ### 9.6 Clips
 
-- All 10 cricket clips are key poses (`shots.ts`): stance, bowl, dugOut, beaten, drive, flick, pull, loft, keeperTake, dive. No `Sword_*` clips are used.
-- The 5 free clips (idle, walk, jog, sprint, crouch) play on the body as they are, lifted so the feet meet the floor (`CLIP_LIFT`, the lowest sole over each whole cycle): idle 0.053 m, walk 0.05, jog 0.039, sprint 0.052, crouch 0.01. Key-pose clips place the feet themselves.
+- All 13 cricket clips are key poses (`shots.ts`): stance, bowl, dugOut, beaten, drive, flick, pull, cut, loft, keeperWait, slipWait, keeperTake, dive. No `Sword_*` clips are used.
+- Key-pose clips are smoothed (fix wave): each bone runs on a monotone cubic through its keys, keyed 30 times a second, exactly on every key (so the bat still meets the ball at `SHOT_CONTACT`), easing out of the first key and into the last, never overshooting a held key. Every bat shot has a pickup key (the toe goes back toward the keeper) and the front-foot shots a downswing key (the bat comes down from behind the hip). Yash's shot fades in over 0.2 s and hands over to the idle over 0.4 s; the keeper settles back into his squat over 0.3 s.
+- The keeper waits in a wicket-keeper's squat (on the balls of his feet, knees wide, gloves together low between them, eyes on the bowler) and the slip in a ready stance (back at about 45 degrees, hands cupped low toward the batter), each with a small breathing loop; the take rises out of the squat and sinks back into it.
+- The 4 free clips used (idle, walk, jog, sprint) play on the body as they are, lifted so the feet meet the floor (`CLIP_LIFT`, the lowest sole over each whole cycle): idle 0.053 m, walk 0.05, jog 0.039, sprint 0.052. `Crouch_Idle_Loop` is still in `moves.glb` but no longer played; dropping it means re-running `tools/models.mjs` on the Quaternius folder (Yash, by hand).
 
 ### 9.7 Rulings, in plain words
 
@@ -278,5 +277,15 @@ The models are sent as they are (`application/octet-stream`, like Vercel), so af
 - Task 7 defines the view builder the same way `CricketScreen` does, since the snippet left it out.
 - The model tool uses the dev package `@gltf-transform/extensions` rather than a hand-written extension class: same project, less of our own code, one more dev dependency.
 - The free clips' feet sit a few centimetres off the floor on this body; the 3D world fixes it with a small measured lift per clip, so the model tool stays simple.
-- A small pnpm patch back-ports React Three Fiber 9.8.2's one-line JSX type fix onto 9.8.1 (the release-age rule blocks 9.8.2 for now). Before merge, try 9.8.2 and drop the patch.
+- A small pnpm patch back-ported React Three Fiber 9.8.2's one-line JSX type fix onto 9.8.1 while the release-age rule blocked 9.8.2. The fix wave moved to 9.8.2 (the rule accepted it with no exclusion) and dropped the patch.
 - **The speed gate (owner, 2026-10-16):** fix the real problems (the phone's layout shift when the 3D arrives, long freezes at start-up), keep the 90 / 80 gate on the page's first load, report the full 3D numbers separately without gating them, and Yash checks the smoothness on his own phone before merge.
+
+### 9.8 The fix wave (2026-10-16)
+
+The owner's play-test and the independent review, in one wave:
+- **What you see matches what happened.** A beaten ball passes outside off stump and ends in the keeper's gloves (I1); the ball leaves the bowler's hand where he lets go, for an early, a centre or a late press (I2).
+- **Start-up and leaving.** The board's backdrop stays over a new canvas until its first frame is drawn, on arrival and after a resize across 1200px; the game takes input from the moment the scene is shown (M2). Once the files are in, the scene gets 10 s to compile and show, or the 2D game takes over, and a failed compile falls back too (M3). Coming back while the download still runs joins it (M4). Leaving or resizing lets the old renderer go (M1).
+- **Sound.** One cheer on the last ball, at the rope (M5); the bat, the "ooh", the cheer and the hum are recordings (§6.5).
+- **Screen readers** hear the line change ("LINE: OFF") (M9).
+- Left for later, as the review allowed: the 3D lining up with the board on windows narrower than 16:10 (M6), the drawing size on very large screens (M7), focus kept across a late fall back to 2D (M8).
+
