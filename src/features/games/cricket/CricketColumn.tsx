@@ -94,6 +94,7 @@ export function CricketColumn({
       venue="turf"
       scene={three?.scene}
       sceneHidden={!ready}
+      sceneDrawn={three?.drawn}
       heading={view.heading}
       bug={
         <ScoreBug label={bug.label} size="sm">

@@ -49,6 +49,11 @@ export function useGameSession<R extends SessionRun, V>({
   useEffect(() => {
     live.current = { desktop, audio, say, save, layout, reduced };
   });
+  // The crowd's cheer (the game's end) and cricket's bat are recordings: fetched ahead, so they are ready by then.
+  useEffect(
+    () => live.current.audio.prefetchSounds(venue === "cricket" ? ["crowd", "bat"] : ["crowd"]),
+    [venue],
+  );
 
   const view = useMemo(
     () =>
@@ -62,15 +67,17 @@ export function useGameSession<R extends SessionRun, V>({
 
   /**
    * The game is over: save the result (once, here, the moment it is known: G8), the crowd reacts, show the verdict, and `VERDICT_MS`
-   * later the end buttons. `extra` is whatever else the run changes with it.
+   * later the end buttons. `extra` is whatever else the run changes with it. `cheer: false` leaves the crowd to the
+   * caller (the 3D cricket game has just cheered the last ball over the rope).
    */
   const finish = (
     next: R["game"],
     result: { score: string; form: number },
     extra: Partial<R> = {},
+    { cheer = true }: { cheer?: boolean } = {},
   ) => {
     const flags = live.current.save(result);
-    live.current.audio.play("crowd");
+    if (cheer) live.current.audio.play("crowd");
     commit({ game: next, phase: "verdict", ...flags, ...extra } as unknown as Partial<R>);
     timers.after(VERDICT_MS, () => commit({ phase: "end" } as unknown as Partial<R>));
   };

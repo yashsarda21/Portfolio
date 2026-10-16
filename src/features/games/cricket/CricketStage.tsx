@@ -57,6 +57,7 @@ export function CricketStage({
       venue="turf"
       scene={three?.scene}
       sceneHidden={!ready}
+      sceneDrawn={three?.drawn}
       bug={
         <ScoreBug label={bug.label} size="md">
           <ScoreBug.Name>{bug.name}</ScoreBug.Name>

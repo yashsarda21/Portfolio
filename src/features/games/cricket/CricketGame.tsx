@@ -4,17 +4,28 @@ import { useThreeGate } from "../three/useThreeGate";
 import { Cricket3DScreen, type Cricket3d } from "./Cricket3DScreen";
 import { CricketScreen } from "./CricketScreen";
 
-/** Once loaded, the scene and its files are kept for the visit: a rematch or coming back is instant (spec §6.2). */
-let loaded: Cricket3d | null = null;
+/**
+ * The download, kept for the visit once started: a rematch or coming back is instant (spec §6.2), and coming back
+ * while it is still running joins it rather than starting it again. A failed one is forgotten, so the next visit tries
+ * again. Progress goes to the latest game waiting on it.
+ */
+let pending: Promise<Cricket3d> | null = null;
+let progressTo: (fraction: number) => void = () => {};
 
 /** three.js and the scene arrive only through this dynamic import, never in a page's first load. */
-const loadCricket3d = (onProgress: (fraction: number) => void): Promise<Cricket3d> =>
-  loaded
-    ? Promise.resolve(loaded)
-    : import("./3d/scene").then(async (m) => {
-        loaded = { Scene: m.CricketScene, assets: await m.loadCricketAssets(onProgress) };
-        return loaded;
-      });
+const loadCricket3d = (onProgress: (fraction: number) => void): Promise<Cricket3d> => {
+  progressTo = onProgress;
+  pending ??= import("./3d/scene")
+    .then(async (m) => ({
+      Scene: m.CricketScene,
+      assets: await m.loadCricketAssets((fraction) => progressTo(fraction)),
+    }))
+    .catch((error: unknown) => {
+      pending = null;
+      throw error;
+    });
+  return pending;
+};
 
 /** Cricket in 3D, or today's 2D game for reduced motion, no WebGL, or a failed download (spec §6.2). */
 export function CricketGame() {

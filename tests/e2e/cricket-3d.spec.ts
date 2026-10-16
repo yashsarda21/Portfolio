@@ -109,6 +109,10 @@ test("an over: a beaten dot on OFF, a FOUR, a SIX off a short one; 10 not out is
   if (desktop) await page.keyboard.press("ArrowLeft");
   else await line(page, cricket.line.off).tap({ force: true });
   await expect(line(page, cricket.line.off)).toHaveAttribute("aria-pressed", "true");
+  // The change is said: the arrows press buttons that do not have the focus.
+  await expect(page.locator("[data-game] + [aria-live=polite]")).toHaveText(
+    cricket.line.said.replace("{line}", cricket.line.off),
+  );
   if (desktop) {
     // A click picks a line without taking the focus: the next Space bowls (it does not press OFF again).
     await line(page, cricket.line.middle).click({ force: true });
@@ -130,8 +134,6 @@ test("an over: a beaten dot on OFF, a FOUR, a SIX off a short one; 10 not out is
     await expect(page.locator("[data-commentary-bar]")).toContainText(cricket.comm.beaten);
   await untilPhase(page, ["ready"]);
   await expectBallNo(page, 2);
-  // The phone plays one ball: it is the same game, and software WebGL is slow.
-  if (!desktop) return expect(errors).toEqual([]);
 
   await bowlAt(page, good, press);
   await untilPhase(page, ["called"]);
@@ -186,23 +188,49 @@ test("Review Focus 1: mashing BOWL starts one run-up, an early press is ignored,
   expect(errors).toEqual([]);
 });
 
-test("Review Focus 2: a hidden tab mid run-up cancels the ball, uncounted", async ({ page }) => {
+/** Hides the tab or brings it back, as switching tabs does. */
+const tab = (page: Page, state: "hidden" | "visible") =>
+  page.evaluate((s) => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => s });
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => s === "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  }, state);
+
+test("Review Focus 2: a hidden tab mid run-up or mid-flight cancels the ball, uncounted; back, it is bowled again", async ({
+  page,
+}) => {
   const errors = watchErrors(page);
   await open3d(page, URL);
   const press = await pressFor(page);
 
+  // In the run-up.
   await press(page);
   await expect(game(page)).toHaveAttribute("data-phase", "runup");
   await jump(page, 750);
-  await page.evaluate(() => {
-    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
+  await tab(page, "hidden");
   await expect(game(page)).toHaveAttribute("data-phase", "ready");
   await jump(page, 3000);
   expect(await phaseOf(page)).toBe("ready");
   await expectBallNo(page, 1);
+  await tab(page, "visible");
+
+  // In the flight (the ball's landing is due): nothing lands while away.
+  await bowlAt(page, good, press);
+  await expect(game(page)).toHaveAttribute("data-phase", "flight");
+  await tab(page, "hidden");
+  await expect(game(page)).toHaveAttribute("data-phase", "ready");
+  await jump(page, 6000);
+  expect(await phaseOf(page)).toBe("ready");
+  await expectBallNo(page, 1);
   expect((await stored(page)).lastScores?.cricket).toBeUndefined();
+
+  // Back: BOWL bowls ball 1 again, and it counts once.
+  await tab(page, "visible");
+  await bowlAt(page, good, press);
+  await untilPhase(page, ["called"]);
+  await expect(call(page)).toHaveText(cricket.calls.four);
+  await untilPhase(page, ["ready"]);
+  await expectBallNo(page, 2);
   expect(errors).toEqual([]);
 });
 
@@ -251,10 +279,28 @@ test("Review Focus 4: a model file that will not download gives the 2D game, whi
   expect(errors).toEqual([]);
 });
 
-test("Review Focus 5: SKIP mid-flight leaves cleanly, and coming back downloads nothing again", async ({
+test("Review Focus 5: SKIP mid-flight leaves cleanly, no sound after, and coming back downloads nothing again", async ({
   page,
 }) => {
   const errors = watchErrors(page);
+  // Counts every sound the page starts (the code-made ones and the recordings).
+  await page.addInitScript(() => {
+    const w = window as unknown as { sounds: number };
+    w.sounds = 0;
+    const count = <K extends "createOscillator" | "createBufferSource">(name: K) => {
+      const make = AudioContext.prototype[name] as (...a: unknown[]) => unknown;
+      (AudioContext.prototype as unknown as Record<K, unknown>)[name] = function (
+        this: AudioContext,
+        ...a: unknown[]
+      ) {
+        w.sounds++;
+        return make.apply(this, a);
+      };
+    };
+    count("createOscillator");
+    count("createBufferSource");
+  });
+  const sounds = () => page.evaluate(() => (window as unknown as { sounds: number }).sounds);
   await open3d(page, URL);
 
   await bowlAt(page, good, await pressFor(page));
@@ -263,8 +309,10 @@ test("Review Focus 5: SKIP mid-flight leaves cleanly, and coming back downloads 
   await page.locator("[data-game] a[href='/career']:visible").first().click({ force: true });
   for (let ms = 0; ms < 5000 && !page.url().endsWith("/career"); ms += 250) await jump(page, 250);
   await expect(page).toHaveURL(/\/career$/);
+  const left = await sounds();
   await jump(page, 4000);
   await expect(page.locator("[data-game]")).toHaveCount(0);
+  expect(await sounds()).toBe(left);
   expect((await stored(page)).lastScores?.cricket).toBeUndefined();
 
   // Back in real time: the files are kept, so nothing downloads again; the new canvas only compiles its shaders (slow

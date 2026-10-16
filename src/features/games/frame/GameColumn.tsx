@@ -25,6 +25,7 @@ export function GameColumn({
   heading,
   scene,
   sceneHidden = false,
+  sceneDrawn = true,
 }: {
   chrome: GameChrome;
   venue: "turf" | "court" | "hall";
@@ -37,6 +38,8 @@ export function GameColumn({
   scene?: ReactNode;
   /** The scene is there but not on screen yet (its shaders compile): it stays invisible, and the backdrop stays. */
   sceneHidden?: boolean;
+  /** The scene's canvas has drawn its first frame: until then the backdrop stays over it. */
+  sceneDrawn?: boolean;
 }) {
   return (
     <div data-game-column="" className="relative h-dvh overflow-hidden bg-night lg:hidden">
@@ -44,7 +47,7 @@ export function GameColumn({
         <div className={cn("absolute inset-0", sceneHidden && "invisible")}>{scene}</div>
       ) : null}
       <div className="relative mx-auto h-full max-w-160">
-        {scene && !sceneHidden ? null : <GameBackdrop venue={venue} frame="column" />}
+        {scene && !sceneHidden && sceneDrawn ? null : <GameBackdrop venue={venue} frame="column" />}
         <h1 className="sr-only">{heading}</h1>
         <div
           data-part="top"

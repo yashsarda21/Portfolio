@@ -19,7 +19,7 @@ import {
   lengthQuality,
   type CricketState,
 } from "./referee";
-import { buildCricket, useCricketCalls } from "./useCricketCalls";
+import { buildCricket, cricketCalls } from "./cricketCalls";
 import type { CricketPhase } from "./view";
 
 interface Run extends EndFlags {
@@ -48,9 +48,9 @@ export function CricketScreen() {
     running: run.phase === "ready" && !reduced,
   });
 
-  const { land: call } = useCricketCalls(session);
+  const { land: call } = cricketCalls(session);
   /** A ball has been bowled and judged: called as the 2D game always has (the bat cracks as it lands). */
-  const land = (next: CricketState) => call(next, { callMs: CRICKET_BEATS.callMs, bat: true });
+  const land = (next: CricketState) => call(next, { callMs: CRICKET_BEATS.callMs, sounds: true });
 
   /** The ball from your hand to the bounce and on to the bat, along the tracer; then `done`. Nothing but transform and opacity moves. */
   const fly = (where: GameLayout, bounce: { x: number; y: number }, done: () => void) => {

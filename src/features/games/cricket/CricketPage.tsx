@@ -10,12 +10,16 @@ import type { Cricket3dControls, CricketPhase, CricketView } from "./view";
 /** The 3D game's part of the board: the gate, the scene (for the layout on screen only) and its controls. */
 export interface CricketThree {
   status: ThreeStatus;
+  /** The canvas on screen has drawn its first frame: until then the board keeps its backdrop over it. */
+  drawn: boolean;
   progress: number;
   /** Drawn by `layout`'s board only, so there is one canvas. */
   scene: ReactNode | null;
   layout: GameLayout;
   controls: Cricket3dControls;
   onLine(line: CricketAim): void;
+  /** Said in place of the last call until the next one (the line just changed). */
+  announce?: string;
 }
 
 const none = () => {};
@@ -52,7 +56,7 @@ export function CricketPage({
   return (
     <GamePage
       phase={phase}
-      announce={view.announce}
+      announce={three?.announce ?? view.announce}
       rootRef={rootRef}
       three={three?.status}
       stage={

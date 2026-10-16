@@ -18,6 +18,7 @@ export function GameStage({
   bug,
   scene,
   sceneHidden = false,
+  sceneDrawn = true,
   children,
 }: {
   chrome: GameChrome;
@@ -27,6 +28,8 @@ export function GameStage({
   scene?: ReactNode;
   /** The scene is there but not on screen yet (its shaders compile): it stays invisible, and the backdrop stays. */
   sceneHidden?: boolean;
+  /** The scene's canvas has drawn its first frame: until then the backdrop stays over it. */
+  sceneDrawn?: boolean;
   children: ReactNode;
 }) {
   const audio = useAudio();
@@ -38,7 +41,11 @@ export function GameStage({
           <div className={cn("absolute inset-0", sceneHidden && "invisible")}>{scene}</div>
         ) : undefined
       }
-      backdrop={scene && !sceneHidden ? undefined : <GameBackdrop venue={venue} frame="stage" />}
+      backdrop={
+        scene && !sceneHidden && sceneDrawn ? undefined : (
+          <GameBackdrop venue={venue} frame="stage" />
+        )
+      }
     >
       <HUD
         fade

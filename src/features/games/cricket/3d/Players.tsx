@@ -106,8 +106,12 @@ export function Players({
         cast.athletes[id].materials.forEach((m) => m.dispose());
         cast.athletes[id].mixer.stopAllAction();
       }
+      // The body's geometry (shared by every clone) and its skin are kept for the visit, but this canvas's renderer
+      // has hooked itself onto them: disposing frees its copies and lets it go. The next canvas uploads them again.
+      assets.body.scene.traverse((o) => (o as Mesh).geometry?.dispose());
+      assets.skin.dispose();
     },
-    [cast],
+    [cast, assets],
   );
 
   useFrame(() => {

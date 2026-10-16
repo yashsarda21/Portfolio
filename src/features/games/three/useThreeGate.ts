@@ -3,6 +3,8 @@ import { canUse3d } from "./support";
 
 /** How long the 3D files get before the game falls back to the 2D one. */
 export const THREE_TIMEOUT_MS = 20_000;
+/** Once the files are in, how long the scene gets to compile and draw its first frame before the 2D game takes over. */
+export const THREE_SHOW_TIMEOUT_MS = 10_000;
 
 export type ThreeStatus = "loading" | "ready" | "off";
 

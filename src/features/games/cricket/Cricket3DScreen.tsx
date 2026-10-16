@@ -6,7 +6,7 @@ import { useGameKeys } from "../engine/useGameKeys";
 import { useGameSession } from "../engine/useGameSession";
 import { NO_END_FLAGS, type EndFlags } from "../engine/useMatchResult";
 import { ThreeBoundary } from "../three/ThreeBoundary";
-import type { ThreeGate } from "../three/useThreeGate";
+import { THREE_SHOW_TIMEOUT_MS, type ThreeGate } from "../three/useThreeGate";
 import type { CricketAssets, CricketScene } from "./3d/scene";
 import { planDelivery } from "./3d/delivery";
 import { pickShot } from "./3d/director";
@@ -15,6 +15,7 @@ import {
   readyShotlist,
   RUNUP,
   RUNUP_END,
+  sweepAt,
   walkBackShotlist,
   type Cue,
   type Shotlist,
@@ -25,14 +26,13 @@ import {
   bowl as bowlBall,
   CRICKET_3D_BEATS,
   CRICKET_BALLS,
-  CRICKET_PERIOD_MS,
   CRICKET_START,
   LINES,
   lengthQuality,
   type CricketAim,
   type CricketState,
 } from "./referee";
-import { buildCricket, useCricketCalls } from "./useCricketCalls";
+import { buildCricket, cricketCalls } from "./cricketCalls";
 import { buildCricket3dControls, type CricketPhase } from "./view";
 
 /** What the 3D download brings: the scene component and the files it draws. */
@@ -56,10 +56,6 @@ const START: Run = {
   ...NO_END_FLAGS,
 };
 
-/** The meter's place (0 to 1) at a run-up time (ms): still through the approach, then one sweep to the end. */
-const sweepAt = (ms: number) =>
-  Math.min(1, Math.max(0, (ms - RUNUP.approach * 1000) / CRICKET_PERIOD_MS));
-
 /**
  * Cricket in 3D (spec §3): pick a line, press BOWL and the bowler runs in; the meter sweeps once across the end of
  * his run-up and the next press releases the ball. The referee judges that place exactly as the 2D game does; the
@@ -69,9 +65,15 @@ const sweepAt = (ms: number) =>
 export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
   const session = useGameSession({ venue: "cricket", start: START, build: buildCricket });
   const { run, latest, commit, view, timers, live, desktop, layout, say } = session;
-  // The files are in: the scene mounts, hidden, and compiles its shaders; the loader stays until it is on screen.
+  // The files are in: the scene mounts, hidden, and compiles its shaders; the loader stays until then. Once shown, the
+  // game takes input for the rest of the visit. `drawn` is this canvas's own: the board's backdrop stays over it until
+  // its first frame is on it (a resize across 1200px mounts a new canvas, which draws again).
   const [shown, setShown] = useState(false);
   const ready = gate.status === "ready" && shown;
+  const [drawn, setDrawn] = useState<{ layout: typeof layout; on: boolean }>({ layout, on: false });
+  if (drawn.layout !== layout) setDrawn({ layout, on: false });
+  // A line change is said too (the arrows change buttons that do not have the focus); the next call replaces it.
+  const [lineSaid, setLineSaid] = useState<{ text: string; over: string } | null>(null);
   const root = useRef<HTMLElement>(null);
   // Where the meter stopped at the release: it holds there through the flight and the call.
   const meterAt = useRef(0);
@@ -85,16 +87,17 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
           : meterAt.current,
     running: ready,
   });
-  const world = useRef<WorldState>({
+  const world = useRef<WorldState>(null);
+  world.current ??= {
     shotlist: readyShotlist(0),
     elapsed: () => clock.elapsed() / 1000,
     crowdUp: false,
-  });
-  const { land } = useCricketCalls(session);
+  };
+  const { land } = cricketCalls(session);
 
   /** Puts a shotlist on the field; `restart` starts its clock at 0 (the ball goes on the run-up's clock). */
   const show = (shotlist: Shotlist, restart = true) => {
-    world.current.shotlist = shotlist;
+    world.current!.shotlist = shotlist;
     if (restart) clock.restart();
   };
   /** Each cue's sound at its time on the shotlist's clock, from `now` (s). Timers: leaving or a hidden tab silences them. */
@@ -106,7 +109,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
   const startRunup = () => {
     const ball = latest.current.game.balls.length;
     meterAt.current = 0;
-    world.current.crowdUp = ball === CRICKET_BALLS - 1;
+    world.current!.crowdUp = ball === CRICKET_BALLS - 1;
     commit({ phase: "runup", speedKmh: null });
     const runup = ballShotlist(ball, null);
     show(runup);
@@ -137,7 +140,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     if (!live.current.desktop) navigator.vibrate?.(20);
     cue(ball.cues, ms / 1000);
     timers.after((ball.end - ms / 1000) * 1000, () => {
-      land(next, { callMs: CRICKET_3D_BEATS.calledMs, bat: false });
+      land(next, { callMs: CRICKET_3D_BEATS.calledMs, sounds: false });
       show(walkBackShotlist(ball, Math.min(next.balls.length, CRICKET_BALLS - 1)));
     });
   };
@@ -148,14 +151,17 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     if (latest.current.phase === "ready") startRunup();
     else release();
   };
+  const setLine = (aim: CricketAim) => {
+    if (latest.current.phase !== "ready" || aim === latest.current.aim) return;
+    commit({ aim });
+    const controls = buildCricket3dControls(ui, { phase: "ready", aim, speedKmh: null });
+    setLineSaid({ text: controls.lines.said, over: view.announce });
+  };
   const step = (by: -1 | 1) => {
-    if (latest.current.phase !== "ready") return;
     const i = LINES.indexOf(latest.current.aim);
-    commit({ aim: LINES[Math.min(LINES.length - 1, Math.max(0, i + by))]! });
+    setLine(LINES[Math.min(LINES.length - 1, Math.max(0, i + by))]!);
   };
-  const pickLine = (aim: CricketAim) => {
-    if (latest.current.phase === "ready") commit({ aim });
-  };
+  const pickLine = setLine;
 
   // Review Focus 2: a hidden tab cancels a ball in its run-up or flight, uncounted; it is bowled again fresh.
   useEffect(() => {
@@ -173,9 +179,25 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The 3D game's own recordings; the stadium hums under it while it is on screen (from the first gesture, sound on).
+  useEffect(() => live.current.audio.prefetchSounds(["ooh", "murmur"]), [live]);
+  useEffect(() => {
+    if (!ready) return;
+    const audio = live.current.audio;
+    audio.ambience(true);
+    return () => audio.ambience(false);
+  }, [ready, live]);
+
+  // Review M3: after the files arrive, the scene gets THREE_SHOW_TIMEOUT_MS to compile and draw, or the 2D game takes over.
+  useEffect(() => {
+    if (gate.status !== "ready" || shown) return;
+    const cap = setTimeout(gate.fail, THREE_SHOW_TIMEOUT_MS);
+    return () => clearTimeout(cap);
+  }, [gate.status, gate.fail, shown]);
+
   const again = () =>
     session.again(() => {
-      world.current.crowdUp = false;
+      world.current!.crowdUp = false;
       show(readyShotlist(0));
       if (desktop) say(ui.games.cricket.comm.start, { interrupt: true });
     });
@@ -212,6 +234,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
           world={world}
           layout={layout}
           onShown={() => setShown(true)}
+          onDrawn={() => setDrawn({ layout, on: true })}
         />
       </ThreeBoundary>
     ) : null;
@@ -224,11 +247,13 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
       rootRef={root}
       three={{
         status: ready ? "ready" : "loading",
+        drawn: ready && drawn.on,
         progress: gate.progress,
         scene,
         layout,
         controls,
         onLine: pickLine,
+        announce: lineSaid && lineSaid.over === view.announce ? lineSaid.text : undefined,
       }}
     />
   );

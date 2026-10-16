@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { safeStorage } from "@/lib/storage";
+import { AMBIENCE, GAME_FILES, GAME_LEVELS, RECORDED, type GameRecording } from "./gameSound";
 import { SHOW_FILES, SHOW_LEVELS, cueEnd, type ShowCue, type ShowSoundName } from "./showSound";
 import { MASTER_GAIN, RECIPES } from "./synth";
 
@@ -35,6 +36,27 @@ interface AudioApi {
   prefetchShow(): void;
   /** Fades the show out over `fadeMs` (default 300): SKIP, leaving the page, switching tabs. */
   stopShow(fadeMs?: number): void;
+  /**
+   * Starts fetching the recordings of these game sounds (the bytes only, like `prefetchShow`); each is decoded once
+   * there is a context, so it is ready by the first ball. Until then a sound plays its code-made recipe.
+   */
+  prefetchSounds(names: readonly (SoundName | "murmur")[]): void;
+  /**
+   * The stadium's hum under a game: `true` asks for it, `false` fades it out (leaving). It plays only once sound is
+   * unlocked by a gesture and on, fades in then, and fades out while the sound is off or the tab is hidden.
+   */
+  ambience(on: boolean): void;
+}
+
+/** Every recording: the show's two and the games'. */
+const FILES = { ...SHOW_FILES, ...GAME_FILES } as const;
+type RecordingName = keyof typeof FILES;
+
+/** The hum: whether a game wants it, and its bus and loop while it plays. */
+interface Ambience {
+  wanted: boolean;
+  bus: GainNode | null;
+  source: AudioBufferSourceNode | null;
 }
 
 /** A show in flight: its own bus (so it can be faded as one) and everything playing through it. */
@@ -80,8 +102,9 @@ function crowdLevel(cue: ShowCue, t: number): number {
 }
 
 /**
- * The game sounds are made in code, not loaded (spec §4.6, P1); see `synth.ts` for the recipes. The Home and Intro
- * show is the one exception: two CC0 recordings (public/audio), fetched and decoded after the first unlock.
+ * The game sounds are made in code (spec §4.6, P1; see `synth.ts` for the recipes), except the few that are CC0
+ * recordings (`gameSound.ts`): the bat, the "ooh", the cheer and the 3D cricket's hum. The Home and Intro show is two
+ * more recordings. All live in public/audio, fetched ahead and decoded once a gesture has made the context.
  */
 export function AudioProvider({ children }: { children: ReactNode }) {
   // Starts enabled so prerender and first client render match; the saved mute is applied after mount.
@@ -91,9 +114,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterRef = useRef<GainNode | null>(null);
   const lastPlayed = useRef<Partial<Record<SoundName, number>>>({});
-  const bytes = useRef<Partial<Record<ShowSoundName, Promise<ArrayBuffer | null>>>>({});
-  const buffers = useRef<Partial<Record<ShowSoundName, Promise<AudioBuffer | null>>>>({});
+  const bytes = useRef<Partial<Record<RecordingName, Promise<ArrayBuffer | null>>>>({});
+  const buffers = useRef<Partial<Record<RecordingName, Promise<AudioBuffer | null>>>>({});
+  /** The decoded recordings, for the game sounds that play at once (no waiting on a promise). */
+  const decoded = useRef<Partial<Record<RecordingName, AudioBuffer>>>({});
+  /** The game recordings asked for so far: decoded as soon as there is a context. */
+  const wanted = useRef(new Set<GameRecording>());
   const showRef = useRef<ActiveShow | null>(null);
+  const ambienceRef = useRef<Ambience>({ wanted: false, bus: null, source: null });
 
   /** Every sound passes through this gain, so muting is one change and silences a sound already playing. */
   const setMaster = useCallback((on: boolean) => {
@@ -118,59 +146,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  /** Call from a user gesture (a click or a key): the first call makes the context, every call wakes it if it slept. */
-  const unlock = useCallback(() => {
-    setUnlocked(true);
-    if (typeof window === "undefined") return;
-    if (ctxRef.current) return wake(ctxRef.current);
-    try {
-      const ctx = new window.AudioContext();
-      const master = ctx.createGain();
-      master.gain.value = enabledRef.current ? MASTER_GAIN : 0;
-      master.connect(limiterFor(ctx) ?? ctx.destination);
-      ctxRef.current = ctx;
-      masterRef.current = master;
-      wake(ctx);
-    } catch {
-      /* no Web Audio, or the browser refused: stay silent */
-    }
-  }, [wake]);
-
-  /** Turning the sound on is itself a gesture, so a game reached directly can be turned on without first visiting the Landing. */
-  const toggle = useCallback(() => {
-    const next = !enabledRef.current;
-    enabledRef.current = next;
-    safeStorage.set(KEY, next ? "on" : "off");
-    setEnabled(next);
-    if (next) unlock();
-    setMaster(next);
-  }, [setMaster, unlock]);
-
-  const play = useCallback(
-    (name: SoundName) => {
-      const ctx = ctxRef.current;
-      const master = masterRef.current;
-      if (!enabledRef.current || !ctx || !master) return;
-      try {
-        wake(ctx);
-        const last = lastPlayed.current[name];
-        if (last !== undefined && ctx.currentTime - last < MIN_GAP_S) return;
-        lastPlayed.current[name] = ctx.currentTime;
-        RECIPES[name](ctx, master, ctx.currentTime + 0.005);
-      } catch {
-        /* a sound that cannot play is a missing sound, not an error */
-      }
-    },
-    [wake],
-  );
-
   /** Fetches a recording's bytes once (no context needed); a failure is a missing sound and is tried again next time. */
-  const fetchBytes = useCallback((name: ShowSoundName) => {
+  const fetchBytes = useCallback((name: RecordingName) => {
     let loading = bytes.current[name];
     if (!loading) {
       loading = (async () => {
         try {
-          const response = await fetch(SHOW_FILES[name]);
+          const response = await fetch(FILES[name]);
           return response.ok ? await response.arrayBuffer() : null;
         } catch {
           return null;
@@ -184,14 +166,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     return loading;
   }, []);
 
-  const prefetchShow = useCallback(() => {
-    if (typeof window === "undefined") return;
-    for (const name of Object.keys(SHOW_FILES) as ShowSoundName[]) void fetchBytes(name);
-  }, [fetchBytes]);
-
   /** Decodes a recording once per context, from the prefetched bytes (or fetching them now). A failure stays silent. */
   const load = useCallback(
-    (ctx: AudioContext, name: ShowSoundName) => {
+    (ctx: AudioContext, name: RecordingName) => {
       let loading = buffers.current[name];
       if (!loading) {
         loading = (async () => {
@@ -204,6 +181,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           }
         })().then((buffer) => {
           if (!buffer) delete buffers.current[name];
+          else if (ctxRef.current === ctx) decoded.current[name] = buffer;
           return buffer;
         });
         buffers.current[name] = loading;
@@ -212,6 +190,151 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     },
     [fetchBytes],
   );
+
+  /** The hum fades in, if a game wants it and it may play: unlocked (a context), the sound on, the tab in view. */
+  const startAmbience = useCallback(() => {
+    const ctx = ctxRef.current;
+    const master = masterRef.current;
+    const a = ambienceRef.current;
+    if (!a.wanted || a.source || !ctx || !master || !enabledRef.current || document.hidden) return;
+    void load(ctx, "murmur").then((buffer) => {
+      if (!buffer || a.source || !a.wanted || !enabledRef.current || document.hidden) return;
+      if (ctxRef.current !== ctx) return;
+      try {
+        wake(ctx);
+        const now = ctx.currentTime;
+        const bus = ctx.createGain();
+        bus.gain.setValueAtTime(0, now);
+        bus.gain.linearRampToValueAtTime(GAME_LEVELS.murmur, now + AMBIENCE.fadeIn);
+        bus.connect(master);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.connect(bus);
+        source.start(now);
+        a.bus = bus;
+        a.source = source;
+      } catch {
+        /* no hum is a quiet stadium, not an error */
+      }
+    });
+  }, [load, wake]);
+
+  /** The hum fades out (it may be asked for again: it fades back in when it can play). */
+  const stopAmbience = useCallback(() => {
+    const a = ambienceRef.current;
+    const ctx = ctxRef.current;
+    const { bus, source } = a;
+    a.bus = null;
+    a.source = null;
+    if (!bus || !source || !ctx) return;
+    try {
+      const now = ctx.currentTime;
+      bus.gain.cancelScheduledValues(now);
+      bus.gain.setValueAtTime(bus.gain.value, now);
+      bus.gain.linearRampToValueAtTime(0, now + AMBIENCE.fadeOut);
+      source.stop(now + AMBIENCE.fadeOut + 0.05);
+      source.onended = () => {
+        source.disconnect();
+        bus.disconnect();
+      };
+    } catch {
+      /* cut when the context goes */
+    }
+  }, []);
+
+  /** Call from a user gesture (a click or a key): the first call makes the context, every call wakes it if it slept. */
+  const unlock = useCallback(() => {
+    setUnlocked(true);
+    if (typeof window === "undefined") return;
+    if (ctxRef.current) return wake(ctxRef.current);
+    try {
+      const ctx = new window.AudioContext();
+      const master = ctx.createGain();
+      master.gain.value = enabledRef.current ? MASTER_GAIN : 0;
+      master.connect(limiterFor(ctx) ?? ctx.destination);
+      ctxRef.current = ctx;
+      masterRef.current = master;
+      wake(ctx);
+      // The game recordings fetched ahead can be decoded now; the hum starts if a game is waiting for it.
+      for (const name of wanted.current) void load(ctx, name);
+      startAmbience();
+    } catch {
+      /* no Web Audio, or the browser refused: stay silent */
+    }
+  }, [wake, load, startAmbience]);
+
+  /** Turning the sound on is itself a gesture, so a game reached directly can be turned on without first visiting the Landing. */
+  const toggle = useCallback(() => {
+    const next = !enabledRef.current;
+    enabledRef.current = next;
+    safeStorage.set(KEY, next ? "on" : "off");
+    setEnabled(next);
+    if (next) unlock();
+    setMaster(next);
+    // Muting cuts every sound at once (the master gain); the hum fades on its own bus and comes back up when on again.
+    if (next) startAmbience();
+    else stopAmbience();
+  }, [setMaster, unlock, startAmbience, stopAmbience]);
+
+  const play = useCallback(
+    (name: SoundName) => {
+      const ctx = ctxRef.current;
+      const master = masterRef.current;
+      if (!enabledRef.current || !ctx || !master) return;
+      try {
+        wake(ctx);
+        const last = lastPlayed.current[name];
+        if (last !== undefined && ctx.currentTime - last < MIN_GAP_S) return;
+        lastPlayed.current[name] = ctx.currentTime;
+        const recording = RECORDED[name];
+        const buffer = recording && decoded.current[recording];
+        if (!recording || !buffer) return RECIPES[name](ctx, master, ctx.currentTime + 0.005);
+        const out = ctx.createGain();
+        out.gain.value = GAME_LEVELS[recording];
+        out.connect(master);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(out);
+        source.onended = () => {
+          source.disconnect();
+          out.disconnect();
+        };
+        source.start(ctx.currentTime + 0.005);
+      } catch {
+        /* a sound that cannot play is a missing sound, not an error */
+      }
+    },
+    [wake],
+  );
+
+  const prefetchSounds = useCallback(
+    (names: readonly (SoundName | "murmur")[]) => {
+      if (typeof window === "undefined") return;
+      for (const name of names) {
+        const recording = name === "murmur" ? name : RECORDED[name];
+        if (!recording) continue;
+        wanted.current.add(recording);
+        void fetchBytes(recording);
+        if (ctxRef.current) void load(ctxRef.current, recording);
+      }
+    },
+    [fetchBytes, load],
+  );
+
+  const ambience = useCallback(
+    (on: boolean) => {
+      ambienceRef.current.wanted = on;
+      if (on) startAmbience();
+      else stopAmbience();
+    },
+    [startAmbience, stopAmbience],
+  );
+
+  const prefetchShow = useCallback(() => {
+    if (typeof window === "undefined") return;
+    for (const name of Object.keys(SHOW_FILES) as ShowSoundName[]) void fetchBytes(name);
+  }, [fetchBytes]);
 
   const stopShow = useCallback((fadeMs = 300) => {
     const show = showRef.current;
@@ -304,21 +427,48 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     [load, stopShow, wake],
   );
 
-  // Switching tabs or minimising ends the show: nothing should roar from a page nobody is looking at.
+  // Switching tabs or minimising ends the show and fades the hum: nothing should roar from a page nobody is looking at.
+  // Back in view, the hum comes up again if the game still wants it.
   useEffect(() => {
     const onVisibility = () => {
-      if (document.hidden) stopShow(300);
+      if (document.hidden) {
+        stopShow(300);
+        stopAmbience();
+      } else startAmbience();
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       stopShow(0);
+      stopAmbience();
     };
-  }, [stopShow]);
+  }, [stopShow, startAmbience, stopAmbience]);
 
   const api = useMemo(
-    () => ({ enabled, unlocked, toggle, unlock, play, playShow, prefetchShow, stopShow }),
-    [enabled, unlocked, toggle, unlock, play, playShow, prefetchShow, stopShow],
+    () => ({
+      enabled,
+      unlocked,
+      toggle,
+      unlock,
+      play,
+      playShow,
+      prefetchShow,
+      stopShow,
+      prefetchSounds,
+      ambience,
+    }),
+    [
+      enabled,
+      unlocked,
+      toggle,
+      unlock,
+      play,
+      playShow,
+      prefetchShow,
+      stopShow,
+      prefetchSounds,
+      ambience,
+    ],
   );
   return <AudioCtx.Provider value={api}>{children}</AudioCtx.Provider>;
 }

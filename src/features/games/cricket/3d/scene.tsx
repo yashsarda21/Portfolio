@@ -116,18 +116,21 @@ function CameraRig({ world, layout }: { world: RefObject<WorldState | null>; lay
 
 /**
  * The 3D cricket ground: the stadium, the seven players, the ball and the camera, drawn from `world` each frame.
- * `onShown`: its shaders are compiled and it is drawing (until then the game keeps its loader up).
+ * `onShown`: its shaders are compiled and it is drawing (until then the game keeps its loader up); `onDrawn`: its
+ * first frame is on the canvas (until then the board keeps its backdrop).
  */
 export function CricketScene({
   assets,
   world,
   layout,
   onShown,
+  onDrawn,
 }: {
   assets: CricketAssets;
   world: RefObject<WorldState | null>;
   layout: GameLayout;
   onShown?: () => void;
+  onDrawn?: () => void;
 }) {
   return (
     <GameCanvas
@@ -135,6 +138,7 @@ export function CricketScene({
       fov={CAMERA.fov[layout]}
       position={CAMERA.aim.position}
       onShown={onShown}
+      onDrawn={onDrawn}
     >
       <Stadium layout={layout} world={world} />
       <Players assets={assets} world={world} layout={layout} />

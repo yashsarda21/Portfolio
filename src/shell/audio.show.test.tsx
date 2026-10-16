@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AudioProvider, useAudio } from "./audio";
+import { AMBIENCE, GAME_FILES, GAME_LEVELS } from "./gameSound";
 import { SHOW_FILES, SHOW_LEVELS, showSchedule, type ShowCue } from "./showSound";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -22,6 +23,7 @@ interface Node {
   buffer?: unknown;
   start?: ReturnType<typeof vi.fn>;
   stop?: ReturnType<typeof vi.fn>;
+  loop?: boolean;
   onended?: () => void;
 }
 const rig = {
@@ -353,5 +355,71 @@ describe("stopShow", () => {
     act(() => result.current.playShow(LAND, performance.now()));
     await settle();
     expect(rig.gains[1]!.gain!.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 100.03);
+  });
+});
+
+const hide = (hidden: boolean) => {
+  Object.defineProperty(document, "hidden", { configurable: true, value: hidden });
+  act(() => void document.dispatchEvent(new Event("visibilitychange")));
+};
+
+describe("game recordings", () => {
+  it("a game sound plays its recording once fetched ahead and decoded (the recipe before), at its level", async () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.prefetchSounds(["bat", "crowd", "clap"]));
+    expect(rig.fetches.sort()).toEqual([GAME_FILES.bat, GAME_FILES.cheer].sort()); // the clap has no file
+    act(() => result.current.play("bat"));
+    expect(rig.sources).toHaveLength(0); // no context yet: nothing
+    act(() => result.current.unlock());
+    await settle();
+    expect(rig.decodes).toBe(2);
+    act(() => result.current.play("bat"));
+    expect(rig.sources).toHaveLength(1);
+    expect(rig.sources[0]!.start).toHaveBeenCalledWith(100.005);
+    expect(rig.gains.at(-1)!.gain!.value).toBe(GAME_LEVELS.bat);
+    act(() => result.current.play("bat")); // the same sound at once: held back, as every sound is
+    expect(rig.sources).toHaveLength(1);
+  });
+
+  it("the hum waits for a gesture, fades in looping, fades out when hidden or left, and comes back in view", async () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.prefetchSounds(["murmur"]));
+    act(() => result.current.ambience(true));
+    await settle();
+    expect(rig.sources).toHaveLength(0); // before any gesture: silent
+    act(() => result.current.unlock());
+    await settle();
+    expect(rig.sources).toHaveLength(1);
+    const hum = rig.sources[0]!;
+    expect(hum.loop).toBe(true);
+    const bus = rig.gains.at(-1)!.gain!;
+    expect(bus.linearRampToValueAtTime).toHaveBeenCalledWith(
+      GAME_LEVELS.murmur,
+      100 + AMBIENCE.fadeIn,
+    );
+    hide(true);
+    expect(bus.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 100 + AMBIENCE.fadeOut);
+    hide(false);
+    await settle();
+    expect(rig.sources).toHaveLength(2);
+    act(() => result.current.ambience(false));
+    expect(rig.sources[1]!.stop).toHaveBeenCalled();
+    hide(false);
+    await settle();
+    expect(rig.sources).toHaveLength(2); // left: it stays off
+  });
+
+  it("the hum never plays while the sound is off, and fades back in when it is turned on", async () => {
+    localStorage.setItem("arena:audio", "off");
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.ambience(true));
+    act(() => result.current.unlock());
+    await settle();
+    expect(rig.sources).toHaveLength(0);
+    act(() => result.current.toggle());
+    await settle();
+    expect(rig.sources).toHaveLength(1);
+    act(() => result.current.toggle());
+    expect(rig.sources[0]!.stop).toHaveBeenCalled();
   });
 });

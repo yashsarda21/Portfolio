@@ -8,7 +8,7 @@ import { useAutoRally, useGameSession } from "./useGameSession";
 import { NO_END_FLAGS, type EndFlags } from "./useMatchResult";
 
 const play = vi.hoisted(() => vi.fn());
-vi.mock("@/shell/audio", () => ({ useAudio: () => ({ play }) }));
+vi.mock("@/shell/audio", () => ({ useAudio: () => ({ play, prefetchSounds: vi.fn() }) }));
 vi.mock("@/shell/commentary", () => ({ useCommentary: () => ({ say: vi.fn() }) }));
 
 /** A `matchMedia` whose reduced-motion answer the test can flip. */
