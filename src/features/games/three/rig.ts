@@ -33,6 +33,19 @@ export const LIBRARY_CLIPS = {
   crouch: "Crouch_Idle_Loop",
 } as const;
 
+/**
+ * The ground speed (m/s) each free run clip's stride is made for at clip speed 1, so a run can be played at the speed
+ * that keeps the planted foot still. Measured with a throwaway script: over one loop at speed 1, a planted foot's
+ * backward travel divided by the time it is planted, for each foot (they agreed within 4 %). Planted: the ball of the
+ * foot within 2 cm of its lowest (the walk, which rolls heel to toe: heel and ball both down). The jog and sprint are
+ * stylised, short contacts and long strides, so they are made for higher speeds than a real jog or sprint.
+ */
+export const CLIP_PACE: { walk: number; jog: number; sprint: number } = {
+  walk: 1.05,
+  jog: 6.2,
+  sprint: 9.5,
+};
+
 export const MODEL_FILES = {
   body: "/models/athlete.glb",
   skin: "/models/athlete-skin.jpg",
