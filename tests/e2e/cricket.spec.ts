@@ -203,10 +203,11 @@ test("every input reveals: three misses open three innings, and each is announce
   }
   const said = await page.evaluate(() => (window as unknown as { __said: string[] }).__said);
   expect(said).toEqual([
-    "SIX. Innings 01 unlocked: DEUTSCHE BANK, Software Engineer 1, Jul 2024 – now",
+    // The career is told from the start (owner, 2026-10-16): the academy, the internship, the current role.
+    "SIX. Innings 01 unlocked: PICT, PUNE, B.Tech, Information Technology, 2020 – 2024",
     "SIX. Innings 02 unlocked: DEUTSCHE BANK, Graduate Analyst Intern, Jun – Jul 2023",
     // The last ball also says how the over ended (m-4).
-    "SIX. Innings 03 unlocked: PICT, PUNE, B.Tech, Information Technology, 2020 – 2024. Over complete. Yash 18 not out.",
+    "SIX. Innings 03 unlocked: DEUTSCHE BANK, Software Engineer 1, Jul 2024 – now. Over complete. Yash 18 not out.",
   ]);
   // Each ball is heard once: the commentary bar's own live region is not on the page while a game is.
   await expect(page.locator("[data-game] [aria-live]")).toHaveCount(0);
@@ -285,8 +286,8 @@ test("a resize across 1200px keeps the game and shows one layout (Review Focus 3
   await expect(page.locator("[data-game-column]")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   const column = page.locator("[data-game-column]");
-  await expect(column.getByText("INNINGS 01 UNLOCKED · NOT OUT")).toBeVisible();
-  await expect(column.getByText("DEUTSCHE BANK")).toBeVisible();
+  await expect(column.getByText("INNINGS 01 UNLOCKED · ACADEMY")).toBeVisible();
+  await expect(column.getByText("PICT, PUNE")).toBeVisible();
   await expect(column.getByText("YOU BOWLING · 2/3")).toBeVisible();
   // The game goes on in the new layout: the next ball is the second.
   await release(page, miss);

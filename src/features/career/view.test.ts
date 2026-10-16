@@ -30,12 +30,12 @@ describe("buildCareerView", () => {
     expect(view.viewCard).toEqual({ label: ui.pages.career.viewCard, to: "/card" });
   });
 
-  it("rows: the innings, then the academy as the next selectable row", () => {
+  it("rows: told from the start, the academy, then the internship, then the current role", () => {
     const { rows, defaultId } = build();
     expect(rows.map((r) => r.id)).toEqual(["01", "02", "03"]);
-    expect(defaultId).toBe("01");
-    expect(rows[0]).toMatchObject({
-      n: "01",
+    expect(defaultId).toBe("03");
+    expect(rows[2]).toMatchObject({
+      n: "03",
       team: "Deutsche Bank",
       role: "Software Engineer 1",
       span: "Jul 2024 – now",
@@ -52,9 +52,9 @@ describe("buildCareerView", () => {
   });
 
   it("rows: detail has the heading, title, role line, every ball and the stack", () => {
-    const [now, intern] = build().rows;
+    const [, intern, now] = build().rows;
     expect(now!.detail).toEqual({
-      heading: "INNINGS 01 · BALL BY BALL",
+      heading: "INNINGS 03 · BALL BY BALL",
       span: "Jul 2024 – now",
       title: "Deutsche Bank",
       roleLine: "Software Engineer 1 · Pune, MH",
@@ -66,10 +66,10 @@ describe("buildCareerView", () => {
     expect(intern!.detail.balls).toHaveLength(3);
   });
 
-  it("academy: row 03, drawn like the innings rows", () => {
-    expect(build().rows[2]).toMatchObject({
-      id: "03",
-      n: "03",
+  it("academy: row 01, drawn like the innings rows", () => {
+    expect(build().rows[0]).toMatchObject({
+      id: "01",
+      n: "01",
       team: "PICT, Pune",
       // The short degree keeps the row to one line; the panel shows the full one.
       role: "B.Tech IT",
@@ -77,13 +77,13 @@ describe("buildCareerView", () => {
       status: "ACADEMY",
       current: false,
     });
-    expect(build().rows[2]!.role).not.toBe(content.trainingAcademy.degree);
+    expect(build().rows[0]!.role).not.toBe(content.trainingAcademy.degree);
   });
 
   it("academy: the panel names the school and links to the trophy room", () => {
-    const { detail } = build().rows[2]!;
+    const { detail } = build().rows[0]!;
     expect(detail).toEqual({
-      heading: "INNINGS 03 · ACADEMY",
+      heading: "INNINGS 01 · ACADEMY",
       span: "Jul 2020 – Jun 2024",
       title: "Pune Institute of Computer Technology (PICT)",
       roleLine: "B.Tech, Information Technology · Distinction, SPPU",
@@ -105,13 +105,13 @@ describe("buildCareerView", () => {
         career: { ...ui.pages.career, academy: "SCHOOL", academyLink: "GO THERE" },
       },
     } as unknown as UiCopy;
-    const row = buildCareerView(content, renamed, ROUTES).rows[2]!;
+    const row = buildCareerView(content, renamed, ROUTES).rows[0]!;
     expect(row.status).toBe("SCHOOL");
-    expect(row.detail.heading).toBe("INNINGS 03 · SCHOOL");
+    expect(row.detail.heading).toBe("INNINGS 01 · SCHOOL");
     expect(row.detail.footer).toMatchObject({ kind: "link", label: "GO THERE" });
   });
 
-  it("academy: numbered after the last career row", () => {
+  it("a third role goes between the academy and the current role, by start date", () => {
     const extra: Content = {
       ...content,
       careerStats: [
@@ -121,8 +121,9 @@ describe("buildCareerView", () => {
     };
     const { rows } = build(extra);
     expect(rows.map((r) => r.id)).toEqual(["01", "02", "03", "04"]);
-    expect(rows[3]!.n).toBe("04");
-    expect(rows[3]!.detail.heading).toBe("INNINGS 04 · ACADEMY");
+    expect(rows.map((r) => r.status)).toEqual(["ACADEMY", "DEBUT", "DEBUT", "NOT OUT"]);
+    expect(rows[0]!.detail.heading).toBe("INNINGS 01 · ACADEMY");
+    expect(rows[3]!.current).toBe(true);
   });
 
   it("current tile: follows the row with no end date", () => {

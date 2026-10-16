@@ -2,6 +2,7 @@ import {
   formatMonth,
   formatSpan,
   getCareerRows,
+  getCareerTimeline,
   getInningsReveals,
   type Content,
   type UiCopy,
@@ -38,11 +39,11 @@ export interface CareerView {
   stats: { label: string; value: string; tone: "glass" | "volt" }[];
   cols: { inn: string; team: string; role: string; span: string; status: string };
   listLabel: string;
-  /** The career innings, then the academy as the last (selectable) row. */
+  /** The career from the start: the academy as innings 01 (a selectable row), then the roles oldest first. */
   rows: CareerRowView[];
   legend: string;
   viewCard: { label: string; to: string };
-  /** The row selected first. */
+  /** The row selected first: the current role. */
   defaultId: string;
 }
 
@@ -54,7 +55,7 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
   const current = careerRows.find((row) => row.isCurrent);
   const academy = getInningsReveals(c).find((reveal) => reveal.kind === "academy");
 
-  const innings: CareerRowView[] = careerRows.map((row) => ({
+  const innings: CareerRowView[] = getCareerTimeline(c).map((row) => ({
     id: row.innings,
     n: row.innings,
     team: row.team,
@@ -73,29 +74,31 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
   }));
 
   const school = c.trainingAcademy;
-  const rows: CareerRowView[] = academy
-    ? [
-        ...innings,
-        {
-          id: academy.n,
-          n: academy.n,
-          team: academy.team,
-          // The short degree keeps the row to one line; the panel shows the full one.
-          role: school.degreeShort,
-          span: academy.span,
-          status: t.academy,
-          current: false,
-          detail: {
-            heading: `${t.innings} ${academy.n} ${sep} ${t.academy}`,
-            span: formatSpan(school.start, school.end),
-            title: school.school,
-            roleLine: `${school.degree} ${sep} ${school.honours}`,
-            balls: [`${copy.scout.cgpa} ${school.cgpa}`, ...school.extras],
-            footer: { kind: "link", label: t.academyLink, to: `${routes.trophies}#academy` },
-          },
-        },
-      ]
-    : innings;
+  const rows: CareerRowView[] = [
+    ...(academy
+      ? [
+          {
+            id: academy.n,
+            n: academy.n,
+            team: academy.team,
+            // The short degree keeps the row to one line; the panel shows the full one.
+            role: school.degreeShort,
+            span: academy.span,
+            status: t.academy,
+            current: false,
+            detail: {
+              heading: `${t.innings} ${academy.n} ${sep} ${t.academy}`,
+              span: formatSpan(school.start, school.end),
+              title: school.school,
+              roleLine: `${school.degree} ${sep} ${school.honours}`,
+              balls: [`${copy.scout.cgpa} ${school.cgpa}`, ...school.extras],
+              footer: { kind: "link", label: t.academyLink, to: `${routes.trophies}#academy` },
+            },
+          } satisfies CareerRowView,
+        ]
+      : []),
+    ...innings,
+  ];
 
   return {
     stats: [
@@ -111,6 +114,6 @@ export function buildCareerView(c: Content, copy: UiCopy, routes: typeof ROUTES)
     rows,
     legend: t.legend,
     viewCard: { label: t.viewCard, to: routes.card },
-    defaultId: rows[0]!.id,
+    defaultId: (rows.find((row) => row.current) ?? rows[rows.length - 1]!).id,
   };
 }

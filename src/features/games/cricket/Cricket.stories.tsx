@@ -53,7 +53,7 @@ export const Phone: StoryObj = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("button", { name: cricket.bowlPhone })).toBeVisible();
-    await expect(canvas.getByText("DEUTSCHE BANK")).toBeVisible();
+    await expect(canvas.getByText("PICT, PUNE")).toBeVisible();
   },
 };
 

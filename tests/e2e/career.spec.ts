@@ -42,7 +42,7 @@ test.describe("without JavaScript", () => {
     for (const line of BALLS) await expect(page.getByText(line, { exact: true })).toBeAttached();
   });
 
-  test("the academy is a third tab whose panel text is in the HTML, with the trophy room link inside it", async ({
+  test("the academy is the first tab, and its panel text is in the HTML, with the trophy room link inside it", async ({
     page,
   }) => {
     await page.goto(ROUTES.career);
@@ -72,13 +72,14 @@ test.describe("scorecard", () => {
     // Keys pressed before React has taken over the prerendered page do nothing.
     await waitForHydration(page);
     const tabs = page.getByRole("tab");
-    await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
+    // The career is told from the start (academy, internship, current role); the current role is open first.
+    await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("tabpanel")).toContainText(now!.role);
 
-    await tabs.first().focus();
-    await page.keyboard.press("ArrowDown");
+    await tabs.nth(2).focus();
+    await page.keyboard.press("ArrowUp");
     await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
-    await expect(tabs.first()).toHaveAttribute("aria-selected", "false");
+    await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "false");
     await expect(page.getByRole("tabpanel")).toBeVisible();
     await expect(page.getByRole("tabpanel")).toContainText("Graduate Analyst Intern");
     await expect(page.getByText(intern!.ballByBall[0]!, { exact: true })).toBeVisible();
@@ -91,12 +92,12 @@ test.describe("scorecard", () => {
     await page.goto(ROUTES.career);
     await waitForHydration(page);
     const tabs = page.getByRole("tab");
-    await tabs.first().focus();
-    await page.keyboard.press("ArrowDown");
+    await tabs.nth(2).focus();
+    await page.keyboard.press("ArrowUp");
     // Each press moves focus with the selection; wait for it before the next one.
     await expect(tabs.nth(1)).toBeFocused();
-    await page.keyboard.press("ArrowDown");
-    await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
+    await page.keyboard.press("ArrowUp");
+    await expect(tabs.nth(0)).toHaveAttribute("aria-selected", "true");
     const panel = page.getByRole("tabpanel");
     await expect(panel).toBeVisible();
     await expect(panel).toContainText(school);
@@ -151,8 +152,11 @@ test.describe("desktop", () => {
       mask: [
         // The COMM line animates in and out, so its box is not stable.
         commentaryBar(page),
-        // P3 (plan, spec §11): the real page adds the "03 ACADEMY" row the artboard does not draw.
-        page.getByRole("tab", { name: ACADEMY_TAB }),
+        // P3 and D-10 (spec §11): the real page adds the "ACADEMY" row and lists the career oldest first
+        // (owner, 2026-10-16), where the artboard draws the current role first.
+        page.getByRole("tab").nth(0),
+        page.getByRole("tab").nth(1),
+        page.getByRole("tab").nth(2),
       ],
     });
     expect(ratio).toBeLessThanOrEqual(0.02);

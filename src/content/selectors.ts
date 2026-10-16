@@ -93,26 +93,38 @@ export function getCareerRows(c: Content): CareerRow[] {
   }));
 }
 
+/**
+ * The career told from the start (owner, 2026-10-16): the academy is innings 01, then the roles oldest first,
+ * numbered on from it. The one order the cricket game and Career Stats both read.
+ */
+export function getCareerTimeline(c: Content): CareerRow[] {
+  const rows = getCareerRows(c);
+  // Oldest start first; two roles that began together keep the page's newest-first order, reversed.
+  return rows
+    .map((row, i) => ({ row, i, start: c.careerStats[i]!.start }))
+    .sort((x, y) => x.start.localeCompare(y.start) || y.i - x.i)
+    .map(({ row }, i) => ({ ...row, innings: String(i + 2).padStart(2, "0") }));
+}
+
 export function getInningsReveals(c: Content): InningsReveal[] {
-  const careers: InningsReveal[] = c.careerStats.map((row) => ({
-    kind: "career",
-    n: row.innings,
-    status: row.status,
-    team: row.team,
-    role: row.role,
-    span: formatSpan(row.start, row.end),
-  }));
   const a = c.trainingAcademy;
   return [
-    ...careers,
     {
       kind: "academy",
-      n: String(careers.length + 1).padStart(2, "0"),
+      n: "01",
       status: "ACADEMY",
       team: `${a.shortName}, ${a.city}`,
       role: a.degree,
       span: formatYearSpan(a.start, a.end),
     },
+    ...getCareerTimeline(c).map((row): InningsReveal => ({
+      kind: "career",
+      n: row.innings,
+      status: row.status,
+      team: row.team,
+      role: row.role,
+      span: row.span,
+    })),
   ];
 }
 

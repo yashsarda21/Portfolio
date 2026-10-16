@@ -48,7 +48,7 @@ test.describe("Mobile-Game.dc.html (390 x 844)", () => {
 
   // After ball 1, a SIX. What differs on purpose is masked and each box logged:
   //  - QUICK VIEW (A5, G11): the board has no such chip, so its box
-  //  - the reveal chip's eyebrow, drawn 10px and shown at 11px (A2), and the tag drawn 9px
+  //  - the reveal chip's words: its title and meta (D-10, the career told from the start) and its eyebrow, drawn 10px and shown at 11px (A2), and the tag drawn 9px
   test("the phone after ball 1 matches the artboard", async ({ page }) => {
     await page.goto(story("features-games-cricket--phone-artboard-parity"));
     const column = page.locator("#storybook-root [data-game-column]");
@@ -56,7 +56,10 @@ test.describe("Mobile-Game.dc.html (390 x 844)", () => {
     await waitForFiniteAnimations(page);
     const boxes = await logged({
       "QUICK VIEW chip": column.getByRole("link", { name: "QUICK VIEW" }),
-      "reveal eyebrow": column.getByText("INNINGS 01 UNLOCKED · NOT OUT"),
+      "reveal eyebrow": column.getByText("INNINGS 01 UNLOCKED · ACADEMY"),
+      // Owner change 2026-10-16 (spec §11.4 D-10): innings 01 is the academy, the board draws the current role.
+      "reveal title": column.getByText("PICT, PUNE"),
+      "reveal meta": column.getByText("B.Tech, Information Technology · 2020 – 2024"),
       "ON STRIKE tag": column.getByText("YASH · ON STRIKE"),
     });
     const ratio = await expectMatchesArtboard(page, "Mobile-Game", {

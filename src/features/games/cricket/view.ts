@@ -117,11 +117,11 @@ export function buildCricketView(
   const score = `${runs}${copy.notOutMark}`;
   const saved = `${score} ${copy.notOut}`;
 
-  // G7: innings 01 and 02 are the first two roles, the third is the academy, however many roles the content grows.
+  // G7 (owner, 2026-10-16: told from the start): innings 01 is the academy, then the two most recent roles, oldest first.
   const reveals = getInningsReveals(content);
-  const careers = reveals.filter((r) => r.kind === "career").slice(0, CRICKET_BALLS - 1);
   const academy = reveals.find((r) => r.kind === "academy");
-  const innings = [...careers, ...(academy ? [academy] : [])].map((r, i) => ({
+  const careers = reveals.filter((r) => r.kind === "career").slice(-(CRICKET_BALLS - 1));
+  const innings = [...(academy ? [academy] : []), ...careers].map((r, i) => ({
     n: String(i + 1).padStart(2, "0"),
     status: r.status,
     team: r.team.toUpperCase(),

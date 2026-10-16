@@ -75,15 +75,15 @@ describe("buildCricketView", () => {
     expect(v.screen.count).toBe("1 / 3 UNLOCKED");
     expect(v.screen.slots[0]).toEqual({
       state: "open",
-      eyebrow: "INNINGS 01 · NOT OUT",
-      title: "DEUTSCHE BANK",
-      meta: "Software Engineer 1 · Jul 2024 – now",
+      eyebrow: "INNINGS 01 · ACADEMY",
+      title: "PICT, PUNE",
+      meta: "B.Tech, Information Technology · 2020 – 2024",
     });
     expect(v.screen.slots[1]).toMatchObject({ state: "locked", hint: "BOWL BALL 2" });
     expect(v.latest).toEqual({
-      eyebrow: "INNINGS 01 UNLOCKED · NOT OUT",
-      title: "DEUTSCHE BANK",
-      meta: "Software Engineer 1 · Jul 2024 – now",
+      eyebrow: "INNINGS 01 UNLOCKED · ACADEMY",
+      title: "PICT, PUNE",
+      meta: "B.Tech, Information Technology · 2020 – 2024",
     });
     expect(v.call).toEqual({ text: "SIX.", tone: "floodlight" });
     expect(v.comm).toBe(ui.games.cricket.comm.six);
@@ -122,9 +122,9 @@ describe("buildCricketView", () => {
     expect(v.screen.slots.every((s) => s.state === "open")).toBe(true);
     expect(v.screen.slots[2]).toEqual({
       state: "open",
-      eyebrow: "INNINGS 03 · ACADEMY",
-      title: "PICT, PUNE",
-      meta: "B.Tech, Information Technology · 2020 – 2024",
+      eyebrow: "INNINGS 03 · NOT OUT",
+      title: "DEUTSCHE BANK",
+      meta: "Software Engineer 1 · Jul 2024 – now",
     });
     expect(v.saved).toBe("14* NOT OUT");
     expect(v.comm).toBe(ui.games.cricket.comm.lastGood);
@@ -171,7 +171,7 @@ describe("buildCricketView", () => {
     }
   });
 
-  it("with a third career role the over still reveals innings 01, 02, then the academy", () => {
+  it("with a third career role the over still reveals the academy, then the two latest roles, oldest first", () => {
     const [first, second] = content.careerStats;
     const three = {
       ...content,
@@ -179,9 +179,9 @@ describe("buildCricketView", () => {
     };
     const v = view(play(["good", "good", "good"]), { phase: "end" }, three);
     expect(v.screen.slots.map((s) => s.state === "open" && s.eyebrow)).toEqual([
-      "INNINGS 01 · NOT OUT",
+      "INNINGS 01 · ACADEMY",
       "INNINGS 02 · DEBUT",
-      "INNINGS 03 · ACADEMY",
+      "INNINGS 03 · NOT OUT",
     ]);
     expect(JSON.stringify(v.screen.slots)).not.toContain("THIRD CO");
   });

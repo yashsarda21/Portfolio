@@ -36,13 +36,14 @@ describe("selectors", () => {
     expect(rows[1]!.shortRole).toBe("Intern");
   });
 
-  it("innings reveals add the academy as innings 03", () => {
+  it("innings reveals tell the career from the start: academy 01, then the roles oldest first", () => {
     const reveals = getInningsReveals(c);
-    expect(reveals.map((r) => r.status)).toEqual(["NOT OUT", "DEBUT", "ACADEMY"]);
-    expect(reveals.map((r) => r.kind)).toEqual(["career", "career", "academy"]);
-    expect(reveals[2]).toEqual({
+    expect(reveals.map((r) => r.status)).toEqual(["ACADEMY", "DEBUT", "NOT OUT"]);
+    expect(reveals.map((r) => r.kind)).toEqual(["academy", "career", "career"]);
+    expect(reveals.map((r) => r.n)).toEqual(["01", "02", "03"]);
+    expect(reveals[0]).toEqual({
       kind: "academy",
-      n: "03",
+      n: "01",
       status: "ACADEMY",
       team: "PICT, Pune",
       role: "B.Tech, Information Technology",

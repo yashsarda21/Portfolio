@@ -45,8 +45,8 @@ describe("Scorecard", () => {
     expect(tabs).toHaveLength(3);
     expect(tabs).toHaveLength(view.rows.length);
     expect(within(screen.getByRole("tablist")).queryByRole("link")).toBeNull();
-    expect(tabs[2]).toHaveAccessibleName(new RegExp(ui.pages.career.academy));
-    expect(tabs[2]).toHaveClass("group/item", "border-l-3");
+    expect(tabs[0]).toHaveAccessibleName(new RegExp(ui.pages.career.academy));
+    expect(tabs[0]).toHaveClass("group/item", "border-l-3");
   });
 
   it("shows the short degree in the academy row", () => {
