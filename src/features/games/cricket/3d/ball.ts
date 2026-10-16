@@ -1,4 +1,13 @@
-import { BALL_RADIUS, CONTACT_Z, GRAVITY, RELEASE, ROPE, type Vec3 } from "./field";
+import {
+  BALL_RADIUS,
+  BEATEN_PAST_X,
+  CONTACT_Z,
+  GRAVITY,
+  KEEPER_TAKE,
+  RELEASE,
+  ROPE,
+  type Vec3,
+} from "./field";
 import type { Delivery } from "./delivery";
 import type { BatShot } from "./director";
 
@@ -50,23 +59,24 @@ export function toRope(from: Vec3, dir: readonly [number, number]): number {
 export const groundTimeAt = (s: number) =>
   (GROUND.speed - Math.sqrt(Math.max(0, GROUND.speed ** 2 - 2 * GROUND.decel * s))) / GROUND.decel;
 
-/** The ball from the hand to `endZ` (default: the bat), pitching at the delivery's length; past the bat it carries on along the same line. */
-export function deliveryPath(d: Delivery, endZ = CONTACT_Z): DeliveryPath {
+/** The ball from the hand (`from`, default the usual release) to the bat, pitching at the delivery's length. */
+export function deliveryPath(d: Delivery, from: Vec3 = RELEASE): DeliveryPath {
   const v = d.speedKmh / 3.6;
-  const [rx, ry, rz] = RELEASE;
+  const [rx, ry, rz] = from;
   const batX = d.x + d.seam;
   if (d.pitchZ === null) {
-    const xAt = (z: number) => lerp(rx, batX, (rz - z) / (rz - CONTACT_Z));
-    const toBat = Math.hypot(batX - rx, rz - CONTACT_Z) / v;
-    const vy = (FULL_TOSS_Y - ry + (GRAVITY * toBat * toBat) / 2) / toBat;
-    const ex = xAt(endZ);
-    const T = Math.hypot(ex - rx, rz - endZ) / v;
+    const T = Math.hypot(batX - rx, rz - CONTACT_Z) / v;
+    const vy = (FULL_TOSS_Y - ry + (GRAVITY * T * T) / 2) / T;
     return {
       duration: T,
       bounceAt: null,
       at: (t) => {
         const s = clampT(t, T);
-        return [lerp(rx, ex, s / T), Math.max(BALL_RADIUS, fall(ry, vy, s)), lerp(rz, endZ, s / T)];
+        return [
+          lerp(rx, batX, s / T),
+          Math.max(BALL_RADIUS, fall(ry, vy, s)),
+          lerp(rz, CONTACT_Z, s / T),
+        ];
       },
     };
   }
@@ -75,8 +85,7 @@ export function deliveryPath(d: Delivery, endZ = CONTACT_Z): DeliveryPath {
   const t1 = Math.hypot(bx - rx, rz - pz) / v;
   const vy1 = (BALL_RADIUS - ry + (GRAVITY * t1 * t1) / 2) / t1;
   const vyOut = -(vy1 - GRAVITY * t1) * BOUNCE.vertical;
-  const ex = lerp(bx, batX, (pz - endZ) / (pz - CONTACT_Z));
-  const t2 = Math.hypot(ex - bx, pz - endZ) / (v * BOUNCE.horizontal);
+  const t2 = Math.hypot(batX - bx, pz - CONTACT_Z) / (v * BOUNCE.horizontal);
   const T = t1 + t2;
   return {
     duration: T,
@@ -86,10 +95,45 @@ export function deliveryPath(d: Delivery, endZ = CONTACT_Z): DeliveryPath {
       if (s <= t1) return [lerp(rx, bx, s / t1), fall(ry, vy1, s), lerp(rz, pz, s / t1)];
       const u = s - t1;
       return [
-        lerp(bx, ex, u / t2),
+        lerp(bx, batX, u / t2),
         Math.max(BALL_RADIUS, fall(BALL_RADIUS, vyOut, u)),
-        lerp(pz, endZ, u / t2),
+        lerp(pz, CONTACT_Z, u / t2),
       ];
+    },
+  };
+}
+
+export interface BeatenPath extends DeliveryPath {
+  /** Seconds from the release to the moment it passes the bat. */
+  readonly batAt: number;
+}
+
+/**
+ * A ball that beats the bat: as bowled to the bat, then on past it just outside off stump (never through the stumps,
+ * whatever its line) and into the keeper's gloves. Past the bat it is aimed, not carried on along its line: a small
+ * angle off the seam over 0.4 m would become metres over the 14 m to the keeper.
+ */
+export function beatenPath(d: Delivery, from: Vec3 = RELEASE): BeatenPath {
+  const toBat = deliveryPath(d, from);
+  const tb = toBat.duration;
+  const [x0, y0] = toBat.at(tb);
+  const [kx, ky, kz] = KEEPER_TAKE;
+  const speed = (d.speedKmh / 3.6) * (d.pitchZ === null ? 1 : BOUNCE.horizontal);
+  const T =
+    (Math.hypot(BEATEN_PAST_X - x0, CONTACT_Z) + Math.hypot(kx - BEATEN_PAST_X, kz)) / speed;
+  const vy = (ky - y0 + (GRAVITY * T * T) / 2) / T;
+  const zAt = (u: number) => lerp(CONTACT_Z, kz, u / T);
+  const xAt = (z: number) =>
+    z >= 0 ? lerp(BEATEN_PAST_X, x0, z / CONTACT_Z) : lerp(BEATEN_PAST_X, kx, z / kz);
+  return {
+    duration: tb + T,
+    bounceAt: toBat.bounceAt,
+    batAt: tb,
+    at: (t) => {
+      if (t <= tb) return toBat.at(t);
+      const u = clampT(t - tb, T);
+      const z = zAt(u);
+      return [xAt(z), Math.max(BALL_RADIUS, fall(y0, vy, u)), z];
     },
   };
 }
@@ -109,7 +153,7 @@ export function shotPath(kind: BatShot, bearing: number, from: Vec3): ShotPath {
       },
     };
   }
-  if (kind === "loft" || kind === "pull") {
+  if (kind === "loft" || kind === "pull" || kind === "cut") {
     const a = rad(AIR.angleDeg);
     const v = Math.sqrt(((toRope(from, dir) + AIR.intoStands) * GRAVITY) / Math.sin(2 * a));
     const vh = v * Math.cos(a);

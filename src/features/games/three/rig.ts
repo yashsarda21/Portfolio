@@ -29,6 +29,7 @@ export const LIBRARY_CLIPS = {
   walk: "Walk_Loop",
   jog: "Jog_Fwd_Loop",
   sprint: "Sprint_Loop",
+  // No longer played (the keeper and slip wait in poses made in code); dropping it means re-running tools/models.mjs.
   crouch: "Crouch_Idle_Loop",
 } as const;
 
@@ -49,8 +50,8 @@ export const KIT_REGIONS = {
   hip: 0.949,
   // neck_01 bone y.
   neck: 1.52,
-  // |x| a little short of lowerarm_l (x 0.463): sleeves to just above the elbow (halfway, 0.3375, left skin showing
-  // on top of the shoulders once the arms come down).
+  // |x| a little short of lowerarm_l (x 0.463): sleeves to just above the elbow (halfway along the upper arm, 0.3375,
+  // left skin showing on top of the shoulders once the arms come down).
   sleeve: 0.42,
 } as const;
 

@@ -2,7 +2,7 @@ import type { Quality } from "../../engine/types";
 import type { CricketCall } from "../referee";
 import type { Delivery } from "./delivery";
 
-export type BatShot = "dugOut" | "drive" | "flick" | "pull" | "loft";
+export type BatShot = "dugOut" | "drive" | "flick" | "pull" | "cut" | "loft";
 export type ShotKind = BatShot | "beaten";
 export interface Shot {
   kind: ShotKind;
@@ -17,6 +17,10 @@ export const BEARINGS = {
   legDrive: [40, 55],
   flick: [45, 60],
   pull: [60, 80],
+  /** Square on the off side, through point: a yorker squeezed out on OFF. */
+  point: [-95, -75],
+  /** Up over point and third man: a short ball cut on OFF. */
+  cut: [-110, -80],
   loftOff: [-25, -15],
   loftStraight: [0, 10],
   loftLeg: [15, 25],
@@ -24,7 +28,8 @@ export const BEARINGS = {
 
 /**
  * Yash's answer to a ball (spec §4.3). The referee's call never changes; the shot is the one its commentary line
- * describes, and only the exact direction is random.
+ * describes, and only the exact direction is random. The shot goes to the side the ball was bowled: an OFF ball only
+ * ever to the off side (a negative bearing), a LEG ball only to the leg side; a MIDDLE ball may go either way.
  */
 export function pickShot(
   { call, q, last }: { call: CricketCall; q: Quality; last: boolean },
@@ -40,13 +45,19 @@ export function pickShot(
   ) => (d.line === "off" ? pick(off) : d.line === "leg" ? pick(leg) : either(middle));
   if (call === "dot") return { kind: d.line === "off" ? "beaten" : "dugOut", bearing: 0 };
   if (call === "four") {
-    if (last && q === "perfect") return { kind: "flick", bearing: pick(BEARINGS.flick) };
+    if (last && q === "perfect")
+      return d.line === "off"
+        ? { kind: "drive", bearing: pick(BEARINGS.point) }
+        : { kind: "flick", bearing: pick(BEARINGS.flick) };
     return {
       kind: "drive",
       bearing: byLine(BEARINGS.coverDrive, BEARINGS.straight, BEARINGS.legDrive),
     };
   }
-  if (d.pitchZ !== null) return { kind: "pull", bearing: pick(BEARINGS.pull) };
+  if (d.pitchZ !== null)
+    return d.line === "off"
+      ? { kind: "cut", bearing: pick(BEARINGS.cut) }
+      : { kind: "pull", bearing: pick(BEARINGS.pull) };
   return {
     kind: "loft",
     bearing: byLine(BEARINGS.loftOff, BEARINGS.loftStraight, BEARINGS.loftLeg),

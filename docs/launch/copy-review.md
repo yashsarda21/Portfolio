@@ -59,10 +59,12 @@ Two things to keep in mind while you read: letters in capitals are drawn in capi
 |---|---|---|---|---|
 | `games.cricket.comm.beaten` | Beaten! Missed off stump by a whisker. | The commentary line after a 3D dot ball bowled on the OFF line (Yash misses it). | code mark | |
 | `games.cricket.comm.sixFull` | Full toss. Thank you very much. | The commentary line after a 3D six off a full toss. | code mark | |
+| `games.cricket.comm.lastPerfectOff` | Perfect yorker. Squeezed through point anyway. Still not out. | The commentary line after a perfect 3D ball 3 bowled on the OFF line (squeezed out through point, not flicked to leg). | code mark | |
 | `games.cricket.release` | RELEASE · SPACE | The 3D game's BOWL button while the bowler runs in (desktop). | code mark | |
 | `games.cricket.releasePhone` | TAP TO RELEASE | The same button on a phone. | code mark | |
 | `games.cricket.line.label` | LINE | The name of the OFF / MIDDLE / LEG control beside BOWL (3D). | code mark | |
 | `games.cricket.line.keys` | ← → | The keys that change the line, shown after LINE (desktop). | code mark | |
+| `games.cricket.line.said` | LINE: {line} | What a screen reader hears when the line changes in the 3D game ({line} is OFF, MIDDLE or LEG). | code mark | |
 | `games.cricket.line.off` | OFF | The line buttons (3D). | code mark | |
 | `games.cricket.line.middle` | MIDDLE | The line buttons (3D). | code mark | |
 | `games.cricket.line.leg` | LEG | The line buttons (3D). | code mark | |

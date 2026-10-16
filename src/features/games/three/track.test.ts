@@ -25,6 +25,8 @@ describe("sampleTrack", () => {
     expect(clips.map((c) => c.clip)).toEqual(["bowl", "run"]);
     expect(clips[0]!.weight + clips[1]!.weight).toBeCloseTo(1);
     expect(clips[0]!.time).toBeCloseTo(0.1 + CROSSFADE_S / 2);
+    const slow = { ...track, clips: [track.clips[0]!, { ...track.clips[1]!, fade: 0.6 }] };
+    expect(sampleTrack(slow, 1.3).clips[0]!.weight).toBeCloseTo(0.5); // its own, longer hand-over
   });
   it("moves along each walk in turn, with its easing and facing", () => {
     expect(sampleTrack(track, 0.5).position).toEqual([0, 0, 5]);

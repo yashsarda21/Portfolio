@@ -20,9 +20,13 @@ import {
   type CricketState,
 } from "./referee";
 
-/** The line for a ball: as the referee says, except a 3D dot on an OFF line (beaten) and a 3D full toss for six (spec §4.3). */
+/**
+ * The line for a ball: as the referee says, except in 3D a dot on an OFF line (beaten), a full toss for six, and a
+ * perfect ball 3 on OFF (squeezed through point: the shot goes to the side it was bowled) (spec §4.3).
+ */
 function commFor(comm: UiCopy["games"]["cricket"]["comm"], ball: CricketBall): string {
   if (ball.call === "dot" && ball.aim === "off") return comm.beaten;
+  if (ball.line === "lastPerfect" && ball.aim === "off") return comm.lastPerfectOff;
   if (ball.line === "six" && ball.full) return comm.sixFull;
   return comm[ball.line];
 }
@@ -226,6 +230,8 @@ export interface Cricket3dControls {
     label: string;
     keys: string;
     options: { id: CricketAim; label: string; pressed: boolean }[];
+    /** What a screen reader hears when the line changes: "LINE: OFF". */
+    said: string;
   };
   bowl: { label: string; labelPhone: string };
   /** "143 KM/H" from the release until the next one; null before the first ball. */
@@ -246,6 +252,7 @@ export function buildCricket3dControls(
       label: copy.line.label,
       keys: copy.line.keys,
       options: LINES.map((id) => ({ id, label: copy.line[id], pressed: id === aim })),
+      said: copy.line.said.replace("{line}", copy.line[aim]),
     },
     bowl: runup
       ? { label: copy.release, labelPhone: copy.releasePhone }

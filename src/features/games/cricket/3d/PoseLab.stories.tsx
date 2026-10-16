@@ -19,6 +19,7 @@ const BALLS: Record<
   flick: { speedKmh: 143, pitchZ: 2, bearing: { off: 52, middle: 52, leg: 52 } },
   pull: { speedKmh: 124, pitchZ: 8, bearing: { off: 70, middle: 70, leg: 70 } },
   loft: { speedKmh: 124, pitchZ: null, bearing: { off: -20, middle: 5, leg: 20 } },
+  cut: { speedKmh: 124, pitchZ: 8, bearing: { off: -95, middle: -95, leg: -95 } },
 };
 
 /** Close views for judging a pose (the TV view is the shotlist's own camera). */
@@ -28,6 +29,9 @@ const VIEWS = {
   yashBehind: { position: [0.3, 1.8, -8.5], target: [0.35, 0.9, 1.3] },
   bowler: { position: [-9, 1.8, 19], target: [0.6, 1.2, 19.5] },
   keeper: { position: [-6, 1.4, -8], target: [-0.4, 0.7, -12.8] },
+  keeperFront: { position: [-1.2, 1.3, -9], target: [-0.4, 0.5, -13] },
+  slip: { position: [-6.5, 1.3, -11], target: [-2.4, 0.6, -13.5] },
+  slipFront: { position: [-3.2, 1.3, -9.5], target: [-2.4, 0.55, -13.5] },
   cover: { position: [-6.5, 2.2, 6.5], target: [-14.5, 0.5, 14.5] },
 } as const satisfies Record<string, CameraPose>;
 
@@ -102,7 +106,10 @@ const meta: Meta<LabArgs> = {
     view: "tv",
   },
   argTypes: {
-    shot: { control: "select", options: ["dugOut", "beaten", "drive", "flick", "pull", "loft"] },
+    shot: {
+      control: "select",
+      options: ["dugOut", "beaten", "drive", "flick", "pull", "cut", "loft"],
+    },
     line: { control: "inline-radio", options: ["off", "middle", "leg"] },
     t: { control: { type: "range", min: 0, max: 10, step: 0.02 } },
     layout: { control: "inline-radio", options: ["stage", "column"] },

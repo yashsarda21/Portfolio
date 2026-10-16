@@ -13,17 +13,34 @@ export type ActorId = "yash" | "bowler" | "keeper" | "slip" | "cover" | "midwick
 export const PITCH = { length: 20.12, width: 3.05, crease: 1.22 } as const;
 export const GRAVITY = 9.81;
 export const BALL_RADIUS = 0.036;
-/** Where the ball leaves the bowler's hand (right arm, over the wicket). */
-export const RELEASE: Vec3 = [0.35, 2.2, 18.9];
 /** Where the bat meets the ball, along the pitch. */
 export const CONTACT_Z = 1.6;
-/** Where the keeper takes a ball that beats the bat. */
-export const KEEPER_TAKE_Z = -12.4;
+/** Where the keeper's gloves take a ball that beats the bat (in front of his chest as he rises out of the squat). */
+export const KEEPER_TAKE: Vec3 = [-0.4, 0.8, -12.5];
+/**
+ * A ball that beats the bat passes the stumps this far to the off side (x at z 0): clear of off stump's outer edge
+ * (0.132 m) by the ball as drawn (three times its radius).
+ */
+export const BEATEN_PAST_X = -0.26;
 /** The boundary rope: a circle on the ground around the pitch's middle. */
 export const ROPE = { centre: [0, 0, PITCH.length / 2] as Vec3, radius: 65 };
 /** The bowler's mark, and where his run-up leaps. */
 export const MARK: Vec3 = [0.6, 0, 31];
 export const JUMP_Z = 20.2;
+/**
+ * The ball in the bowler's right hand at the release, in his own frame (x his left, y up, z his front): measured on the
+ * rig at the bowling clip's release key (RELEASE_AFTER), the ball in his fingers.
+ */
+export const RELEASE_HAND: Vec3 = [0.2, 1.98, 1.06];
+/** Where the ball leaves the hand of a bowler standing at `at`, turned to `face` (radians, as `faceOf`). */
+export function releaseFrom(at: Vec3, face: number): Vec3 {
+  const [x, y, z] = RELEASE_HAND;
+  const c = Math.cos(face);
+  const s = Math.sin(face);
+  return [at[0] + x * c + z * s, at[1] + y, at[2] - x * s + z * c];
+}
+/** The usual release: right arm over the wicket, from the leap at the crease. */
+export const RELEASE: Vec3 = releaseFrom([MARK[0], 0, JUMP_Z], Math.PI);
 /** The line at the bat for each choice (m): just outside off stump, middle, on the pads. */
 export const LINE_X: Record<CricketAim, number> = { off: -0.15, middle: 0, leg: 0.12 };
 

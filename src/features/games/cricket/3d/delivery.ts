@@ -12,8 +12,8 @@ export const SPEED_KMH: Record<Quality, readonly [number, number]> = {
 export const SCATTER_M: Record<Quality, number> = { perfect: 0, good: 0.08, miss: 0.2 };
 /** Where balls pitch (z, m): the yorker at the meter's centre, the shortest at its left end, never fuller than `fullest`. */
 export const LENGTH_Z = { yorker: 2.0, short: 11.0, fullest: 1.7 } as const;
-/** The largest sideways nudge (m) off the seam, by the time the ball reaches the bat. */
-export const SEAM_M = 0.1;
+/** The largest sideways nudge (m) off the seam by the time the ball reaches the bat; a perfect ball is right on the spot. */
+export const SEAM_M: Record<Quality, number> = { perfect: 0, good: 0.1, miss: 0.1 };
 
 export interface Delivery {
   speedKmh: number;
@@ -40,6 +40,6 @@ export function planDelivery(
         ? Math.max(LENGTH_Z.fullest, LENGTH_Z.yorker - (p - 0.5) * 2)
         : LENGTH_Z.yorker + ((0.5 - p) / 0.5) * (LENGTH_Z.short - LENGTH_Z.yorker);
   const x = LINE_X[line] + (rand() * 2 - 1) * SCATTER_M[quality];
-  const seam = pitchZ === null ? 0 : (rand() * 2 - 1) * SEAM_M;
+  const seam = pitchZ === null ? 0 : (rand() * 2 - 1) * SEAM_M[quality];
   return { speedKmh, pitchZ, x, seam, line };
 }

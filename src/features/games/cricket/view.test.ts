@@ -215,6 +215,14 @@ describe("buildCricketView", () => {
     expect(view(full).comm).toBe(comm.sixFull);
     expect(view(play(["miss"])).comm).toBe(comm.six);
   });
+
+  it("3D: a perfect ball 3 on OFF is squeezed through point; on LEG still flicked; 2D unchanged", () => {
+    const comm = ui.games.cricket.comm;
+    const two = play(["perfect", "perfect"]);
+    expect(view(bowl(two, "perfect", { aim: "off", full: false })).comm).toBe(comm.lastPerfectOff);
+    expect(view(bowl(two, "perfect", { aim: "leg", full: false })).comm).toBe(comm.lastPerfect);
+    expect(view(play(["perfect", "perfect", "perfect"])).comm).toBe(comm.lastPerfect);
+  });
 });
 
 describe("buildCricket3dControls", () => {
@@ -231,6 +239,7 @@ describe("buildCricket3dControls", () => {
     const runup = buildCricket3dControls(ui, { phase: "runup", aim: "off", speedKmh: null });
     expect(runup.bowl).toEqual({ label: copy.release, labelPhone: copy.releasePhone });
     expect(runup.lines.options.find((o) => o.pressed)?.id).toBe("off");
+    expect(runup.lines.said).toBe(`${copy.line.label}: ${copy.line.off}`);
   });
 
   it("the speed gun reads 143 KM/H once a ball is bowled, and nothing before", () => {

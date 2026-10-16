@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sampleTrack } from "../../three/track";
-import { deliveryPath } from "./ball";
 import type { Delivery } from "./delivery";
-import { CAMERA, homeOf, JUMP_Z, MARK } from "./field";
+import { CAMERA, CONTACT_Z, homeOf, JUMP_Z, MARK } from "./field";
 import {
   ballShotlist,
   clapTimes,
@@ -10,6 +9,7 @@ import {
   RELEASE_AFTER,
   RUNUP,
   SHOT_CONTACT,
+  sweepAt,
   walkBackShotlist,
 } from "./sequence";
 
@@ -32,7 +32,31 @@ describe("clapTimes", () => {
   });
 });
 
+describe("sweepAt", () => {
+  it("the meter's centre is the final leap (spec §7)", () => {
+    expect(sweepAt(LEAP_AT * 1000)).toBeCloseTo(0.5, 9);
+    expect(sweepAt(0)).toBe(0);
+    expect(sweepAt(99_999)).toBe(1);
+  });
+});
+
 describe("ballShotlist", () => {
+  it("the ball leaves the bowler's hand where he lets go, for an early, a centre and a late press (review I2)", () => {
+    for (const m of [0, 0.5, 1]) {
+      const pressAt = RUNUP.approach + m * RUNUP.sweep;
+      const s = ballShotlist(0, { ...plan("drive"), pressAt });
+      const release = pressAt + RELEASE_AFTER;
+      const him = sampleTrack(s.actors.bowler, release).position;
+      const ball = s.ball(release)!;
+      // His right hand at the release, measured in the Pose Lab: about 1.98 m up, 1.06 m in front of him, 0.2 m to
+      // his left; he faces down the pitch (-z), so in front is -z and his left is -x.
+      const hand = [him[0] - 0.2, 1.98, him[2] - 1.06];
+      expect(Math.hypot(ball[0] - hand[0]!, ball[1] - hand[1]!, ball[2] - hand[2]!)).toBeLessThan(
+        0.05,
+      );
+      expect(s.ball(release - 0.01)).toBeNull();
+    }
+  });
   it("before the release press, the bowler runs in to the leap and there is no ball", () => {
     const s = ballShotlist(0, null);
     expect(s.ball(1)).toBeNull();
@@ -43,10 +67,11 @@ describe("ballShotlist", () => {
     const p = plan("drive");
     const s = ballShotlist(0, p);
     const release = p.pressAt + RELEASE_AFTER;
-    const contact = release + deliveryPath(delivery).duration;
     const shot = s.actors.yash.clips.find((c) => c.clip === "drive")!;
-    expect(shot.start).toBeCloseTo(contact - SHOT_CONTACT.drive);
-    expect(s.ball(contact)).toEqual(deliveryPath(delivery).at(deliveryPath(delivery).duration));
+    const contact = shot.start + SHOT_CONTACT.drive;
+    expect(contact).toBeGreaterThan(release + 0.4);
+    expect(s.ball(contact)![2]).toBeCloseTo(CONTACT_Z, 3);
+    expect(s.ball(contact)![0]).toBeCloseTo(delivery.x, 3);
     expect(s.cues).toContainEqual({ at: contact, sound: "bat" });
     expect(s.cues.some((c) => c.sound === "crowd" && c.at > contact)).toBe(true);
     expect(s.cues.some((c) => c.sound === "clap")).toBe(false);

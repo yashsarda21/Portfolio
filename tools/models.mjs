@@ -1,5 +1,5 @@
 // The asset step for the 3D games (Phase 8): turns two free CC0 Quaternius packs into small web files.
-// Run by hand, once; it is not part of the build.
+// Run by hand, once; it is not part of the build. macOS only: the skin is converted with sips, the macOS image tool.
 //
 // Usage:  node tools/models.mjs <folder holding ubc/ and ual/>
 //

@@ -474,7 +474,14 @@ export const ui = {
       bowlPhone: "TAP TO BOWL",
       release: "RELEASE · SPACE", // derived (Phase 8)
       releasePhone: "TAP TO RELEASE", // derived (Phase 8)
-      line: { label: "LINE", keys: "← →", off: "OFF", middle: "MIDDLE", leg: "LEG" }, // derived (Phase 8)
+      line: {
+        label: "LINE",
+        keys: "← →",
+        off: "OFF",
+        middle: "MIDDLE",
+        leg: "LEG",
+        said: "LINE: {line}",
+      }, // derived (Phase 8)
       loading: "PREPARING THE PITCH", // derived (Phase 8)
       how3d:
         "Pick a line, run in, and release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.", // derived (Phase 8)
@@ -490,6 +497,7 @@ export const ui = {
         lastSix: "Into the second tier. Still not out.",
         beaten: "Beaten! Missed off stump by a whisker.", // derived (Phase 8)
         sixFull: "Full toss. Thank you very much.", // derived (Phase 8)
+        lastPerfectOff: "Perfect yorker. Squeezed through point anyway. Still not out.", // derived (Phase 8)
       },
       see: "SEE THE FULL SCORECARD",
       again: "BOWL AGAIN",

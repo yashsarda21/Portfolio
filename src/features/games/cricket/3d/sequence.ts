@@ -1,7 +1,7 @@
 import type { SoundName } from "@/shell/audio";
 import { CRICKET_PERIOD_MS } from "../referee";
 import { lerp3, sampleTrack, type ActorTrack, type Move, type Vec3 } from "../../three/track";
-import { deliveryPath, groundTimeAt, heading, shotPath } from "./ball";
+import { beatenPath, deliveryPath, groundTimeAt, heading, shotPath } from "./ball";
 import type { Delivery } from "./delivery";
 import type { Shot } from "./director";
 import {
@@ -9,10 +9,10 @@ import {
   CAMERA,
   FIELDERS,
   JUMP_Z,
-  KEEPER_TAKE_Z,
   MARK,
   faceOf,
   homeOf,
+  releaseFrom,
   type ActorId,
   type CameraPose,
 } from "./field";
@@ -23,6 +23,8 @@ export type CricketClip =
   | "jog"
   | "sprint"
   | "crouch"
+  | "keeperWait"
+  | "slipWait"
   | "stance"
   | "bowl"
   | "dugOut"
@@ -31,6 +33,7 @@ export type CricketClip =
   | "flick"
   | "pull"
   | "loft"
+  | "cut"
   | "keeperTake"
   | "dive";
 export type Track = ActorTrack<CricketClip>;
@@ -63,6 +66,9 @@ export const RUNUP = { approach: 1.2, sweep: CRICKET_PERIOD_MS / 1000, strides: 
 export const LEAP_AT = RUNUP.approach + RUNUP.sweep / 2;
 /** The meter's end: no press by now is released as a full toss. */
 export const RUNUP_END = RUNUP.approach + RUNUP.sweep;
+/** The meter's place (0 to 1) at a run-up time (ms): still through the approach, then one sweep to the end. */
+export const sweepAt = (ms: number) =>
+  Math.min(1, Math.max(0, (ms - RUNUP.approach * 1000) / CRICKET_PERIOD_MS));
 /** The bowling action lets go this long after it starts; each bat shot meets the ball this far into its clip. */
 export const RELEASE_AFTER = 0.3;
 export const SHOT_CONTACT: Record<Shot["kind"], number> = {
@@ -71,8 +77,15 @@ export const SHOT_CONTACT: Record<Shot["kind"], number> = {
   drive: 0.35,
   flick: 0.3,
   pull: 0.3,
+  cut: 0.3,
   loft: 0.4,
 };
+/**
+ * The hand-overs around a shot (s): from the guard into the shot, then, this long after the bat meets the ball, out of
+ * its held finish into the idle, slowly enough to read as settling rather than snapping back. Out is done before the
+ * shortest ball ends (a dot), so the walk back starts from the idle.
+ */
+export const SHOT_FADE = { in: 0.2, outAfter: 0.95, out: 0.4 } as const;
 export const DIVE_REACH = 0.35;
 export const RUN_SPEED = 7;
 export const CHASE_WITHIN = 15;
@@ -92,7 +105,7 @@ const blend = (a: CameraPose, b: CameraPose, f: number): CameraPose => ({
 });
 const aim = () => CAMERA.aim;
 const restClip = (id: ActorId): CricketClip =>
-  id === "yash" ? "stance" : id === "keeper" || id === "slip" ? "crouch" : "idle";
+  id === "yash" ? "stance" : id === "keeper" ? "keeperWait" : id === "slip" ? "slipWait" : "idle";
 
 /** Everyone in place before ball `ball` (0 to 2), in their waiting moves. */
 export function standing(ball: number): Record<ActorId, Track> {
@@ -177,6 +190,8 @@ export function ballShotlist(ball: number, plan: BallPlan | null): Shotlist {
   const { delivery, shot, pressAt } = plan;
   const release = pressAt + RELEASE_AFTER;
   const atPress = sampleTrack(actors.bowler, pressAt).position;
+  // The ball leaves his hand where he is when he lets go (he stops where the press found him), not a fixed point.
+  const hand = releaseFrom(atPress, actors.bowler.face);
   actors.bowler.clips.push(
     { clip: "bowl", start: pressAt },
     { clip: "idle", start: release + 1.0, loop: true },
@@ -186,21 +201,21 @@ export function ballShotlist(ball: number, plan: BallPlan | null): Shotlist {
     { start: release, end: release + 0.8, to: [atPress[0], 0, atPress[2] - 3], ease: "out" },
   ];
 
-  const toBat = deliveryPath(delivery);
+  const toBat = deliveryPath(delivery, hand);
   const contact = release + toBat.duration;
   actors.yash.clips.push(
-    { clip: shot.kind, start: contact - SHOT_CONTACT[shot.kind] },
-    { clip: "idle", start: contact + 1.2, loop: true },
+    { clip: shot.kind, start: contact - SHOT_CONTACT[shot.kind], fade: SHOT_FADE.in },
+    { clip: "idle", start: contact + SHOT_FADE.outAfter, loop: true, fade: SHOT_FADE.out },
   );
   const cues: Cue[] = [];
   if (toBat.bounceAt !== null) cues.push({ at: release + toBat.bounceAt, sound: "bounce" });
 
   if (shot.kind === "beaten") {
-    const past = deliveryPath(delivery, KEEPER_TAKE_Z);
+    const past = beatenPath(delivery, hand);
     const take = release + past.duration;
     actors.keeper.clips.push(
       { clip: "keeperTake", start: take - 0.25 },
-      { clip: "crouch", start: take + 1.0, loop: true },
+      { clip: "keeperWait", start: take + 1.0, loop: true, fade: 0.3 },
     );
     cues.push({ at: contact, sound: "ooh" });
     return {
@@ -224,11 +239,15 @@ export function ballShotlist(ball: number, plan: BallPlan | null): Shotlist {
           ? after.at(t - contact)
           : null;
   cues.push({ at: contact, sound: "bat" });
+  // The cheer as it reaches the rope; on the last ball too, where the over's end then stays quiet (no second cheer).
   if (after.boundaryAt !== null) cues.push({ at: contact + after.boundaryAt, sound: "crowd" });
   if (shot.kind === "drive" || shot.kind === "flick") chase(actors, shot.bearing, from, contact);
 
   const [dx, dz] = heading(shot.bearing);
-  const lift = shot.kind === "pull" || shot.kind === "loft" ? FOLLOW.air : FOLLOW.ground;
+  const lift =
+    shot.kind === "pull" || shot.kind === "loft" || shot.kind === "cut"
+      ? FOLLOW.air
+      : FOLLOW.ground;
   const camera = (t: number): CameraPose => {
     if (shot.kind === "dugOut" || t <= contact) return aim();
     const now = Math.min(t, flightEnd);
@@ -254,10 +273,12 @@ export function walkBackShotlist(prev: Shotlist, next: number): Shotlist {
     a.face = was.face;
     const far = Math.hypot(to[0] - was.position[0], to[2] - was.position[2]) > 0.3;
     if (!far) {
+      // Yash's idle carries on where it was, and he settles into his guard.
+      const idle = was.clips[0]?.clip === "idle" ? was.clips[0].time : 0;
       if (id === "yash")
         a.clips = [
-          { clip: "idle", start: 0, loop: true },
-          { clip: "stance", start: 1.6, loop: true },
+          { clip: "idle", start: 0, loop: true, from: idle },
+          { clip: "stance", start: 1.6, loop: true, fade: 0.4 },
         ];
       continue;
     }

@@ -9,6 +9,8 @@ export interface ClipSeg<C extends string = string> {
   /** Playback speed (default 1). */
   speed?: number;
   loop?: boolean;
+  /** Seconds the clip before this one takes to hand over to it (default `CROSSFADE_S`). */
+  fade?: number;
 }
 /** A walk from wherever the actor is to `to`, from `start` to `end` (moves do not overlap and are in order). */
 export interface Move {
@@ -37,7 +39,7 @@ export interface ActorSample<C extends string = string> {
   clips: ClipSample<C>[];
 }
 
-/** How long one clip takes to hand over to the next. */
+/** How long one clip takes to hand over to the next, unless it says otherwise. */
 export const CROSSFADE_S = 0.15;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -81,7 +83,7 @@ export function sampleTrack<C extends string>(track: ActorTrack<C>, t: number): 
     if (first) clips.push(sampleClip(first, first.start, 1));
   } else {
     const current = track.clips[i]!;
-    const w = i > 0 ? clamp01((t - current.start) / CROSSFADE_S) : 1;
+    const w = i > 0 ? clamp01((t - current.start) / (current.fade ?? CROSSFADE_S)) : 1;
     clips.push(sampleClip(current, t, w));
     if (w < 1) clips.push(sampleClip(track.clips[i - 1]!, t, 1 - w));
   }
