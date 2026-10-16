@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { canUse3d } from "./support";
 
 /** How long the 3D files get before the game falls back to the 2D one. */
@@ -26,8 +26,10 @@ const OFF = { status: "off", progress: 0, value: null } as const;
 
 /**
  * Decides whether a game gets its 3D scene. It starts "loading" on the server and the client alike (so hydration
- * matches the prerender). With reduced motion or without WebGL2 it is "off" at once and loads nothing; otherwise it
- * runs `load`, and a rejection or `THREE_TIMEOUT_MS` also turns it "off". Whatever arrives after that is ignored.
+ * matches the prerender). With reduced motion it is "off" at once and loads nothing. Otherwise, just after mount, in a
+ * task of its own, it checks WebGL2 (making a context can take a while: the hydrated page paints first): without it,
+ * "off"; with it, it runs `load`, and a rejection or `THREE_TIMEOUT_MS` also turns it "off". Whatever arrives after
+ * that is ignored.
  */
 export function useThreeGate<T>({
   reduced,
@@ -37,24 +39,18 @@ export function useThreeGate<T>({
   load: (onProgress: (fraction: number) => void) => Promise<T>;
 }): ThreeGate<T> {
   const [state, setState] = useState<GateState<T>>(LOADING);
-  // WebGL2 is probed once per gate. The server (and the hydrating client) assume yes, so both start at "loading".
-  const [probe] = useState<{ webgl2?: boolean }>(() => ({}));
-  const supported = useSyncExternalStore(
-    () => () => {},
-    () => (probe.webgl2 ??= canUse3d()),
-    () => true,
-  );
-  const unavailable = reduced || !supported;
   const loadRef = useRef(load);
   useEffect(() => {
     loadRef.current = load;
   });
 
   useEffect(() => {
-    if (unavailable) return;
+    if (reduced) return;
     let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const stop = () => {
       live = false;
+      clearTimeout(probe);
       clearTimeout(timer);
     };
     const off = () => {
@@ -62,27 +58,30 @@ export function useThreeGate<T>({
       stop();
       setState({ status: "off", progress: 0, value: null });
     };
-    const timer = setTimeout(off, THREE_TIMEOUT_MS);
-    loadRef
-      .current((fraction) => {
-        if (!live) return;
-        setState((s) =>
-          s.status === "loading" && fraction > s.progress ? { ...s, progress: fraction } : s,
-        );
-      })
-      .then((value) => {
-        if (!live) return;
-        stop();
-        setState({ status: "ready", progress: 1, value });
-      }, off);
+    const probe = setTimeout(() => {
+      if (!canUse3d()) return off();
+      timer = setTimeout(off, THREE_TIMEOUT_MS);
+      loadRef
+        .current((fraction) => {
+          if (!live) return;
+          setState((s) =>
+            s.status === "loading" && fraction > s.progress ? { ...s, progress: fraction } : s,
+          );
+        })
+        .then((value) => {
+          if (!live) return;
+          stop();
+          setState({ status: "ready", progress: 1, value });
+        }, off);
+    }, 0);
     return () => {
       stop();
       // A fresh load starts from "loading", not from an "off" left by the last one (a ready scene is kept).
       setState((s) => (s.status === "ready" ? s : LOADING));
     };
-  }, [unavailable]);
+  }, [reduced]);
 
   const fail = useCallback(() => setState({ status: "off", progress: 0, value: null }), []);
 
-  return { ...(unavailable ? OFF : state), fail };
+  return { ...(reduced ? OFF : state), fail };
 }

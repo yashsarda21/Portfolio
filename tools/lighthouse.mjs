@@ -37,6 +37,14 @@ const MOBILE = { name: "mobile", config: undefined };
 // phone profile is Lighthouse's default: a slow-4G network and a 4x slower CPU).
 const PHONE_FLOOR = 0.8;
 const MOBILE_FAST = { ...MOBILE, gate: { performance: PHONE_FLOOR } };
+// Cricket (owner decision, 2026-10-16): the gate measures the page's first load, as in every phase: the prerendered
+// page and the 2D game it falls back to without WebGL. Headless Chrome on a machine with a GPU has WebGL2, so the
+// gated runs switch it off (as the 2D e2e projects do). The 3D game is reported, never gated: the SwiftShader flags
+// give headless Chrome a software WebGL, so the page loads its 3D scene, models and render loop. SwiftShader draws
+// on the CPU, on the main thread's budget, so it overstates what a real device's GPU costs; Yash checks the 3D on
+// his own phone instead.
+const NO_3D = ["--disable-3d-apis"];
+const SWIFTSHADER = ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"];
 
 /**
  * The pages. Landing (spec 11.11, ruling L13): the full-motion run is reported for performance (the 3 s name
@@ -84,8 +92,17 @@ const PAGES = [
     variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   },
   // The three games (spec 11.13, G17): a game waits for the visitor and moves by transform only, so desktop
-  // carries the Hub's gates. Mobile is reported.
-  ...["/arena/cricket", "/arena/tennis", "/arena/badminton"].map((path) => ({
+  // carries the Hub's gates, and phones the floor. Cricket is gated without WebGL, and its 3D only reported (above).
+  {
+    path: "/arena/cricket",
+    variants: [
+      { ...DESKTOP, chromeFlags: NO_3D, gate: { ...FRESH, fcp: 1500, cls: 0.1 } },
+      { ...MOBILE_FAST, chromeFlags: NO_3D },
+      { ...DESKTOP, name: "desktop, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
+      { ...MOBILE, name: "mobile, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
+    ],
+  },
+  ...["/arena/tennis", "/arena/badminton"].map((path) => ({
     path,
     variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   })),

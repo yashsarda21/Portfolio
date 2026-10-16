@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ui } from "@/content";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
@@ -69,7 +69,9 @@ const sweepAt = (ms: number) =>
 export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
   const session = useGameSession({ venue: "cricket", start: START, build: buildCricket });
   const { run, latest, commit, view, timers, live, desktop, layout, say } = session;
-  const ready = gate.status === "ready";
+  // The files are in: the scene mounts, hidden, and compiles its shaders; the loader stays until it is on screen.
+  const [shown, setShown] = useState(false);
+  const ready = gate.status === "ready" && shown;
   const root = useRef<HTMLElement>(null);
   // Where the meter stopped at the release: it holds there through the flight and the call.
   const meterAt = useRef(0);
@@ -203,9 +205,14 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
   });
   const loaded = gate.value;
   const scene =
-    ready && loaded ? (
+    gate.status === "ready" && loaded ? (
       <ThreeBoundary onError={gate.fail}>
-        <loaded.Scene assets={loaded.assets} world={world} layout={layout} />
+        <loaded.Scene
+          assets={loaded.assets}
+          world={world}
+          layout={layout}
+          onShown={() => setShown(true)}
+        />
       </ThreeBoundary>
     ) : null;
   return (
@@ -216,7 +223,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
       onAgain={again}
       rootRef={root}
       three={{
-        status: gate.status,
+        status: ready ? "ready" : "loading",
         progress: gate.progress,
         scene,
         layout,

@@ -47,7 +47,22 @@ const canvases = (page: Page) => page.locator("canvas");
 const line = (page: Page, name: string) =>
   page.locator(`[data-game] [data-part=lines]:visible`).getByRole("button", { name });
 
-test("the loader shows while the files download, then one canvas and no drawn ball", async ({
+/**
+ * Where the parts around the 3D's arrival sit: SKIP, the score bug, and the stage's STADIUM SCREEN or the phone's thumb
+ * zone (which grows from the loader to the controls).
+ */
+async function around(page: Page) {
+  const parts = [
+    page.locator("[data-game] a[href='/career']:visible").first(),
+    page.locator(`[data-game] [role=group][aria-label="${ui.games.bug}"]:visible`),
+    (await stage(page))
+      ? page.locator(`[data-game] section[aria-label="${cricket.screen}"]:visible`)
+      : page.locator("[data-game-column] [data-part=thumb] > div"),
+  ];
+  return Promise.all(parts.map((p) => p.boundingBox()));
+}
+
+test("the loader shows while the files download, then one canvas and no drawn ball; nothing moves when the 3D arrives", async ({
   page,
 }) => {
   const errors = watchErrors(page);
@@ -63,10 +78,15 @@ test("the loader shows while the files download, then one canvas and no drawn ba
   await waitForHydration(page);
   await expect(game(page)).toHaveAttribute("data-three", "loading");
   await expect(page.getByRole("progressbar", { name: cricket.loading })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const before = await around(page);
   letGo();
   await page.locator("[data-game][data-three=ready]").waitFor({ timeout: 30_000 });
   await pauseClock(page);
   await jump(page, 500);
+  // The loading board reserves the controls' place: the swap to the 3D shifts nothing (Lighthouse's CLS).
+  expect(before.every(Boolean)).toBe(true);
+  expect(await around(page)).toEqual(before);
 
   await expect(canvases(page)).toHaveCount(1);
   await expect(page.locator("[data-part=ball]")).toHaveCount(0);
@@ -231,7 +251,7 @@ test("Review Focus 4: a model file that will not download gives the 2D game, whi
   expect(errors).toEqual([]);
 });
 
-test("Review Focus 5: SKIP mid-flight leaves cleanly, and coming back is instant", async ({
+test("Review Focus 5: SKIP mid-flight leaves cleanly, and coming back downloads nothing again", async ({
   page,
 }) => {
   const errors = watchErrors(page);
@@ -247,11 +267,17 @@ test("Review Focus 5: SKIP mid-flight leaves cleanly, and coming back is instant
   await expect(page.locator("[data-game]")).toHaveCount(0);
   expect((await stored(page)).lastScores?.cricket).toBeUndefined();
 
-  // Back in real time: the files are kept, so the scene is ready at once.
+  // Back in real time: the files are kept, so nothing downloads again; the new canvas only compiles its shaders (slow
+  // in software GL) before it shows.
+  const fetched: string[] = [];
+  page.on("request", (r) => {
+    if (/\/models\/|\/scene-/.test(r.url())) fetched.push(r.url());
+  });
   await page.clock.resume();
   await page.goBack();
   await expect(page).toHaveURL(/\/arena\/cricket$/);
-  await expect(game(page)).toHaveAttribute("data-three", "ready", { timeout: 2000 });
+  await expect(game(page)).toHaveAttribute("data-three", "ready");
+  expect(fetched).toEqual([]);
   await expectBallNo(page, 1);
   expect(errors).toEqual([]);
 });

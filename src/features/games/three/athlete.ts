@@ -89,7 +89,7 @@ export function makeAthlete(
 
 /** Poses the athlete from its clip samples (`sampleTrack`): each clip at its time and weight, the rest at weight 0. */
 export function applyClips(athlete: Athlete, samples: readonly ClipSample[]): void {
-  for (const action of Object.values(athlete.actions)) action.weight = 0;
+  for (const name in athlete.actions) athlete.actions[name]!.weight = 0;
   let lift = 0;
   for (const s of samples) {
     const action = athlete.actions[s.clip];

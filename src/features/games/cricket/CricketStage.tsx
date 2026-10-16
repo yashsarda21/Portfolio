@@ -55,7 +55,8 @@ export function CricketStage({
     <GameStage
       chrome={view.chrome}
       venue="turf"
-      scene={ready ? three.scene : null}
+      scene={three?.scene}
+      sceneHidden={!ready}
       bug={
         <ScoreBug label={bug.label} size="md">
           <ScoreBug.Name>{bug.name}</ScoreBug.Name>

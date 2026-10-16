@@ -2,14 +2,13 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, type RefObject } from "react";
 import { CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry } from "three";
 import type { GameLayout } from "../../engine/types";
-import { applyClips, makeAthlete, restPose, type Athlete } from "../../three/athlete";
+import { applyClips, makeAthlete, type Athlete } from "../../three/athlete";
 import { SETTINGS } from "../../three/settings";
 import { tokenColor } from "../../three/tokens";
 import { sampleTrack } from "../../three/track";
 import { ACTORS, type ActorId } from "./field";
 import { makeProps } from "./props";
 import type { CricketAssets } from "./scene";
-import { buildCricketClips } from "./shots";
 import type { WorldState } from "./world";
 
 /** A soft dark spot under each player where there are no shadows (the column): a round fade, used as an alpha map. */
@@ -49,7 +48,6 @@ export function Players({
 }) {
   const shadows = SETTINGS[layout].shadows;
   const cast = useMemo(() => {
-    const clips = buildCricketClips(restPose(assets.body.scene), assets.moves);
     const eyes = tokenColor("--ref-night");
     const shoes = tokenColor("--ref-floodlight");
     const dark = tokenColor("--surface-panel");
@@ -63,7 +61,7 @@ export function Players({
     });
     const athletes = {} as Record<ActorId, Athlete>;
     for (const id of ACTORS) {
-      const a = makeAthlete(assets, id === "yash" ? yashKit : fieldKit, clips);
+      const a = makeAthlete(assets, id === "yash" ? yashKit : fieldKit, assets.clips);
       if (id === "yash") props.batter(a);
       else if (id === "keeper") props.keeper(a);
       else props.fielder(a);

@@ -47,11 +47,53 @@ export function CricketColumn({
 }) {
   const { bug, call, end, latest } = view;
   const ready = three?.status === "ready";
+  const controls = (
+    <>
+      {three ? (
+        <>
+          <LinePicker
+            lines={three.controls.lines}
+            disabled={phase !== "ready"}
+            onLine={three.onLine}
+            size="column"
+          />
+          {/* The speed gun keeps its line while empty, so nothing moves when the first ball is bowled. */}
+          <MonoLabel
+            data-part="speed"
+            variant="mono-chip"
+            tone="primary"
+            className={cn("block min-h-[1lh]", three.controls.speed ? "" : "invisible")}
+          >
+            {three.controls.speed}
+          </MonoLabel>
+        </>
+      ) : null}
+      <TimingMeter size="column" zones={view.meter.zones.column} />
+      <MonoLabel
+        data-part="hint"
+        variant="mono-chip"
+        tone="label"
+        className="text-center text-balance"
+      >
+        {view.bowl.hint}
+      </MonoLabel>
+      <BowlButton
+        size="tap"
+        skew={false}
+        glow={false}
+        disabled={three ? phase !== "ready" && phase !== "runup" : phase !== "ready"}
+        onBowl={onBowl}
+      >
+        {three ? three.controls.bowl.labelPhone : view.bowl.labelPhone}
+      </BowlButton>
+    </>
+  );
   return (
     <GameColumn
       chrome={view.chrome}
       venue="turf"
-      scene={ready ? three.scene : null}
+      scene={three?.scene}
+      sceneHidden={!ready}
       heading={view.heading}
       bug={
         <ScoreBug label={bug.label} size="sm">
@@ -95,47 +137,18 @@ export function CricketColumn({
         phase === "end" && end ? (
           <GameEnd size="column" end={end} onAgain={onAgain} />
         ) : reduced ? null : three && !ready ? (
-          <GameLoader label={three.controls.loading} progress={three.progress} size="column" />
+          // While the 3D loads, the controls hold their place, unseen, with the loader over BOWL's: when they appear,
+          // the thumb zone is already their height, so nothing moves.
+          <div className="relative flex w-full flex-col items-center gap-4 short:gap-2">
+            <div inert className="invisible flex w-full flex-col items-center gap-4 short:gap-2">
+              {controls}
+            </div>
+            <div className="absolute inset-x-0 bottom-0">
+              <GameLoader label={three.controls.loading} progress={three.progress} size="column" />
+            </div>
+          </div>
         ) : (
-          <>
-            {three ? (
-              <>
-                <LinePicker
-                  lines={three.controls.lines}
-                  disabled={phase !== "ready"}
-                  onLine={three.onLine}
-                  size="column"
-                />
-                {/* The speed gun keeps its line while empty, so nothing moves when the first ball is bowled. */}
-                <MonoLabel
-                  data-part="speed"
-                  variant="mono-chip"
-                  tone="primary"
-                  className={cn("block min-h-[1lh]", three.controls.speed ? "" : "invisible")}
-                >
-                  {three.controls.speed}
-                </MonoLabel>
-              </>
-            ) : null}
-            <TimingMeter size="column" zones={view.meter.zones.column} />
-            <MonoLabel
-              data-part="hint"
-              variant="mono-chip"
-              tone="label"
-              className="text-center text-balance"
-            >
-              {view.bowl.hint}
-            </MonoLabel>
-            <BowlButton
-              size="tap"
-              skew={false}
-              glow={false}
-              disabled={three ? phase !== "ready" && phase !== "runup" : phase !== "ready"}
-              onBowl={onBowl}
-            >
-              {three ? three.controls.bowl.labelPhone : view.bowl.labelPhone}
-            </BowlButton>
-          </>
+          controls
         )
       }
     />

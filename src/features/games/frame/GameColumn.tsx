@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { GameBackdrop, SkipChip } from "@/design-system";
+import { cn } from "@/lib/cn";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import type { GameChrome } from "./chrome";
@@ -23,6 +24,7 @@ export function GameColumn({
   thumb,
   heading,
   scene,
+  sceneHidden = false,
 }: {
   chrome: GameChrome;
   venue: "turf" | "court" | "hall";
@@ -33,12 +35,16 @@ export function GameColumn({
   heading: string;
   /** The 3D scene, when there is one: it replaces the backdrop and fills the screen's width. */
   scene?: ReactNode;
+  /** The scene is there but not on screen yet (its shaders compile): it stays invisible, and the backdrop stays. */
+  sceneHidden?: boolean;
 }) {
   return (
     <div data-game-column="" className="relative h-dvh overflow-hidden bg-night lg:hidden">
-      {scene ? <div className="absolute inset-0">{scene}</div> : null}
+      {scene ? (
+        <div className={cn("absolute inset-0", sceneHidden && "invisible")}>{scene}</div>
+      ) : null}
       <div className="relative mx-auto h-full max-w-160">
-        {scene ? null : <GameBackdrop venue={venue} frame="column" />}
+        {scene && !sceneHidden ? null : <GameBackdrop venue={venue} frame="column" />}
         <h1 className="sr-only">{heading}</h1>
         <div
           data-part="top"

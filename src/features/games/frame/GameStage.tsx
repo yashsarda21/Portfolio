@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AudioToggle, Breadcrumb, GameBackdrop, HUD, SkipChip, Stage } from "@/design-system";
+import { cn } from "@/lib/cn";
 import { ArenaLink } from "@/shell/ArenaLink";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
@@ -16,6 +17,7 @@ export function GameStage({
   venue,
   bug,
   scene,
+  sceneHidden = false,
   children,
 }: {
   chrome: GameChrome;
@@ -23,14 +25,20 @@ export function GameStage({
   bug: ReactNode;
   /** The 3D scene, when there is one: it replaces the backdrop and fills the viewport under the board. */
   scene?: ReactNode;
+  /** The scene is there but not on screen yet (its shaders compile): it stays invisible, and the backdrop stays. */
+  sceneHidden?: boolean;
   children: ReactNode;
 }) {
   const audio = useAudio();
   return (
     <Stage
       from="lg"
-      underlay={scene}
-      backdrop={scene ? undefined : <GameBackdrop venue={venue} frame="stage" />}
+      underlay={
+        scene ? (
+          <div className={cn("absolute inset-0", sceneHidden && "invisible")}>{scene}</div>
+        ) : undefined
+      }
+      backdrop={scene && !sceneHidden ? undefined : <GameBackdrop venue={venue} frame="stage" />}
     >
       <HUD
         fade
