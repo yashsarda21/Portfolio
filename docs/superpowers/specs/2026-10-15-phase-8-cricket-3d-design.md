@@ -206,3 +206,77 @@ All of them go through the existing audio system and mute toggle. Yash listens a
 - Replays, multiple camera angles, slow motion, weather, an umpire, player faces or likeness.
 - Any paid asset or tool.
 - Changing the rules, the results or the HUD design.
+
+## 9. As built (2026-10-16)
+
+### 9.1 The speed gate (owner decision, 2026-10-16)
+
+- Lighthouse gates `/arena/cricket` on the page's **first load**, as in every phase: the prerendered page and the 2D game it falls back to. The gated runs switch WebGL off (`--disable-3d-apis`, as the 2D e2e projects do): headless Chrome on a Mac with a GPU otherwise has WebGL2 (Apple M1, through Metal) and would load the 3D.
+- The 3D game is measured too, and **only reported**, never gated: "desktop, 3D (software WebGL)" and "mobile, 3D (software WebGL)" run Chrome with SwiftShader. SwiftShader draws on the CPU, so it overstates what a real device's GPU costs (the main thread waits on it for every context and every shader).
+- Yash checks the 3D's smoothness on his own phone before merge.
+
+### 9.2 Lighthouse (3 runs each; perf = median, a11y / bp / SEO = worst run, CLS = worst run)
+
+| `/arena/cricket` | run | perf | a11y | bp | SEO | FCP | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|---|---|
+| desktop, **gated** (WebGL off) | after | 100 | 100 | 100 | 100 | 468 ms | 572 ms | 0.000 | 0 ms |
+| phone, **gated** (WebGL off) | after | 92 | 100 | 100 | 100 | 2036 ms | 3156 ms | 0.000 | 0 ms |
+| desktop, 3D (software WebGL) | before | 64 | 100 | 100 | 100 | 472 ms | 581 ms | 0.000 | 2068 ms |
+| desktop, 3D (software WebGL) | after | 67 | 100 | 100 | 100 | 468 ms | 605 ms | 0.000 | 1172 ms |
+| phone, 3D (software WebGL) | before | 42 | 100 | 100 | 100 | 2037 ms | 7789 ms | 0.081 | 2393 ms |
+| phone, 3D (software WebGL) | after | 45 | 100 | 100 | 100 | 2038 ms | 7751 ms | 0.000 | 2251 ms |
+
+Gates: desktop performance ≥ 90, phone ≥ 80, accessibility 100, best practices and SEO ≥ 90, FCP ≤ 1500 ms, CLS ≤ 0.1; every other page keeps its Phase 7 result and the budget is met. Before the fixes, the gated page measured with WebGL off scored desktop 99–100 and phone 82–83. The phone's 3D LCP (about 7.8 s) is the moment TAP TO BOWL appears, after about 925 KB arrive on Lighthouse's slow 4G. The first 3D run in each fresh Chrome is much slower (desktop 49, phone 26): SwiftShader starts up and compiles every shader cold.
+
+### 9.3 The 3D start-up, in small steps
+
+- The WebGL2 check makes a throwaway context. It now runs in a task of its own just after hydration (not inside it), and once per visit to the site.
+- After the three files arrive, the clips are built (all 10 made clips and the 5 free ones, once, shared by the seven players) and the body's skinned bounds are measured once (each clone copies them), each in a task of its own.
+- The scene then mounts **hidden** over the 2D board, and `renderer.compileAsync` compiles every shader in a task of its own before the first frame; the loader stays up until it resolves. Where the browser has `KHR_parallel_shader_compile` (Chrome on the M1 does; SwiftShader does not), the compile no longer freezes the page.
+- The phone's thumb zone keeps the controls' place (unseen) while the loader shows, so nothing moves when the 3D arrives (the 0.081 layout shift is gone).
+- No allocation per frame in the camera rig or in `applyClips`.
+- Unused JavaScript: no cheap win. R3F imports the whole of `three` (`import * as THREE`), so naming fewer imports would not shrink the chunk.
+
+Long tasks (Chrome CPU profile, a fresh browser each run, until 5 s after the 3D shows; "phone" = 390×844 with the CPU slowed 4×):
+
+| Where | Before | After |
+|---|---|---|
+| SwiftShader, phone | hydration + WebGL check 2.6–3.3 s; scene mount 0.6 s (0.45 s making the context); first frame 1.5–2.0 s (1.1–1.3 s waiting for shaders) | hydration 0.1 s; WebGL check 2.5 s on its own; clips and bounds under 0.1 s each; mount 0.24 s; first frame 1.46 s |
+| SwiftShader, desktop | 5.5 s; 2.6 s; 0.35 s (shadow shaders) | 6.3 s (the check alone); 0.5 s; 1.7 s |
+| Apple M1 GPU, phone | 144–154 ms, 265–269 ms | 181–190 ms, 88–91 ms |
+| Apple M1 GPU, desktop | 115–127 ms | none over 50 ms |
+
+On SwiftShader the check's context costs seconds because the software GPU process is busy drawing the page, and SwiftShader has no parallel shader compile, so the first frame still waits for the shaders; a real GPU has neither problem. On the M1 the 3D appears about 0.3–0.4 s later on the slowed phone (the compile now finishes before the first frame), with no freeze over 0.2 s.
+
+### 9.4 Sizes (build/client)
+
+| File | raw | gzip -9 | brotli q5 |
+|---|---|---|---|
+| `assets/scene-*.js` (three + R3F + the scene, lazy) | 993,894 | 260,294 | 243,742 |
+| `assets/arena.cricket-*.js` (the route) | 18,424 | 7,065 | 6,772 |
+| `models/athlete.glb` | 414,616 | 248,338 | 194,425 |
+| `models/moves.glb` | 153,944 | 65,296 | 61,626 |
+| `models/athlete-skin.jpg` | 81,716 | 80,959 | 80,905 |
+
+The models are sent as they are (`application/octet-stream`, like Vercel), so after first paint a first cricket visit downloads about 925 KB: the scene chunk 244 KB (brotli), the models 651 KB, gsap 27 KB and two small chunks of about 4 KB.
+
+### 9.5 Camera (`field.ts`)
+
+- `CAMERA.aim`: position `[0, 8, 54]`, target `[0, 0, 8]` (the TV view from behind the bowler).
+- `fov`: stage 16, column 26. `followFov`: stage 34, column 46 (the lens opens as the camera leaves the TV view; fully open 10 m away).
+- `tilt`: stage 0, column 4.5° (the column tips down, so the play sits above the thumb zone).
+
+### 9.6 Clips
+
+- All 10 cricket clips are key poses (`shots.ts`): stance, bowl, dugOut, beaten, drive, flick, pull, loft, keeperTake, dive. No `Sword_*` clips are used.
+- The 5 free clips (idle, walk, jog, sprint, crouch) play on the body as they are, lifted so the feet meet the floor (`CLIP_LIFT`, the lowest sole over each whole cycle): idle 0.053 m, walk 0.05, jog 0.039, sprint 0.052, crouch 0.01. Key-pose clips place the feet themselves.
+
+### 9.7 Rulings, in plain words
+
+- Task 4 could change one line in `sequence.ts` (a type check that every sound cue is a real sound), though its file list left it out: the plan asked for that line.
+- `tools/models.mjs` repeats the five free clip names, because the tool cannot import TypeScript; `rig.test.ts` fails if the two lists drift apart.
+- Task 7 defines the view builder the same way `CricketScreen` does, since the snippet left it out.
+- The model tool uses the dev package `@gltf-transform/extensions` rather than a hand-written extension class: same project, less of our own code, one more dev dependency.
+- The free clips' feet sit a few centimetres off the floor on this body; the 3D world fixes it with a small measured lift per clip, so the model tool stays simple.
+- A small pnpm patch back-ports React Three Fiber 9.8.2's one-line JSX type fix onto 9.8.1 (the release-age rule blocks 9.8.2 for now). Before merge, try 9.8.2 and drop the patch.
+- **The speed gate (owner, 2026-10-16):** fix the real problems (the phone's layout shift when the 3D arrives, long freezes at start-up), keep the 90 / 80 gate on the page's first load, report the full 3D numbers separately without gating them, and Yash checks the smoothness on his own phone before merge.
