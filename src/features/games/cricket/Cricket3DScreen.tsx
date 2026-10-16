@@ -5,9 +5,9 @@ import { useGameClock } from "../engine/useGameClock";
 import { useGameKeys } from "../engine/useGameKeys";
 import { useGameSession } from "../engine/useGameSession";
 import { NO_END_FLAGS, type EndFlags } from "../engine/useMatchResult";
-import { ThreeBoundary } from "../three/ThreeBoundary";
-import { THREE_SHOW_TIMEOUT_MS, type ThreeGate } from "../three/useThreeGate";
-import type { CricketAssets, CricketScene } from "./3d/scene";
+import type { ThreeGate } from "../three/useThreeGate";
+import { useThreeScreen, type Loaded3d } from "../three/useThreeScreen";
+import type { CricketAssets } from "./3d/scene";
 import { planDelivery } from "./3d/delivery";
 import { pickShot } from "./3d/director";
 import {
@@ -36,10 +36,7 @@ import { buildCricket, cricketCalls } from "./cricketCalls";
 import { buildCricket3dControls, type CricketPhase } from "./view";
 
 /** What the 3D download brings: the scene component and the files it draws. */
-export interface Cricket3d {
-  Scene: typeof CricketScene;
-  assets: CricketAssets;
-}
+export type Cricket3d = Loaded3d<CricketAssets, WorldState>;
 
 interface Run extends EndFlags {
   game: CricketState;
@@ -65,13 +62,15 @@ const START: Run = {
 export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
   const session = useGameSession({ venue: "cricket", start: START, build: buildCricket });
   const { run, latest, commit, view, timers, live, desktop, layout, say } = session;
-  // The files are in: the scene mounts, hidden, and compiles its shaders; the loader stays until then. Once shown, the
-  // game takes input for the rest of the visit. `drawn` is this canvas's own: the board's backdrop stays over it until
-  // its first frame is on it (a resize across 1200px mounts a new canvas, which draws again).
-  const [shown, setShown] = useState(false);
-  const ready = gate.status === "ready" && shown;
-  const [drawn, setDrawn] = useState<{ layout: typeof layout; on: boolean }>({ layout, on: false });
-  if (drawn.layout !== layout) setDrawn({ layout, on: false });
+  // `ready` once the scene is drawing and takes input (the files are in and its shaders compiled); `drawn` is this
+  // canvas's own, so the board's backdrop stays over a new canvas (a resize across 1200px) until its first frame.
+  const world = useRef<WorldState>(null);
+  const { ready, drawn, scene } = useThreeScreen({
+    gate,
+    world,
+    layout,
+    audio: live.current.audio,
+  });
   // A line change is said too (the arrows change buttons that do not have the focus); the next call replaces it.
   const [lineSaid, setLineSaid] = useState<{ text: string; over: string } | null>(null);
   const root = useRef<HTMLElement>(null);
@@ -87,7 +86,6 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
           : meterAt.current,
     running: ready,
   });
-  const world = useRef<WorldState>(null);
   world.current ??= {
     shotlist: readyShotlist(0),
     elapsed: () => clock.elapsed() / 1000,
@@ -179,21 +177,8 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The 3D game's own recordings; the stadium hums under it while it is on screen (from the first gesture, sound on).
+  // The 3D game's own recordings.
   useEffect(() => live.current.audio.prefetchSounds(["ooh", "murmur"]), [live]);
-  useEffect(() => {
-    if (!ready) return;
-    const audio = live.current.audio;
-    audio.ambience(true);
-    return () => audio.ambience(false);
-  }, [ready, live]);
-
-  // Review M3: after the files arrive, the scene gets THREE_SHOW_TIMEOUT_MS to compile and draw, or the 2D game takes over.
-  useEffect(() => {
-    if (gate.status !== "ready" || shown) return;
-    const cap = setTimeout(gate.fail, THREE_SHOW_TIMEOUT_MS);
-    return () => clearTimeout(cap);
-  }, [gate.status, gate.fail, shown]);
 
   const again = () =>
     session.again(() => {
@@ -225,19 +210,6 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     aim: run.aim,
     speedKmh: run.speedKmh,
   });
-  const loaded = gate.value;
-  const scene =
-    gate.status === "ready" && loaded ? (
-      <ThreeBoundary onError={gate.fail}>
-        <loaded.Scene
-          assets={loaded.assets}
-          world={world}
-          layout={layout}
-          onShown={() => setShown(true)}
-          onDrawn={() => setDrawn({ layout, on: true })}
-        />
-      </ThreeBoundary>
-    ) : null;
   return (
     <CricketPage
       view={view}
@@ -247,7 +219,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
       rootRef={root}
       three={{
         status: ready ? "ready" : "loading",
-        drawn: ready && drawn.on,
+        drawn,
         progress: gate.progress,
         scene,
         layout,

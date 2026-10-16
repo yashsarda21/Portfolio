@@ -1,25 +1,19 @@
-import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, type RefObject } from "react";
 import {
   CanvasTexture,
-  CylinderGeometry,
-  Float32BufferAttribute,
-  IcosahedronGeometry,
   DirectionalLight,
   DoubleSide,
-  InstancedMesh,
   LatheGeometry,
-  MeshLambertMaterial,
-  Object3D,
   RepeatWrapping,
   SRGBColorSpace,
   Vector2,
-  type BufferGeometry,
   type Color,
-  type Group,
+  type Object3D,
 } from "three";
-import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { GameLayout } from "../../engine/types";
+import { Crowd } from "../../three/Crowd";
+import { crowdColors } from "../../three/crowdKit";
+import { Floodlight } from "../../three/Floodlight";
 import { SETTINGS } from "../../three/settings";
 import { tokenColor } from "../../three/tokens";
 import { LENGTH_Z } from "./delivery";
@@ -29,42 +23,9 @@ import type { WorldState } from "./world";
 /** The stands: tiers from the front row to the back wall (m from the ground's centre), and how high each step rises. */
 const STANDS = { from: 72, to: 95, tiers: 7, rise: 1.4 } as const;
 const TOWER = { radius: 101, height: 46 } as const;
-/** How far the crowd rises when it stands (ball 3), and how long it takes (s). */
-const CROWD_RISE = { up: 0.25, seconds: 0.4 } as const;
 const STUMP = { radius: 0.018, height: 0.711, apart: 0.114 } as const;
 const LINE = 0.05;
 const centreZ = ROPE.centre[2];
-
-/** A small random sequence that is the same on every visit (the crowd's seats and shirts). */
-function seeded(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** One crowd instance: four seated people side by side, each a body and a darker head, a little different in shade. */
-function figures(): BufferGeometry {
-  const parts = [-0.75, -0.25, 0.25, 0.75].flatMap((x, k) => {
-    const shade = [1, 0.82, 0.92, 0.75][k]!;
-    const body = new CylinderGeometry(0.17, 0.22, 0.55, 5).toNonIndexed().translate(x, 0.3, 0);
-    const head = new IcosahedronGeometry(0.11, 0).translate(x, 0.7, 0);
-    return [
-      [body, shade],
-      [head, 0.32],
-    ] as const;
-  });
-  for (const [geometry, shade] of parts) {
-    const count = geometry.attributes.position!.count;
-    geometry.setAttribute("color", new Float32BufferAttribute(new Array(count * 3).fill(shade), 3));
-  }
-  const row = mergeGeometries(parts.map(([geometry]) => geometry))!;
-  parts.forEach(([geometry]) => geometry.dispose());
-  return row;
-}
 
 /** Mown stripes across the outfield, drawn on a canvas (no image files). */
 function stripes(a: Color, b: Color): CanvasTexture {
@@ -93,83 +54,21 @@ function palette() {
     line: tokenColor("--ref-floodlight"),
     volt: tokenColor("--ref-volt"),
     stand: tokenColor("--ref-mast"),
-    mast: tokenColor("--ref-mast"),
     lamp: tokenColor("--ref-lamp"),
     sky: tokenColor("--ref-led-white"),
     turf: tokenColor("--ref-turf-deep"),
-    // Mostly whites and greys under the lights, with some colour.
-    crowd: [
-      "--ref-floodlight",
-      "--ref-floodlight",
-      "--ref-text-2",
-      "--ref-text-2",
-      "--ref-scout-grey",
-      "--ref-scout-grey",
-      "--ref-dim",
-      "--ref-dim",
-      "--ref-line-hover",
-      "--ref-stand-hi",
-      "--ref-court-mid",
-      "--ref-hall-mid",
-      "--ref-volt",
-      "--ref-live-red",
-    ].map(tokenColor),
   };
 }
 
-/** The crowd: one instanced mesh of simple figures on the tiers; they stand up (rise) when `crowdUp`. */
-function Crowd({
-  count,
-  colors,
-  world,
-}: {
-  count: number;
-  colors: Color[];
-  world: RefObject<WorldState | null>;
-}) {
-  const group = useRef<Group>(null);
-  const mesh = useMemo(() => {
-    const crowd = new InstancedMesh(
-      figures(),
-      new MeshLambertMaterial({ vertexColors: true }),
-      count,
-    );
-    const rand = seeded(7);
-    const at = new Object3D();
-    const tread = (STANDS.to - STANDS.from) / STANDS.tiers;
-    for (let i = 0; i < count; i++) {
-      const tier = Math.floor(rand() * STANDS.tiers);
-      const r = STANDS.from + tread * (tier + 0.25 + rand() * 0.5);
-      const a = rand() * Math.PI * 2;
-      at.position.set(Math.cos(a) * r, STANDS.rise * (tier + 1), centreZ + Math.sin(a) * r);
-      at.rotation.y = Math.atan2(-Math.cos(a), -Math.sin(a));
-      at.updateMatrix();
-      crowd.setMatrixAt(i, at.matrix);
-      crowd.setColorAt(i, colors[Math.floor(rand() * colors.length)]!);
-    }
-    return crowd;
-  }, [count, colors]);
-  useEffect(
-    () => () => {
-      mesh.geometry.dispose();
-      (mesh.material as MeshLambertMaterial).dispose();
-      mesh.dispose();
-    },
-    [mesh],
-  );
-  useFrame((_, delta) => {
-    const g = group.current;
-    if (!g) return;
-    const goal = world.current?.crowdUp ? CROWD_RISE.up : 0;
-    const step = (Math.min(delta, 0.1) * CROWD_RISE.up) / CROWD_RISE.seconds;
-    g.position.y += Math.max(-step, Math.min(step, goal - g.position.y));
-  });
-  return (
-    <group ref={group}>
-      <primitive object={mesh} />
-    </group>
-  );
-}
+/** One crowd seat: a random place on the tiers round the oval, facing the middle. */
+const seatOnTiers = (rand: () => number, at: Object3D) => {
+  const tread = (STANDS.to - STANDS.from) / STANDS.tiers;
+  const tier = Math.floor(rand() * STANDS.tiers);
+  const r = STANDS.from + tread * (tier + 0.25 + rand() * 0.5);
+  const a = rand() * Math.PI * 2;
+  at.position.set(Math.cos(a) * r, STANDS.rise * (tier + 1), centreZ + Math.sin(a) * r);
+  at.rotation.y = Math.atan2(-Math.cos(a), -Math.sin(a));
+};
 
 /** The floodlit ground (spec §6.1), built from simple shapes; every colour comes from the design tokens. */
 export function Stadium({
@@ -181,6 +80,7 @@ export function Stadium({
 }) {
   const settings = SETTINGS[layout];
   const c = useMemo(() => palette(), []);
+  const crowd = useMemo(() => crowdColors(), []);
   const outfield = useMemo(() => stripes(c.outfieldA, c.outfieldB), [c]);
   useEffect(() => () => outfield.dispose(), [outfield]);
   const stands = useMemo(() => {
@@ -221,7 +121,7 @@ export function Stadium({
   const ends = [0, PITCH.length];
   const towers = [45, 135, 225, 315].map((deg) => {
     const a = (deg * Math.PI) / 180;
-    return [Math.cos(a) * TOWER.radius, Math.sin(a) * TOWER.radius + centreZ] as const;
+    return [Math.cos(a) * TOWER.radius, 0, Math.sin(a) * TOWER.radius + centreZ] as const;
   });
   return (
     <group>
@@ -295,18 +195,20 @@ export function Stadium({
       <mesh geometry={stands} position={[0, 0, centreZ]}>
         <meshLambertMaterial color={c.stand} side={DoubleSide} flatShading />
       </mesh>
-      <Crowd count={settings.crowd} colors={c.crowd} world={world} />
-      {towers.map(([x, z]) => (
-        <group key={`${x}:${z}`} position={[x, 0, z]} rotation-y={Math.atan2(-x, centreZ - z)}>
-          <mesh position={[0, TOWER.height / 2, 0]}>
-            <cylinderGeometry args={[0.35, 0.7, TOWER.height, 8]} />
-            <meshLambertMaterial color={c.mast} />
-          </mesh>
-          <mesh position={[0, TOWER.height + 2, 0.6]} rotation-x={0.35}>
-            <boxGeometry args={[11, 5, 0.6]} />
-            <meshStandardMaterial color={c.lamp} emissive={c.lamp} emissiveIntensity={2.5} />
-          </mesh>
-        </group>
+      <Crowd
+        count={settings.crowd}
+        colors={crowd}
+        seat={seatOnTiers}
+        up={() => world.current?.crowdUp ?? false}
+      />
+      {towers.map((at) => (
+        <Floodlight
+          key={`${at[0]}:${at[2]}`}
+          at={at}
+          aim={[0, 0, centreZ]}
+          height={TOWER.height}
+          color={c.lamp}
+        />
       ))}
     </group>
   );

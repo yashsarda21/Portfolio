@@ -1,8 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, type RefObject } from "react";
-import { CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry } from "three";
+import type { Mesh } from "three";
 import type { GameLayout } from "../../engine/types";
 import { applyClips, makeAthlete, type Athlete } from "../../three/athlete";
+import { useGroundSpots } from "../../three/groundSpots";
 import { SETTINGS } from "../../three/settings";
 import { tokenColor } from "../../three/tokens";
 import { sampleTrack } from "../../three/track";
@@ -10,19 +11,6 @@ import { ACTORS, type ActorId } from "./field";
 import { makeProps } from "./props";
 import type { CricketAssets } from "./scene";
 import type { WorldState } from "./world";
-
-/** A soft dark spot under each player where there are no shadows (the column): a round fade, used as an alpha map. */
-function blob() {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 64;
-  const ctx = canvas.getContext("2d")!;
-  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-  g.addColorStop(0, tokenColor("--ref-floodlight").getStyle());
-  g.addColorStop(1, tokenColor("--ref-night").getStyle());
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 64, 64);
-  return new CanvasTexture(canvas);
-}
 
 /** Each player where the shotlist puts them now: place, heading and pose. */
 function movePlayers(athletes: Record<ActorId, Athlete>, w: WorldState) {
@@ -69,36 +57,8 @@ export function Players({
     }
     return { athletes, props };
   }, [assets]);
-  const spot = useMemo(() => {
-    if (shadows) return null;
-    const texture = blob();
-    return {
-      texture,
-      geometry: new PlaneGeometry(1.1, 1.1).rotateX(-Math.PI / 2),
-      material: new MeshBasicMaterial({
-        color: tokenColor("--ref-night"),
-        alphaMap: texture,
-        transparent: true,
-        opacity: 0.55,
-        depthWrite: false,
-      }),
-    };
-  }, [shadows]);
-  useEffect(() => {
-    if (!spot) return;
-    const meshes = ACTORS.map((id) => {
-      const m = new Mesh(spot.geometry, spot.material);
-      m.position.y = 0.012;
-      cast.athletes[id].root.add(m);
-      return m;
-    });
-    return () => {
-      meshes.forEach((m) => m.removeFromParent());
-      spot.texture.dispose();
-      spot.geometry.dispose();
-      spot.material.dispose();
-    };
-  }, [spot, cast]);
+  const roots = useMemo(() => ACTORS.map((id) => cast.athletes[id].root), [cast]);
+  useGroundSpots(!shadows, roots);
   useEffect(
     () => () => {
       cast.props.dispose();

@@ -53,6 +53,9 @@ export const KIT_REGIONS = {
   // |x| a little short of lowerarm_l (x 0.463): sleeves to just above the elbow (halfway along the upper arm, 0.3375,
   // left skin showing on top of the shoulders once the arms come down).
   sleeve: 0.42,
+  // calf_l bone's rest-pose world height (the knee) is 0.5424, found by composing the node transforms in
+  // public/models/athlete.glb's JSON with a throwaway script; the hem sits 0.08 above it.
+  shorts: 0.622,
 } as const;
 
 /** Turns the model to face +z (0 if it already does): the toes (ball_l - foot_l) and the eyes both point to +z at rest. */

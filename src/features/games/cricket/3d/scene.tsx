@@ -4,19 +4,15 @@ import {
   MathUtils,
   PerspectiveCamera,
   Vector3,
-  RepeatWrapping,
-  SRGBColorSpace,
-  TextureLoader,
   type AnimationClip,
   type Mesh,
-  type SkinnedMesh,
   type Texture,
 } from "three";
-import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
+import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import type { GameLayout } from "../../engine/types";
+import { loadAthleteFiles, prepareAthlete } from "../../three/assets";
 import { GameCanvas } from "../../three/GameCanvas";
-import { restPose } from "../../three/athlete";
-import { MODEL_FILES } from "../../three/rig";
+import type { SceneProps } from "../../three/useThreeScreen";
 import { tokenColor } from "../../three/tokens";
 import { BALL_RADIUS, CAMERA } from "./field";
 import { Players } from "./Players";
@@ -31,41 +27,15 @@ export interface CricketAssets {
   skin: Texture;
 }
 
-/** The next task: each start-up step gets one of its own, so none holds the main thread for long. */
-const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-
 /**
- * The three files (body, moves, skin), fetched together; progress is the mean of each file's share loaded. Then, a
- * task each: the clips are built, and the body's skinned bounds are measured once (every player's clone copies them,
- * so the first frame does not measure seven bodies vertex by vertex).
+ * The three files, then the clips are built (once, shared by the seven players) and the body's skinned bounds are
+ * measured (see `prepareAthlete`).
  */
 export async function loadCricketAssets(
   onProgress: (fraction: number) => void,
 ): Promise<CricketAssets> {
-  const done = [0, 0, 0];
-  const report = (i: number, fraction: number) => {
-    done[i] = Math.min(1, Math.max(done[i]!, fraction));
-    onProgress((done[0]! + done[1]! + done[2]!) / 3);
-  };
-  const share = (i: number) => (e: ProgressEvent) => {
-    if (e.total > 0) report(i, e.loaded / e.total);
-  };
-  const gltf = new GLTFLoader();
-  const [body, moves, skin] = await Promise.all([
-    gltf.loadAsync(MODEL_FILES.body, share(0)).then((g) => (report(0, 1), g)),
-    gltf.loadAsync(MODEL_FILES.moves, share(1)).then((g) => (report(1, 1), g)),
-    new TextureLoader().loadAsync(MODEL_FILES.skin, share(2)).then((t) => (report(2, 1), t)),
-  ]);
-  skin.colorSpace = SRGBColorSpace;
-  skin.flipY = false;
-  skin.wrapS = skin.wrapT = RepeatWrapping;
-  await nextTask();
-  const clips = buildCricketClips(restPose(body.scene), moves.animations);
-  await nextTask();
-  body.scene.traverse((o) => {
-    if ((o as SkinnedMesh).isSkinnedMesh) (o as SkinnedMesh).computeBoundingSphere();
-  });
-  return { body, clips, skin };
+  const files = await loadAthleteFiles(onProgress);
+  return prepareAthlete(files, buildCricketClips);
 }
 
 /** The ball, drawn three times its real size so it reads on screen; hidden when the shotlist has none. */
@@ -125,13 +95,7 @@ export function CricketScene({
   layout,
   onShown,
   onDrawn,
-}: {
-  assets: CricketAssets;
-  world: RefObject<WorldState | null>;
-  layout: GameLayout;
-  onShown?: () => void;
-  onDrawn?: () => void;
-}) {
+}: SceneProps<CricketAssets, WorldState>) {
   return (
     <GameCanvas
       layout={layout}
