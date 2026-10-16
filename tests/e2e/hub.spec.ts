@@ -865,7 +865,7 @@ test.describe("phone hub", () => {
       await expect(cricket.getByRole("link", { name: "REMATCH" })).toBeVisible();
       await expect(cricket.getByRole("link", { name: /SEE STATS/ })).toBeVisible();
       const tennis = fixture(page, "CENTRE COURT");
-      await expect(tennis.getByText("~12s")).toBeVisible();
+      await expect(tennis.getByText("~40s")).toBeVisible();
       await expect(tennis.getByRole("link", { name: "PLAY", exact: true })).toBeVisible();
       await expect(tennis.getByRole("link", { name: /^SKIP/ })).toBeVisible();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.arena.heading);

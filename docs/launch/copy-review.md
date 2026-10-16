@@ -88,6 +88,27 @@ Two things to keep in mind while you read: letters in capitals are drawn in capi
 | `games.tennis.comm.line` | Clipped the line. Still undefeated. | The commentary line after a ball that clips the line. | code mark | |
 | `games.tennis.see` | SEE MATCH HIGHLIGHTS | The end button that leads to Match Highlights. | code mark | |
 
+## Phase 8 tennis (derived)
+
+The 3D Centre Court game. The Hub card's pitch and length were changed from the 2D wording; the rest are new.
+
+| Key | Wording now | Where it shows | Source | Yash's wording |
+|---|---|---|---|---|
+| `hub.venues.tennis.blurb` | Return my serve. Every point I win puts a project on the big screen. | The Hub's Centre Court card: the one-line pitch (replaces the 2D wording). | code mark | |
+| `hub.venues.tennis.duration` | ~40s | The Hub's Centre Court card: how long the game takes (phone: shown instead of a status). | code mark | |
+| `games.tennis.three.loading` | PREPARING THE COURT | The loading bar while the 3D court downloads, in the start button's place. | code mark | |
+| `games.tennis.three.how` | Pick the open side as he hits. | The how-to-play text in the left panel of the 3D game (desktop). | code mark | |
+| `games.tennis.three.progress` | HIS POINTS UNLOCK THE HIGHLIGHTS | The label above the progress bars in the 3D game. | code mark | |
+| `games.tennis.three.point` | POINT | The score bug's status (POINT 3) and each highlight card's tag (POINT 3) in the 3D game. | code mark | |
+| `games.tennis.three.gamePoint` | GAME POINT | The score bug's status once Yash is on 40 in the 3D game. | code mark | |
+| `games.tennis.three.calls.late` | TOO LATE. | The call when your second shot comes too late (3D). | code mark | |
+| `games.tennis.three.calls.winner` | WINNER. | The call when you win a point (3D). | code mark | |
+| `games.tennis.three.calls.out` | OUT. | The call when your best shot goes out, once you have 30 (3D). | code mark | |
+| `games.tennis.three.comm.yourPoint` | Your point. He'll remember that. | The commentary line after you win a point (3D). | code mark | |
+| `games.tennis.three.comm.out` | Hawk-Eye says out. By a whisker. | The commentary line after your shot goes OUT (3D). | code mark | |
+| `games.tennis.three.comm.gamePoint` | Game point. He's done this before. | The commentary line when Yash has just reached 40 (3D). | code mark | |
+| `games.tennis.three.comm.game` | Game, Yash. Still undefeated. | The commentary line when the game is over (3D). | code mark | |
+
 ## Badminton Hall
 
 | Key | Wording now | Where it shows | Source | Yash's wording |
@@ -164,4 +185,4 @@ The first trophy (the cup) is yours from the design. The other four descriptions
 
 ---
 
-84 strings in total.
+98 strings in total.

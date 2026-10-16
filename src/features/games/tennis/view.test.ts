@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
-import { playReturn, TENNIS_START, type ReturnPick, type Side, type TennisState } from "./referee";
-import { buildTennisView, type TennisPhase } from "./view";
+import { MATCH_START, playPoint, type MatchState } from "./3d/match";
+import {
+  playReturn,
+  TENNIS_START,
+  type ReturnPick,
+  type Side,
+  type TennisReturn,
+  type TennisState,
+} from "./referee";
+import { buildTennis3dView, buildTennisView, type Tennis3dPhase, type TennisPhase } from "./view";
 
 const GOOD: ReturnPick = { side: "right", atMs: 600 };
 const PERFECT: ReturnPick = { side: "right", atMs: 100 };
@@ -257,5 +265,91 @@ describe("buildTennisView", () => {
     expect(view(play([PERFECT, PERFECT, PERFECT]), { phase: "verdict" }).announce).toMatch(
       /\. Game yash\.$/,
     );
+  });
+});
+
+describe("buildTennis3dView", () => {
+  const three = ui.games.tennis.three;
+  const ace: TennisReturn = { q: "miss", call: "ace" };
+  const clean: TennisReturn = { q: "perfect", call: "clean" };
+  const good: TennisReturn = { q: "good", call: "returned" };
+
+  const played = (points: TennisReturn[][]): MatchState =>
+    points.reduce((s, inputs) => playPoint(s, inputs), MATCH_START);
+  const view3d = (state: MatchState, phase: Tennis3dPhase = "ready", open: Side | null = null) =>
+    buildTennis3dView(content, ui, ROUTES, state, {
+      phase,
+      open,
+      offerHighlight: false,
+      fullTime: false,
+    });
+
+  it("reads the fresh court: 0 all, point 1, nothing unlocked", () => {
+    const v = view3d(MATCH_START);
+    expect(v.bug).toMatchObject({ yash: "0", you: "0", status: "POINT 1", statusPhone: "POINT 1" });
+    expect(v.cards).toEqual([]);
+    expect(v.call).toBeNull();
+    expect(v.serving).toMatch(/178 KM\/H$/);
+    expect(v.comm).toBe(content.commentary.entrance[0]);
+    const lit = view3d(MATCH_START, "window", "left").aims[0];
+    expect(lit.open).toBe(true);
+    expect(lit.name).toMatch(/open court$/);
+  });
+
+  it("after an ace: 15–0, a card, ACE. in floodlight", () => {
+    const v = view3d(played([[ace]]), "called");
+    expect(v.bug).toMatchObject({ yash: "15", you: "0" });
+    expect(v.cards.map((c) => [c.eyebrow, c.tag])).toEqual([["HIGHLIGHT 01 · QF", "POINT 1"]]);
+    expect(v.call).toEqual({ text: "ACE.", tone: "floodlight" });
+    expect(v.comm).toBe(ui.games.tennis.comm.missed);
+  });
+
+  it("after your point: 0–15, no card, WINNER. in volt", () => {
+    const v = view3d(played([[clean, clean]]), "called");
+    expect(v.bug).toMatchObject({ yash: "0", you: "15" });
+    expect(v.cards).toEqual([]);
+    expect(v.call).toEqual({ text: "WINNER.", tone: "volt" });
+    expect(v.comm).toBe(three.comm.yourPoint);
+  });
+
+  it("after three Yash points: GAME POINT, three cards tagged by the point that unlocked them", () => {
+    const v = view3d(played([[ace], [clean, clean], [ace], [ace]]));
+    expect(v.bug.status).toBe("GAME POINT");
+    expect(v.cards.map((c) => c.tag)).toEqual(["POINT 1", "POINT 3", "POINT 4"]);
+    const three3 = view3d(played([[ace], [ace], [ace]]), "called");
+    expect(three3.bug.status).toBe("GAME POINT");
+    expect(three3.cards).toHaveLength(3);
+    expect(three3.marquee.map((m) => m.text)).toContain("ALL THREE ON THE BIG SCREEN");
+    expect(three3.comm).toBe(three.comm.gamePoint);
+  });
+
+  it("after four aces: GAME YASH, saved, the end, and the announcer says so", () => {
+    const v = view3d(played([[ace], [ace], [ace], [ace]]), "end");
+    expect(v.bug.status).toBe("GAME YASH");
+    expect(v.saved).toBe("GAME YASH");
+    expect(v.end).not.toBeNull();
+    expect(v.comm).toBe(three.comm.game);
+    expect(v.announce).toBe("ACE. 40–0. Game yash.");
+  });
+
+  it("announces a point with what it unlocked", () => {
+    expect(view3d(played([[ace]]), "called").announce).toBe(
+      "ACE. 15–0. Highlight 01 unlocked: POWER BI DASHBOARD, An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
+    );
+    expect(view3d(played([[clean, clean]]), "called").announce).toBe("WINNER. 0–15.");
+  });
+
+  it("an OUT point: OUT. and the Hawk-Eye line", () => {
+    const v = view3d(
+      played([
+        [clean, clean],
+        [good, good],
+        [clean, clean],
+      ]),
+      "called",
+    );
+    expect(v.bug).toMatchObject({ yash: "15", you: "30" });
+    expect(v.call?.text).toBe("OUT.");
+    expect(v.comm).toBe(three.comm.out);
   });
 });

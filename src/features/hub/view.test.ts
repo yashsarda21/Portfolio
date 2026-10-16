@@ -46,7 +46,7 @@ describe("buildHubView", () => {
     expect(tennis).toMatchObject({
       played: false,
       status: "UNPLAYED",
-      statusPhone: "~12s",
+      statusPhone: "~40s",
       play: { label: "PLAY", to: "/arena/tennis" },
       skip: { label: "SKIP", labelPhone: "SKIP", to: "/highlights" },
     });

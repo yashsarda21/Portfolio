@@ -382,9 +382,9 @@ export const ui = {
         see: "SEE STATS",
       },
       tennis: {
-        blurb: "Return my serve. Every shot you get back puts a project on the big screen.",
+        blurb: "Return my serve. Every point I win puts a project on the big screen.", // derived (Phase 8)
         reveals: "MATCH HIGHLIGHTS",
-        duration: "~12s",
+        duration: "~40s", // derived (Phase 8)
         category: "PROJECTS",
         see: "SEE PROJECTS",
       },
@@ -543,6 +543,21 @@ export const ui = {
         missed: "Ace. The project ships anyway.", // derived
         line: "Clipped the line. Still undefeated.", // derived
       },
+      /** The 3D game (Phase 8): real points to 40, Yash always wins. */
+      three: {
+        loading: "PREPARING THE COURT",
+        how: "Pick the open side as he hits.",
+        progress: "HIS POINTS UNLOCK THE HIGHLIGHTS",
+        point: "POINT",
+        gamePoint: "GAME POINT",
+        calls: { late: "TOO LATE.", winner: "WINNER.", out: "OUT." },
+        comm: {
+          yourPoint: "Your point. He'll remember that.",
+          out: "Hawk-Eye says out. By a whisker.",
+          gamePoint: "Game point. He's done this before.",
+          game: "Game, Yash. Still undefeated.",
+        },
+      }, // derived (Phase 8)
       see: "SEE MATCH HIGHLIGHTS", // derived
       skip: "SKIP TO MATCH HIGHLIGHTS",
     },
