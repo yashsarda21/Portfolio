@@ -9,6 +9,8 @@ export interface Judged {
 }
 /** A pick in the first 40 % of the window is perfect; later in the window it is good. */
 export const PERFECT_SHARE = 0.4;
+/** The column (touch) gets 25 % longer (spec §8.2): every 3D game's windows share it. */
+export const TOUCH_STRETCH = 1.25;
 
 /**
  * Judges one pick against the choice that is lit. `atMs` is when the visitor picked, in ms after the hit (negative:

@@ -10,7 +10,9 @@ import {
   type GameChrome,
   type GameEndView,
 } from "../frame/chrome";
+import { matchOver, scoreOf, smashKmh, type Dir, type MatchState } from "./3d/match";
 import {
+  BADMINTON_START_STATE,
   badmintonOver,
   badmintonScore,
   BADMINTON_RALLIES,
@@ -22,6 +24,42 @@ import {
 
 /** Where the game is: waiting for a hold, the hold, the shuttle in the air, the call, the 2 s verdict, the end buttons. */
 export type BadmintonPhase = "ready" | "charging" | "flight" | "called" | "verdict" | "end";
+
+/**
+ * Where the 3D game is: waiting to start, Yash's serve, the window to pick in, your swing, the rally shuttle, the call,
+ * the 2 s verdict, the end buttons.
+ */
+export type Badminton3dPhase =
+  "ready" | "serve" | "window" | "struck" | "rally" | "called" | "verdict" | "end";
+
+/** The phases of the 3D game in which a window is open or about to be: a pick can be made (before the hit it is TOO EARLY). */
+export const LIVE_3D: readonly Badminton3dPhase[] = ["serve", "window", "rally"];
+
+/** One of the two pick buttons: what `AimZone` takes, plus the direction it stands for. */
+export interface BadmintonAim {
+  dir: Dir;
+  arrow: "↑" | "↓";
+  label: string;
+  /** The accessible name: "Send it deep: smash — open court". */
+  name: string;
+  open: boolean;
+}
+
+/** What the 3D game adds to the 2D view: the buttons, the speed line and the hints. */
+export interface Badminton3dParts {
+  /** The short button (↓ DROP), then the deep one (↑ SMASH). */
+  aims: [BadmintonAim, BadmintonAim];
+  /** "YASH · SMASH · 348 KM/H": only while a smash win is being called, else null. */
+  speed: string | null;
+  how: string;
+  keys: string;
+  hint: { stage: string; phone: string };
+  progress: string;
+  loading: string;
+}
+
+/** The 2D view's shape plus the 3D parts; the 2D's meter, hold and reading are kept, and not drawn in 3D. */
+export type Badminton3dView = BadmintonView & { three: Badminton3dParts };
 
 type Tone = "volt" | "floodlight";
 
@@ -185,5 +223,179 @@ export function buildBadmintonView(
     }),
     saved: `${score.yash}–${score.you}`,
     heading: chrome.heading,
+  };
+}
+
+const ARROW = { deep: "↑", short: "↓" } as const;
+
+/** The two pick buttons, the short one then the deep one; `open` (if any) is lit. */
+function aimsFor(ui: UiCopy, open: Dir | null): [BadmintonAim, BadmintonAim] {
+  const aim = ui.games.badminton.three.aim;
+  const one = (dir: Dir): BadmintonAim => {
+    const lit = open === dir;
+    return {
+      dir,
+      arrow: ARROW[dir],
+      label: `${ARROW[dir]} ${lit ? aim.open : aim[dir]}`,
+      name: lit ? `${aim.to[dir]} ${aim.dash} ${aim.openName}` : aim.to[dir],
+      open: lit,
+    };
+  };
+  return [one("short"), one("deep")];
+}
+
+/** Everything the 3D badminton game shows: real rallies to 21 (Phase 8), the same board, cards and end as the 2D game. */
+export function buildBadminton3dView(
+  content: Content,
+  ui: UiCopy,
+  routes: typeof ROUTES,
+  state: MatchState,
+  {
+    phase,
+    open,
+    offerHighlight,
+    fullTime,
+  }: { phase: Badminton3dPhase; open: Dir | null } & EndFlags,
+): Badminton3dView {
+  const copy = ui.games.badminton;
+  const three = copy.three;
+  const tennis = ui.games.tennis.three;
+  const sep = ui.glyph.sep;
+  // The chrome, the meter, the hold and the reading are the 2D game's, whatever the state.
+  const base = buildBadmintonView(content, ui, routes, BADMINTON_START_STATE, {
+    phase: "ready",
+    offerHighlight,
+    fullTime,
+  });
+  const played = state.rallies.length;
+  const over = matchOver(state);
+  const { yash, you } = scoreOf(state);
+  const score = `${yash}–${you}`;
+  const rallyName = (n: number) => `${ui.games.rally} ${n}`;
+
+  // The groups in content order, one per card; card i was charged by the rally that carries it.
+  const groups = getAttributeGroups(content).slice(0, BADMINTON_RALLIES);
+  const chargedBy = (i: number) => state.rallies.findIndex((r) => r.card === i) + 1;
+  const charged = groups.flatMap((g, i) =>
+    chargedBy(i) > 0
+      ? [
+          {
+            eyebrow: `${copy.charged} ${sep} ${rallyName(chargedBy(i))}`,
+            tag: g.shot.toUpperCase(),
+            title: g.name.toUpperCase(),
+            chips: g.skills.filter((k) => k.level === "shipped").map((k) => k.name),
+          },
+        ]
+      : [],
+  );
+  // Never LOCKED (§11.2 #24): the next group is UP NEXT. Rally numbers shift when you win one, so the later ones name their shot.
+  const toasts: AttributeToastProps[] = groups.map((g, i) =>
+    i < charged.length
+      ? { state: "charged", ...charged[i]!, accent: i === charged.length - 1 }
+      : {
+          state: i === charged.length ? "next" : "later",
+          label: g.name.toUpperCase(),
+          hint: i === charged.length ? copy.upNext : g.shot.toUpperCase(),
+        },
+  );
+  const newest = charged.at(-1);
+  const last = state.rallies.at(-1);
+  const lastGroup = last?.card != null ? groups[last.card] : undefined;
+
+  const atAll = !over && yash === 20 && you === 20;
+  const yourMatchPoint = !over && you === 20 && yash < 20;
+  const atMatchPoint = !over && yash >= 20 && yash > you;
+  const status = over
+    ? copy.status.game
+    : atAll
+      ? three.status.all
+      : yourMatchPoint
+        ? three.status.yourMatchPoint
+        : atMatchPoint
+          ? copy.matchPoint
+          : rallyName(played + 1);
+  const calling = phase === "called" || phase === "verdict" || phase === "end";
+
+  const comm = !last
+    ? content.commentary.entrance[0]!
+    : over
+      ? tennis.comm.game
+      : last.call === "out"
+        ? `${tennis.comm.out} ${lastGroup?.name} ${three.comm.anyway}`
+        : last.winner === "you"
+          ? atAll
+            ? three.comm.all
+            : tennis.comm.yourPoint
+          : lastGroup
+            ? `${three.comm[last.kind]} ${lastGroup.name} ${three.comm.charged}`
+            : three.comm[last.kind];
+
+  const callText = last ? three.calls[last.call] : "";
+  // Yash's smash win is on the speed gun while it is called; the OUT call is his by a whisker, not a smash.
+  const kmh = last && last.winner === "yash" && last.call !== "out" ? smashKmh(last.kind) : null;
+  const speed =
+    calling && kmh !== null
+      ? [ui.hub.record.yash, three.speed, `${kmh} ${ui.games.kmh}`].join(` ${sep} `)
+      : null;
+  // "Backend charged: Java, Spring Boot, JUnit." Your own rally charges nothing.
+  const lastChips = lastGroup
+    ? lastGroup.skills.filter((k) => k.level === "shipped").map((k) => k.name)
+    : [];
+  const spoken = [
+    `${callText} ${score}.`,
+    lastGroup
+      ? `${lastGroup.name} ${three.comm.charged.replace(/\.$/, "")}: ${lastChips.join(", ")}.`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    ...base,
+    bug: {
+      label: ui.games.bug,
+      name: ui.hub.record.yash,
+      yash: String(yash),
+      you: String(you),
+      away: ui.hub.record.you,
+      status,
+      statusPhone: status,
+      phoneBadge: over || atMatchPoint || yourMatchPoint || atAll,
+      alert: atMatchPoint || yourMatchPoint,
+    },
+    toasts,
+    latest: newest
+      ? { eyebrow: newest.eyebrow, title: newest.title, meta: newest.chips.join(` ${sep} `) }
+      : null,
+    played,
+    call:
+      calling && last
+        ? { text: callText, tone: last.call === "winner" ? "volt" : "floodlight" }
+        : null,
+    comm,
+    announce: last
+      ? announceWith(
+          // The line already ends with its own full stop: when the game is over, announceWith adds the outcome after it.
+          over ? spoken.slice(0, -1) : spoken,
+          over ? `${sentenceCase(status)}. ${score}` : null,
+        )
+      : "",
+    end: buildGameEnd(ui, routes, base.chrome, {
+      over,
+      offerHighlight,
+      fullTime,
+      see: copy.see,
+      again: ui.hud.rematch,
+    }),
+    saved: score,
+    three: {
+      aims: aimsFor(ui, phase === "window" ? open : null),
+      speed,
+      how: three.how,
+      keys: three.keys,
+      hint: three.hint,
+      progress: three.progress,
+      loading: three.loading,
+    },
   };
 }

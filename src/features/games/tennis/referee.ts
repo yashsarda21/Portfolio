@@ -1,14 +1,12 @@
-import { PERFECT_SHARE, pickQuality, type PickCall } from "../engine/pick";
+import { PERFECT_SHARE, pickQuality, TOUCH_STRETCH, type PickCall } from "../engine/pick";
 import type { GameLayout, Luck, Quality } from "../engine/types";
 
 /** Moved to `engine/pick.ts`; still exported here. */
-export { PERFECT_SHARE };
+export { PERFECT_SHARE, TOUCH_STRETCH };
 
 export type Side = "left" | "right";
 export const TENNIS_SERVES = 3;
 export const SERVE_WINDOW_MS = [900, 700, 500] as const;
-/** The column (touch) gets 25 % longer (spec §8.2). */
-export const TOUCH_STRETCH = 1.25;
 export const SERVE_KMH = [178, 186, 194] as const;
 /** The open side lights up this long after the serve begins; the toss then runs a random 0.4–0.9 s. */
 export const TELL_MS = 300;

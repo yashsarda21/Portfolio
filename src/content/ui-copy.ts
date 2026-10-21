@@ -249,7 +249,8 @@ export const ui = {
     },
     badminton: {
       title: "Smash or Clear — Badminton Hall",
-      description: "Play four rallies. Each one charges a group of Yash's skills.",
+      description:
+        "Play the end of a badminton game against Yash. Every rally he wins charges a group of his skills.", // derived (Phase 8)
       heading: "SMASH OR CLEAR",
     },
     fullTime: {
@@ -389,9 +390,9 @@ export const ui = {
         see: "SEE PROJECTS",
       },
       badminton: {
-        blurb: "Hold, release, smash. Every rally won charges one of my player attributes.",
+        blurb: "Rally with me in 3D. Every rally I win charges one of my player attributes.", // derived (Phase 8)
         reveals: "PLAYER ATTRIBUTES",
-        duration: "~10s",
+        duration: "~40s", // derived (Phase 8)
         category: "SKILLS",
         see: "SEE SKILLS",
       },
@@ -588,6 +589,43 @@ export const ui = {
         matchPoint: "Match point. He's done this before.",
         // the final rally: content.commentary.yashWins[0]
       },
+      /** The 3D game (Phase 8): real rallies to 21, Yash always wins. */
+      three: {
+        loading: "PREPARING THE HALL",
+        how: "Send it where he isn't: deep or short.",
+        keys: "↑ ↓",
+        hint: { stage: "↑ ↓ OR CLICK", phone: "TAP OR SWIPE ↑ ↓" },
+        progress: "HIS RALLIES CHARGE THE ATTRIBUTES",
+        aim: {
+          deep: "SMASH",
+          short: "DROP",
+          open: "OPEN COURT",
+          to: { deep: "Send it deep: smash", short: "Send it short: drop" },
+          openName: "open court",
+          dash: "—",
+        },
+        status: { yourMatchPoint: "YOUR MATCH POINT", all: "20 ALL" },
+        calls: {
+          early: "TOO EARLY.",
+          late: "TOO LATE.",
+          wrong: "WRONG SHOT.",
+          read: "HE READ IT.",
+          winner: "WINNER.",
+          out: "OUT.",
+          dive: "WHAT A DIVE.",
+        },
+        speed: "SMASH",
+        comm: {
+          smash: "Jump smash.",
+          drop: "Drop shot. Dead at the net.",
+          dive: "Full stretch. He gets everything back.",
+          placement: "Court vision. Into the empty corner.",
+          final: "Jump smash to finish it.",
+          charged: "charged.",
+          anyway: "charged anyway.",
+          all: "Twenty all. Nerves of steel.",
+        },
+      }, // derived (Phase 8)
       see: "SEE PLAYER ATTRIBUTES", // derived
       skip: "SKIP TO PLAYER ATTRIBUTES",
     },

@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { BADMINTON_START_STATE, playRally, type BadmintonState } from "./referee";
-import { buildBadmintonView, type BadmintonPhase } from "./view";
+import type { Judged } from "../engine/pick";
+import { MATCH_START, needsSecond, playRally as playRally3d, type MatchState } from "./3d/match";
+import {
+  buildBadminton3dView,
+  buildBadmintonView,
+  type Badminton3dPhase,
+  type BadmintonPhase,
+} from "./view";
 
 /** The phone's quiet third link at the end. */
 const HUB = { label: "BACK TO THE HUB", to: "/arena" };
@@ -245,6 +252,205 @@ describe("buildBadmintonView", () => {
     );
     expect(view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "verdict" }).announce).toMatch(
       /\. Game yash\. 21–19\.$/,
+    );
+  });
+});
+
+describe("buildBadminton3dView", () => {
+  const perfect: Judged = { q: "perfect", call: "perfect" };
+  const late: Judged = { q: "miss", call: "late" };
+  /** Plays rallies in order, each a list of picks. */
+  const play3d = (...rallies: Judged[][]): MatchState =>
+    rallies.reduce((s, picks) => playRally3d(s, picks), MATCH_START);
+  /** A whole game of perfect picks: 22–20. */
+  const allPerfect = (): MatchState => {
+    let s = MATCH_START;
+    while (s.rallies.length < 6) {
+      s = playRally3d(s, needsSecond(s, perfect) ? [perfect, perfect] : [perfect]);
+    }
+    return s;
+  };
+  /** A rally you win (from 19, outside the Data rally), or the OUT rally once you are on 20. */
+  const yours = [perfect, perfect];
+  const view3d = (
+    state: MatchState,
+    opts: { phase?: Badminton3dPhase; open?: "deep" | "short" | null; fullTime?: boolean } = {},
+  ) =>
+    buildBadminton3dView(content, ui, ROUTES, state, {
+      phase: opts.phase ?? "ready",
+      open: opts.open ?? null,
+      offerHighlight: false,
+      fullTime: opts.fullTime ?? false,
+    });
+
+  it("3D: before the first rally the bug reads 17–19 and RALLY 1; nothing is called or charged", () => {
+    const v = view3d(MATCH_START);
+    expect(v.bug).toEqual({
+      label: "Score",
+      name: "YASH",
+      yash: "17",
+      you: "19",
+      away: "YOU",
+      status: "RALLY 1",
+      statusPhone: "RALLY 1",
+      phoneBadge: false,
+      alert: false,
+    });
+    expect(v.toasts).toEqual([
+      { state: "next", label: "BACKEND", hint: "UP NEXT" },
+      { state: "later", label: "FRONTEND", hint: "DROP SHOT" },
+      { state: "later", label: "DATA", hint: "DEFENCE" },
+      { state: "later", label: "CRAFT", hint: "COURT VISION" },
+    ]);
+    expect(v.latest).toBeNull();
+    expect(v.call).toBeNull();
+    expect(v.announce).toBe("");
+    expect(v.end).toBeNull();
+    expect(v.three.speed).toBeNull();
+    expect(v.comm).toBe(content.commentary.entrance[0]);
+    expect(v.three).toMatchObject({
+      how: "Send it where he isn't: deep or short.",
+      keys: "↑ ↓",
+      hint: { stage: "↑ ↓ OR CLICK", phone: "TAP OR SWIPE ↑ ↓" },
+      progress: "HIS RALLIES CHARGE THE ATTRIBUTES",
+      loading: "PREPARING THE HALL",
+    });
+    // The 2D parts are kept, not drawn.
+    expect(v.meter.label).toBe("SHOT POWER");
+    expect(v.reading).toBe("YASH · READING YOUR GRIP");
+  });
+
+  it("3D: the status reads MATCH POINT at 20–19 (alert), YOUR MATCH POINT at 17–20 (alert), 20 ALL at 20–20, and GAME YASH at the end", () => {
+    const at = (state: MatchState) => view3d(state).bug;
+    expect(at(play3d([late], [late], [late]))).toMatchObject({
+      yash: "20",
+      you: "19",
+      status: "MATCH POINT",
+      statusPhone: "MATCH POINT",
+      phoneBadge: true,
+      alert: true,
+    });
+    expect(at(play3d(yours))).toMatchObject({
+      yash: "17",
+      you: "20",
+      status: "YOUR MATCH POINT",
+      phoneBadge: true,
+      alert: true,
+    });
+    expect(at(play3d(yours, [late], [late], [late]))).toMatchObject({
+      yash: "20",
+      you: "20",
+      status: "20 ALL",
+      phoneBadge: true,
+      alert: false,
+    });
+    expect(at(play3d(yours, [late], [late], [late], [late]))).toMatchObject({
+      status: "MATCH POINT",
+      alert: true,
+    });
+    expect(at(play3d([late], [late], [late], [late]))).toMatchObject({
+      yash: "21",
+      status: "GAME YASH",
+      statusPhone: "GAME YASH",
+      phoneBadge: true,
+      alert: false,
+    });
+    expect(at(play3d([late])).status).toBe("RALLY 2");
+  });
+
+  it("3D: the aims are ↓ DROP then ↑ SMASH; in a window the open one is lit, reads OPEN COURT and is named 'Send it deep: smash — open court'", () => {
+    const idle = view3d(MATCH_START).three.aims;
+    expect(idle).toEqual([
+      { dir: "short", arrow: "↓", label: "↓ DROP", name: "Send it short: drop", open: false },
+      { dir: "deep", arrow: "↑", label: "↑ SMASH", name: "Send it deep: smash", open: false },
+    ]);
+    const lit = view3d(MATCH_START, { phase: "window", open: "deep" }).three.aims;
+    expect(lit[1]).toEqual({
+      dir: "deep",
+      arrow: "↑",
+      label: "↑ OPEN COURT",
+      name: "Send it deep: smash — open court",
+      open: true,
+    });
+    expect(lit[0]!.open).toBe(false);
+    // Nothing is lit outside a window, whatever is open.
+    expect(view3d(MATCH_START, { phase: "rally", open: "deep" }).three.aims).toEqual(idle);
+  });
+
+  it("3D: the toasts charge in content order, each eyebrow naming the rally that charged it; the next reads UP NEXT and the later ones their shot", () => {
+    // Your win is rally 1; Yash's wins are rallies 2 and 3 (the OUT charges Backend).
+    const v = view3d(play3d(yours, yours, [late]));
+    expect(v.toasts).toEqual([
+      {
+        state: "charged",
+        eyebrow: "ATTRIBUTE CHARGED · RALLY 2",
+        tag: "SMASH",
+        title: "BACKEND",
+        chips: ["Java", "Spring Boot", "JUnit"],
+        accent: false,
+      },
+      {
+        state: "charged",
+        eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
+        tag: "DROP SHOT",
+        title: "FRONTEND",
+        chips: ["React", "Redux"],
+        accent: true,
+      },
+      { state: "next", label: "DATA", hint: "UP NEXT" },
+      { state: "later", label: "CRAFT", hint: "COURT VISION" },
+    ]);
+    expect(v.latest).toEqual({
+      eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
+      title: "FRONTEND",
+      meta: "React · Redux",
+    });
+  });
+
+  it("3D: comm after a smash win is 'Jump smash. Backend charged.'; after the OUT, 'Hawk-Eye says out. By a whisker. Backend charged anyway.'", () => {
+    expect(view3d(play3d([late])).comm).toBe("Jump smash. Backend charged.");
+    expect(view3d(play3d([late], [late])).comm).toBe(
+      "Drop shot. Dead at the net. Frontend charged.",
+    );
+    expect(view3d(play3d(yours, yours)).comm).toBe(
+      "Hawk-Eye says out. By a whisker. Backend charged anyway.",
+    );
+    expect(view3d(play3d(yours)).comm).toBe(ui.games.tennis.three.comm.yourPoint);
+    // Your rally that makes it 20 all.
+    expect(view3d(play3d([late], [late], [late], yours)).comm).toBe("Twenty all. Nerves of steel.");
+    expect(view3d(play3d([late], [late], [late], [late])).comm).toBe(
+      ui.games.tennis.three.comm.game,
+    );
+  });
+
+  it("3D: the speed line reads YASH · SMASH · 348 KM/H only while a smash win is called", () => {
+    const smash = play3d([late]);
+    expect(view3d(smash, { phase: "called" }).three.speed).toBe("YASH · SMASH · 348 KM/H");
+    expect(view3d(smash, { phase: "verdict" }).three.speed).toBe("YASH · SMASH · 348 KM/H");
+    expect(view3d(smash, { phase: "ready" }).three.speed).toBeNull();
+    expect(view3d(smash, { phase: "rally" }).three.speed).toBeNull();
+    expect(view3d(play3d([late], [late]), { phase: "called" }).three.speed).toBeNull();
+    // The OUT rally is Yash's win by a call, not a smash.
+    expect(view3d(play3d(yours, yours), { phase: "called" }).three.speed).toBeNull();
+    // The final smash reads 365.
+    expect(view3d(allPerfect(), { phase: "end" }).three.speed).toBe("YASH · SMASH · 365 KM/H");
+  });
+
+  it("3D: saved is the real score: 21–19, or 22–20", () => {
+    expect(view3d(play3d([late], [late], [late], [late]), { phase: "end" }).saved).toBe("21–19");
+    expect(view3d(allPerfect(), { phase: "end" }).saved).toBe("22–20");
+    expect(view3d(allPerfect(), { phase: "end" }).end?.again).toBe("REMATCH");
+  });
+
+  it("3D: the announcement is the call and the score, then what was charged: 'TOO LATE. 18–19. Backend charged: Java, Spring Boot, JUnit.'", () => {
+    expect(view3d(play3d([late])).announce).toBe(
+      "TOO LATE. 18–19. Backend charged: Java, Spring Boot, JUnit.",
+    );
+    // Your rally charges nothing.
+    expect(view3d(play3d(yours)).announce).toBe("WINNER. 17–20.");
+    // The end adds how the game ended.
+    expect(view3d(play3d([late], [late], [late], [late]), { phase: "end" }).announce).toMatch(
+      /^TOO LATE\. 21–19\. Craft charged: .+\. Game yash\. 21–19\.$/,
     );
   });
 });
