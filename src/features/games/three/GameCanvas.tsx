@@ -62,6 +62,7 @@ export function GameCanvas({
   layout,
   fov,
   position,
+  antialias,
   onShown,
   onDrawn,
   children,
@@ -70,6 +71,8 @@ export function GameCanvas({
   /** The lens for this layout (vertical degrees), and where the camera starts. */
   fov: number;
   position: Vec3;
+  /** Smooth the edges of the geometry: a game can ask for it on the column, whose setting leaves it off. */
+  antialias?: boolean;
   onShown?: () => void;
   onDrawn?: () => void;
   children: ReactNode;
@@ -93,7 +96,7 @@ export function GameCanvas({
       className="absolute inset-0"
       dpr={[1, settings.dpr]}
       shadows={settings.shadows ? "percentage" : false}
-      gl={{ antialias: settings.antialias, powerPreference: "high-performance" }}
+      gl={{ antialias: antialias ?? settings.antialias, powerPreference: "high-performance" }}
       camera={{ fov, near: 0.1, far: 500, position: [...position] }}
       frameloop={drawing ? "always" : "never"}
       onCreated={({ scene }) => {

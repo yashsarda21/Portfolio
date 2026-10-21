@@ -24,7 +24,11 @@ import type { WorldState } from "./world";
 const FENCE = { x: COURT.doubles + COURT.runoff.side, z: COURT.half + COURT.runoff.back } as const;
 /** Behind you the floor and the side walls run on this far past the back fence, to the near stand (the camera stands in this gap). */
 const NEAR_Z = FENCE.z + 16;
-const WALL = { height: 2.5, thick: 0.25, band: 0.14 } as const;
+/**
+ * `lift` raises the volt band a hair above the wall's top, so their top faces are not in the same plane: two faces in one
+ * plane take turns winning the depth test, which shows as a dashed, crawling edge along the whole top of the wall.
+ */
+const WALL = { height: 2.5, thick: 0.25, band: 0.14, lift: 0.01 } as const;
 /** The stands: a gap beyond the wall, then steps of this tread and rise. */
 const STANDS = { gap: 5, tiers: 8, tread: 1, rise: 0.7 } as const;
 /** Each stand in the world: the way it faces away from the court (radians about y), where its front edge starts, its width. */
@@ -255,7 +259,7 @@ function Walls({ c }: { c: ReturnType<typeof palette> }) {
             <boxGeometry args={[size[0], WALL.height, size[1]]} />
             <meshLambertMaterial color={c.wall} />
           </mesh>
-          <mesh position={[0, WALL.height - WALL.band / 2, 0]}>
+          <mesh position={[0, WALL.height - WALL.band / 2 + WALL.lift, 0]}>
             <boxGeometry args={[size[0] + 0.02, WALL.band, size[1] + 0.02]} />
             <meshBasicMaterial color={c.volt} />
           </mesh>

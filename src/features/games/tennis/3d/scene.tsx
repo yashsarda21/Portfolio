@@ -150,6 +150,7 @@ export function TennisScene({
       layout={layout}
       fov={CAMERA.fov[layout]}
       position={CAMERA.tv.position}
+      antialias
       onShown={onShown}
       onDrawn={onDrawn}
     >
