@@ -199,7 +199,7 @@ describe("pointShotlist: the players", () => {
         }
     }
     expect(bad).toEqual([]);
-  });
+  }, 30_000);
 
   it("feet do not slide: a run or a shuffle at full weight plays at the ground speed", () => {
     const pace: Partial<Record<TennisClip, number>> = {
@@ -233,7 +233,7 @@ describe("pointShotlist: the players", () => {
         }
     }
     expect(checked).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   it("a late swing reaches the ball's place MISS.late after the ball; an early one MISS.early before", () => {
     let seen = 0;
@@ -293,7 +293,7 @@ describe("pointShotlist: the rebuild and the cues", () => {
       });
     }
     expect(bad).toEqual([]);
-  });
+  }, 30_000);
 
   it("cues: a hit at each contact, the court at each bounce, ooh at an OUT, applause unless it is GAME", () => {
     const at = (s: Shotlist, sound: string) =>

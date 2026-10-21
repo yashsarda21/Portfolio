@@ -29,7 +29,7 @@ import {
 import type { TennisAssets } from "./3d/scene";
 import { pointShotlist, readyShotlist, walkShotlist, type Shotlist } from "./3d/sequence";
 import type { WorldState } from "./3d/world";
-import { TELL_MS, type Side } from "./referee";
+import type { Side } from "./referee";
 import { TennisPage } from "./TennisPage";
 import { buildTennis3dView, LIVE_3D, type Tennis3dPhase } from "./view";
 
@@ -83,8 +83,6 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
   // The files, kept for the handlers (a handler made before they arrived reads them here).
   const files = useRef<TennisAssets>(null);
   const point = useRef<InPlay>(null);
-  // The next point's setup, drawn as the last one ended (or before the first): the players walk to its places.
-  const queued = useRef<PointSetup>(null);
   // The first point waits for the page's wipe to be done (m-7): `busyRef` is the wipe now, `waitingForPage` a point due.
   const { busy } = useArenaTransition();
   const busyRef = useRef(busy);
@@ -94,15 +92,16 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
 
   const reach = () => files.current!.reach;
   const elapsed = () => clock.elapsed() / 1000;
+  /** A setup for `game`'s next point, drawn now with the layout now. The players' places follow only from its court. */
+  const places = (game: MatchState) => setupPoint(game, live.current.layout, Math.random);
 
   // The files are in: both players wait at their places for the first point.
   const assets = gate.value?.assets ?? null;
   useEffect(() => {
     if (!assets || files.current) return;
     files.current = assets;
-    queued.current = setupPoint(MATCH_START, live.current.layout, Math.random);
     world.current = {
-      shotlist: readyShotlist(queued.current, assets.reach),
+      shotlist: readyShotlist(places(MATCH_START), assets.reach),
       elapsed,
       crowdUp: false,
     };
@@ -123,9 +122,8 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
   function holdIfHidden() {
     if (document.visibilityState !== "hidden") return false;
     timers.clear();
-    const setup = queued.current ?? point.current?.setup;
     point.current = null;
-    if (setup) show(readyShotlist(setup, reach()));
+    show(readyShotlist(places(latest.current.game), reach()));
     commit({ phase: "ready", open: null });
     waiting.current = true;
     return true;
@@ -135,9 +133,8 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
   function beginPoint() {
     if (holdIfHidden()) return;
     waiting.current = false;
-    const setup =
-      queued.current ?? setupPoint(latest.current.game, live.current.layout, Math.random);
-    queued.current = null;
+    // Drawn here, so a resize since the last point gives this one the new layout's windows (§6.6).
+    const setup = places(latest.current.game);
     const script = scriptPoint(setup, {}, reach());
     point.current = { setup, decided: {}, script, next: null };
     const list = pointShotlist(script, reach());
@@ -198,8 +195,9 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
   }
 
   /**
-   * Your pick (a key, a click, a tap or a swipe): a gesture, so a game reached directly makes sound too. During the
-   * toss or the rally ball it is TOO EARLY; in a window it is judged by the point's clock; any other time it does nothing.
+   * Your pick (a key, a click, a tap or a swipe): a gesture, so a game reached directly makes sound too. In the toss,
+   * a window or the rally ball it is judged by the point's clock, as the scene shows it: before Yash's hit it is TOO
+   * EARLY (a negative time). Any other time it does nothing.
    */
   function pick(side: Side) {
     live.current.audio.unlock();
@@ -207,8 +205,9 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
     if (!p) return;
     const i = p.decided.first ? 1 : 0;
     const phase = latest.current.phase;
-    if (phase === "toss" || phase === "rally") resolve(i, side, -1);
-    else if (phase === "window") resolve(i, side, (elapsed() - p.script.windows[i]!.opens) * 1000);
+    if (phase !== "toss" && phase !== "window" && phase !== "rally") return;
+    const hit = p.script.windows[i];
+    resolve(i, side, hit ? (elapsed() - hit.opens) * 1000 : -1);
   }
 
   /** The point's last ball is done: the call, the score and what it unlocked; the game's end is saved at once (G8). */
@@ -236,8 +235,7 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
       show(walkShotlist(was, null));
       return;
     }
-    queued.current = setupPoint(next, now.layout, Math.random);
-    show(walkShotlist(was, queued.current));
+    show(walkShotlist(was, places(next)));
     timers.after(TENNIS_3D_BEATS.callMs, beginPoint);
   }
 
@@ -293,10 +291,11 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
       world.current!.crowdUp = false;
       point.current = null;
       waiting.current = false;
-      queued.current = setupPoint(MATCH_START, live.current.layout, Math.random);
-      show(readyShotlist(queued.current, reach()));
+      // No cut: the players walk from where GAME left them to the first point's places, and the camera eases from the
+      // push-in back to the TV view, as between any two points.
+      show(walkShotlist(world.current!.shotlist, places(MATCH_START)));
       if (desktop) say(content.commentary.entrance[0]!, { interrupt: true });
-      timers.after(TELL_MS, beginPoint);
+      timers.after(TENNIS_3D_BEATS.callMs, beginPoint);
     });
 
   useGameKeys(

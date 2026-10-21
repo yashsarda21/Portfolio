@@ -9,7 +9,15 @@ import {
   type GameChrome,
   type GameEndView,
 } from "../frame/chrome";
-import { matchOver, scoreOf, serveKmh, unlockedOf, yashPoints, type MatchState } from "./3d/match";
+import {
+  GAME_AT,
+  matchOver,
+  scoreOf,
+  serveKmh,
+  unlockedOf,
+  yashPoints,
+  type MatchState,
+} from "./3d/match";
 import {
   SERVE_KMH,
   TENNIS_SERVES,
@@ -295,7 +303,7 @@ export function buildTennis3dView(
   const status = copy.status.game;
   const boardStatus = over
     ? status
-    : yashPoints(state) === 3
+    : yashPoints(state) === GAME_AT - 1
       ? three.gamePoint
       : `${three.point} ${played + 1}`;
 
@@ -315,7 +323,7 @@ export function buildTennis3dView(
         ? three.comm.out
         : last.winner === "you"
           ? three.comm.yourPoint
-          : yashPoints(state) === 3
+          : yashPoints(state) === GAME_AT - 1
             ? three.comm.gamePoint
             : last.call === "ace"
               ? copy.comm.missed

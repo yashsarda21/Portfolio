@@ -44,12 +44,16 @@ export default defineConfig({
       // The 3D game on a desktop: software WebGL2, so the -3d specs run on any machine.
       name: "desktop-3d",
       testMatch: /-3d\.spec/,
+      // Software WebGL is heavy: one worker at a time keeps the 30 s open and the 10 s show cap from being missed.
+      workers: 1,
       use: { ...DESKTOP, launchOptions: SOFTWARE_GL },
     },
     {
       // The 3D game on a phone: software WebGL2, so the -3d specs run on any machine.
       name: "mobile-3d",
       testMatch: /-3d\.spec/,
+      // Software WebGL is heavy: one worker at a time keeps the 30 s open and the 10 s show cap from being missed.
+      workers: 1,
       use: { ...MOBILE, launchOptions: SOFTWARE_GL },
     },
     {

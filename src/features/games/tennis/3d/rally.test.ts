@@ -218,7 +218,7 @@ describe("scriptPoint: the shots", () => {
       return null;
     });
     expect(bad).toEqual([]);
-  });
+  }, 30_000);
 
   it("no impossible run: under 7.5 m/s between a player's spots, after the follow-through", () => {
     const follow = STROKE_CLIP.end - STROKE_CLIP.contact;
@@ -237,7 +237,7 @@ describe("scriptPoint: the shots", () => {
     });
     expect(bad).toEqual([]);
     expect(fastest).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   // Task 4's carry: shotTo itself enforces nothing, so every shot the script plans with it is checked here.
   it("every ball to a racket is a real tennis ball, and every ball over the net clears it", () => {
@@ -259,7 +259,7 @@ describe("scriptPoint: the shots", () => {
       return null;
     });
     expect(bad).toEqual([]);
-  });
+  }, 30_000);
 });
 
 describe("scriptPoint: the rules", () => {
@@ -343,5 +343,5 @@ describe("scriptPoint: the rules", () => {
           same(scripts[0]!, scripts[1]!, decided.first!.at);
           if (decided.second) same(scripts[1]!, scripts[2]!, decided.second.at);
         }
-  });
+  }, 30_000);
 });

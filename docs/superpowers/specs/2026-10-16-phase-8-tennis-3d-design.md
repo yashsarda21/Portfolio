@@ -355,7 +355,7 @@ Reach, in the body frame from the feet (x is the player's left, y up, z the play
 
 - Eleven tennis clips are made from key poses with `poseClip` (serve, forehand, two-handed backhand, footwork, stretches, fist pump), as cricket's are. No new model files. Yash approved the moves on their own before the game was built on them (§5.4), and again in the finished game (owner checkpoint, 2026-10-21: "lgtm").
 - The racket is built in code and fixed to the right hand with a mild semi-western grip (so the short arms reach the ball without bending the wrist 80–90°).
-- Sounds (picked by Yash by ear, all CC0, listed in `public/models/CREDITS.md`): `hit` (the racket), `court` (the bounce), `applause` (after a point), `hush` (the quieter hum, a loop for the serve and the rally), and today's `ooh` and `cheer` reused. The picks are rebuilt from their sources with the same trims and levels the candidates had; they were not listened to again by the builder (a later by-ear check by Yash is wanted). Until a recording is fetched and decoded on the first gesture, or if it fails to load, the code-made sound plays.
+- Sounds (picked by Yash by ear, all CC0, listed in `public/audio/CREDITS.md`): `hit` (the racket), `court` (the bounce), `applause` (after a point), `hush` (the quieter hum, a loop for the serve and the rally), and today's `ooh` and `cheer` reused. The picks are rebuilt from their sources with the same trims and levels the candidates had; they were not listened to again by the builder (a later by-ear check by Yash is wanted). Until a recording is fetched and decoded on the first gesture, or if it fails to load, the code-made sound plays.
 
 ### 10.7 The court's lines
 

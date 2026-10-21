@@ -137,18 +137,28 @@ test("perfect play: two WINNERs, then OUT by a whisker; 40–30, GAME YASH saved
   expect(errors).toEqual([]);
 });
 
-test("Review Focus 1: mashing in the toss is TOO EARLY once; a press while your swing is under way does nothing", async ({
+test("Review Focus 1: mashing is TOO EARLY once; a press in the routine, the call or while your swing is under way does nothing", async ({
   page,
 }) => {
   const errors = watchErrors(page);
   await forceLuck(page, 0.2);
   await open3d(page, URL);
 
+  // The routine: a press does nothing.
+  expect(await phaseOf(page)).toBe("ready");
+  await pickSide(page, "left");
+  expect(await phaseOf(page)).toBe("ready");
+  await expectScore(page, "0", "0");
+
   await untilPhase(page, ["toss"]);
   for (let k = 0; k < 3; k++) await pickSide(page, "left");
   await expect(game(page)).toHaveAttribute("data-phase", "struck");
   await untilPhase(page, ["called"]);
   await expect(call(page)).toHaveText(tennis.calls.early);
+  await expectScore(page, "15", "0");
+  // The call: a press does nothing.
+  await pickSide(page, "left");
+  expect(await phaseOf(page)).toBe("called");
   await expectScore(page, "15", "0");
 
   // A good return, then a press in "struck": it is not your second shot (that would be TOO EARLY, with no rally ball).
@@ -160,6 +170,12 @@ test("Review Focus 1: mashing in the toss is TOO EARLY once; a press while your 
   expect(await phaseOf(page)).toBe("struck");
   expect(await untilPhase(page, ["rally", "called"])).toBe("rally");
   await expectScore(page, "15", "0");
+  // The rally ball: mashing is TOO EARLY once (Yash's point, 30–0).
+  for (let k = 0; k < 3; k++) await pickSide(page, "left");
+  expect(await phaseOf(page)).toBe("struck");
+  await untilPhase(page, ["called"]);
+  await expect(call(page)).toHaveText(tennis.calls.early);
+  await expectScore(page, "30", "0");
   expect(errors).toEqual([]);
 });
 
@@ -270,6 +286,7 @@ test("Review Focus 5: SKIP mid-rally leaves cleanly, no sound after, and coming 
     await jump(page, 250);
   await expect(page).toHaveURL(/\/highlights$/);
   const left = await sounds();
+  expect(left).toBeGreaterThan(0);
   await jump(page, 6000);
   await expect(page.locator("[data-game]")).toHaveCount(0);
   expect(await sounds()).toBe(left);
