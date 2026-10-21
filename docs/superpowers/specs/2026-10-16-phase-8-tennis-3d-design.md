@@ -301,3 +301,99 @@ These are cycle 1's settings (§6.3 there): the pixel ratio cap 2 / 1.5, one sha
 - Player faces or likeness.
 - Any paid asset or tool.
 - Changes to the 2D tennis game.
+
+## 10. As built (2026-10-21)
+
+### 10.1 The speed gate
+
+Same rule as cricket §9.1. Lighthouse gates `/arena/tennis` on the page's first load: the prerendered page and the 2D game it falls back to, with WebGL off (`--disable-3d-apis`). The 3D game is measured with software WebGL (SwiftShader) and only reported. `tools/lighthouse.mjs` now gives tennis cricket's four runs. It also takes an optional `LIGHTHOUSE_ONLY=/arena/tennis` to run one page.
+
+### 10.2 Lighthouse (3 runs each; perf = median, a11y / bp / SEO = worst run, CLS = worst run)
+
+| `/arena/tennis` | perf | a11y | bp | SEO | FCP | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|---|
+| desktop, **gated** (WebGL off) | 99 | 100 | 100 | 100 | 472 ms | 935 ms | 0.000 | 0 ms |
+| phone, **gated** (WebGL off) | 82 | 100 | 100 | 100 | 2043 ms | 4550 ms | 0.000 | 0 ms |
+| desktop, 3D (software WebGL) | 67 | 100 | 100 | 100 | 483 ms | 900 ms | 0.000 | 1818 ms |
+| phone, 3D (software WebGL) | 41 | 100 | 100 | 100 | 2113 ms | 9244 ms | 0.000 | 2781 ms |
+
+Gates (unchanged): desktop performance ≥ 90, phone ≥ 80, accessibility 100, best practices and SEO ≥ 90, FCP ≤ 1500 ms (desktop), CLS ≤ 0.1. All were met on the first run, so no start-up fix was needed: the loader keeps the controls' place, so nothing moves when the 3D arrives (CLS 0.000 in every run). The phone gate has 2 points of room (82 against 80). As in cricket, the first 3D run in a fresh Chrome is much slower (desktop 37, phone 25 on run 1): SwiftShader starts up and compiles every shader cold. The phone's 3D LCP is the moment the files finish arriving on Lighthouse's slow 4G. Only `/arena/tennis` was re-run this time; the other pages are untouched by this cycle.
+
+### 10.3 Sizes (build/client)
+
+| File | raw | gzip -9 | brotli q5 |
+|---|---|---|---|
+| `assets/scene-*.js` (the tennis scene, lazy) | 44,406 | 11,619 | 10,553 |
+| `assets/Floodlight-*.js` (three + R3F + the shared 3D parts, lazy, shared with cricket) | 969,106 | 255,033 | 238,937 |
+| `assets/arena.tennis-*.js` (the route) | 19,975 | 7,366 | 7,015 |
+| `assets/sequence-*.js` (the point script and shotlists, in the route's first load; no `three`) | 14,421 | 6,324 | 6,189 |
+
+The models (`athlete.glb`, `moves.glb`, `athlete-skin.jpg`) are shared with cricket and unchanged (cricket §9.4). The hard 3D chunk is also shared: a visitor who played cricket has already downloaded it, and the new tennis code on top is only about 10 KB (brotli). A first tennis visit downloads about 915 KB after first paint (the shared 3D chunk 239 KB, the scene 11 KB, the models 651 KB, plus gsap and a few small files). The smoke test checks that no first-load tennis chunk contains `three`.
+
+### 10.4 Camera (`court.ts`)
+
+- `CAMERA.tv`: position `[0, 11, 32]`, target `[0, 1.83, 3.4]` (the broadcast view from behind you, high enough to see the whole court).
+- `fov`: stage 30, column 44. `tilt`: stage 0, column 4° (the column tips down so the play sits above the thumb zone). `pan`: 0.25.
+- `CAMERA.game`: position `[0, 4.2, 6]`, target `[0, 1.2, -12]` (the push-in at GAME).
+- Stage at 1440×900: Yash's head at about y 266 and your whole body in frame (y 745 to 890). Column at 390×844: Yash's head at y 233 and you at y 531–619, above the thumb zone.
+
+### 10.5 The measured reach and pace
+
+Reach, in the body frame from the feet (x is the player's left, y up, z the player's front), measured with the real clips and the racket:
+
+| | x | y | z |
+|---|---|---|---|
+| serve contact | −0.108 | 2.678 | 0.515 |
+| forehand contact | −0.855 | 0.898 | 0.543 |
+| backhand contact | 0.655 | 0.938 | 0.537 |
+| toss (left hand at 0.3 s) | −0.034 | 1.851 | 0.366 |
+| bounce (left hand at 0) | 0.022 | 0.906 | 0.421 |
+
+`CLIP_PACE` (the ground speed each free clip was made for, at clip speed 1, in `three/rig.ts`): walk 1.05 m/s, jog 6.2 m/s, sprint 9.5 m/s.
+
+### 10.6 The moves and the sounds
+
+- Eleven tennis clips are made from key poses with `poseClip` (serve, forehand, two-handed backhand, footwork, stretches, fist pump), as cricket's are. No new model files. Yash approved the moves on their own before the game was built on them (§5.4), and again in the finished game (owner checkpoint, 2026-10-21: "lgtm").
+- The racket is built in code and fixed to the right hand with a mild semi-western grip (so the short arms reach the ball without bending the wrist 80–90°).
+- Sounds (picked by Yash by ear, all CC0, listed in `public/models/CREDITS.md`): `hit` (the racket), `court` (the bounce), `applause` (after a point), `hush` (the quieter hum, a loop for the serve and the rally), and today's `ooh` and `cheer` reused. The picks are rebuilt from their sources with the same trims and levels the candidates had; they were not listened to again by the builder (a later by-ear check by Yash is wanted). Until a recording is fetched and decoded on the first gesture, or if it fails to load, the code-made sound plays.
+
+### 10.7 The court's lines
+
+After the first owner check, the court's white lines blinked on phones. The cause was shimmer from thin lines far away (the lines were well under one pixel wide from the broadcast view), not two surfaces fighting for the same spot. The lines are now drawn once into one mipmapped texture on one plane above the court. Far lines fade smoothly, the phone no longer draws them wider, and the draw calls per frame fell by 10. The same check showed the "lag" on the desktop video came from the screen recorder using software drawing (about 9 fps at 1440×900). On a real GPU the scene ran a steady 60 fps on both layouts, with room to spare (over 140 fps even at double pixel density). To record videos on this Mac, start Chromium with `--use-angle=metal --enable-gpu --ignore-gpu-blocklist`.
+
+Left as it is: the crowd figures and the volt band at the top of the walls still shimmer a little on phones (the crowd is shared with cricket). The far lines on phones are thinner than before.
+
+### 10.8 Rulings, in plain words
+
+From the plan:
+- **The window closes 0.2 s before contact.** A real swing needs that long, so Yash's forward swing starts when your window closes. The ball's flight to your contact is the window plus 0.2 s.
+- **The bounce keeps between 50 and 90 % of its up-speed.** Each ball has to meet a racket at a set height and a set time, so the kept up-speed is worked out for each shot. Flat serves skid low, topspin kicks high. The court keeps 62 % of the speed along it (the spec said "about 60 %").
+- **The bounce sound is named `court`**, not `bounce`, because cricket's code-made pitch bounce already has that name and a recording under it would change cricket's sound.
+- **The hum does not dip for the serve.** It is already quiet. The hush comes from the silence between hits and the applause after each point. Keep it simple.
+
+While building:
+- **R1: `CLIP_PACE` lives in `three/rig.ts`**, not `three/athlete.ts`, because the point script is part of the page's first load and `athlete.ts` imports `three`. Same reason (R3): the point script and rally use `Reach` as a type only.
+- **R2: Task 8 could change `CAMERA`** (and only it) in `court.ts` while tuning, though its file list left `court.ts` out.
+- **R4: `props.racket(a, throat = "light")`**, because the reach code calls it with no throat colour.
+- **R5: the swing's `side` is the screen side.** The shotlists choose the left or right stretch from the player's own right and left, so a stretch is never mirrored.
+- **R6: the tennis sound names have a compile-time check** that each one is a real sound, as cricket has.
+- **R7 and R19: Opus built the moves, the point script, the shotlists and the game wiring** (the pieces that decide whether the racket meets the ball and nothing snaps). The rest was built with Sonnet.
+- **R8: Task 2 ran while the sounds were being gathered**, since they touched different files.
+- **R9 and R21: the owner chose lean reviews.** The sound task and this task had no review of their own, and Task 10's review is the one final whole-branch review.
+- **R10: the "into the net" ball starts to drop exactly at the net** (the plan had it start 4 cm after), because the test needs the ball at the net exactly at flight time, and 4 cm was a visible jump.
+- **R11: Task 5's review covered the code, not the key-pose numbers.** The poses were checked by eye and by the owner checkpoint.
+- **R13 (runs):** a run starts 0.1 s after the opponent's hit with the split step blended in. A recovery still going is cut short where the player is. The run arrives when the forward swing starts, and the stroke clip fades in over 0.4 s while the last of the run finishes. Early misses are capped at about 6 m/s and stop short. This is physically possible and matches real open-stance strokes on the move. The cost is a small foot slide in that 0.4 s blend.
+- **R14 (return of serve):** the receiver stands deeper (about 14.6 m) and nearer the middle of the contact range, so a return needs a short step, not a 1.8 m dash.
+- **R15 (jogs):** under 1 m, or under about 2.7 m/s, the player uses a side shuffle. Beyond that the jog and sprint clips are allowed to play at 0.42–0.65 of their speed, because feet that do not slide are worth more than a slightly slow look.
+- **R16:** `SERVE_LANDS` lives in `timing.ts` (one source of truth for three files, and no `three`).
+- **R17:** after a point, a walk back of up to about 2.6 m within the call time; a jog beyond that.
+- **R18: the sounds were rebuilt from source** because the candidates folder had been cleared. Same sources, same trims and levels. Yash's by-ear check still applies.
+- **R20: lean checks for the last task:** unit tests, typecheck, lint and format, the 3D tennis e2e on desktop-3d and mobile-3d, the cricket 3D e2e on desktop-3d, and tennis, hub and smoke on the 2D desktop project. The full `pnpm verify` is the one run before merge.
+
+### 10.9 Known and left for later
+
+- The 3D e2e on desktop-3d is load-sensitive: under 4 parallel workers, software WebGL at 1440×900 can miss the 30 s ready or the 10 s show cap and fall back to 2D (as designed). The fix is fewer workers for the `-3d` projects, or a longer `open3d` wait.
+- Three heavy unit tests (`rally.test.ts` ×2, `sequence.test.ts` ×1) can hit the 5 s timeout under the full suite and pass alone. They need a per-test timeout or a sparser sweep.
+- `useGameSession` now passes the whole run to `build`, outside the Task 10 file list (type-compatible with cricket and badminton).
+- The hands are open (no finger bones), the loops of some shuffles may hitch at the seam, and there is a 2–3 cm foot slide in the 0.4 s blend (R13). Yash judged the moves good at the checkpoint.
+- Yash checks the 3D's smoothness on his own phone before merge, as in cricket.

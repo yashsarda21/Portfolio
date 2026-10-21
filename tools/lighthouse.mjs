@@ -37,7 +37,7 @@ const MOBILE = { name: "mobile", config: undefined };
 // phone profile is Lighthouse's default: a slow-4G network and a 4x slower CPU).
 const PHONE_FLOOR = 0.8;
 const MOBILE_FAST = { ...MOBILE, gate: { performance: PHONE_FLOOR } };
-// Cricket (owner decision, 2026-10-16): the gate measures the page's first load, as in every phase: the prerendered
+// Cricket and Tennis (owner decision, 2026-10-16): the gate measures the page's first load, as in every phase: the prerendered
 // page and the 2D game it falls back to without WebGL. Headless Chrome on a machine with a GPU has WebGL2, so the
 // gated runs switch it off (as the 2D e2e projects do). The 3D game is reported, never gated: the SwiftShader flags
 // give headless Chrome a software WebGL, so the page loads its 3D scene, models and render loop. SwiftShader draws
@@ -92,7 +92,7 @@ const PAGES = [
     variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   },
   // The three games (spec 11.13, G17): a game waits for the visitor and moves by transform only, so desktop
-  // carries the Hub's gates, and phones the floor. Cricket is gated without WebGL, and its 3D only reported (above).
+  // carries the Hub's gates, and phones the floor. Cricket and Tennis are gated without WebGL, and their 3D only reported (above).
   {
     path: "/arena/cricket",
     variants: [
@@ -102,10 +102,19 @@ const PAGES = [
       { ...MOBILE, name: "mobile, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
     ],
   },
-  ...["/arena/tennis", "/arena/badminton"].map((path) => ({
-    path,
+  {
+    path: "/arena/tennis",
+    variants: [
+      { ...DESKTOP, chromeFlags: NO_3D, gate: { ...FRESH, fcp: 1500, cls: 0.1 } },
+      { ...MOBILE_FAST, chromeFlags: NO_3D },
+      { ...DESKTOP, name: "desktop, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
+      { ...MOBILE, name: "mobile, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
+    ],
+  },
+  {
+    path: "/arena/badminton",
     variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
-  })),
+  },
   // Full Time (spec 11.14, F13): the matchday's last page, entered by CSS keyframes only, so desktop carries the Hub's gates.
   {
     path: "/arena/full-time",
@@ -295,7 +304,10 @@ async function main() {
     // Accessibility, best practices and SEO are deterministic: they are gated on the worst of the same runs,
     // with no retry. Every run is printed.
     const failures = [];
-    for (const page of PAGES) {
+    // LIGHTHOUSE_ONLY=/arena/tennis runs a single page (a quick check; the full run is still the phase-exit gate).
+    for (const page of PAGES.filter(
+      (p) => !process.env.LIGHTHOUSE_ONLY || p.path === process.env.LIGHTHOUSE_ONLY,
+    )) {
       console.log(`\n${page.path}\n${TABLE_HEAD}`);
       for (const variant of page.variants) {
         const { runs, lastLhr } = await measure(`${ORIGIN}${page.path}`, variant);

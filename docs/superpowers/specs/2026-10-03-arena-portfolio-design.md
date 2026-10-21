@@ -270,6 +270,8 @@ Resolved token drift (audit §2.10):
 
 ### 8.2 Tennis: Return of Serve (rules designed from README)
 
+> **Phase 8 (2026-10-16):** tennis becomes a 3D game; see [`2026-10-16-phase-8-tennis-3d-design.md`](2026-10-16-phase-8-tennis-3d-design.md), which wins over this section and §11.13 for tennis. The rules below stay as the 2D backup's rules.
+
 - 3 serves. Before each serve, the open side is chosen randomly and shown as a subtle tell: a volt highlight on the open aim zone after a short delay.
 - The visitor picks ← / → (click or swipe).
 - Reaction window shrinks: 900ms, 700ms, 500ms (+25% on touch). The displayed serve speed rises: 178, 186, 194 km/h.
