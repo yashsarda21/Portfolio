@@ -15,7 +15,16 @@ import {
   type ActorId,
   type Vec3,
 } from "./court";
-import { courtOf, windowMs, YOUR_CAP, yourPoints, type Court, type MatchState } from "./match";
+import {
+  courtOf,
+  GAME_AT,
+  windowMs,
+  yashPoints,
+  YOUR_CAP,
+  yourPoints,
+  type Court,
+  type MatchState,
+} from "./match";
 // Type only: reach.ts imports three, and this file is reached from the first load (ruling R3).
 import type { Reach } from "./reach";
 import { MISS, ROUTINE, SERVE_CLIP, SWING_LEAD, type Stroke } from "./timing";
@@ -56,6 +65,8 @@ export interface PointSetup {
   first: boolean;
   /** You already have 30: your best shot is OUT. */
   capped: boolean;
+  /** Yash has 40: if he wins this point, it is GAME. */
+  gamePoint: boolean;
   /** Each window (s), the layout applied; fixed for the point. */
   windows: { serve: number; rally: number };
   /** The open side at Yash's serve, and at his rally shot. */
@@ -123,6 +134,7 @@ export function setupPoint(s: MatchState, layout: GameLayout, luck: Luck): Point
     court: courtOf(s),
     first: s.points.length === 0,
     capped: yourPoints(s) >= YOUR_CAP,
+    gamePoint: yashPoints(s) === GAME_AT - 1,
     windows: {
       serve: windowMs("serve", s, layout) / 1000,
       rally: windowMs("rally", s, layout) / 1000,

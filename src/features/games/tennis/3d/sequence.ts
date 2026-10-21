@@ -1,6 +1,6 @@
 import { CLIP_PACE } from "../../three/rig";
 import { lerp3, sampleTrack, type ActorTrack, type ClipSeg } from "../../three/track";
-import { TOUCH_STRETCH, type Side } from "../referee";
+import type { Side } from "../referee";
 import {
   ACTORS,
   BALL_RADIUS,
@@ -15,7 +15,7 @@ import {
   type CameraPose,
   type Vec3,
 } from "./court";
-import { TENNIS_3D_BEATS, WINDOW_MS } from "./match";
+import { TENNIS_3D_BEATS } from "./match";
 import { RECOVER, type PointScript, type PointSetup, type Recover, type Swing } from "./rally";
 // Type only: reach.ts imports three, and this file is reached from the first load (ruling R3).
 import type { Reach } from "./reach";
@@ -323,17 +323,11 @@ const tvFollowing =
     return { position: CAMERA.tv.position, target: [(CAMERA.pan * x) / PAN.samples, y, z] };
   };
 
-/**
- * Whether this point ends the game: Yash wins it at 40. His score is read off the serve window, which only his 40
- * gives (desktop 0.7 s, the column 0.875 s); you win only the points where Yash stretches for your last ball.
- */
+/** Whether this point ends the game: Yash wins it at 40 (you win only the points where Yash stretches for your last ball). */
 function endsGame(script: PointScript): boolean {
-  const { windows, capped } = script.setup;
-  const forty = [1, TOUCH_STRETCH].some(
-    (k) => Math.abs(windows.serve - (WINDOW_MS.serve[3] * k) / 1000) < 1e-9,
-  );
+  const { gamePoint, capped } = script.setup;
   const youWin = !capped && script.swings.at(-1)?.by === "yash";
-  return forty && !youWin;
+  return gamePoint && !youWin;
 }
 
 /** Both at their places before a point: Yash with the ball, the camera on the court. */

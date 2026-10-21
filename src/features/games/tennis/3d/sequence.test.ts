@@ -57,6 +57,7 @@ const SETUPS: PointSetup[] = COURTS.flatMap((court) =>
             court,
             first,
             capped: false,
+            gamePoint: false,
             windows,
             open: [o0, o1] as [Side, Side],
             draws: Array<number>(6).fill(v),
@@ -311,12 +312,20 @@ describe("pointShotlist: the rebuild and the cues", () => {
       );
       expect(at(s, "court")).toEqual([...routine, ...flights]);
       expect(at(s, "ooh")).toEqual(script.mark ? [script.mark.from] : []);
-      // The setups at desktop's shortest windows are Yash at 40: his point there is GAME.
-      const yashWins = script.setup.capped || script.swings.at(-1)!.by !== "yash";
-      const game = script.setup.windows.serve === WINDOW_MS.serve[3] / 1000 && yashWins;
-      expect(at(s, "applause")).toEqual(game ? [] : [end - 0.3]);
+      expect(at(s, "applause")).toEqual([end - 0.3]);
       expect(s.buzz).toEqual(script.contacts);
     }
+  });
+
+  it("at 40, no applause when Yash wins the point (GAME), applause when you win it", () => {
+    const base = { ...SETUPS[0]!, gamePoint: true };
+    const applause = (inputs: TennisReturn[]) => {
+      const { script } = play(base, inputs);
+      return pointShotlist(script, REACH).cues.filter((c) => c.sound === "applause");
+    };
+    for (const inputs of [[late], [early], [wrong], [good, late], [perfect, wrong]])
+      expect(applause(inputs)).toEqual([]);
+    expect(applause([good, good])).toHaveLength(1);
   });
 });
 

@@ -57,7 +57,15 @@ const setup = (
   open: [Side, Side],
   windows: PointSetup["windows"],
   draws: number[],
-): PointSetup => ({ court, first: false, capped: false, windows, open, draws });
+): PointSetup => ({
+  court,
+  first: false,
+  capped: false,
+  gamePoint: false,
+  windows,
+  open,
+  draws,
+});
 /** Every setup the sweep covers (no luck: built directly). */
 const SETUPS: PointSetup[] = COURTS.flatMap((court) =>
   SIDES.flatMap((o0) =>
