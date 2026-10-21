@@ -188,4 +188,9 @@ export const RECIPES: Record<SoundName, Recipe> = {
   clap,
   bounce,
   ooh,
+  // Code-made fallbacks for the tennis recordings: the racket's thump is the net's, the court's the pitch's bounce,
+  // the applause the crowd's.
+  hit: net,
+  court: bounce,
+  applause: crowd,
 };

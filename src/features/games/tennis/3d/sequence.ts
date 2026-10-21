@@ -1,3 +1,4 @@
+import type { SoundName } from "@/shell/audio";
 import { CLIP_PACE } from "../../three/rig";
 import { lerp3, sampleTrack, type ActorTrack, type ClipSeg } from "../../three/track";
 import type { Side } from "../referee";
@@ -35,6 +36,8 @@ import {
 
 export type Track = ActorTrack<TennisClip>;
 export type Sound = "hit" | "court" | "applause" | "ooh";
+/** Compile-time check: every cue sound is a real `SoundName` (the two lists cannot drift). */
+export const SOUNDS_ARE_NAMES: Sound extends SoundName ? true : never = true;
 export interface Cue {
   at: number;
   sound: Sound;

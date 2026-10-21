@@ -9,12 +9,29 @@ import {
   type ReactNode,
 } from "react";
 import { safeStorage } from "@/lib/storage";
-import { AMBIENCE, GAME_FILES, GAME_LEVELS, RECORDED, type GameRecording } from "./gameSound";
+import {
+  AMBIENCE,
+  GAME_FILES,
+  GAME_LEVELS,
+  RECORDED,
+  type AmbienceTrack,
+  type GameRecording,
+} from "./gameSound";
 import { SHOW_FILES, SHOW_LEVELS, cueEnd, type ShowCue, type ShowSoundName } from "./showSound";
 import { MASTER_GAIN, RECIPES } from "./synth";
 
 export type SoundName =
-  "crowd" | "floodlight" | "bat" | "net" | "smash" | "clap" | "bounce" | "ooh";
+  | "crowd"
+  | "floodlight"
+  | "bat"
+  | "net"
+  | "smash"
+  | "clap"
+  | "bounce"
+  | "ooh"
+  | "hit"
+  | "court"
+  | "applause";
 
 interface AudioApi {
   enabled: boolean;
@@ -40,21 +57,25 @@ interface AudioApi {
    * Starts fetching the recordings of these game sounds (the bytes only, like `prefetchShow`); each is decoded once
    * there is a context, so it is ready by the first ball. Until then a sound plays its code-made recipe.
    */
-  prefetchSounds(names: readonly (SoundName | "murmur")[]): void;
+  prefetchSounds(names: readonly (SoundName | AmbienceTrack)[]): void;
   /**
    * The stadium's hum under a game: `true` asks for it, `false` fades it out (leaving). It plays only once sound is
-   * unlocked by a gesture and on, fades in then, and fades out while the sound is off or the tab is hidden.
+   * unlocked by a gesture and on, fades in then, and fades out while the sound is off or the tab is hidden. `track`
+   * is the venue's own hum (default the cricket crowd's `"murmur"`); asking for another one fades the first out.
    */
-  ambience(on: boolean): void;
+  ambience(on: boolean, track?: AmbienceTrack): void;
 }
 
 /** Every recording: the show's two and the games'. */
 const FILES = { ...SHOW_FILES, ...GAME_FILES } as const;
 type RecordingName = keyof typeof FILES;
 
-/** The hum: whether a game wants it, and its bus and loop while it plays. */
+/** The hum: whether a game wants it, which track, and its bus and loop while it plays. */
 interface Ambience {
   wanted: boolean;
+  track: AmbienceTrack;
+  /** The track that is playing (it may differ from `track` while the old one fades out). */
+  playing: AmbienceTrack | null;
   bus: GainNode | null;
   source: AudioBufferSourceNode | null;
 }
@@ -103,8 +124,9 @@ function crowdLevel(cue: ShowCue, t: number): number {
 
 /**
  * The game sounds are made in code (spec §4.6, P1; see `synth.ts` for the recipes), except the few that are CC0
- * recordings (`gameSound.ts`): the bat, the "ooh", the cheer and the 3D cricket's hum. The Home and Intro show is two
- * more recordings. All live in public/audio, fetched ahead and decoded once a gesture has made the context.
+ * recordings (`gameSound.ts`): the bat, the "ooh", the cheer, the tennis hit, court bounce and applause, and the 3D
+ * games' hums. The Home and Intro show is two more recordings. All live in public/audio, fetched ahead and decoded
+ * once a gesture has made the context.
  */
 export function AudioProvider({ children }: { children: ReactNode }) {
   // Starts enabled so prerender and first client render match; the saved mute is applied after mount.
@@ -121,7 +143,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   /** The game recordings asked for so far: decoded as soon as there is a context. */
   const wanted = useRef(new Set<GameRecording>());
   const showRef = useRef<ActiveShow | null>(null);
-  const ambienceRef = useRef<Ambience>({ wanted: false, bus: null, source: null });
+  const ambienceRef = useRef<Ambience>({
+    wanted: false,
+    track: "murmur",
+    playing: null,
+    bus: null,
+    source: null,
+  });
 
   /** Every sound passes through this gain, so muting is one change and silences a sound already playing. */
   const setMaster = useCallback((on: boolean) => {
@@ -197,15 +225,16 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const master = masterRef.current;
     const a = ambienceRef.current;
     if (!a.wanted || a.source || !ctx || !master || !enabledRef.current || document.hidden) return;
-    void load(ctx, "murmur").then((buffer) => {
-      if (!buffer || a.source || !a.wanted || !enabledRef.current || document.hidden) return;
-      if (ctxRef.current !== ctx) return;
+    const track = a.track;
+    void load(ctx, track).then((buffer) => {
+      if (!buffer || a.source || !a.wanted || a.track !== track) return;
+      if (!enabledRef.current || document.hidden || ctxRef.current !== ctx) return;
       try {
         wake(ctx);
         const now = ctx.currentTime;
         const bus = ctx.createGain();
         bus.gain.setValueAtTime(0, now);
-        bus.gain.linearRampToValueAtTime(GAME_LEVELS.murmur, now + AMBIENCE.fadeIn);
+        bus.gain.linearRampToValueAtTime(GAME_LEVELS[track], now + AMBIENCE.fadeIn);
         bus.connect(master);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
@@ -214,6 +243,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         source.start(now);
         a.bus = bus;
         a.source = source;
+        a.playing = track;
       } catch {
         /* no hum is a quiet stadium, not an error */
       }
@@ -227,6 +257,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const { bus, source } = a;
     a.bus = null;
     a.source = null;
+    a.playing = null;
     if (!bus || !source || !ctx) return;
     try {
       const now = ctx.currentTime;
@@ -309,10 +340,10 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   );
 
   const prefetchSounds = useCallback(
-    (names: readonly (SoundName | "murmur")[]) => {
+    (names: readonly (SoundName | AmbienceTrack)[]) => {
       if (typeof window === "undefined") return;
       for (const name of names) {
-        const recording = name === "murmur" ? name : RECORDED[name];
+        const recording = name === "murmur" || name === "hush" ? name : RECORDED[name];
         if (!recording) continue;
         wanted.current.add(recording);
         void fetchBytes(recording);
@@ -323,8 +354,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   );
 
   const ambience = useCallback(
-    (on: boolean) => {
-      ambienceRef.current.wanted = on;
+    (on: boolean, track: AmbienceTrack = "murmur") => {
+      const a = ambienceRef.current;
+      a.wanted = on;
+      a.track = track;
+      // Another track than the one playing: it fades out and the new one fades in.
+      if (on && a.playing && a.playing !== track) stopAmbience();
       if (on) startAmbience();
       else stopAmbience();
     },

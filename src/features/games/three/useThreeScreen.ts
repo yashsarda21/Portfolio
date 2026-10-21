@@ -6,6 +6,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import type { AmbienceTrack } from "@/shell/gameSound";
 import type { GameLayout } from "../engine/types";
 import { ThreeBoundary } from "./ThreeBoundary";
 import { THREE_SHOW_TIMEOUT_MS, type ThreeGate } from "./useThreeGate";
@@ -36,11 +37,15 @@ export function useThreeScreen<A, W>({
   world,
   layout,
   audio,
+  hum,
 }: {
   gate: ThreeGate<Loaded3d<A, W>>;
   world: RefObject<W | null>;
   layout: GameLayout;
-  audio: { ambience(on: boolean): void };
+  /** A getter, read inside the effect, so the hum never starts with a render's stale api. */
+  audio: () => { ambience(on: boolean, track?: AmbienceTrack): void };
+  /** The venue's own hum (default the cricket crowd's murmur). */
+  hum?: AmbienceTrack;
 }): { ready: boolean; drawn: boolean; scene: ReactNode | null } {
   // The files are in: the scene mounts, hidden, and compiles its shaders; the loader stays until then. Once shown, the
   // game takes input for the rest of the visit.
@@ -60,8 +65,8 @@ export function useThreeScreen<A, W>({
   // the audio api changes when sound is switched on or off, and that must not stop and start the hum.
   useEffect(() => {
     if (!ready) return;
-    audio.ambience(true);
-    return () => audio.ambience(false);
+    audio().ambience(true, hum);
+    return () => audio().ambience(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 

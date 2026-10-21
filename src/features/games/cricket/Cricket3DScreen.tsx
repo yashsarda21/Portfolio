@@ -69,7 +69,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
     gate,
     world,
     layout,
-    audio: live.current.audio,
+    audio: () => live.current.audio,
   });
   // A line change is said too (the arrows change buttons that do not have the focus); the next call replaces it.
   const [lineSaid, setLineSaid] = useState<{ text: string; over: string } | null>(null);

@@ -409,6 +409,24 @@ describe("game recordings", () => {
     expect(rig.sources).toHaveLength(2); // left: it stays off
   });
 
+  it("a venue's own hum plays at its own level, and asking for another track fades the first out", async () => {
+    const { result } = renderHook(() => useAudio(), { wrapper });
+    act(() => result.current.prefetchSounds(["murmur", "hush"]));
+    act(() => result.current.unlock());
+    act(() => result.current.ambience(true, "hush"));
+    await settle();
+    expect(rig.sources).toHaveLength(1);
+    const first = rig.sources[0]!;
+    expect(rig.gains.at(-1)!.gain!.linearRampToValueAtTime).toHaveBeenCalledWith(
+      GAME_LEVELS.hush,
+      100 + AMBIENCE.fadeIn,
+    );
+    act(() => result.current.ambience(true)); // the default track is the cricket crowd's murmur
+    await settle();
+    expect(first.stop).toHaveBeenCalled();
+    expect(rig.sources).toHaveLength(2);
+  });
+
   it("the hum never plays while the sound is off, and fades back in when it is turned on", async () => {
     localStorage.setItem("arena:audio", "off");
     const { result } = renderHook(() => useAudio(), { wrapper });
