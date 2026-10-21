@@ -1,6 +1,7 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import {
+  CanvasTexture,
   DirectionalLight,
   DoubleSide,
   Shape,
@@ -49,8 +50,10 @@ const CROWD_SHARE = 0.4;
 const TAPE = 0.06;
 /** Heights above the floor (m): each layer sits a hair above the one under it. */
 const LAYER = { court: 0.002, line: 0.004, glow: 0.006, mark: 0.008 } as const;
-/** The column draws no anti-aliasing, so a 5 cm line would break up into dashes at its distance: it is drawn this much wider there. */
-const LINE_BOLD: Record<GameLayout, number> = { stage: 1, column: 1.6 };
+/** The line texture's detail (texels per metre on the court): a 5 cm line is about 9 texels wide on the stage, 4 on a phone. */
+const LINE_TEXELS: Record<GameLayout, number> = { stage: 186, column: 93 };
+/** How sharply the lines stay at the far end of the court, where the view is almost along the floor. */
+const LINE_ANISOTROPY = 8;
 /**
  * The open-side glow's strongest opacity, and the Hawk-Eye ellipse's size (m, width by depth): drawn `drawn` times as large,
  * because at 0.3 m it is a dozen pixels from the broadcast view.
@@ -94,35 +97,87 @@ function palette() {
   };
 }
 
-/** A flat rectangle on the floor: `x`, `z` its centre, `w` by `d` its size. */
+/** A flat, lit rectangle on the floor: `at` its centre (x, z), `size` its width by depth. */
 function Flat({
   at,
   size,
   y,
   color,
-  receive = false,
-  material = "basic",
 }: {
   at: readonly [number, number];
   size: readonly [number, number];
   y: number;
   color: ReturnType<typeof tokenColor>;
-  receive?: boolean;
-  material?: "basic" | "standard";
 }) {
   return (
-    <mesh rotation-x={-Math.PI / 2} position={[at[0], y, at[1]]} receiveShadow={receive}>
+    <mesh rotation-x={-Math.PI / 2} position={[at[0], y, at[1]]} receiveShadow>
       <planeGeometry args={size} />
-      {material === "basic" ? (
-        <meshBasicMaterial
-          color={color}
-          polygonOffset
-          polygonOffsetFactor={-1}
-          polygonOffsetUnits={-1}
-        />
-      ) : (
-        <meshStandardMaterial color={color} roughness={0.85} />
-      )}
+      <meshStandardMaterial color={color} roughness={0.85} />
+    </mesh>
+  );
+}
+
+/**
+ * The court's markings (baselines, doubles and singles sidelines, service lines, the centre service line, the centre
+ * marks) as ONE texture on one plane, not a dozen thin meshes. A line a few centimetres wide is under a pixel wide from
+ * the broadcast view, and as geometry it shimmers: it breaks into dashes and crawls as the camera pans. As a texture
+ * it is mipmapped and anisotropically filtered, so far away it fades smoothly instead of flickering. The canvas holds
+ * only the coverage (white where there is line); the plane's colour is the line token.
+ */
+function CourtLines({
+  layout,
+  color,
+  y,
+}: {
+  layout: GameLayout;
+  color: ReturnType<typeof tokenColor>;
+  y: number;
+}) {
+  const gl = useThree((s) => s.gl);
+  const texture = useMemo(() => {
+    const per = LINE_TEXELS[layout];
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(COURT.doubles * 2 * per);
+    canvas.height = Math.round(COURT.half * 2 * per);
+    const g = canvas.getContext("2d")!;
+    g.fillStyle = "black"; // a coverage mask, not a palette colour
+    g.fillRect(0, 0, canvas.width, canvas.height);
+    g.fillStyle = "white";
+    const w = COURT.line;
+    // A rectangle by its centre (x, z) and size, in metres from the court's middle. Each line lies inside the outer
+    // edge of its measure (ITF sizes are to the outside of the line).
+    const rect = (x: number, z: number, width: number, depth: number) =>
+      g.fillRect(
+        (x - width / 2 + COURT.doubles) * per,
+        (z - depth / 2 + COURT.half) * per,
+        width * per,
+        depth * per,
+      );
+    for (const k of [-1, 1]) {
+      rect(0, k * (COURT.half - w / 2), COURT.doubles * 2, w);
+      rect(0, k * (COURT.service - w / 2), COURT.singles * 2, w);
+      rect(k * (COURT.doubles - w / 2), 0, w, COURT.half * 2);
+      rect(k * (COURT.singles - w / 2), 0, w, COURT.half * 2);
+      rect(0, k * (COURT.half - 0.05), w, 0.1);
+    }
+    rect(0, 0, w, COURT.service * 2);
+    const t = new CanvasTexture(canvas);
+    t.anisotropy = Math.min(LINE_ANISOTROPY, gl.capabilities.getMaxAnisotropy());
+    return t;
+  }, [layout, gl]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[0, y, 0]} renderOrder={-1}>
+      <planeGeometry args={[COURT.doubles * 2, COURT.half * 2]} />
+      <meshBasicMaterial
+        color={color}
+        alphaMap={texture}
+        transparent
+        depthWrite={false}
+        polygonOffset
+        polygonOffsetFactor={-1}
+        polygonOffsetUnits={-1}
+      />
     </mesh>
   );
 }
@@ -326,13 +381,6 @@ export function Arena({
   }, [c, settings.shadows]);
   useEffect(() => () => sun.dispose(), [sun]);
 
-  const lineW = COURT.line * LINE_BOLD[layout];
-  // Each line lies inside the outer edge of its measure (ITF sizes are to the outside of the line).
-  const baseline = COURT.half - lineW / 2;
-  const service = COURT.service - lineW / 2;
-  const doubles = COURT.doubles - lineW / 2;
-  const singles = COURT.singles - lineW / 2;
-  const L = LAYER.line;
   return (
     <group>
       <hemisphereLight args={[c.sky, c.floor, 1.6]} />
@@ -344,28 +392,14 @@ export function Arena({
         size={[FENCE.x * 2, NEAR_Z + FENCE.z]}
         y={0}
         color={c.runoff}
-        receive
-        material="standard"
       />
       <Flat
         at={[0, 0]}
         size={[COURT.doubles * 2, COURT.half * 2]}
         y={LAYER.court}
         color={c.court}
-        receive
-        material="standard"
       />
-      {/* Baselines, doubles and singles sidelines, service lines, the centre service line, the centre marks. */}
-      {[-1, 1].map((k) => (
-        <group key={k}>
-          <Flat at={[0, k * baseline]} size={[COURT.doubles * 2, lineW]} y={L} color={c.line} />
-          <Flat at={[0, k * service]} size={[COURT.singles * 2, lineW]} y={L} color={c.line} />
-          <Flat at={[k * doubles, 0]} size={[lineW, COURT.half * 2]} y={L} color={c.line} />
-          <Flat at={[k * singles, 0]} size={[lineW, COURT.half * 2]} y={L} color={c.line} />
-          <Flat at={[0, k * (COURT.half - 0.05)]} size={[lineW, 0.1]} y={L} color={c.line} />
-        </group>
-      ))}
-      <Flat at={[0, 0]} size={[lineW, COURT.service * 2]} y={L} color={c.line} />
+      <CourtLines layout={layout} color={c.line} y={LAYER.line} />
 
       <Net c={c} />
       <Walls c={c} />
