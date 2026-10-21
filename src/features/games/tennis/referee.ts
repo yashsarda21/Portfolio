@@ -1,11 +1,14 @@
+import { PERFECT_SHARE, pickQuality, type PickCall } from "../engine/pick";
 import type { GameLayout, Luck, Quality } from "../engine/types";
+
+/** Moved to `engine/pick.ts`; still exported here. */
+export { PERFECT_SHARE };
 
 export type Side = "left" | "right";
 export const TENNIS_SERVES = 3;
 export const SERVE_WINDOW_MS = [900, 700, 500] as const;
 /** The column (touch) gets 25 % longer (spec §8.2). */
 export const TOUCH_STRETCH = 1.25;
-export const PERFECT_SHARE = 0.4;
 export const SERVE_KMH = [178, 186, 194] as const;
 /** The open side lights up this long after the serve begins; the toss then runs a random 0.4–0.9 s. */
 export const TELL_MS = 300;
@@ -57,13 +60,18 @@ export function newServe(s: TennisState, luck: Luck): TennisState {
   return { ...s, serve: { open, tossMs: TOSS_MS.min + luck() * (TOSS_MS.max - TOSS_MS.min) } };
 }
 
+/** The shared pick call, in tennis's words. */
+const CALLS = {
+  late: "ace",
+  early: "early",
+  wrong: "wrong",
+  perfect: "clean",
+  good: "returned",
+} as const satisfies Record<PickCall, TennisCall>;
+/** The pick judged (the shared `pickQuality`), in tennis's words: late is an ace, perfect is clean, good is returned. */
 export function returnQuality(pick: ReturnPick, open: Side, windowMs: number): TennisReturn {
-  if (pick.side === null || pick.atMs > windowMs) return { q: "miss", call: "ace" };
-  if (pick.atMs < 0) return { q: "miss", call: "early" };
-  if (pick.side !== open) return { q: "miss", call: "wrong" };
-  return pick.atMs <= windowMs * PERFECT_SHARE
-    ? { q: "perfect", call: "clean" }
-    : { q: "good", call: "returned" };
+  const { q, call } = pickQuality({ dir: pick.side, atMs: pick.atMs }, open, windowMs);
+  return { q, call: CALLS[call] };
 }
 
 /** One return. Yash always wins (F1): serve 3's winner always clips the line, however well the first two were played. */

@@ -1,4 +1,9 @@
 export type Vec3 = readonly [x: number, y: number, z: number];
+/** Where a camera stands and what it looks at (world, m). */
+export interface CameraPose {
+  position: Vec3;
+  target: Vec3;
+}
 
 /** One clip on an actor's timeline, from `start` (s) until the next one starts. */
 export interface ClipSeg<C extends string = string> {

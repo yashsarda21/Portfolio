@@ -1,6 +1,21 @@
 import type { SoundName } from "@/shell/audio";
-import { CLIP_PACE } from "../../three/rig";
-import { lerp3, sampleTrack, type ActorTrack, type ClipSeg } from "../../three/track";
+import {
+  addClip,
+  cutMoves,
+  FOOTWORK,
+  followBall,
+  PAN,
+  recoverTo,
+  SLOWEST_STEP,
+  travel,
+  TURN,
+  walkBack,
+  WALK,
+  type Gait,
+  type Leg,
+} from "../../three/footwork";
+import { ground, smooth, toWorld } from "../../three/geometry";
+import { lerp3, sampleTrack, type ActorTrack, type CameraPose } from "../../three/track";
 import type { Side } from "../referee";
 import {
   ACTORS,
@@ -11,9 +26,7 @@ import {
   RECEIVE_SPOT,
   SERVE_SPOT,
   sideSign,
-  toWorld,
   type ActorId,
-  type CameraPose,
   type Vec3,
 } from "./court";
 import { TENNIS_3D_BEATS } from "./match";
@@ -65,25 +78,14 @@ export const RUN_AFTER = 0.1;
  * weight as the feet stop, at the forward swing's start (the run arrives at contact − SWING_LEAD).
  */
 export const STROKE_FADE = STROKE_CLIP.contact - SWING_LEAD;
-/** A run this short or this slow is a side shuffle, facing the net; from `sprint` m/s it is a sprint, else a jog. */
-export const FOOTWORK = { shuffleUnder: 1, shuffleSlower: 2.7, sprint: 4 } as const;
-/**
- * A shuffle or a walk never plays slower than this (its clip speed): a short, slow one is done sooner, and he waits.
- * The runs (jog, sprint) are only chosen from FOOTWORK.shuffleSlower, so they play at 0.44 or more.
- */
-export const SLOWEST_STEP = 0.5;
+// The footwork constants moved to `three/footwork.ts`; tests and the scene still read them here.
+export { FOOTWORK, PAN, SLOWEST_STEP, TURN, WALK };
 /** An early (missed) swing's run goes no faster than this (m/s): he stops short of the ball's line. */
 export const EARLY_RUN_CAP = 6;
-/** How long a player takes to turn toward a run, and back to the net as he arrives (s). */
-export const TURN = { out: 0.15, back: 0.2 } as const;
 /** The serve hands over to the recovery this long before its end, while he settles inside the line. */
 export const SERVE_HANDOVER = 0.2;
 /** The glow on the open side rises over this long. */
 export const GLOW_RISE = 0.15;
-/** The camera's pan follows the ball's x over the last 0.6 s: these many samples, this far apart. */
-export const PAN = { samples: 5, every: 0.15 } as const;
-/** Between points: past this far a player jogs back instead of walking; he is there this long before the call ends. */
-export const WALK = { jogOver: 2.6, settle: 0.2, fade: 0.3 } as const;
 /** At GAME the camera pushes in over this long. */
 export const GAME_PUSH_S = 3;
 /**
@@ -93,12 +95,7 @@ export const GAME_PUSH_S = 3;
 export const PALM: Vec3 = [0, 0.05, 0.06];
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-const smooth = (f: number) => {
-  const c = clamp01(f);
-  return c * c * (3 - 2 * c);
-};
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const ground = (a: Vec3, b: Vec3) => Math.hypot(a[0] - b[0], a[2] - b[2]);
 const blend = (a: CameraPose, b: CameraPose, f: number): CameraPose => ({
   position: lerp3(a.position, b.position, f),
   target: lerp3(a.target, b.target, f),
@@ -109,100 +106,19 @@ const homeOf = (id: ActorId, setup: PointSetup): Vec3 =>
 const waitClip = (id: ActorId): TennisClip => (id === "yash" ? "bounceBall" : "ready");
 const PERIOD: Partial<Record<TennisClip, number>> = { bounceBall: ROUTINE.period, ready: 1.2 };
 
-/** Adds a clip; any clip from its start on is dropped (a later plan replaces an earlier one). */
-function addClip(track: Track, seg: ClipSeg<TennisClip>) {
-  track.clips = track.clips.filter((c) => c.start < seg.start);
-  track.clips.push(seg);
-}
-/** Stops whatever walk is under way at `t`, where it has got to (every move here is linear). */
-function cut(track: Track, t: number) {
-  const at = sampleTrack(track, t).position;
-  track.moves = track.moves
-    .filter((m) => m.start < t)
-    .map((m) => (m.end > t ? { ...m, end: t, to: at } : m));
-}
-
-interface Leg {
-  /** The footwork clip starts here (with `fade`); the move runs from `start` to `end`. */
-  clipAt: number;
-  start: number;
-  end: number;
-  to: Vec3;
-  fade: number;
-  /** A run turns back to the net from `backAt`, over `back` s. */
-  backAt: number;
-  back: number;
-  /** A slow shuffle may be done early, if he can settle in ready (0.15 s) before this. */
-  settleBy: number;
-}
-/**
- * A player gets from where he is to `leg.to`: a side shuffle (facing the net) when short or slow, else a jog or a
- * sprint facing the run. Each clip plays at the speed that keeps the feet still (ground speed / its pace). Returns when
- * he gets there (a slow shuffle is done before `leg.end`), or null when he is already there.
- */
-function travel(track: Track, id: ActorId, leg: Leg): number | null {
-  const from = sampleTrack(track, leg.start).position;
-  const dx = leg.to[0] - from[0];
-  const dz = leg.to[2] - from[2];
-  const d = Math.hypot(dx, dz);
-  if (d < 1e-3) return null;
-  const v = d / (leg.end - leg.start);
-  if (d < FOOTWORK.shuffleUnder || v < FOOTWORK.shuffleSlower) {
-    // The player's left, in the world: x cos(face), z −sin(face).
-    const left = dx * Math.cos(FACE[id]) - dz * Math.sin(FACE[id]) > 0;
-    const clip = left ? "shuffleL" : "shuffleR";
-    // Done early (not before its clip has faded in, so three clips never blend), if there is room to settle.
-    const early = Math.max(leg.start + d / (SLOWEST_STEP * SHUFFLE_PACE), leg.clipAt + leg.fade);
-    const slow = v < SLOWEST_STEP * SHUFFLE_PACE && early + 0.15 <= leg.settleBy;
-    const end = slow ? early : leg.end;
-    const pace = d / (end - leg.start);
-    addClip(track, {
-      clip,
-      start: leg.clipAt,
-      loop: true,
-      speed: pace / SHUFFLE_PACE,
-      fade: leg.fade,
-    });
-    track.moves.push({ start: leg.start, end, to: leg.to, face: FACE[id], turn: TURN.back });
-    return end;
-  }
-  const clip = v < FOOTWORK.sprint ? "jog" : "sprint";
-  addClip(track, {
-    clip,
-    start: leg.clipAt,
-    loop: true,
-    speed: v / CLIP_PACE[clip],
-    fade: leg.fade,
-  });
-  const back = Math.min(Math.max(leg.backAt, leg.start), leg.end);
-  track.moves.push(
-    {
-      start: leg.start,
-      end: back,
-      to: lerp3(from, leg.to, (back - leg.start) / (leg.end - leg.start)),
-      face: Math.atan2(dx, dz),
-      turn: TURN.out,
-    },
-    { start: back, end: leg.end, to: leg.to, face: FACE[id], turn: leg.back },
-  );
-  return leg.end;
-}
-
+/** Tennis's clips for the shared footwork: Yash and you move alike. */
+const GAIT: Gait<TennisClip> = {
+  shuffleLeft: "shuffleL",
+  shuffleRight: "shuffleR",
+  shufflePace: SHUFFLE_PACE,
+  jog: "jog",
+  sprint: "sprint",
+  walk: "walk",
+  ready: "ready",
+};
 /** A recovery (a shuffle or a run back toward the middle), then ready. */
-function recover(track: Track, id: ActorId, r: Recover, clipAt = r.start, fade = 0.2) {
-  const leg = {
-    clipAt,
-    start: r.start,
-    end: r.end,
-    to: r.to,
-    fade,
-    backAt: r.end,
-    back: TURN.back,
-    settleBy: Infinity,
-  };
-  const there = travel(track, id, leg) ?? clipAt;
-  addClip(track, { clip: "ready", start: there, loop: true, fade });
-}
+const recover = (track: Track, id: ActorId, r: Recover, clipAt = r.start, fade = 0.2) =>
+  recoverTo(track, FACE[id], r, GAIT, clipAt, fade);
 
 /** The stretch toward the player's own right is the forehand lunge; `side` is the screen's (ruling R5). */
 const stretchClip = (id: ActorId, side: Side): TennisClip =>
@@ -220,14 +136,14 @@ function swing(track: Track, id: ActorId, w: Swing, hit: number) {
   const fade = stretch ? STRETCH_CLIP.reach : STROKE_FADE;
   const arrive = stretch ? w.contact : on - SWING_LEAD;
 
-  cut(track, go);
+  cutMoves(track, go);
   addClip(track, { clip: "split", start: hit, fade: 0.1 });
   const from = sampleTrack(track, go).position;
   let to = w.spot;
   const far = ground(from, to);
   if (w.miss === "early" && far > EARLY_RUN_CAP * (arrive - go))
     to = lerp3(from, to, (EARLY_RUN_CAP * (arrive - go)) / far);
-  const leg = {
+  const leg: Leg = {
     clipAt: go,
     start: go,
     end: arrive,
@@ -238,7 +154,7 @@ function swing(track: Track, id: ActorId, w: Swing, hit: number) {
     settleBy: clipAt,
   };
   // Settled before the stroke (no run, or a short shuffle done early): ready until it.
-  const there = clipAt - go >= TURN.out ? travel(track, id, leg) : null;
+  const there = clipAt - go >= TURN.out ? travel(track, FACE[id], leg, GAIT) : null;
   const settled = there ?? hit + SPLIT_CLIP.end;
   if (clipAt > settled + 0.15)
     addClip(track, { clip: "ready", start: settled, loop: true, fade: 0.15 });
@@ -316,16 +232,6 @@ function tossBall(spot: Vec3, reach: Reach, takes: number) {
   ];
 }
 
-/** The broadcast view, its target's x following the ball's recent x (null counts as the middle). */
-const tvFollowing =
-  (ball: (t: number) => Vec3 | null) =>
-  (t: number): CameraPose => {
-    let x = 0;
-    for (let k = 0; k < PAN.samples; k++) x += ball(t - k * PAN.every)?.[0] ?? 0;
-    const [, y, z] = CAMERA.tv.target;
-    return { position: CAMERA.tv.position, target: [(CAMERA.pan * x) / PAN.samples, y, z] };
-  };
-
 /** Whether this point ends the game: Yash wins it at 40 (you win only the points where Yash stretches for your last ball). */
 function endsGame(script: PointScript): boolean {
   const { gamePoint, capped } = script.setup;
@@ -394,7 +300,7 @@ export function pointShotlist(script: PointScript, reach: Reach): Shotlist {
     ball,
     held: (t) => (t >= serveClipAt && t < tossAt ? "yash" : null),
     actors: { yash: playerTrack("yash", script), you: playerTrack("you", script) },
-    camera: tvFollowing(ball),
+    camera: followBall(ball, CAMERA.tv, CAMERA.pan),
     glow: (t) => {
       const w = script.windows.find((w) => t >= w.opens && t < w.commits + SWING_LEAD);
       return w ? { side: w.open, strength: clamp01((t - w.opens) / GLOW_RISE) } : null;
@@ -415,48 +321,23 @@ export function walkShotlist(after: Shotlist, next: PointSetup | null): Shotlist
   const arrive = callS - WALK.settle;
   const actors = {} as Record<ActorId, Track>;
   for (const id of ACTORS) {
-    const was = sampleTrack(after.actors[id], after.end);
-    const now = was.clips[0]!;
-    const playing = after.actors[id].clips.filter((c) => c.start <= after.end).at(-1);
-    // What was playing carries on as it was (at its speed) while the walk takes over.
-    const track: Track = {
-      home: was.position,
-      face: was.face,
-      clips: [{ clip: now.clip, start: 0, from: now.time, loop: now.loop, speed: playing?.speed }],
-      moves: [],
-    };
-    actors[id] = track;
-    if (!next) {
-      if (id === "yash")
-        track.clips.push(
-          { clip: "fistPump", start: 0, fade: WALK.fade },
-          { clip: "ready", start: FIST_PUMP_CLIP.end, loop: true, fade: 0.4 },
-        );
-      continue;
-    }
-    const to = homeOf(id, next);
-    const d = ground(was.position, to);
-    let there: number = WALK.fade;
-    if (d >= 1e-3) {
-      const clip = d > WALK.jogOver ? "jog" : "walk";
-      // At least half the clip's pace (done sooner, then he waits), and never shorter than its fade.
-      there = Math.max(Math.min(arrive, d / (SLOWEST_STEP * CLIP_PACE[clip])), WALK.fade);
-      const speed = d / there / CLIP_PACE[clip];
-      track.clips.push({ clip, start: 0, loop: true, speed, fade: WALK.fade });
-      track.moves.push({
-        start: 0,
-        end: there,
-        to,
-        face: Math.atan2(to[0] - was.position[0], to[2] - was.position[2]),
-        turn: WALK.fade,
-      });
-    }
-    track.moves.push({ start: there, end: there, to, face: FACE[id], turn: WALK.settle });
-    // Phased so the loop is at its start when the next point begins with it.
     const wait = waitClip(id);
-    const period = PERIOD[wait]!;
-    const from = (period - ((callS - there) % period)) % period;
-    track.clips.push({ clip: wait, start: there, from, loop: true, fade: WALK.settle });
+    const to = next ? homeOf(id, next) : null;
+    const track = walkBack(
+      after.actors[id],
+      after.end,
+      to,
+      FACE[id],
+      { clip: wait, period: PERIOD[wait]! },
+      callS,
+      GAIT,
+    );
+    actors[id] = track;
+    if (!next && id === "yash")
+      track.clips.push(
+        { clip: "fistPump", start: 0, fade: WALK.fade },
+        { clip: "ready", start: FIST_PUMP_CLIP.end, loop: true, fade: 0.4 },
+      );
   }
   const from = after.camera(after.end);
   return {

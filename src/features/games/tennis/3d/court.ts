@@ -1,13 +1,10 @@
 import type { Side } from "../referee";
-import type { Vec3 } from "../../three/track";
+import type { CameraPose, Vec3 } from "../../three/track";
 
-export type { Vec3 };
+export { feetFor, toWorld } from "../../three/geometry";
+export type { CameraPose, Vec3 };
 export type ActorId = "yash" | "you";
 export const ACTORS: readonly ActorId[] = ["yash", "you"];
-export interface CameraPose {
-  position: Vec3;
-  target: Vec3;
-}
 
 /**
  * ITF sizes (m), each to the outside of its line. y is up; z runs from Yash's baseline (−) through the net (0) to yours
@@ -57,22 +54,6 @@ export const BOX = {
 /** Where each player recovers to between shots: this deep, this far to the side he covers. */
 export const YASH_BASE = { z: -12.6, cover: 1.5 } as const;
 export const YOUR_BASE = { z: 13.2, cover: 0.6 } as const;
-
-/** A point in the body's frame (x its left, y up, z its front) from a player standing at `spot` facing `face`, in the world. */
-export function toWorld(spot: Vec3, face: number, offset: Vec3): Vec3 {
-  const c = Math.cos(face);
-  const s = Math.sin(face);
-  return [
-    spot[0] + offset[0] * c + offset[2] * s,
-    spot[1] + offset[1],
-    spot[2] - offset[0] * s + offset[2] * c,
-  ];
-}
-/** Where a player facing `face` must stand so that `offset` (his racket's sweet spot) is at `contact`. */
-export function feetFor(contact: Vec3, face: number, offset: Vec3): Vec3 {
-  const at = toWorld([0, 0, 0], face, offset);
-  return [contact[0] - at[0], 0, contact[2] - at[2]];
-}
 
 /**
  * The broadcast view: high behind your baseline, down the court. The column frames the same view a little higher

@@ -1,15 +1,14 @@
 import type { GameLayout, Luck } from "../../engine/types";
+import { clamp, feetFor, ground, lerp, toWorld } from "../../three/geometry";
 import type { Side, TennisReturn } from "../referee";
 import { intoNet, shotTo, SPIN, toBounce, type BallPath } from "./ball";
 import {
   BALL_RADIUS,
   COURT,
   FACE,
-  feetFor,
   RECEIVE_SPOT,
   SERVE_SPOT,
   sideSign,
-  toWorld,
   YASH_BASE,
   YOUR_BASE,
   type ActorId,
@@ -28,9 +27,6 @@ import {
 // Type only: reach.ts imports three, and this file is reached from the first load (ruling R3).
 import type { Reach } from "./reach";
 import { MISS, ROUTINE, SERVE_CLIP, SWING_LEAD, type Stroke } from "./timing";
-
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-const lerp = (a: number, b: number, f: number) => a + (b - a) * f;
 
 /** The serve bounces this deep in the box. */
 export const SERVE_BOUNCE_Z = 5.5;
@@ -144,7 +140,6 @@ export function setupPoint(s: MatchState, layout: GameLayout, luck: Luck): Point
   };
 }
 
-const ground = (a: Vec3, b: Vec3) => Math.hypot(a[0] - b[0], a[2] - b[2]);
 /** The screen side `x` lies on, seen from `from` (+x is your right). */
 const sideOf = (x: number, from: Vec3): Side => (x >= from[0] ? "right" : "left");
 const other = (side: Side): Side => (side === "left" ? "right" : "left");
