@@ -122,21 +122,56 @@ const unit = (v: Vec3): Vec3 => {
   const n = Math.hypot(v[0], v[1], v[2]);
   return n < 1e-9 ? [0, 0, 1] : [v[0] / n, v[1] / n, v[2] / n];
 };
+const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+/** `v` turned by `angle` (radians) about the unit axis `axis` (Rodrigues' formula). */
+function turn(v: Vec3, axis: Vec3, angle: number): Vec3 {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const k = cross(axis, v);
+  const d = dot(axis, v) * (1 - c);
+  return [
+    v[0] * c + k[0] * s + axis[0] * d,
+    v[1] * c + k[1] * s + axis[1] * d,
+    v[2] * c + k[2] * s + axis[2] * d,
+  ];
+}
+/** Two directions closer than this to opposite (sin of the gap) have no one way round between them. */
+const OPPOSITE = Math.sin((10 * Math.PI) / 180);
 
 /**
- * The cork's direction (a unit vector) `t` s into `path`. It is the flight's direction. Right after a hit it is still
- * the reverse of `prev`'s direction at its end, and it eases round to the flight's direction over TURNOVER. With no
- * `prev` (a serve) it is just the flight's direction.
+ * The cork's direction (a unit vector) `t` s into `path`. The shuttle arrives cork first, so right after a hit the
+ * cork still points along `prev`'s direction at its end; it then flips round to the new flight's direction over
+ * TURNOVER, on an ease. The flip is the short way round, except when the two are (nearly) opposite, which is the usual
+ * case: then it flips over the top, about the horizontal axis across the new flight, so it is the same way every time.
+ * With no `prev` (a serve) it is just the flight's direction.
  */
 export function heading(prev: ShuttlePath | null, path: ShuttlePath, t: number): Vec3 {
   const now = unit(path.velocity(t));
   if (prev === null || t >= TURNOVER) return now;
   const was = unit(prev.velocity(prev.end));
   const f = smooth(t / TURNOVER);
-  const mix: Vec3 = [
-    -was[0] * (1 - f) + now[0] * f,
-    -was[1] * (1 - f) + now[1] * f,
-    -was[2] * (1 - f) + now[2] * f,
-  ];
-  return Math.hypot(mix[0], mix[1], mix[2]) < 1e-6 ? now : unit(mix);
+  const axis = cross(was, now);
+  const sine = Math.hypot(axis[0], axis[1], axis[2]);
+  const angle = Math.atan2(sine, dot(was, now));
+  if (dot(was, now) >= 0 || sine >= OPPOSITE) {
+    if (sine < 1e-9) return now;
+    return turn(was, [axis[0] / sine, axis[1] / sine, axis[2] / sine], angle * f);
+  }
+  const ground = unit([now[0], 0, now[2]]);
+  let across = unit([ground[2], 0, -ground[0]]);
+  if (turn(was, across, Math.PI / 2)[1] < 0) across = [-across[0], 0, -across[2]];
+  const flipped = turn(was, across, angle * f);
+  // The axis is a little off the plane of the two, so close the small gap as it ends.
+  const close = f * f;
+  const end = turn(was, across, angle);
+  return unit([
+    flipped[0] + close * (now[0] - end[0]),
+    flipped[1] + close * (now[1] - end[1]),
+    flipped[2] + close * (now[2] - end[2]),
+  ]);
 }

@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { COURT } from "./court";
-import { flyTo, flyToFloor, heading, netGap, NET_CLEAR, OUT_BY, TURNOVER } from "./shuttle";
+import {
+  flyTo,
+  flyToFloor,
+  heading,
+  netGap,
+  NET_CLEAR,
+  OUT_BY,
+  TURNOVER,
+  type ShuttlePath,
+} from "./shuttle";
 import type { Vec3 } from "../../three/track";
 
 const SERVE_FROM: Vec3 = [-0.55, 0.9, -3];
@@ -60,11 +69,36 @@ describe("the shuttle's flight", () => {
   it("the shuttle turns cork first within TURNOVER", () => {
     const prev = flyToFloor([-0.4, 2.5, 4.6], [0.2, -5.0], 1.2);
     const next = flyToFloor([0.2, 2.2, -4.9], [-0.3, 5.5], 1.4);
-    const back = unit(prev.velocity(prev.end)).map((v) => -v) as unknown as Vec3;
-    expect(angleDeg(heading(prev, next, 0), back)).toBeLessThan(0.01);
-    expect(angleDeg(heading(prev, next, TURNOVER), unit(next.velocity(TURNOVER)))).toBeLessThan(2);
-    expect(speed(heading(prev, next, TURNOVER / 2))).toBeCloseTo(1, 9);
+    const was = unit(prev.velocity(prev.end));
+    const now = (t: number) => unit(next.velocity(t));
+    expect(angleDeg(heading(prev, next, 0), was)).toBeLessThan(2);
+    expect(angleDeg(heading(prev, next, TURNOVER), now(TURNOVER))).toBeLessThan(2);
     // With no shuttle before it (a serve) it simply points along its flight.
-    expect(angleDeg(heading(null, next, 0), unit(next.velocity(0)))).toBeLessThan(0.01);
+    expect(angleDeg(heading(null, next, 0), now(0))).toBeLessThan(0.01);
+  });
+
+  it("it flips rather than snaps, staying a unit vector, when the two directions are opposite", () => {
+    const along = (v: Vec3): ShuttlePath => ({
+      end: 1,
+      at: () => v,
+      velocity: () => v,
+      lands: null,
+    });
+    // A steep fall at the hitter, and a clear straight back up the way it came (exactly opposite), and a real pair.
+    const pairs: [ShuttlePath, ShuttlePath][] = [
+      [along([0, -3, 5]), along([0, 3, -5])],
+      [
+        flyToFloor([-0.4, 2.5, 4.6], [0.2, -5.0], 1.2),
+        flyToFloor([0.2, 2.2, -4.9], [-0.3, 5.5], 1.4),
+      ],
+    ];
+    for (const [prev, next] of pairs) {
+      const was = unit(prev.velocity(prev.end));
+      const mid = heading(prev, next, TURNOVER / 2);
+      expect(Math.abs(angleDeg(mid, was) - 90)).toBeLessThan(30);
+      expect(Math.abs(angleDeg(mid, unit(next.velocity(TURNOVER / 2))) - 90)).toBeLessThan(30);
+      for (let t = 0; t <= TURNOVER; t += TURNOVER / 20)
+        expect(speed(heading(prev, next, t))).toBeCloseTo(1, 9);
+    }
   });
 });
