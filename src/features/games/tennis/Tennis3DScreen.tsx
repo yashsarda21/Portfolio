@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
-import { useArenaTransition } from "@/shell/transition";
 import { perfectShare } from "../engine/form";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
 import { useGameKeys } from "../engine/useGameKeys";
 import { useGameSession } from "../engine/useGameSession";
 import { NO_END_FLAGS, type EndFlags } from "../engine/useMatchResult";
+import { stageCues, useFirstPlay, useHiddenTab } from "../three/useRallyLoop";
 import type { ThreeGate } from "../three/useThreeGate";
 import { useThreeScreen, type Loaded3d } from "../three/useThreeScreen";
 import {
@@ -83,10 +83,6 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
   // The files, kept for the handlers (a handler made before they arrived reads them here).
   const files = useRef<TennisAssets>(null);
   const point = useRef<InPlay>(null);
-  // The first point waits for the page's wipe to be done (m-7): `busyRef` is the wipe now, `waitingForPage` a point due.
-  const { busy } = useArenaTransition();
-  const busyRef = useRef(busy);
-  const waitingForPage = useRef(false);
   // A point is due but the tab is hidden: it is played when the tab is visible again (G2).
   const waiting = useRef(false);
 
@@ -160,11 +156,7 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
     });
     if (first && first.r.q !== "miss" && !second)
       at(script.contacts[0]!, () => commit({ phase: "rally" }));
-    for (const c of list.cues) if (c.at >= now) at(c.at, () => live.current.audio.play(c.sound));
-    const buzz = () => {
-      if (!live.current.desktop) navigator.vibrate?.(15);
-    };
-    for (const b of list.buzz) if (b >= now) at(b, buzz);
+    stageCues(list, now, at, live);
     if (script.end !== null) at(script.end, land);
   }
 
@@ -241,44 +233,20 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
 
   // On arrival the visitor has the court to look at: the first point comes `firstMs` after the scene is shown and
   // the page's wipe is done (m-7).
-  const serveOnArrival = () => {
-    if (busyRef.current) waitingForPage.current = true;
-    else timers.after(TENNIS_3D_BEATS.firstMs, beginPoint);
-  };
-  useEffect(() => {
-    busyRef.current = busy;
-    if (busy || !waitingForPage.current) return;
-    waitingForPage.current = false;
-    timers.after(TENNIS_3D_BEATS.firstMs, beginPoint);
-    // Its handlers are the latest by ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy]);
-  useEffect(() => {
-    if (!ready) return;
-    serveOnArrival();
-    return () => {
-      timers.clear();
-      waitingForPage.current = false;
-    };
-    // Its handlers are the latest by ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+  useFirstPlay({ ready, firstMs: TENNIS_3D_BEATS.firstMs, begin: beginPoint, timers });
 
   // Review Focus 2: a hidden tab drops the point in play; the visible tab plays it again, fresh from the routine.
-  useEffect(() => {
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        if (point.current) holdIfHidden();
-      } else if (waiting.current) {
+  useHiddenTab({
+    onHidden: () => {
+      if (point.current) holdIfHidden();
+    },
+    onVisible: () => {
+      if (waiting.current) {
         waiting.current = false;
         if (latest.current.phase === "ready") beginPoint();
       }
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
-    // Its handlers are the latest by ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    },
+  });
 
   // The 3D game's own recordings.
   useEffect(

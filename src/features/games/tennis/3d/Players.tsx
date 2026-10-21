@@ -1,12 +1,12 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, type RefObject } from "react";
-import type { Mesh, Object3D } from "three";
+import type { Object3D } from "three";
 import type { GameLayout } from "../../engine/types";
-import { applyClips, makeAthlete, type Athlete } from "../../three/athlete";
+import { makeAthlete, type Athlete } from "../../three/athlete";
+import { disposeCast, poseCast } from "../../three/cast";
 import { useGroundSpots } from "../../three/groundSpots";
 import { SETTINGS } from "../../three/settings";
 import { tokenColor } from "../../three/tokens";
-import { sampleTrack } from "../../three/track";
 import { ACTORS, type ActorId } from "./court";
 import { makeTennisProps } from "./props";
 import type { TennisAssets } from "./scene";
@@ -16,18 +16,6 @@ import type { WorldState } from "./world";
 export interface YashHand {
   hand: Object3D;
   root: Object3D;
-}
-
-/** Each player where the shotlist puts them now: place, heading and pose. */
-function movePlayers(athletes: Record<ActorId, Athlete>, w: WorldState) {
-  const t = w.elapsed();
-  for (const id of ACTORS) {
-    const a = athletes[id];
-    const s = sampleTrack(w.shotlist.actors[id], t);
-    a.root.position.set(...s.position);
-    a.root.rotation.y = s.face;
-    applyClips(a, s.clips);
-  }
 }
 
 /** The two players in their kits, made once, each moved every frame from the shotlist on screen. */
@@ -83,23 +71,18 @@ export function Players({
     return () => onYash(null);
   }, [cast, onYash]);
   useEffect(
-    () => () => {
-      cast.props.dispose();
-      for (const id of ACTORS) {
-        cast.athletes[id].materials.forEach((m) => m.dispose());
-        cast.athletes[id].mixer.stopAllAction();
-      }
-      // The body's geometry (shared by both players) and its skin are kept for the visit, but this canvas's renderer
-      // has hooked itself onto them: disposing frees its copies and lets it go. The next canvas uploads them again.
-      assets.body.scene.traverse((o) => (o as Mesh).geometry?.dispose());
-      assets.skin.dispose();
-    },
+    () => () =>
+      disposeCast(
+        ACTORS.map((id) => cast.athletes[id]),
+        cast.props,
+        assets,
+      ),
     [cast, assets],
   );
 
   useFrame(() => {
     const w = world.current;
-    if (w) movePlayers(cast.athletes, w);
+    if (w) poseCast(cast.athletes, w.shotlist.actors, w.elapsed());
   });
 
   return (

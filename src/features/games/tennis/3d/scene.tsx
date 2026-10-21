@@ -1,19 +1,13 @@
 import { useFrame } from "@react-three/fiber";
 import { useCallback, useMemo, useRef, type RefObject } from "react";
-import {
-  MathUtils,
-  PerspectiveCamera,
-  Vector3,
-  type AnimationClip,
-  type Mesh,
-  type MeshBasicMaterial,
-  type Texture,
-} from "three";
+import { Vector3, type AnimationClip, type Mesh, type Texture } from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
-import type { GameLayout } from "../../engine/types";
 import { loadAthleteFiles, nextTask, prepareAthlete } from "../../three/assets";
+import { CameraRig } from "../../three/CameraRig";
+import { FloorShadow } from "../../three/FloorShadow";
 import { GameCanvas } from "../../three/GameCanvas";
 import { tokenColor } from "../../three/tokens";
+import type { Vec3 } from "../../three/track";
 import type { SceneProps } from "../../three/useThreeScreen";
 import { Arena } from "./Arena";
 import { BALL_RADIUS, CAMERA } from "./court";
@@ -55,30 +49,27 @@ const AXIS_Y = new Vector3(0, 1, 0);
 
 /**
  * The ball: at the shotlist's place, or in Yash's left palm while he holds it (the same palm offset the toss starts
- * from, so there is no jump), or hidden. A soft dark disc on the floor under it fades with its height.
+ * from, so there is no jump), or hidden. `placedRef` is told where it is each frame (null while hidden), for its shadow.
  */
 function Ball({
   world,
   yashHand,
+  placedRef,
 }: {
   world: RefObject<WorldState | null>;
   yashHand: RefObject<YashHand | null>;
+  placedRef: RefObject<Vec3 | null>;
 }) {
   const ball = useRef<Mesh>(null);
-  const spot = useRef<Mesh>(null);
-  const colors = useMemo(
-    () => ({ volt: tokenColor("--ref-volt"), night: tokenColor("--ref-night") }),
-    [],
-  );
+  const volt = useMemo(() => tokenColor("--ref-volt"), []);
   useFrame(() => {
     const w = world.current;
     const b = ball.current;
-    const s = spot.current;
-    if (!w || !b || !s) return;
+    if (!w || !b) return;
     const t = w.elapsed();
     const held = w.shotlist.held(t);
     const hand = yashHand.current;
-    let at: readonly [number, number, number] | null = null;
+    let at: Vec3 | null = null;
     if (held === "yash" && hand) {
       // The palm: the hand bone plus the shotlist's offset, in Yash's own frame.
       hand.hand.updateWorldMatrix(true, false);
@@ -89,44 +80,16 @@ function Ball({
     } else if (!held) {
       at = w.shotlist.ball(t);
     }
-    b.visible = s.visible = at !== null;
-    if (!at) return;
-    b.position.set(...at);
-    s.position.set(at[0], 0.01, at[2]);
-    (s.material as MeshBasicMaterial).opacity =
-      BALL_SHADOW.opacity * Math.max(0, 1 - Math.max(0, at[1]) / BALL_SHADOW.fadeBy);
+    placedRef.current = at;
+    b.visible = at !== null;
+    if (at) b.position.set(...at);
   });
   return (
-    <>
-      <mesh ref={ball} visible={false}>
-        <sphereGeometry args={[BALL_DRAWN, 16, 12]} />
-        <meshStandardMaterial color={colors.volt} emissive={colors.volt} emissiveIntensity={0.35} />
-      </mesh>
-      <mesh ref={spot} visible={false} rotation-x={-Math.PI / 2}>
-        <circleGeometry args={[BALL_SHADOW.radius, 16]} />
-        <meshBasicMaterial color={colors.night} transparent opacity={0} depthWrite={false} />
-      </mesh>
-    </>
+    <mesh ref={ball} visible={false}>
+      <sphereGeometry args={[BALL_DRAWN, 16, 12]} />
+      <meshStandardMaterial color={volt} emissive={volt} emissiveIntensity={0.35} />
+    </mesh>
   );
-}
-
-/** The camera, set every frame from the shotlist's camera (the broadcast view, then the push-in at GAME). */
-function CameraRig({ world, layout }: { world: RefObject<WorldState | null>; layout: GameLayout }) {
-  useFrame(({ camera }) => {
-    const w = world.current;
-    if (!w || !(camera instanceof PerspectiveCamera)) return;
-    const pose = w.shotlist.camera(w.elapsed());
-    camera.position.set(...pose.position);
-    camera.lookAt(...pose.target);
-    // The column frames the same view a little higher, clear of the thumb zone.
-    camera.rotateX(-MathUtils.degToRad(CAMERA.tilt[layout]));
-    const fov = CAMERA.fov[layout];
-    if (Math.abs(camera.fov - fov) > 0.01) {
-      camera.fov = fov;
-      camera.updateProjectionMatrix();
-    }
-  });
-  return null;
 }
 
 /**
@@ -142,6 +105,7 @@ export function TennisScene({
   onDrawn,
 }: SceneProps<TennisAssets, WorldState>) {
   const yashHand = useRef<YashHand | null>(null);
+  const ballAt = useRef<Vec3 | null>(null);
   const onYash = useCallback((yash: YashHand | null) => {
     yashHand.current = yash;
   }, []);
@@ -156,8 +120,9 @@ export function TennisScene({
     >
       <Arena layout={layout} world={world} />
       <Players assets={assets} world={world} layout={layout} onYash={onYash} />
-      <Ball world={world} yashHand={yashHand} />
-      <CameraRig world={world} layout={layout} />
+      <Ball world={world} yashHand={yashHand} placedRef={ballAt} />
+      <FloorShadow at={() => ballAt.current} {...BALL_SHADOW} />
+      <CameraRig world={world} layout={layout} tilt={CAMERA.tilt} fov={CAMERA.fov} />
     </GameCanvas>
   );
 }

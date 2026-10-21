@@ -2,7 +2,6 @@ import { useRef, type PointerEvent, type Ref } from "react";
 import {
   AimZone,
   GAME_COURT_VIEW,
-  Button,
   CallOverlay,
   CourtBox,
   MonoLabel,
@@ -15,6 +14,7 @@ import {
 import { cn } from "@/lib/cn";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
+import { PickPair } from "../frame/PickPair";
 import { GameLoader } from "../three/GameLoader";
 import { returnPath, SERVE } from "./flight";
 import type { Side } from "./referee";
@@ -98,24 +98,16 @@ export function TennisColumn({
       >
         {instructions.phoneHint}
       </MonoLabel>
-      <div className="flex w-full gap-3">
-        {view.aims.map((aim) => (
-          <Button
-            key={aim.side}
-            size="tap"
-            skew={false}
-            glow={false}
-            variant={aim.open ? "primary" : "secondary"}
-            aria-label={aim.name}
-            aria-disabled={!live}
-            data-game-control=""
-            onClick={() => choose(aim.side)}
-            className="min-w-0 flex-1"
-          >
-            {aim.arrow}
-          </Button>
-        ))}
-      </div>
+      <PickPair
+        aims={view.aims.map((aim) => ({
+          key: aim.side,
+          arrow: aim.arrow,
+          name: aim.name,
+          open: aim.open,
+        }))}
+        live={live}
+        onPick={choose}
+      />
     </>
   );
 
