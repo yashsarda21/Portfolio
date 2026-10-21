@@ -5,6 +5,7 @@ import {
   FIST_PUMP_CLIP,
   ROUTINE,
   SERVE_CLIP,
+  SERVE_LANDS,
   STRETCH_CLIP,
   STROKE_CLIP,
   type TennisClip,
@@ -1692,7 +1693,7 @@ export const MOVE_KEYS: Record<MadeClip, readonly Key[]> = {
     // ready, inside the line
     {
       at: SERVE_CLIP.end,
-      hips: [-0.15, -0.13, 0.7],
+      hips: [SERVE_LANDS[0], -0.13, 0.02 + SERVE_LANDS[2]],
       pose: {
         hips: [14, 0, 0],
         spine: [2, 0, 0],

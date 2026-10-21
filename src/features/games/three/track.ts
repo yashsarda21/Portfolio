@@ -20,6 +20,8 @@ export interface Move {
   ease?: "linear" | "in" | "out";
   /** The heading to face from `start` (radians, 0 faces +z); unchanged when left out. */
   face?: number;
+  /** Seconds the heading takes to ease to `face` from the one before it, the short way round (default 0: at once). */
+  turn?: number;
 }
 export interface ActorTrack<C extends string = string> {
   home: Vec3;
@@ -54,6 +56,12 @@ export const lerp3 = (a: Vec3, b: Vec3, f: number): Vec3 => [
   a[2] + (b[2] - a[2]) * f,
 ];
 
+/** The turn from heading `a` to `b` the short way round (radians, between -pi and pi). */
+const shortWay = (a: number, b: number) => {
+  const d = (((b - a) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI);
+  return d - Math.PI;
+};
+
 const sampleClip = <C extends string>(
   seg: ClipSeg<C>,
   t: number,
@@ -68,13 +76,20 @@ const sampleClip = <C extends string>(
 /** Where an actor is at `t`, which way it faces, and its clips with their weights (the newest first). */
 export function sampleTrack<C extends string>(track: ActorTrack<C>, t: number): ActorSample<C> {
   let position = track.home;
-  let face = track.face;
+  // The latest turn: from one heading to another, from `start` over `takes` s (0: at once).
+  let turn = { from: track.face, to: track.face, start: 0, takes: 0 };
+  const headingAt = (at: number) => {
+    const f = turn.takes > 0 ? clamp01((at - turn.start) / turn.takes) : 1;
+    return f >= 1 ? turn.to : turn.from + shortWay(turn.from, turn.to) * f;
+  };
   for (const m of track.moves) {
     if (t < m.start) break;
-    if (m.face !== undefined) face = m.face;
+    if (m.face !== undefined)
+      turn = { from: headingAt(m.start), to: m.face, start: m.start, takes: m.turn ?? 0 };
     const f = m.end > m.start ? clamp01((t - m.start) / (m.end - m.start)) : 1;
     position = lerp3(position, m.to, EASE[m.ease ?? "linear"](f));
   }
+  const face = headingAt(t);
   let i = -1;
   for (let k = 0; k < track.clips.length; k++) if (track.clips[k]!.start <= t) i = k;
   const clips: ClipSample<C>[] = [];

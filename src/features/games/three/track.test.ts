@@ -35,6 +35,20 @@ describe("sampleTrack", () => {
     expect(mid.face).toBe(1.5);
     expect(sampleTrack(track, 9).position).toEqual([4, 0, 10]);
   });
+  it("turns to a move's heading over its `turn`, the short way round", () => {
+    const turning = (from: number, face: number): ActorTrack => ({
+      ...track,
+      face: from,
+      moves: [{ start: 1, end: 2, to: [1, 0, 0], face, turn: 0.2 }],
+    });
+    const quarter = turning(0, Math.PI / 2);
+    expect(sampleTrack(quarter, 1).face).toBeCloseTo(0);
+    expect(sampleTrack(quarter, 1.1).face).toBeCloseTo(Math.PI / 4);
+    expect(sampleTrack(quarter, 1.2).face).toBeCloseTo(Math.PI / 2);
+    expect(sampleTrack(quarter, 5).face).toBeCloseTo(Math.PI / 2);
+    // From 3 to -3 radians: through pi (0.28 rad), not back through 0 (6 rad).
+    expect(sampleTrack(turning(3, -3), 1.1).face).toBeCloseTo(Math.PI);
+  });
   it("before the first clip, holds its first frame", () => {
     const late = { ...track, clips: [{ clip: "idle", start: 2 }] };
     expect(sampleTrack(late, 1).clips).toEqual([{ clip: "idle", time: 0, weight: 1, loop: false }]);

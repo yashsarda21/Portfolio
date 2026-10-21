@@ -2,6 +2,12 @@
 export const ROUTINE = { bounces: 3, first: 2, period: 0.55 } as const;
 /** The serve clip: the toss leaves his left hand at `toss`, the racket meets the ball at `contact`, done at `end` (s). */
 export const SERVE_CLIP = { toss: 0.3, contact: 1.05, end: 1.9 } as const;
+/**
+ * Where the serve's follow-through lands him (m, body frame: x his left, z his front), from where he served: the serve
+ * clip's last key puts the hips here (on top of the ready stance's), and the shotlist moves him by it as the serve hands
+ * over, so he does not slide back to his spot.
+ */
+export const SERVE_LANDS = [-0.15, 0, 0.68] as const;
 /** A ground stroke: the forward swing starts at `commit`, meets the ball at `contact`, done at `end` (s). */
 export const STROKE_CLIP = { commit: 0.4, contact: 0.6, end: 1.3 } as const;
 /** Your window closes when the forward swing must start: this long before contact (spec §3.3). */

@@ -39,10 +39,15 @@ export const SERVE_SPOT = {
   deuce: [-0.9, 0, -12.2],
   ad: [0.9, 0, -12.2],
 } as const satisfies Record<string, Vec3>;
-/** Where you wait for the serve: the deuce box is on your right. */
+/**
+ * Where you wait for the serve: the deuce box is on your right. Deep and wide enough that the return is a short step,
+ * not a dash: your feet at the return's contact are 14.3–15.1 m deep (by the serve's speed), and their x runs from 1.9
+ * to 3.7 on the deuce court (from -3.9 to -2.1 on the ad court, the backhand side) once the nearer stroke is picked, so
+ * you wait in the middle of both (at most about 1 m from any return).
+ */
 export const RECEIVE_SPOT = {
-  deuce: [2.4, 0, 13.4],
-  ad: [-2.4, 0, 13.4],
+  deuce: [2.8, 0, 14.7],
+  ad: [-3.0, 0, 14.7],
 } as const satisfies Record<string, Vec3>;
 /** The service box each serve must land in (x and z ranges, to the outside of the lines). */
 export const BOX = {
