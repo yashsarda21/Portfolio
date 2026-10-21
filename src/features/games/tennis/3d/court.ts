@@ -80,7 +80,7 @@ export function feetFor(contact: Vec3, face: number, offset: Vec3): Vec3 {
  * is where the camera has pushed in to at GAME. Tuned by eye in Task 8.
  */
 export const CAMERA = {
-  tv: { position: [0, 7.6, 25.5], target: [0, 0.6, -3] } as CameraPose,
+  tv: { position: [0, 11, 32], target: [0, 1.83, 3.4] } as CameraPose,
   fov: { stage: 30, column: 44 },
   tilt: { stage: 0, column: 4 },
   pan: 0.25,

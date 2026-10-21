@@ -87,7 +87,7 @@ export const GAME_PUSH_S = 3;
  * The palm, from the wrist bone that `Reach.toss` and `Reach.bounce` measure (body frame): the ball sits about 8 cm
  * along the hand, a little up and forward.
  */
-const PALM: Vec3 = [0, 0.05, 0.06];
+export const PALM: Vec3 = [0, 0.05, 0.06];
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const smooth = (f: number) => {
