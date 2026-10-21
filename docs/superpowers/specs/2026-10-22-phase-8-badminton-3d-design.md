@@ -8,7 +8,7 @@
 
 ## 1. Goal (in plain words)
 
-Turn "Smash or Clear" into a real game of badminton in 3D. It is the end of a singles game in an indoor hall. You lead 19–17, and Yash comes back to win. Each rally is short and real: serves, smashes, drops, net shots and lifts. Yash always wins the game. You can win one rally, by skill, and reach 20.
+Turn "Smash or Clear" into a real game of badminton in 3D. It is the end of a singles game in an indoor hall. You lead 19–17, and Yash comes back to win. Each rally is short and real: high serves, smashes, drops, dives and Yash's net play. Yash always wins the game. You can win one rally, by skill, and reach 20.
 
 **The owner's asks, most important first:**
 1. **It must look and feel real, as real as the 3D tennis.** Players move smoothly to the shuttle and hit it cleanly. The shuttle flies like a real shuttle (§5).
@@ -32,9 +32,9 @@ Turn "Smash or Clear" into a real game of badminton in 3D. It is the end of a si
 | D2 | Your points | You start on 19 and can reach **20 at most**: you can win one rally. Yash always wins the game (B1). |
 | D3 | How the game ends | **Real rules.** If you never reach 20, Yash wins **21–19**. If you reach 20, the game goes to 20 all (deuce), and Yash wins **22–20**. |
 | D4 | How you win a rally | **Skill.** Both your picks in a rally are good (the lit button, in time). Once you are on 20, your best shot lands **just OUT** (Hawk-Eye), as in tennis, but only once a game. After that, Yash reads your good shots (§3.2), so that he still wins his rallies with his own shots (D7). |
-| D5 | Controls | **Deep (↑) or short (↓)**, once each time the shuttle comes to you. The two buttons name the real shot (§3.6). The smart one is lit. Yash approved the mockup (desktop and phone). |
+| D5 | Controls | **Deep (↑) or short (↓)**, once each time the shuttle comes to you: **↑ SMASH** or **↓ DROP** (§3.6). The smart one is lit. Yash approved the mockup (desktop and phone). After the builder check, Yash chose **no low shots**: every pick is on a high shuttle, so the mockup's LIFT / NET state is dropped. |
 | D6 | Yash's dive | When your short shot beats him, Yash dives full length to get it back (owner's idea). |
-| D7 | Reveals | Each of Yash's rally wins unlocks the next skill card in content order. **He wins that rally with the shot printed on the card:** Backend with a smash, Frontend with a drop shot, Data with defence (the dive), Craft with court vision (a placement). |
+| D7 | Reveals | Each of Yash's rally wins unlocks the next skill card in content order. **He wins that rally with the shot printed on the card:** Backend with a smash, Frontend with a drop shot, Data with defence (the dive), Craft with court vision (a placement). The one exception is the single OUT rally (§3.2). |
 | D8 | Smashes | Yash plays 1–2 hard jump smashes: the Backend rally, plus the final rally after 20 all. |
 | D9 | Handedness | Yash is right-handed. Your player is right-handed too. |
 | D10 | 2D backup | **Today's 2D badminton game stays exactly as it is** (4 rallies, the power meter). It is used only for reduced motion, no WebGL, or a failed download (cycle 1 §6.2). |
@@ -46,8 +46,7 @@ Turn "Smash or Clear" into a real game of badminton in 3D. It is the end of a si
 ### 3.1 Words used here
 
 - **Pick:** your one input when the shuttle comes to you, deep (↑) or short (↓).
-- **High shuttle:** a shuttle you hit from above your head. Your buttons are **↑ SMASH** and **↓ DROP**.
-- **Low shuttle:** a shuttle you hit from below the net tape, near the net. Your buttons are **↑ LIFT** and **↓ NET**.
+- **Your shots:** every shuttle that reaches you for a pick is high, and you hit it from above your head. Your buttons are always **↑ SMASH** (deep and hard) and **↓ DROP** (short and soft). There are no low shots by the net for you (owner's choice after the builder check: a real net exchange is too quick for a fair pick window, and fewer moves means more polish).
 - **The open part:** the part of Yash's court he is not covering. As each of his shots leaves his racket, Yash sets either **forward** (the back is open, so ↑ is the smart pick) or **back** (the front is open, so ↓ is the smart pick). Which one is drawn at random for each of his shots, as tennis draws the open side, except where §3.3 fixes it.
 - **Good:** the lit button, in time. **Perfect:** the lit button within the first 40% of the window (`PERFECT_SHARE`, as tennis). A perfect shot is a little crisper, but it decides nothing more than a good one.
 - **Wrong:** the dim button, in time. **Late:** no pick by the end of the window. **Early:** a pick before Yash's hit.
@@ -59,24 +58,22 @@ Turn "Smash or Clear" into a real game of badminton in 3D. It is the end of a si
    - Yash serves the first rally (his score is 17, so he serves from his left box). After that, **whoever won the last rally serves**.
    - The crowd goes quiet. Both players settle into the ready stance.
 2. **The serve.** Badminton serves are hit underarm, with the contact below 1.15 m (the real rule).
-   - **Yash serves high and deep** (the singles high serve). About one rally in three he serves **low and short** instead, just over the net, for variety. The Data rally always serves high (§3.3).
-   - **You serve automatically** (no input) in the rally after your point. It is a high serve, and Yash returns it with a clear (high) or a net shot (low). The Data rally returns with a clear.
-3. **Pick 1.** The shuttle comes to you, high or low. Yash sets forward or back, the smart button lights, and you pick.
+   - **Yash serves high and deep**, the classic singles high serve, every time.
+   - **You serve automatically** (no input) in the rally after your point. It is a high serve, and Yash returns it with a high clear.
+3. **Pick 1.** The high shuttle comes to you. Yash sets forward or back, the smart button lights, and you pick.
 4. **What pick 1 does** (the Data rally is set up differently, §3.3):
-   - **Good, on 20, after the one OUT** (step 6): **he read it.** He moved before you hit, takes your shot comfortably and finishes with the card's shot. There is no pick 2. Call: **HE READ IT.** Without this, a strong player on 20 would see OUT after OUT, and Yash's skill shots would never show.
+   - **Good, on 20, once the OUT is used or on the final rally** (step 6): **he read it.** He moved before you hit, takes your shot comfortably and finishes with the card's shot. There is no pick 2. Call: **HE READ IT.** Without this, a strong player on 20 would see OUT after OUT, and Yash's skill shots would never show.
    - **Good, otherwise:** your shot beats him.
-     - A short shot (a drop or a net shot): Yash **dives** forward and scoops it back.
+     - A drop: Yash **dives** forward and scoops it back.
      - A smash: Yash dives to the side and digs it up.
-     - A lift: he scrambles back and floats a weak clear.
-     - The shuttle comes back high to the middle of your court, and you get **pick 2**.
+     - Either way the shuttle comes back high to the middle of your court, and you get **pick 2**.
    - **Wrong:** your shot goes where he is waiting. He finishes the rally with the card's shot (§3.5).
    - **Late or early:** your player mistimes it and hits it off the frame. The shuttle floats up weakly, and he finishes with the card's shot.
 5. **Pick 2** (only after a good pick 1 that beat him; never in the Data rally). It is always a high shuttle.
-   - After a dive, Yash is on the floor at the front, so ↑ SMASH is lit.
-   - After his scramble back, he is deep, so ↓ DROP is lit.
+   - Yash is on the floor after his dive, so the court behind him is open and ↑ SMASH is lit.
 6. **What pick 2 does:**
    - **Good, and you are on 19:** **your point.** Your shot lands in the empty court. Call: **WINNER.**
-   - **Good, and you are on 20:** your shot lands **just out**, a few centimetres long or wide. The Hawk-Eye mark shows it. Yash's point. Call: **OUT.** This happens at most once a game. Its rally still charges the next card (as tennis's OUT point unlocked a project), and the commentary says so ("Hawk-Eye says out. Backend charged anyway.").
+   - **Good, and you are on 20:** your shot lands **just out**, a few centimetres long or wide. The Hawk-Eye mark shows it. Yash's point. Call: **OUT.** This happens at most once a game, and only while a card is left to charge (Yash's wins 1 to 4), never on the final rally at 21–20, which is always his smash. Its rally still charges the next card (as tennis's OUT point unlocked a project), and the commentary says so ("Hawk-Eye says out. Backend charged anyway.").
    - **Wrong, late or early:** your shot is weak or goes where he is. He is back up in time and finishes with the card's shot. A weak pick-2 shot always gives him time to get up from a dive (about 1 s).
 7. **The end of the rally.** The call, the commentary (desktop) and the applause play. The score updates and any card unlocks. The players walk to their places for the next rally while the call shows.
 
@@ -85,20 +82,25 @@ Turn "Smash or Clear" into a real game of badminton in 3D. It is the end of a si
 | What happened | Shots (Yash serving) | Rally | What you see |
 |---|---|---|---|
 | Pick 1 wrong, late or early | 3 | Yash | His card's shot wins it at once. |
-| Pick 1 good, on 20, after the one OUT | 3 | Yash | HE READ IT: he is already there and wins with his card's shot. |
-| Pick 1 good, pick 2 not good | 5 | Yash | He dives (or scrambles), gets up, and wins with his card's shot. |
+| Pick 1 good, on 20, once the OUT is used or on the final rally | 3 (5 in a smash rally) | Yash | HE READ IT: he is already there and wins with his card's shot. |
+| Pick 1 good, pick 2 not good | 5 | Yash | He dives, gets up, and wins with his card's shot. |
 | Both good, you are on 19 | 4 | **You** | Your shot lands in the open court while he is down. |
 | Both good, you are on 20, the first time | 4 | Yash | OUT by a whisker (Hawk-Eye). The next card still charges. |
 
 When you serve, every rally has one shot more, so a rally can have up to 6 shots.
 
 **The Data rally** (until Yash's 3rd rally win, the defence card) is set up so the dive almost always happens. It has **no pick 2**: the dive's scoop is the winner.
-- It always starts high: Yash serves high, or returns your serve with a clear.
-- Yash sets **back**, so ↓ DROP is lit.
+- Yash sets **back** for your pick 1, so ↓ DROP is lit.
 - **Good drop** (at any score): he dives and scoops it tight over the net, out of your reach. It is his rally, won from the floor. You cannot win the Data rally, but you see the dive.
 - **Late or early:** the framed shuttle dribbles just over the net instead of floating. He dives and scoops it the same way.
 - **Wrong (a smash):** it comes straight at him, and he blocks it dead at the net. That is defence too, so the card still unlocks, but there is no dive. You chose the dim button.
 - The dive also happens in the other rallies, whenever your good short shot or good smash stretches him (§3.2). That is where your own point can come from, smashing into the court he has left.
+
+**The smash rallies** (until Yash's 1st win, the Backend card, and the final rally at 21–20) are set up so his jump smash always comes, because nobody can smash a shuttle that is low or one that is already a smash:
+- Yash sets **forward** for your pick 1, so ↑ SMASH is lit.
+- **Every not-good shot of yours floats up into the middle of the court** (a loose drop that sits up, or a framed shot), whatever you pressed. He jumps and smashes it. This applies to pick 1 and to pick 2.
+- **HE READ IT** in a smash rally: he blocks your good smash to the net, your lift back is weak (automatic, no pick), and he jump smashes it. That is 5 shots.
+- So every game shows at least one jump smash: the Backend smash, unless the one OUT charged Backend, and in that case you reached 20, so the game goes to the final rally and its smash.
 
 ### 3.4 The game
 
@@ -131,7 +133,7 @@ When you serve, every rally has one shot more, so a rally can have up to 6 shots
 ### 3.5 Reveals
 
 - Yash's rally wins unlock the skill groups in content order (`getAttributeGroups`):
-  1. **Backend**, on his 1st win, with a **smash**: a jump smash with the scissor kick from a floating shuttle, or a net kill (the smash at the net) when the shuttle is at the net.
+  1. **Backend**, on his 1st win, with a **smash**: a jump smash with the scissor kick from a floating shuttle (the smash rally, §3.3).
   2. **Frontend**, on his 2nd win, with a **drop shot**: a slow drop from the back that dies at the net, or a tumbling net shot.
   3. **Data**, on his 3rd win, with **defence**: the dive, set up as §3.3 says.
   4. **Craft**, on his 4th win, with **court vision**: a placement into the corner you are furthest from, usually cross-court.
@@ -143,10 +145,10 @@ When you serve, every rally has one shot more, so a rally can have up to 6 shots
 
 | Action | Keyboard | Mouse / touch |
 |---|---|---|
-| Send it deep (SMASH or LIFT) | ↑ | Click the ↑ button (stage). Tap the ↑ button, or swipe up on the court (phone). |
-| Send it short (DROP or NET) | ↓ | Click the ↓ button (stage). Tap the ↓ button, or swipe down on the court (phone). |
+| Send it deep: SMASH | ↑ | Click the ↑ button (stage). Tap the ↑ button, or swipe up on the court (phone). |
+| Send it short: DROP | ↓ | Click the ↓ button (stage). Tap the ↓ button, or swipe down on the court (phone). |
 
-- **Desktop.** The two buttons sit together low in the centre of the stage, in tennis's place above the progress bars. Each button shows its arrow and the real shot: `↓ DROP` and `↑ SMASH` for a high shuttle, `↓ NET` and `↑ LIFT` for a low one. The smart one is lit and reads `OPEN COURT`. A hint underneath reads `↑ ↓ OR CLICK`.
+- **Desktop.** The two buttons sit together low in the centre of the stage, in tennis's place above the progress bars. Each button shows its arrow and the shot: `↓ DROP` and `↑ SMASH`. The smart one is lit and reads `OPEN COURT`. A hint underneath reads `↑ ↓ OR CLICK`.
 - **Phone.** The same two buttons sit side by side at the bottom, in tennis's thumb zone, at 56px or taller. The swipe counts only while a pick is open. Like tennis's sideways swipe, it is touch or pen only: more than 40px, and more up or down than across. How it lives with page scrolling (for example `touch-action` on the court only while a pick is open) is the builder's call, but it must never block scrolling outside a pick.
 - **One pick per shot.** The first pick after Yash's hit counts. Key repeats and double taps do nothing more (G3's key rules stand). Between picks the buttons are `aria-disabled`, not `disabled`, so a keyboard pick keeps the focus.
 - **Copy.** All new labels and lines come from `ui` content (parent §1).
@@ -165,7 +167,7 @@ When you serve, every rally has one shot more, so a rally can have up to 6 shots
   - who serves next
   - each pick's quality and call
   - the cards charged
-  - the rally in play: high or low, where Yash sets for each of his shots (drawn at random when each hit happens, except as §3.3 fixes it), and whether a low serve is drawn
+  - the rally in play: where Yash sets for each of his shots (drawn at random when each hit happens, except as §3.3 fixes it)
 - **`playRally`.** It takes the rally's picks (1 or 2, each `{ dir, atMs }` measured from Yash's hit) and returns the rally's result: the winner, the call, the shots played (3 to 6), the card unlocked (if any), the new score and the next server.
 - **Unit-tested guarantees:**
   - Yash wins every game.
@@ -173,7 +175,8 @@ When you serve, every rally has one shot more, so a rally can have up to 6 shots
   - The final score is 21–19 or 22–20, and every score on the way is reachable under real rules.
   - No rally has more than 2 picks or more than 6 shots.
   - A rally is yours only if both picks are good or perfect, you are on 19, and it is not the Data rally.
-  - OUT happens at most once a game. After it, a good pick 1 on 20 is HE READ IT.
+  - OUT happens at most once a game, only on Yash's wins 1 to 4. After it, and on the final rally, a good pick 1 on 20 is HE READ IT.
+  - The Backend rally and the final rally start high with Yash set forward, and end on his jump smash (except a Backend rally charged by the one OUT). Every game has at least one jump smash.
   - Yash's rally wins 1 to 4 unlock Backend, Frontend, Data and Craft, in that order. Each is won with its card's shot, except the one OUT rally.
   - The Data rally has no pick 2. Its dive happens on a good, late or early pick 1.
   - A 5th win happens only after 20 all, and it is a smash.
@@ -204,12 +207,12 @@ The moves are the heart of this game, as in tennis. They are built and approved 
 | Ready stance (racket up in front, weight forward, small sway) | both | key poses, looped |
 | Split step (a small hop as the opponent hits) | both | key poses |
 | Footwork: side shuffle (chassé), the front lunge and push back, the move back to the rear corners | both | key poses; the run clips matched to ground speed for longer moves |
-| High serve (forehand, underarm) and low serve (backhand, short) | both (the visitor's high serve only) | key poses; contact below 1.15 m |
+| High serve (forehand, underarm) | both | key poses; contact below 1.15 m |
 | Overhead stroke: one preparation (side-on, racket back, the other arm pointing up) for the clear, drop and smash | both | key poses. The shared preparation is real badminton's disguise. |
 | Jump smash with the scissor kick | Yash | key poses |
 | Standing smash | you | key poses |
-| Net shot and net kill (from a lunge) | both | key poses |
-| Lift (underarm from a lunge) | both | key poses |
+| Net shot (from a lunge, for his tumbling drop) | Yash | key poses |
+| Lift (underarm) | you | key poses; only your automatic weak lift in a HE READ IT smash rally (§3.3) |
 | Block (defence, racket in front) | Yash | key poses |
 | **The dive** (launch, full-length flight, landing on the forearms and chest, a short slide, then getting up) | Yash | key poses. One forward dive, turned toward the shuttle (track's `Move.turn`), serves both the short-shot dive and the side dive. |
 | Mistimed swing (the frame shot) and stretch-and-miss | you | key poses |
@@ -329,7 +332,7 @@ These are cycle 1's settings: the pixel ratio caps, the shadows, the full or hal
 - **Loader:** `PREPARING THE HALL`.
 - **How:** "Send it where he isn't: deep or short."
 - **Progress:** `HIS RALLIES CHARGE THE ATTRIBUTES`.
-- **Buttons:** `SMASH`, `DROP`, `LIFT`, `NET`, `OPEN COURT`. **Hints:** `↑ ↓ OR CLICK` (stage), `TAP OR SWIPE ↑ ↓` (phone).
+- **Buttons:** `SMASH`, `DROP`, `OPEN COURT`. **Hints:** `↑ ↓ OR CLICK` (stage), `TAP OR SWIPE ↑ ↓` (phone).
 - **Calls** (about your pick, as in tennis): `TOO EARLY.`, `TOO LATE.`, `WRONG SHOT.`, `WINNER.` (volt), `OUT.`, `HE READ IT.`, and `WHAT A DIVE.` when your last pick was good but his dive won the Data rally. When Yash wins, his shot is named in the commentary and the toast.
 - **Status:** `RALLY n`, `MATCH POINT` (reused), `YOUR MATCH POINT`, `20 ALL`, `GAME YASH` (reused).
 - **Commentary** (desktop, one line per rally), for example:
@@ -354,7 +357,7 @@ These are cycle 1's settings: the pixel ratio caps, the shadows, the full or hal
 - **Browser (e2e), on the fake clock:**
   - 3D on desktop and on the phone: the loader, then the canvas, then a full game to the end. `GAME YASH` is saved with the score, and the four cards show.
   - With no input: four rallies, 21–19.
-  - With perfect picks: 22–20, with the OUT call at the end.
+  - With perfect picks: 6 rallies, 22–20. You win rally 1 (17–20). The OUT comes in rally 2 (Backend charged anyway). Rallies 3, 5 and 6 are HE READ IT, and rally 4 is the Data dive. It ends on the jump smash.
 - **The 2D backup:** the existing badminton tests keep running with WebGL off and stay green unchanged.
 - **Lighthouse:** `/arena/badminton` first load is gated (WebGL off): desktop at least 90, phone at least 80. The 3D runs are reported only.
 - **Yash:**
