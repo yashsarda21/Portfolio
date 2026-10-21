@@ -30,8 +30,11 @@ export function useGameSession<R extends SessionRun, V>({
 }: {
   venue: Venue;
   start: R;
-  /** The game's view builder, with the content, the copy and the routes already given. */
-  build: (game: R["game"], at: { phase: R["phase"] } & EndFlags) => V;
+  /**
+   * The game's view builder, with the content, the copy and the routes already given. It gets the whole run: the
+   * phase, the end flags and anything else the game keeps there (the 3D tennis game's open side).
+   */
+  build: (game: R["game"], at: R) => V;
 }) {
   const { run, latest, commit } = useRun<R>(start);
   const flight = useFlight();
@@ -55,15 +58,7 @@ export function useGameSession<R extends SessionRun, V>({
     [venue],
   );
 
-  const view = useMemo(
-    () =>
-      build(run.game, {
-        phase: run.phase,
-        offerHighlight: run.offerHighlight,
-        fullTime: run.fullTime,
-      }),
-    [run, build],
-  );
+  const view = useMemo(() => build(run.game, run), [run, build]);
 
   /**
    * The game is over: save the result (once, here, the moment it is known: G8), the crowd reacts, show the verdict, and `VERDICT_MS`

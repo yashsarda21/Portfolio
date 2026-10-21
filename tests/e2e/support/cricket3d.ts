@@ -2,39 +2,13 @@ import { expect, type Page } from "@playwright/test";
 import { ui } from "../../../src/content/ui-copy";
 import { CRICKET_PERIOD_MS } from "../../../src/features/games/cricket/referee";
 import { RUNUP } from "../../../src/features/games/cricket/3d/sequence";
-import { waitForHydration } from "./contentPage";
-import { game, phaseOf } from "./cricket";
-import { cssVar, freezeClock, pauseClock, stepUntil } from "./game";
+import { game } from "./cricket";
+import { cssVar, stepUntil } from "./game";
+import { jump } from "./three";
 
-/*
- * 3D cricket helpers (cricket-3d.spec.ts, the desktop-3d and mobile-3d projects). Software WebGL draws slowly, so
- * time moves in jumps: the scene is a function of its clock, so a jump draws one frame where `runFor` would draw one
- * per 16 ms, and lands in the same place.
- */
+/* 3D cricket helpers (cricket-3d.spec.ts); the ones every 3D game uses live in three.ts. */
 
-/** Opens `url` on the fake clock, waits (real time) for the 3D game to be ready, then stops time. */
-export async function open3d(page: Page, url: string) {
-  await freezeClock(page);
-  await page.goto(url);
-  await waitForHydration(page);
-  await page.locator("[data-game][data-three=ready]").waitFor({ timeout: 30_000 });
-  await pauseClock(page);
-}
-
-/** Moves the paused clock `ms` forward in 250 ms jumps: each fires the timers due and one frame. */
-export async function jump(page: Page, ms: number) {
-  for (let left = ms; left > 0; left -= 250) await page.clock.fastForward(Math.min(250, left));
-}
-
-/** Jumps until the game is in one of `phases` (at most `maxMs` of game time); returns the phase. */
-export async function untilPhase(page: Page, phases: string[], maxMs = 12_000) {
-  for (let spent = 0; spent <= maxMs; spent += 250) {
-    const phase = await phaseOf(page);
-    if (phase && phases.includes(phase)) return phase;
-    await jump(page, 250);
-  }
-  throw new Error(`the game never reached ${phases.join(" / ")} (it is in ${await phaseOf(page)})`);
-}
+export { jump, open3d, untilPhase } from "./three";
 
 /** Whatever starts the run-up and releases: Space on the stage, a tap on BOWL / RELEASE on the phone. */
 export type Press = (page: Page) => Promise<void>;

@@ -1,9 +1,25 @@
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
+import type { GameLayout } from "../engine/types";
 import { GamePage } from "../frame/GamePage";
+import type { ThreeStatus } from "../three/useThreeGate";
 import type { Side } from "./referee";
 import { TennisColumn } from "./TennisColumn";
 import { TennisStage } from "./TennisStage";
-import type { TennisPhase, TennisView } from "./view";
+import type { Tennis3dPhase, TennisPhase, TennisView } from "./view";
+
+/** The 3D game's part of the board: the gate, the scene (for the layout on screen only) and whether a pick is taken. */
+export interface TennisThree {
+  status: ThreeStatus;
+  /** The canvas on screen has drawn its first frame: until then the board keeps its backdrop over it. */
+  drawn: boolean;
+  progress: number;
+  /** Drawn by `layout`'s board only, so there is one canvas. */
+  scene: ReactNode | null;
+  layout: GameLayout;
+  /** The aim buttons take a pick (toss, window, rally). */
+  live: boolean;
+  loading: string;
+}
 
 const none = () => {};
 
@@ -22,9 +38,10 @@ export function TennisPage({
   onAgain = none,
   rootRef,
   ballRefs,
+  three,
 }: {
   view: TennisView;
-  phase: TennisPhase;
+  phase: TennisPhase | Tennis3dPhase;
   /** No live game (reduced motion): no zones to pick, no tracer. */
   reduced?: boolean;
   /** The side the last return was sent to. */
@@ -34,12 +51,17 @@ export function TennisPage({
   rootRef?: Ref<HTMLElement>;
   /** The ball of each layout, which the return's flight moves. */
   ballRefs?: { stage: Ref<SVGCircleElement>; column: Ref<SVGCircleElement> };
+  /** The 3D game: without it, the 2D board exactly as it always was. */
+  three?: TennisThree;
 }) {
+  const on = (layout: GameLayout) =>
+    three && { ...three, scene: three.layout === layout ? three.scene : null };
   return (
     <GamePage
       phase={phase}
       announce={view.announce}
       rootRef={rootRef}
+      three={three?.status}
       stage={
         <TennisStage
           view={view}
@@ -49,6 +71,7 @@ export function TennisPage({
           onPick={onPick}
           onAgain={onAgain}
           ballRef={ballRefs?.stage}
+          three={on("stage")}
         />
       }
       column={
@@ -60,6 +83,7 @@ export function TennisPage({
           onPick={onPick}
           onAgain={onAgain}
           ballRef={ballRefs?.column}
+          three={on("column")}
         />
       }
     />
