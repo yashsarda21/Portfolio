@@ -31,7 +31,7 @@ import type { WorldState } from "./world";
 /** Where the boards stand: from the middle of the court to the side boards and the back boards (m). */
 const RING = { x: COURT.doubles + COURT.runoff.side, z: COURT.half + COURT.runoff.back } as const;
 /** The LED boards: how tall (m), how thick, and how tall the volt band on top is. */
-const BOARD = { height: 0.9, thick: 0.15, band: 0.1 } as const;
+const BOARD = { height: 0.6, thick: 0.1, band: 0.035 } as const;
 /** The boards all round the run-off (the camera looks over the near one). */
 const BOARDS: readonly Wall[] = [
   { at: [0, -RING.z], size: [RING.x * 2, BOARD.thick] },
@@ -40,7 +40,7 @@ const BOARDS: readonly Wall[] = [
   { at: [RING.x, 0], size: [BOARD.thick, RING.z * 2] },
 ];
 /** The stands, a gap beyond the boards: steps of this tread and rise (m). */
-const STANDS = { gap: 4.5, tiers: 8, tread: 1, rise: 0.7 } as const;
+const STANDS = { gap: 1.2, tiers: 8, tread: 1, rise: 0.7 } as const;
 /** The stands on the two long sides and the far end (the camera stands behind the near end, with no stand there). */
 const SIDES: readonly StandSide[] = (() => {
   const back = RING.x + STANDS.gap + STANDS.tiers * STANDS.tread;

@@ -1,11 +1,21 @@
 import { useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, type RefObject } from "react";
-import { Group, Vector3, type AnimationClip, type Texture } from "three";
+import {
+  AdditiveBlending,
+  CanvasTexture,
+  Group,
+  Vector3,
+  type AnimationClip,
+  type Sprite,
+  type Texture,
+} from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
+import type { GameLayout } from "../../engine/types";
 import { loadAthleteFiles, nextTask, prepareAthlete } from "../../three/assets";
 import { CameraRig } from "../../three/CameraRig";
 import { FloorShadow } from "../../three/FloorShadow";
 import { GameCanvas } from "../../three/GameCanvas";
+import { clamp, smooth } from "../../three/geometry";
 import { tokenColor } from "../../three/tokens";
 import type { Vec3 } from "../../three/track";
 import type { SceneProps } from "../../three/useThreeScreen";
@@ -14,6 +24,7 @@ import { Hall } from "./Hall";
 import { buildBadmintonClips } from "./moves";
 import { Players, type LeftHands } from "./Players";
 import { makeBadmintonProps } from "./props";
+import { DRAWN } from "./shuttle";
 import { HANG, measureReach, PINCH, type Reach } from "./reach";
 import type { WorldState } from "./world";
 
@@ -39,25 +50,51 @@ export async function loadBadmintonAssets(
   return { ...made, reach: measureReach(made, made.clips) };
 }
 
-/** The shadow under the shuttle: its radius (m), how dark at the floor, and the height (m) at which it has faded away. */
+/**
+ * How many times real size the shuttle is drawn in flight, per layout (so it reads on a phone), and the soft halo's
+ * width around it (m) per unit of that size. In the server's hand it is drawn at `DRAWN`, then it grows to this over
+ * `GROW_S` as it falls.
+ */
+const DRAWN_BY: Record<GameLayout, number> = { stage: 2.2, column: 3.0 };
+const HALO = { width: 0.1, opacity: 0.4 } as const;
+const GROW_S = 0.3;
+/** The shadow under the shuttle at `DRAWN` times real size (it scales with the drawn size): radius (m), how dark at the floor, and the height (m) it has faded away by. */
 const SHUTTLE_SHADOW = { radius: 0.09, opacity: 0.4, fadeBy: 5 } as const;
 const HERE = new Vector3();
 const AHEAD = new Vector3();
 const DOWN = new Vector3(0, -1, 0);
 
+/** A soft round fade (white in the middle, clear at the rim), used as the halo's picture. */
+function glowTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 64;
+  const g = canvas.getContext("2d")!;
+  const fade = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  const white = tokenColor("--ref-white");
+  fade.addColorStop(0, white.getStyle());
+  fade.addColorStop(0.35, white.clone().multiplyScalar(0.5).getStyle());
+  fade.addColorStop(1, tokenColor("--ref-night").getStyle());
+  g.fillStyle = fade;
+  g.fillRect(0, 0, 64, 64);
+  return new CanvasTexture(canvas);
+}
+
 /**
  * The shuttle: at the shotlist's place with the cork along its heading, or hanging cork down from the server's left
- * fingers while he holds it (the same pinch the serve lets go from, so there is no jump), or hidden. `placedRef` is
- * told where it is each frame (null while hidden), for its shadow.
+ * fingers while he holds it (the same pinch the serve lets go from, so there is no jump), or hidden. It has a faint
+ * soft halo so it reads against the court. `placedRef` is told where it is each frame (null while hidden), for its
+ * shadow.
  */
 function Shuttle({
   world,
   hands,
   placedRef,
+  layout,
 }: {
   world: RefObject<WorldState | null>;
   hands: RefObject<LeftHands | null>;
   placedRef: RefObject<Vec3 | null>;
+  layout: GameLayout;
 }) {
   const props = useMemo(
     () =>
@@ -69,16 +106,34 @@ function Shuttle({
     [],
   );
   const shuttle = useMemo<Group>(() => props.shuttle(), [props]);
+  const glow = useMemo(() => glowTexture(), []);
+  const white = useMemo(() => tokenColor("--ref-white"), []);
+  useEffect(
+    () => () => {
+      props.dispose();
+      glow.dispose();
+    },
+    [props, glow],
+  );
   const holder = useRef<Group>(null);
-  useEffect(() => () => props.dispose(), [props]);
+  const sized = useRef<Group>(null);
+  const halo = useRef<Sprite>(null);
+  const since = useRef(-Infinity);
+  const drawn = DRAWN_BY[layout];
   useFrame(() => {
     const w = world.current;
     const g = holder.current;
-    if (!w || !g) return;
+    const body = sized.current;
+    const h = halo.current;
+    if (!w || !g || !body || !h) return;
     const t = w.elapsed();
     const held = w.shotlist.held(t);
     const hand = held ? hands.current?.[held] : undefined;
     let at: Vec3 | null = null;
+    // Real-hand size while held, growing to the layout's size over GROW_S once let go.
+    if (held) since.current = t;
+    const grown = held ? 0 : smooth(clamp((t - since.current) / GROW_S, 0, 1));
+    const size = DRAWN + (drawn - DRAWN) * grown;
     if (held && hand) {
       // The fingers' pinch in the hand's frame, the shuttle hanging cork down from it.
       hand.updateWorldMatrix(true, false);
@@ -95,12 +150,27 @@ function Shuttle({
         at = s.at;
       }
     }
+    // The shuttle is built at DRAWN; the halo is as wide as the drawn size says.
+    body.scale.setScalar(size / DRAWN);
+    h.scale.setScalar(HALO.width * size * 2);
     placedRef.current = at;
     g.visible = at !== null;
   });
   return (
     <group ref={holder} visible={false}>
-      <primitive object={shuttle} />
+      <group ref={sized}>
+        <primitive object={shuttle} />
+      </group>
+      <sprite ref={halo}>
+        <spriteMaterial
+          map={glow}
+          color={white}
+          transparent
+          opacity={HALO.opacity}
+          depthWrite={false}
+          blending={AdditiveBlending}
+        />
+      </sprite>
     </group>
   );
 }
@@ -133,8 +203,12 @@ export function BadmintonScene({
     >
       <Hall layout={layout} world={world} />
       <Players assets={assets} world={world} layout={layout} onHands={onHands} />
-      <Shuttle world={world} hands={hands} placedRef={shuttleAt} />
-      <FloorShadow at={() => shuttleAt.current} {...SHUTTLE_SHADOW} />
+      <Shuttle world={world} hands={hands} placedRef={shuttleAt} layout={layout} />
+      <FloorShadow
+        at={() => shuttleAt.current}
+        {...SHUTTLE_SHADOW}
+        radius={(SHUTTLE_SHADOW.radius * DRAWN_BY[layout]) / DRAWN}
+      />
       <CameraRig world={world} layout={layout} tilt={CAMERA.tilt} fov={CAMERA.fov} />
     </GameCanvas>
   );
