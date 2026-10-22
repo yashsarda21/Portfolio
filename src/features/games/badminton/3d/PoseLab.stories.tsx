@@ -38,7 +38,7 @@ interface LabAssets {
  * The broadcast camera's line to a player, from his chest (m): behind you at your receiving depth, and in front of
  * Yash at his base. The lab looks along the same line from closer (`TV_NEAR` of the way), so he fills the frame.
  */
-const [, camY, camZ] = CAMERA.tv.position;
+const [, camY, camZ] = CAMERA.tv.stage.position;
 const TV_LINE = { you: [camY - 1, -(camZ - RECEIVE_Z)], yash: [camY - 1, camZ + BASE_Z] } as const;
 const TV_NEAR = 0.45;
 /**

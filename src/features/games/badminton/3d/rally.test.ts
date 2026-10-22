@@ -143,12 +143,15 @@ const arriving = (s: RallyScript, t: number) => s.flights.filter((f) => f.start 
 const leaving = (s: RallyScript, t: number) => s.flights.find((f) => Math.abs(f.start - t) < 1e-9);
 const SKIMS = new Set(["net", "dive", "block"]);
 const yashMeets = (s: RallyScript) => s.swings.filter((w) => w.by === "yash" && w.meets);
+/** Flight `i` drops off the net: the one after your early shot into it. */
+const offNet = (s: RallyScript, i: number) => Math.abs(s.flights[i]!.path.at(0)[2]) < 1e-9;
 
 describe("scriptRally: the shots", () => {
   it("the shuttle is at the striker's sweet spot at every contact", () => {
     const bad = sweep((s) => {
-      for (const f of s.flights)
-        if (!s.swings.some((w) => w.meets && Math.abs(w.contact - f.start) < 1e-9))
+      // Every flight leaves a racket, except the drop off the net after your early, framed shot.
+      for (const [i, f] of s.flights.entries())
+        if (!s.swings.some((w) => w.meets && Math.abs(w.contact - f.start) < 1e-9) && !offNet(s, i))
           return `the flight at ${f.start} leaves no racket`;
       for (const w of s.swings) {
         if (!w.meets) continue;
@@ -156,9 +159,9 @@ describe("scriptRally: the shots", () => {
         const out = leaving(s, w.contact);
         if (!out) return `${w.by} ${w.kind} sends nothing on`;
         const at = (f: typeof into) => f!.path.at(w.contact - f!.start);
-        // A frame shot (ruling P7) meets the shuttle on its path, off the strings: it leaves from where it was met.
-        // Off the frame: near the sweet spot, but not on it.
-        if (w.frame) {
+        // Too early, the frame meets the shuttle on its path, off the strings: it leaves from where it was met, near the
+        // sweet spot but not on it.
+        if (w.miss === "early") {
           if (!into || gap(at(into), at(out)) > 0.01) return "the frame shot jumps";
           const off = gap(at(into), sweet(w));
           if (off < 0.08 || off > 0.2) return `the frame shot meets ${off} m from the sweet spot`;
@@ -178,8 +181,10 @@ describe("scriptRally: the shots", () => {
   it("every overhead flight clears the net by NET_CLEAR; net shots and scoops by NET_SKIM", () => {
     const bad = sweep((s) => {
       for (const [i, f] of s.flights.entries()) {
-        const by = s.swings.find((w) => w.meets && Math.abs(w.contact - f.start) < 1e-9)!;
-        const skim = SKIMS.has(by.kind) || (by.frame !== undefined && s.setup.kind === "dive");
+        const by = s.swings.find((w) => w.meets && Math.abs(w.contact - f.start) < 1e-9);
+        // Your early shot goes into the net (the misses test).
+        if (!by || by.miss) continue;
+        const skim = SKIMS.has(by.kind);
         const lift = netGap(f.path);
         if (lift === null) return `flight ${i} never crosses the net`;
         if (lift < (skim ? NET_SKIM : NET_CLEAR))
@@ -201,8 +206,9 @@ describe("scriptRally: the shots", () => {
           if (w.open !== s.setup.open[i]) return `window ${i} lights the wrong part`;
           const f = leaving(s, w.opens);
           const you = s.swings.find((x) => x.by === "you" && x.contact > w.opens);
-          if (!f || !you || you.kind !== "overhead") return `window ${i} has no shot to you`;
-          if (you.frame) continue;
+          if (!f || !you) return `window ${i} has no shot to you`;
+          if (you.miss) continue;
+          if (you.kind !== "overhead") return `window ${i} has no overhead for you`;
           const off = gap(f.path.at(w.commits + SWING_LEAD - w.opens), sweet(you));
           if (off > 0.01) return `window ${i}'s shuttle is ${off} m off your racket`;
         }
@@ -263,7 +269,7 @@ describe("scriptRally: the rules", () => {
   it("the rally kinds end on their card shots", () => {
     const bad = sweep((s, { s: state, picks }) => {
       const { call } = decideRally(state, picks);
-      if (call === "winner" || call === "out") return null;
+      if (call === "winner" || call === "out" || call === "late" || call === "early") return null;
       const last = yashMeets(s).at(-1)!;
       const kind = s.setup.kind;
       if ((kind === "smash" || kind === "final") && last.kind !== "jumpSmash")
@@ -277,6 +283,35 @@ describe("scriptRally: the rules", () => {
       return inside ? null : `the card shot lands out at ${lands.join(", ")}`;
     });
     expect(bad).toEqual([]);
+  }, 30_000);
+
+  it("a late pick: the shuttle goes by your racket and lands in your court as you reach; an early one is framed into the net and drops on your side", () => {
+    let misses = 0;
+    const bad = sweep((s, { s: state, picks }) => {
+      const { call } = decideRally(state, picks);
+      if (call !== "late" && call !== "early") return null;
+      misses++;
+      const last = s.swings.at(-1)!;
+      const f = s.flights.at(-1)!;
+      const lands = f.path.lands!;
+      if (last.by !== "you" || last.miss !== call) return `ends on ${last.by} ${last.kind}`;
+      if (call === "late") {
+        if (last.kind !== "stretch" || last.meets) return "the late swing is not a stretch";
+        const by = f.path.at(last.due! - f.start);
+        if (gap(by, toWorld(last.spot, last.face, REACH.overhead)) > 0.01)
+          return "he was not set for it";
+        if (Math.abs(last.contact - (f.start + f.path.end)) > 1e-9) return "he reaches as it lands";
+        const inside = Math.abs(lands[0]) < COURT.singles && lands[2] > 0 && lands[2] < COURT.half;
+        return inside ? null : `it lands out at ${lands.join(", ")}`;
+      }
+      const net = s.flights.at(-2)!;
+      const hits = net.path.at(f.start - net.start);
+      if (Math.abs(hits[2]) > 1e-9 || hits[1] < 0.8 || hits[1] > COURT.net.centre - 0.2)
+        return `it meets the net at ${hits.join(", ")}`;
+      return lands[2] > 0 && lands[2] < 0.5 ? null : `it drops off the net to ${lands[2]}`;
+    });
+    expect(bad).toEqual([]);
+    expect(misses).toBeGreaterThan(0);
   }, 30_000);
 
   it("your winner lands in the empty court; on 20 it lands just OUT, with the mark there", () => {

@@ -1,3 +1,4 @@
+import type { GameLayout } from "../../engine/types";
 import type { CameraPose, Vec3 } from "../../three/track";
 import type { Dir, Player } from "./match";
 
@@ -46,17 +47,25 @@ export const BASE_Z = 3.6;
 /** Where Yash stands when that part is open: forward leaves the back open (distance from the net, m). */
 export const SET_Z: Record<Dir, number> = { deep: 2.6, short: 4.6 };
 /** How far from the net the racket meets the shuttle: [near, far] for an overhead stroke and for a mid-height one. */
-export const CONTACT_Z = { overhead: [4.6, 5.6], mid: [3.0, 4.0] } as const;
+export const CONTACT_Z = { overhead: [4.6, 5.3], mid: [3.0, 4.0] } as const;
 
 /**
- * The broadcast view: high behind your back line, down the court. The column frames the same view a little higher
- * (`tilt`, degrees down), clear of the thumb zone. `pan` is how much of the shuttle's recent x the target follows.
- * `game` is where the camera has pushed in to at GAME. Tuned by eye in Task 9.
+ * The broadcast view: high behind your back line, down the court, for each layout. The stage's stands further back on
+ * a longer lens (owner play-test 1): the whole court, both back lines, sits above the pick buttons, the players as big
+ * as before. The column frames its view a little higher (`tilt`, degrees down), clear of the thumb zone. `pan` is how
+ * much of the shuttle's recent x the target follows. `game` is where the camera has pushed in to at GAME, from Yash's
+ * feet (m, world axes): his whole body between the call and the end buttons. Tuned by eye in Task 9 and play-test 1.
  */
 export const CAMERA = {
-  tv: { position: [0, 9, 13], target: [0, 0.5, 0.5] } as CameraPose,
-  fov: { stage: 38, column: 56 },
+  tv: {
+    stage: { position: [0, 8, 18], target: [0, 0.5, 3.5] },
+    column: { position: [0, 9, 13], target: [0, 0.5, 0.5] },
+  } as Record<GameLayout, CameraPose>,
+  fov: { stage: 34, column: 63 },
   tilt: { stage: 0, column: 12 },
   pan: 0.2,
-  game: { position: [0, 3.2, 4.5], target: [0, 1.2, -6] } as CameraPose,
+  game: {
+    stage: { position: [0, 7, 15.25], target: [0, 1, -2.25] },
+    column: { position: [0, 4, 5], target: [0, 1, -8] },
+  } as Record<GameLayout, CameraPose>,
 } as const;

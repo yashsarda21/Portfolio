@@ -1,4 +1,5 @@
 import type { SoundName } from "@/shell/audio";
+import type { GameLayout } from "../../engine/types";
 import {
   addClip,
   cutMoves,
@@ -32,7 +33,6 @@ import {
   DIVE_CLIP,
   DIVE_LANDS,
   FIST_PUMP_CLIP,
-  FRAME,
   JUMP_SMASH_CLIP,
   LIFT_CLIP,
   NET_CLIP,
@@ -62,7 +62,8 @@ export interface Shotlist {
   /** Who holds the shuttle in his left hand at `t` (the scene hangs it from that hand), or null. */
   held(t: number): Player | null;
   actors: Record<Player, Track>;
-  camera(t: number): CameraPose;
+  /** The camera for each layout (court.ts CAMERA). */
+  camera(t: number, layout: GameLayout): CameraPose;
   /** The open part's glow on Yash's half while a window is open (ruling P1): the part and its strength (0 to 1). */
   glow(t: number): { part: Dir; strength: number } | null;
   mark: { at: Vec3; from: number } | null;
@@ -101,6 +102,8 @@ const CORK_DOWN: Vec3 = [0, -1, 0];
 const RETIME = 1e-6;
 /** A run turns back to the swing's heading over at least this long before it arrives (never a spin on the spot). */
 const TURN_IN = 0.3;
+/** A late miss turns from the overhead into the stretch over this long (s). */
+const LATE_TURN = 0.25;
 /** A shuffle done before its stroke settles into ready over this long, as the stroke starts. */
 const SETTLE = 0.15;
 
@@ -171,8 +174,10 @@ const reads = (s: RallySetup) => s.kind !== "dive" && s.on20 && (s.outUsed || s.
 /** Whether this rally ends the game: Yash wins the placement rally with you on 19, or the final. */
 function endsGame(script: RallyScript): boolean {
   const { kind, on20 } = script.setup;
-  const yashWins = script.swings.at(-1)?.kind === "stretch" || script.mark !== null;
-  return yashWins && (kind === "final" || (kind === "placement" && !on20));
+  // The rally is yours only when your last shot is the winner: met, not missed, and not OUT.
+  const last = script.swings.at(-1);
+  const yours = last?.by === "you" && last.meets && !last.miss && script.mark === null;
+  return !yours && (kind === "final" || (kind === "placement" && !on20));
 }
 
 /** `path` as it is when it is hit again, `end` s in: the cork turns over from the way it was going then. */
@@ -222,16 +227,16 @@ function legTo(plan: Plan, face: number, leg: Leg): number | null {
 
 /**
  * One swing: the split step at the other's `hit`, the run (or shuffle) to the swing's spot arriving as the stroke
- * plants, turning to the swing's heading, the stroke on its contact, then ready. A late frame shot is the meeting
- * swing until its commit (the pick is only known then), then its forward swing takes FRAME.late longer, the feet where
- * they are (rally.ts keeps the meeting swing's spot). The dive plays where he stands, turned toward the shuttle; he stays where its slide leaves him and gets up.
+ * plants, turning to the swing's heading, the stroke on its contact, then ready. A late miss is the overhead he was set
+ * for until its commit (the pick is known only then): he holds it there as the shuttle goes by, then stretches for it.
+ * The dive plays where he stands, turned toward the shuttle; he stays where its slide leaves him and gets up.
  */
 function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
   const { track } = plan;
-  const stretch = w.kind === "stretch";
-  const k = w.kind as Exclude<Stroke, "serve">;
-  const late = w.frame === "late";
-  const on = late ? w.contact - FRAME.late : w.contact;
+  const late = w.miss === "late";
+  const stretch = w.kind === "stretch" && !late;
+  const k = (late ? "overhead" : w.kind) as Exclude<Stroke, "serve">;
+  const on = late ? w.due! : w.contact;
   const plant = stretch ? STRETCH_CLIP.reach : PLANT[k];
   const clipAt = on - (stretch ? STRETCH_CLIP.reach : CLIP[k].contact);
   const arrive = clipAt + plant;
@@ -304,13 +309,26 @@ function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
     plan.free = stand;
     return;
   }
-  let done = w.contact + CLIP[k].end - CLIP[k].contact;
   if (late) {
-    // From the commit the forward swing takes FRAME.late longer, the feet still: the frame meets the shuttle.
-    const speed = SWING_LEAD / (w.contact - arrive);
-    addClip(track, { clip, start: arrive, from: plant, speed, fade: RETIME });
-    done = arrive + (CLIP[k].end - plant) / speed;
+    // From the commit he stretches across instead of swinging, slowed to be at full reach as it lands: his body and
+    // racket leave the shuttle's way down at once, so it drops clean past him (rally.ts picks the side).
+    const speed = STRETCH_CLIP.reach / (w.contact - arrive);
+    addClip(track, {
+      clip: stretchClip(p, w.side ?? "left"),
+      start: arrive,
+      speed,
+      fade: LATE_TURN,
+    });
+    plan.squeaks.push(arrive + LUNGE.heel / speed);
+    addClip(track, {
+      clip: "ready",
+      start: arrive + STRETCH_CLIP.end / speed,
+      loop: true,
+      fade: 0.3,
+    });
+    return;
   }
+  const done = w.contact + CLIP[k].end - CLIP[k].contact;
   addClip(track, { clip: "ready", start: done, loop: true, fade: 0.3 });
 }
 
@@ -383,7 +401,7 @@ export function readyShotlist(setup: RallySetup): Shotlist {
     shuttle: () => null,
     held: () => setup.server,
     actors,
-    camera: () => CAMERA.tv,
+    camera: (_, layout) => CAMERA.tv[layout],
     glow: () => null,
     mark: null,
     cues: [],
@@ -434,7 +452,8 @@ export function rallyShotlist(script: RallyScript, reach: Reach): Shotlist {
     shuttle,
     held: (t) => (t < drop ? setup.server : null),
     actors: { yash: plans.yash.track, you: plans.you.track },
-    camera: followBall((t) => shuttle(t)?.at ?? null, CAMERA.tv, CAMERA.pan),
+    camera: (t, layout) =>
+      followBall((t) => shuttle(t)?.at ?? null, CAMERA.tv[layout], CAMERA.pan)(t),
     glow: (t) => {
       const w = script.windows.find((w) => t >= w.opens && t < w.commits + SWING_LEAD);
       return w ? { part: w.open, strength: clamp((t - w.opens) / GLOW_RISE, 0, 1) } : null;
@@ -472,15 +491,22 @@ export function walkShotlist(after: Shotlist, next: RallySetup | null): Shotlist
         { clip: "ready", start: FIST_PUMP_CLIP.end, loop: true, fade: 0.4 },
       );
   }
-  const from = after.camera(after.end);
+  const from = (layout: GameLayout) => after.camera(after.end, layout);
+  // GAME: the camera pushes in to Yash, where the rally left him (CAMERA.game is from his feet).
+  const yash = sampleTrack(after.actors.yash, after.end).position;
+  const fromYash = (v: Vec3): Vec3 => [yash[0] + v[0], yash[1] + v[1], yash[2] + v[2]];
+  const game = (layout: GameLayout): CameraPose => ({
+    position: fromYash(CAMERA.game[layout].position),
+    target: fromYash(CAMERA.game[layout].target),
+  });
   return {
     end: next ? callS : GAME_PUSH_S,
     shuttle: () => null,
     held: (t) => (next && t >= arrive ? next.server : null),
     actors,
     camera: next
-      ? (t) => blend(from, CAMERA.tv, smooth(t / 1.0))
-      : (t) => blend(from, CAMERA.game, smooth(t / GAME_PUSH_S)),
+      ? (t, layout) => blend(from(layout), CAMERA.tv[layout], smooth(t / 1.0))
+      : (t, layout) => blend(from(layout), game(layout), smooth(t / GAME_PUSH_S)),
     glow: () => null,
     mark: after.mark,
     cues: [],

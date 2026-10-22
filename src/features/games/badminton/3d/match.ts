@@ -29,8 +29,8 @@ export interface Rally {
   kind: RallyKind;
   winner: Player;
   call: RallyCall;
-  /** Shots played, the serve included. */
-  shots: 3 | 4 | 5 | 6;
+  /** Shots played (contacts), the serve included: a whiff is none, a shot framed into the net is one. */
+  shots: 1 | 2 | 3 | 4 | 5 | 6;
   /** Your picks in this rally (1 or 2), as judged. */
   picks: Judged[];
   /** The attribute card this rally charged (0 to 3): null for your rally and for the final smash. */
@@ -102,7 +102,16 @@ export function decideRally(s: MatchState, picks: readonly Judged[]): Rally {
     picks: [...picks],
     card,
   });
-  const missed = (j: Judged, base: number) => yash(j.call as "late" | "early" | "wrong", base);
+  /**
+   * Not good, where your shot would be shot `base`: late, you whiff (no shot) and it lands in your court; early, you
+   * frame it into the net (your shot, his point at once); wrong, he plays your shot and wins with his card's shot.
+   */
+  const missed = (j: Judged, base: number) =>
+    j.call === "late"
+      ? yash("late", base - 2)
+      : j.call === "early"
+        ? yash("early", base - 1)
+        : yash("wrong", base);
 
   if (!isGood(first)) return missed(first, 3);
   if (kind === "dive") return yash("dive", 3);

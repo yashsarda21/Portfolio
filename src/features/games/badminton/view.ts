@@ -318,6 +318,8 @@ export function buildBadminton3dView(
           : rallyName(played + 1);
   const calling = phase === "called" || phase === "verdict" || phase === "end";
 
+  // Too late or too early, you missed it (owner play-test ruling): he played no card shot, so the line names none.
+  const missed = last?.call === "late" || last?.call === "early";
   const comm = !last
     ? content.commentary.entrance[0]!
     : over
@@ -329,12 +331,14 @@ export function buildBadminton3dView(
             ? three.comm.all
             : tennis.comm.yourPoint
           : lastGroup
-            ? `${three.comm[last.kind]} ${lastGroup.name} ${three.comm.charged}`
+            ? `${missed ? "" : `${three.comm[last.kind]} `}${lastGroup.name} ${three.comm.charged}`
             : three.comm[last.kind];
 
   const callText = last ? three.calls[last.call] : "";
-  // Yash's smash win is on the speed gun while it is called; the OUT call is his by a whisker, not a smash.
-  const kmh = last && last.winner === "yash" && last.call !== "out" ? smashKmh(last.kind) : null;
+  // Yash's smash win is on the speed gun while it is called; the OUT call is his by a whisker, and your miss is no
+  // shot of his: neither is a smash.
+  const kmh =
+    last && last.winner === "yash" && last.call !== "out" && !missed ? smashKmh(last.kind) : null;
   const speed =
     calling && kmh !== null
       ? [ui.hub.record.yash, three.speed, `${kmh} ${ui.games.kmh}`].join(` ${sep} `)

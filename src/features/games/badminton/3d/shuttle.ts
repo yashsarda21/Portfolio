@@ -78,7 +78,13 @@ export function flyTo(from: Vec3, to: Vec3, flight: number): ShuttlePath {
   const v = launch(from, to, flight);
   const open = curve(from, v, LONGEST, null);
   if (open.at(flight)[1] <= 0) return curve(from, v, flight, open.at(flight));
-  let lo = flight;
+  return toFloor(from, v, flight);
+}
+
+/** The shuttle from `from` at speed `v`, on to the floor; it is still up `after` s in. */
+function toFloor(from: Vec3, v: Vec3, after: number): ShuttlePath {
+  const open = curve(from, v, LONGEST, null);
+  let lo = after;
   let hi = LONGEST;
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2;
@@ -89,6 +95,15 @@ export function flyTo(from: Vec3, to: Vec3, flight: number): ShuttlePath {
   const [x, , z] = open.at(end);
   return curve(from, v, end, [x, 0, z]);
 }
+
+/** How fast (m/s) a shuttle that hits the net drops back off the mesh, toward the side it came from. */
+export const OFF_THE_NET = 0.5;
+/**
+ * A shuttle that has hit the net at `at` (z = 0): the mesh takes its pace and it drops to the floor, a little back
+ * toward `side` (+1 your side, −1 his).
+ */
+export const offTheNet = (at: Vec3, side: 1 | -1): ShuttlePath =>
+  toFloor(at, [0, 0, side * OFF_THE_NET], 0);
 
 /** A shuttle from `from` that lands at `land` (x, z) at `flight` s: a clear, a drop, an OUT, or Yash's put-away. */
 export function flyToFloor(

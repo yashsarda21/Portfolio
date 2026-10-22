@@ -259,6 +259,7 @@ describe("buildBadmintonView", () => {
 describe("buildBadminton3dView", () => {
   const perfect: Judged = { q: "perfect", call: "perfect" };
   const late: Judged = { q: "miss", call: "late" };
+  const wrong: Judged = { q: "miss", call: "wrong" };
   /** Plays rallies in order, each a list of picks. */
   const play3d = (...rallies: Judged[][]): MatchState =>
     rallies.reduce((s, picks) => playRally3d(s, picks), MATCH_START);
@@ -422,11 +423,13 @@ describe("buildBadminton3dView", () => {
     });
   });
 
-  it("3D: comm after a smash win is 'Jump smash. Backend charged.'; after the OUT, 'Hawk-Eye says out. By a whisker. Backend charged anyway.'", () => {
-    expect(view3d(play3d([late])).comm).toBe("Jump smash. Backend charged.");
-    expect(view3d(play3d([late], [late])).comm).toBe(
+  it("3D: comm after a smash win is 'Jump smash. Backend charged.'; after your miss, 'Backend charged.'; after the OUT, 'Hawk-Eye says out. By a whisker. Backend charged anyway.'", () => {
+    expect(view3d(play3d([wrong])).comm).toBe("Jump smash. Backend charged.");
+    expect(view3d(play3d([wrong], [wrong])).comm).toBe(
       "Drop shot. Dead at the net. Frontend charged.",
     );
+    // Too late (or too early) he plays no card shot: the line names none.
+    expect(view3d(play3d([late])).comm).toBe("Backend charged.");
     expect(view3d(play3d(yours, yours)).comm).toBe(
       "Hawk-Eye says out. By a whisker. Backend charged anyway.",
     );
@@ -439,12 +442,14 @@ describe("buildBadminton3dView", () => {
   });
 
   it("3D: the speed line reads YASH · SMASH · 348 KM/H only while a smash win is called", () => {
-    const smash = play3d([late]);
+    const smash = play3d([wrong]);
     expect(view3d(smash, { phase: "called" }).three.speed).toBe("YASH · SMASH · 348 KM/H");
+    // Your miss: he smashed nothing.
+    expect(view3d(play3d([late]), { phase: "called" }).three.speed).toBeNull();
     expect(view3d(smash, { phase: "verdict" }).three.speed).toBe("YASH · SMASH · 348 KM/H");
     expect(view3d(smash, { phase: "ready" }).three.speed).toBeNull();
     expect(view3d(smash, { phase: "rally" }).three.speed).toBeNull();
-    expect(view3d(play3d([late], [late]), { phase: "called" }).three.speed).toBeNull();
+    expect(view3d(play3d([wrong], [wrong]), { phase: "called" }).three.speed).toBeNull();
     // The OUT rally is Yash's win by a call, not a smash.
     expect(view3d(play3d(yours, yours), { phase: "called" }).three.speed).toBeNull();
     // The final smash reads 365.

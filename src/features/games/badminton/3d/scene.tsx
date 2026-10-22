@@ -196,7 +196,7 @@ export function BadmintonScene({
     <GameCanvas
       layout={layout}
       fov={CAMERA.fov[layout]}
-      position={CAMERA.tv.position}
+      position={CAMERA.tv[layout].position}
       antialias
       onShown={onShown}
       onDrawn={onDrawn}

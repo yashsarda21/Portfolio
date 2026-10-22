@@ -36,7 +36,7 @@ const SWIPE_PX = 40;
  * and nothing drifts with the width (D-9).
  *
  * With `three` (the 3D game): the scene fills the screen behind everything once it is ready, and only the call is
- * drawn on the field. The thumb zone has the hint and the two pick buttons (while the 3D loads, they hold their place,
+ * drawn on the field; the newest charge's chip fades out after a moment, keeping its place. The thumb zone has the hint and the two pick buttons (while the 3D loads, they hold their place,
  * unseen, with the loader over them). A swipe up on the field is deep and a swipe down is short, only while a pick is
  * taken: then the field takes the touch (`touch-none`); at any other time the page scrolls over it as usual.
  */
@@ -141,7 +141,15 @@ export function BadmintonColumn({
             )}
           </ScoreBug>
         }
-        reveal={latest ? <RevealChip key={view.played} {...latest} /> : null}
+        reveal={
+          latest ? (
+            // Each new charge shows for a moment, then fades out, keeping its place (owner play-test 1): the court is
+            // clear for play. The announcer reads every charge.
+            <div key={latest.eyebrow} data-part="reveal" className="animate-fade-away">
+              <RevealChip key={view.played} {...latest} />
+            </div>
+          ) : null
+        }
         field={
           <div
             aria-hidden="true"

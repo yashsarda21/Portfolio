@@ -133,6 +133,21 @@
     animation: none;
   }
 }
+/* A part that shows for a moment, then fades out and is hidden, keeping its place, so nothing under it moves: the 3D
+   badminton column's reveal chip (owner play-test 1), clearing the court for play. Its last frame is hidden, so a
+   gone part cannot take focus; with reduced motion it is simply gone. */
+@keyframes fade-away {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@utility animate-fade-away {
+  animation: fade-away 400ms ease-in 2.5s both;
+}
 @utility animate-pop {
   animation: pop-in var(--dur-pop) var(--ease-follow) both;
   animation-delay: var(--d, 0s);

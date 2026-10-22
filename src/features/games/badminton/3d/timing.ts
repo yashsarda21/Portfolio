@@ -39,12 +39,12 @@ export const FIST_PUMP_CLIP = { end: 1.4 } as const;
 /** The side shuffle's ground speed at clip speed 1 (m/s). */
 export const SHUFFLE_PACE = 1.8;
 /**
- * A mistimed swing meets the shuttle off the frame this much later or earlier on its path (ruling P7). Kept short (Task
- * 7 fix ruling): the shuttle falls at up to about 5.3 m/s at your contact, so in 0.03 s it moves at most about 0.16 m
- * up or down. The feet stay where the meeting swing planned them (Task 8 fix ruling), so the frame meets it 0.1–0.16 m
- * from the sweet spot.
+ * Too early, your swing meets the shuttle this long before it reaches the sweet spot, on the frame (owner play-test
+ * ruling: it goes into the net). Kept short (Task 7 fix ruling): the shuttle falls at up to about 5.3 m/s at your
+ * contact, so in 0.03 s it is at most about 0.16 m above the sweet spot; the feet stay where the meeting swing planned
+ * them, so the frame meets it 0.1–0.16 m from the sweet spot.
  */
-export const FRAME = { late: 0.03, early: 0.03 } as const;
+export const EARLY_FRAME = 0.03;
 /** Your window closes when the forward swing must start: this long before contact. */
 export const SWING_LEAD = OVERHEAD_CLIP.contact - OVERHEAD_CLIP.commit;
 export type BadmintonClip =

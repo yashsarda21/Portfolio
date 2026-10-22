@@ -416,11 +416,15 @@ describe("walkShotlist", () => {
     for (const r of RALLIES) {
       const after = rallyShotlist(r.script, REACH);
       if (!r.next) {
-        // GAME: Yash pumps his fist and the camera pushes in toward CAMERA.game.
+        // GAME: Yash pumps his fist and the camera pushes in to CAMERA.game, from where he stands.
         const s = walkShotlist(after, null);
         expect(s.actors.yash.clips.map((c) => c.clip)).toContain("fistPump");
-        const toGame = (t: number) => gap(s.camera(t).position, CAMERA.game.position);
-        expect(toGame(s.end)).toBeLessThan(toGame(0) / 2);
+        const yash = sampleTrack(after.actors.yash, after.end).position;
+        for (const layout of LAYOUTS) {
+          const [x, y, z] = CAMERA.game[layout].position;
+          const there: Vec3 = [yash[0] + x, yash[1] + y, yash[2] + z];
+          expect(gap(s.camera(s.end, layout).position, there)).toBeLessThan(1e-9);
+        }
         continue;
       }
       const s = walkShotlist(after, r.next);
@@ -443,7 +447,10 @@ describe("walkShotlist", () => {
       }
       expect(s.held(callS)).toBe(r.next.server);
       expect(next.held(0)).toBe(r.next.server);
-      expect(gap(s.camera(callS).target, next.camera(0).target)).toBeLessThan(1e-9);
+      for (const layout of LAYOUTS)
+        expect(gap(s.camera(callS, layout).target, next.camera(0, layout).target)).toBeLessThan(
+          1e-9,
+        );
     }
   }, 30_000);
 });
@@ -468,7 +475,9 @@ describe("rallyShotlist: the rebuild", () => {
           if (after.held(t) !== before.held(t)) why.push(`held ${t}`);
           if (JSON.stringify(after.glow(t)) !== JSON.stringify(before.glow(t)))
             why.push(`glow ${t}`);
-          if (off(after.camera(t).target, before.camera(t).target)) why.push(`camera ${t}`);
+          for (const layout of LAYOUTS)
+            if (off(after.camera(t, layout).target, before.camera(t, layout).target))
+              why.push(`camera ${t}`);
           for (const id of PLAYERS) {
             const [a, b] = [sampleTrack(before.actors[id], t), sampleTrack(after.actors[id], t)];
             const same =

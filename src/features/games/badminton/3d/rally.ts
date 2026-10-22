@@ -28,11 +28,11 @@ import {
 } from "./match";
 // Type only: reach.ts imports three, and this file is reached from the first load (tennis ruling R3).
 import type { Reach } from "./reach";
-import { flyTo, flyToFloor, OUT_BY, type ShuttlePath } from "./shuttle";
+import { flyTo, flyToFloor, offTheNet, OUT_BY, type ShuttlePath } from "./shuttle";
 import {
   DIVE_CLIP,
   DIVE_LANDS,
-  FRAME,
+  EARLY_FRAME,
   JUMP_SMASH_CLIP,
   OVERHEAD_CLIP,
   SWING_LEAD,
@@ -53,10 +53,10 @@ export const FLIGHT = {
   smash: 0.8,
   /** Your drop: at Yash by the net, or short of him into his dive. */
   drop: 1.1,
-  /** A weak shot of yours (off the frame, or not good) floating up to Yash's mid-court. */
+  /** A wrong shot of yours in a smash rally (or a wrong second shot) floating up to Yash's mid-court. */
   float: 1.3,
-  /** Your frame shot in the Data rally, dribbling just over the net. */
-  dribble: 1.6,
+  /** Your early shot, off the frame and into the net. */
+  net: 0.8,
   /** Your automatic weak lift in a read smash rally. */
   lift: 1.4,
   /** Yash's block of your smash, to your lift by the net (a read smash rally). */
@@ -76,6 +76,8 @@ export const CARD = {
 export const RECOVER = { after: 0.4, takes: 0.8 } as const;
 /** The call comes this long after the rally's last shuttle lands (s). */
 export const CALL_AFTER_S = 0.9;
+/** How high (m) your early, framed shot meets the net: under the tape, in the mesh. */
+const NET_HIT = [1.0, 1.3] as const;
 /** You recover this far off the centre line, on the side you last hit from (m). */
 const YOUR_BASE_X = 0.3;
 /** The cross-court corners Yash's placement aims at (m: across, and depth from the net). */
@@ -117,8 +119,13 @@ export interface Swing {
   /** The heading at contact: FACE, except the dive, turned toward the shuttle. */
   face: number;
   meets: boolean;
-  /** A mistimed swing meets the shuttle off the frame, this much late or early on its path (ruling P7). */
-  frame?: "late" | "early";
+  /**
+   * Your pick missed (owner play-test ruling): late, a stretch whose racket reaches just after the shuttle went by
+   * (`meets` false); early, the overhead EARLY_FRAME too soon, the shuttle on the frame and into the net.
+   */
+  miss?: "late" | "early";
+  /** A late miss: the contact of the overhead he was set for. He plays it to its commit (the pick is known only then). */
+  due?: number;
   /** Stretch only: which way, as the screen shows it (+x is your right). */
   side?: "left" | "right";
 }
@@ -177,7 +184,8 @@ export function setupRally(s: MatchState, layout: GameLayout, luck: Luck): Rally
 
 const smashes = (kind: RallyKind) => kind === "smash" || kind === "final";
 const isGood = (j: Judged) => j.q !== "miss";
-const frameOf = (j: Judged) => (j.call === "late" || j.call === "early" ? j.call : undefined);
+/** A pick that misses the shuttle (too late or too early), as opposed to a wrong shot that is played. */
+const missOf = (j: Judged) => (j.call === "late" || j.call === "early" ? j.call : undefined);
 const sideOf = (x: number, from: Vec3): "left" | "right" => (x >= from[0] ? "right" : "left");
 /** The heading (0 faces +z) from `a` toward `b` along the ground. */
 const headingTo = (a: Vec3, b: Vec3) => Math.atan2(b[0] - a[0], b[2] - a[2]);
@@ -299,19 +307,38 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
   const you: Vec3 = [Math.sign(youX) * YOUR_BASE_X, 0, BASE_Z];
 
   /**
-   * Your overhead at a window: on the strings at `contact`, or (a frame shot) the same swing late or early, meeting the
-   * shuttle FRAME further along its path, off the strings on the frame: the feet stay where the meeting swing planned
-   * them (T8 fix ruling: no slide after the commit), so the shuttle is 0.1–0.2 m from the sweet spot, below it when
-   * late and above it when early. Returns when and where the shuttle leaves.
+   * Your pick that misses ends the rally at once, his point (owner play-test ruling). Late: he was set for the overhead
+   * at `at` (the pick is known only at its commit); the shuttle goes by the sweet spot on to the floor in your court,
+   * and he stretches for it too late, at full reach as it lands. Early: the same swing EARLY_FRAME too soon meets the
+   * shuttle on the frame (the feet where the meeting swing planned them, T8 fix ruling), and it goes into the net and
+   * drops off the mesh on your side.
    */
-  const yours = (into: Flight, at: Vec3, contact: number, j: Judged | null) => {
-    const w = hit("you", "overhead", at, contact);
-    const frame = j ? frameOf(j) : undefined;
-    if (!frame) return { t: contact, from: at };
-    const t = contact + (frame === "late" ? FRAME.late : -FRAME.early);
+  const missed = (into: Flight, at: Vec3, contact: number, miss: "late" | "early") => {
+    if (miss === "late") {
+      const spot = feetFor(at, FACE.you, reach.overhead);
+      const lands = into.start + into.path.end;
+      swings.push({
+        by: "you",
+        kind: "stretch",
+        contact: lands,
+        spot,
+        face: FACE.you,
+        meets: false,
+        miss,
+        due: contact,
+        // He reaches across to the side away from where it falls (it falls by his racket shoulder), so his body and
+        // racket are out of its way and it drops clean past him.
+        side: sideOf(into.path.lands![0], spot) === "right" ? "left" : "right",
+      });
+      return done(lands + CALL_AFTER_S);
+    }
+    const t = contact - EARLY_FRAME;
     const from = into.path.at(t - into.start);
-    Object.assign(w, { frame, contact: t });
-    return { t, from };
+    Object.assign(hit("you", "overhead", at, contact), { miss, contact: t });
+    const net: Vec3 = [from[0], lerp(...NET_HIT, d(6)), 0];
+    fly(t, flyTo(from, net, FLIGHT.net));
+    const off = fly(t + FLIGHT.net, offTheNet(net, 1));
+    return done(off.start + off.path.end + CALL_AFTER_S);
   };
 
   // 2. Your first pick: still to come.
@@ -320,8 +347,10 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
     hit("you", "overhead", yourAt, contact1);
     return done(null);
   }
-  const shot1 = yours(incoming, yourAt, contact1, first.j);
-  recover("you", shot1.t, you);
+  const miss1 = missOf(first.j);
+  if (miss1) return missed(incoming, yourAt, contact1, miss1);
+  hit("you", "overhead", yourAt, contact1);
+  recover("you", contact1, you);
   const ys = Math.sign(youX);
 
   /** Yash's card shot from `at` (his stroke `k`) to the floor, where the rally's kind puts it. */
@@ -354,34 +383,28 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
 
   const j1 = first.j;
   const dir1 = first.dir ?? open[0];
-  // 3. The Data rally: your good drop or your frame dribble beats him into the dive; your smash he blocks dead.
+  // 3. The Data rally: your good drop beats him into the dive; your smash he blocks dead.
   if (kind === "dive") {
     if (j1.call === "wrong") {
       const at = toWorld(covers("short"), FACE.yash, reach.block);
-      fly(shot1.t, flyTo(shot1.from, at, FLIGHT.smash));
-      return beaten(card("block", at, shot1.t + FLIGHT.smash));
+      fly(contact1, flyTo(yourAt, at, FLIGHT.smash));
+      return beaten(card("block", at, contact1 + FLIGHT.smash));
     }
-    const dribble = frameOf(j1) !== undefined;
-    const at: Vec3 = [
-      lerp(-1, 1, d(4)),
-      reach.dive[1],
-      dribble ? -lerp(0.5, 0.8, d(5)) : -lerp(1.7, 2.0, d(5)),
-    ];
-    const flight = dribble ? FLIGHT.dribble : FLIGHT.drop;
-    fly(shot1.t, flyTo(shot1.from, at, flight));
-    dive = shot1.t + flight;
+    const at: Vec3 = [lerp(-1, 1, d(4)), reach.dive[1], -lerp(1.7, 2.0, d(5))];
+    fly(contact1, flyTo(yourAt, at, FLIGHT.drop));
+    dive = contact1 + FLIGHT.drop;
     return beaten(card("dive", at, dive, headingTo(yashSet, at)));
   }
 
-  // 4. Not good: off the frame (and in the smash rallies anything) floats up to him; a wrong shot goes where he waits.
+  // 4. Wrong: in the smash rallies it floats up to him; otherwise it goes where he waits. A read goes there too.
   const read = setup.on20 && (setup.outUsed || kind === "final");
   if (!isGood(j1) || read) {
-    const how: "float" | Dir = !isGood(j1) && (frameOf(j1) || smashes(kind)) ? "float" : dir1;
+    const how: "float" | Dir = !isGood(j1) && smashes(kind) ? "float" : dir1;
     if (how === "float") {
       const k: Stroke = smashes(kind) ? "jumpSmash" : "overhead";
       const at = midAt(k, lerp(-0.8, 0.8, d(4)), -lerp(...CONTACT_Z.mid, d(5)));
-      fly(shot1.t, flyTo(shot1.from, at, FLIGHT.float));
-      return beaten(card(k, at, shot1.t + FLIGHT.float));
+      fly(contact1, flyTo(yourAt, at, FLIGHT.float));
+      return beaten(card(k, at, contact1 + FLIGHT.float));
     }
     if (how === "short") {
       // Your drop, at him by the net: his tumbling net shot, or (placement) his lift to the deep corner.
@@ -392,13 +415,13 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
         reach[k][1],
         k === "net" ? -lerp(0.4, 0.6, d(5)) : -lerp(0.9, 1.1, d(5)),
       ];
-      fly(shot1.t, flyTo(shot1.from, at, FLIGHT.drop));
-      return beaten(card(k, at, shot1.t + FLIGHT.drop));
+      fly(contact1, flyTo(yourAt, at, FLIGHT.drop));
+      return beaten(card(k, at, contact1 + FLIGHT.drop));
     }
     // Your smash, at him at the back: he blocks it.
     const at = toWorld(covers("short"), FACE.yash, reach.block);
-    fly(shot1.t, flyTo(shot1.from, at, FLIGHT.smash));
-    const blockAt = shot1.t + FLIGHT.smash;
+    fly(contact1, flyTo(yourAt, at, FLIGHT.smash));
+    const blockAt = contact1 + FLIGHT.smash;
     if (!smashes(kind)) return beaten(card("block", at, blockAt));
     // A read smash rally: his block to the net, your automatic weak lift, his jump smash.
     hit("yash", "block", at, blockAt);
@@ -419,8 +442,8 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
       ? [lerp(-1, 1, d(4)), reach.dive[1], -lerp(1.7, 2.0, d(5))]
       : [side * lerp(2.0, 2.3, d(4)), reach.dive[1], -lerp(2.8, 3.3, d(5))];
   const toDive = open[0] === "short" ? FLIGHT.drop : FLIGHT.smash;
-  fly(shot1.t, flyTo(shot1.from, diveAt, toDive));
-  const dived = diveTo(diveAt, yashSet, shot1.t + toDive);
+  fly(contact1, flyTo(yourAt, diveAt, toDive));
+  const dived = diveTo(diveAt, yashSet, contact1 + toDive);
   const up = toWorld(dived.spot, dived.face, DIVE_LANDS);
   const yourAt2: Vec3 = [
     ys * lerp(0.3, 1.5, d(4)),
@@ -431,14 +454,16 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
   windows.push({ opens: dived.contact, commits: dived.contact + window[1], open: open[1] });
   const contact2 = dived.contact + window[1] + SWING_LEAD;
 
-  // 6. Your second pick: still to come, good (the empty court, or OUT on 20), or not good (he is up for his card).
+  // 6. Your second pick: still to come, a miss, good (the empty court, or OUT on 20), or wrong (he is up for his card).
   const second = decided.second;
   if (!second) {
     hit("you", "overhead", yourAt2, contact2);
     return done(null);
   }
-  const shot2 = yours(scoop, yourAt2, contact2, second.j);
-  recover("you", shot2.t, you);
+  const miss2 = missOf(second.j);
+  if (miss2) return missed(scoop, yourAt2, contact2, miss2);
+  hit("you", "overhead", yourAt2, contact2);
+  recover("you", contact2, you);
   if (isGood(second.j)) {
     const away = diveAt[0] < 0 ? 1 : -1;
     const by = lerp(OUT_BY.min, OUT_BY.max, d(6));
@@ -448,17 +473,17 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
       : d(7) < 0.5
         ? [x, -(COURT.half + by)]
         : [away * (COURT.singles + by), -lerp(4.5, 5.5, d(5))];
-    const last = fly(shot2.t, flyToFloor(shot2.from, land, FLIGHT.smash));
-    const lands = shot2.t + FLIGHT.smash;
+    const last = fly(contact2, flyToFloor(yourAt2, land, FLIGHT.smash));
+    const lands = contact2 + FLIGHT.smash;
     return done(lands + CALL_AFTER_S, setup.on20 ? { at: last.path.lands!, from: lands } : null);
   }
-  // He gets up where the dive left him, moves, and plays his card from a high float.
+  // Wrong: your shot floats; he gets up where the dive left him, moves, and plays his card from it.
   const k: Stroke = smashes(kind) ? "jumpSmash" : "overhead";
   const at = midAt(k, up[0], up[2]);
   const move = ground(up, feetFor(at, FACE.yash, reach[k])) / FOOTWORK.sprint;
   const stroke = k === "jumpSmash" ? JUMP_SMASH_CLIP.contact : OVERHEAD_CLIP.contact;
   const ready = dived.contact + DIVE_CLIP.up - DIVE_CLIP.contact + move + stroke;
-  const flight = Math.max(FLIGHT.float, ready - shot2.t);
-  fly(shot2.t, flyTo(shot2.from, at, flight));
-  return beaten(card(k, at, shot2.t + flight));
+  const flight = Math.max(FLIGHT.float, ready - contact2);
+  fly(contact2, flyTo(yourAt2, at, flight));
+  return beaten(card(k, at, contact2 + flight));
 }

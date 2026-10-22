@@ -39,7 +39,7 @@ describe("badminton 3D rules", () => {
     expect(scoreOf(s)).toEqual({ yash: 21, you: 19 });
     expect(s.rallies.map((r) => r.kind)).toEqual(["smash", "drop", "dive", "placement"]);
     expect(s.rallies.map((r) => r.card)).toEqual([0, 1, 2, 3]);
-    expect(s.rallies.map((r) => r.shots)).toEqual([3, 3, 3, 3]);
+    expect(s.rallies.map((r) => r.shots)).toEqual([1, 1, 1, 1]);
   });
 
   it("perfect picks: 22–20 in six rallies: WINNER, OUT, HE READ IT, WHAT A DIVE, HE READ IT, HE READ IT", () => {
@@ -91,11 +91,11 @@ describe("badminton 3D rules", () => {
     expect(playRally(s, [perfect]).rallies[2]).toMatchObject({ winner: "yash", call: "dive" });
   });
 
-  it("the Data rally: a good, late or early pick brings the dive; a wrong one is blocked", () => {
+  it("the Data rally: only a good pick brings the dive; a late one misses; a wrong one is blocked", () => {
     const s = beforeDive();
     const last = (p: Judged) => playRally(s, [p]).rallies[2];
     expect(last(perfect)).toMatchObject({ winner: "yash", call: "dive", card: 2 });
-    expect(last(late)).toMatchObject({ winner: "yash", call: "late", card: 2 });
+    expect(last(late)).toMatchObject({ winner: "yash", call: "late", card: 2, shots: 1 });
     expect(last(wrong)).toMatchObject({ winner: "yash", call: "wrong", card: 2 });
   });
 
