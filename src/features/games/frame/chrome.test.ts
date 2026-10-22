@@ -46,15 +46,17 @@ describe("buildGameEnd", () => {
     expect(end(true, false)).toEqual({
       primary: { label: "SEE IT", to: chrome.content },
       again: "AGAIN",
+      next: null,
       hub: { label: ui.games.backToHub, to: ROUTES.arena },
     });
     expect(end(true, true)?.primary).toEqual({ label: ui.games.highlight, to: chrome.content });
   });
 
-  it("offers SEE FULL TIME once the matchday is complete, ahead of the highlight (F3)", () => {
+  it("keeps the main button and adds SEE FULL TIME as the quiet third link once the matchday is complete (F3)", () => {
     expect(end(true, true, true)).toEqual({
-      primary: { label: ui.games.fullTime, to: ROUTES.fullTime },
+      primary: { label: ui.games.highlight, to: chrome.content },
       again: "AGAIN",
+      next: { label: ui.games.fullTime, to: ROUTES.fullTime },
       hub: { label: ui.games.backToHub, to: ROUTES.arena },
     });
   });

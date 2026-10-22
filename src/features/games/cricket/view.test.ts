@@ -131,6 +131,7 @@ describe("buildCricketView", () => {
     expect(v.end).toEqual({
       primary: { label: "SEE THE FULL SCORECARD", to: "/career" },
       again: "BOWL AGAIN",
+      next: null,
       hub: HUB,
     });
   });
@@ -140,6 +141,7 @@ describe("buildCricketView", () => {
     expect(v.end).toEqual({
       primary: { label: "WATCH THE HIGHLIGHT INSTEAD", to: "/career" },
       again: "BOWL AGAIN",
+      next: null,
       hub: HUB,
     });
   });
@@ -160,12 +162,16 @@ describe("buildCricketView", () => {
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
   });
 
-  it("once all three venues are played, the main button is SEE FULL TIME, ahead of the highlight (F3)", () => {
+  it("once all three venues are played, the main button stays the venue's page (or the highlight offer) and SEE FULL TIME is the quiet third link (F3)", () => {
     const state = play(["good", "miss", "good"]);
     for (const offerHighlight of [false, true]) {
       expect(view(state, { phase: "end", offerHighlight, fullTime: true }).end).toEqual({
-        primary: { label: "SEE FULL TIME", to: "/arena/full-time" },
+        primary: {
+          label: offerHighlight ? "WATCH THE HIGHLIGHT INSTEAD" : "SEE THE FULL SCORECARD",
+          to: "/career",
+        },
         again: "BOWL AGAIN",
+        next: { label: "SEE FULL TIME", to: "/arena/full-time" },
         hub: HUB,
       });
     }

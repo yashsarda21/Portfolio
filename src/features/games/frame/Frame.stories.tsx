@@ -105,7 +105,7 @@ const end = (offerHighlight: boolean, fullTime: boolean): GameEndView =>
     again: cricket.again,
   })!;
 
-/** The end buttons: the venue's page, the highlight offer after the second loss, and Full Time once all three are played; on the stage and in the column. */
+/** The end buttons: the venue's page, the highlight offer after the second loss, and Full Time as a quiet third link once all three are played; on the stage and in the column. */
 export const End: StoryObj = {
   parameters: { layout: "padded" },
   render: () => {
@@ -137,7 +137,7 @@ export const End: StoryObj = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getAllByRole("link", { name: cricket.see })).toHaveLength(2);
+    await expect(canvas.getAllByRole("link", { name: cricket.see })).toHaveLength(4);
     await expect(canvas.getAllByRole("link", { name: ui.games.fullTime })).toHaveLength(2);
     await expect(canvas.getAllByRole("button", { name: cricket.again })).toHaveLength(4);
   },

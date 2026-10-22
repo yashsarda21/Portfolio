@@ -5,15 +5,16 @@ import { cn } from "@/lib/cn";
 import type { GameEndView } from "./chrome";
 
 /**
- * What the game offers when it is over: the main button (volt) and play again (glass). The main button is SEE FULL
- * TIME once the matchday is complete (F3), else the venue's page, or after the second loss the highlight (G9). The
- * column adds a quiet BACK TO THE HUB. The stage draws them as skewed 62px buttons side by side; the column stacks
+ * What the game offers when it is over: the main button (volt) and play again (glass). The main button is always the
+ * venue's page, or after the second loss the highlight (G9). Once the matchday is complete (F3) a quiet SEE FULL TIME
+ * link follows: on the stage after play again, in the column in place of the quiet BACK TO THE HUB (which it
+ * otherwise adds). The stage draws them as skewed 62px buttons side by side; the column stacks
  * them full width, the first 64px. Focus lands on the first button when
  * they appear, if the focus was on the game's controls or nowhere, so a keyboard player is already there (Space and
  * Enter then press that button, never a shot).
  */
 export function GameEnd({
-  end: { primary, again, hub },
+  end: { primary, again, next, hub },
   onAgain,
   size,
 }: {
@@ -31,6 +32,8 @@ export function GameEnd({
   }, []);
 
   const stage = size === "stage";
+  // The quiet third link: SEE FULL TIME once the matchday is complete; else (the phone only) the way back to the Hub.
+  const quiet = next ?? (stage ? null : hub);
   return (
     <div
       ref={root}
@@ -55,19 +58,19 @@ export function GameEnd({
       >
         {again}
       </Button>
-      {stage ? null : (
-        // The phone has no breadcrumb: a quiet way back to the Hub (the stage's breadcrumb does it).
+      {quiet ? (
+        // The phone has no breadcrumb, so its quiet link is the way back to the Hub unless Full Time takes the place.
         <Button
           as={ArenaLink}
-          to={hub.to}
+          to={quiet.to}
           variant="ghost"
-          size="bar"
-          skew={false}
-          className="short:flex-1"
+          size={stage ? "ml" : "bar"}
+          skew={stage}
+          className={stage ? "px-7.5" : "short:flex-1"}
         >
-          {hub.label}
+          {quiet.label}
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }

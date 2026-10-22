@@ -147,7 +147,7 @@ test.describe("perfect play still loses (F1)", () => {
   });
 });
 
-test("with tennis and badminton already played, the over's end leads to SEE FULL TIME (F3)", async ({
+test("with tennis and badminton already played, the over's end keeps the scorecard as the main button and adds SEE FULL TIME as the quiet third link (F3)", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -171,8 +171,9 @@ test("with tennis and badminton already played, the over's end leads to SEE FULL
   const fullTime = page.getByRole("link", { name: ui.games.fullTime });
   await expect(fullTime).toBeVisible();
   await expect(fullTime).toHaveAttribute("href", "/arena/full-time");
-  await expect(fullTime).toBeFocused();
-  await expect(page.getByRole("link", { name: cricket.see })).toHaveCount(0);
+  const see = page.getByRole("link", { name: cricket.see });
+  await expect(see).toBeVisible();
+  await expect(see).toBeFocused();
   await expect(page.getByRole("button", { name: cricket.again })).toBeVisible();
   expect((await stored(page)).venuesPlayed).toEqual(["tennis", "badminton", "cricket"]);
 

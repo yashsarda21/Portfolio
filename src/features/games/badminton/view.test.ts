@@ -176,6 +176,7 @@ describe("buildBadmintonView", () => {
     expect(v.end).toEqual({
       primary: { label: "SEE PLAYER ATTRIBUTES", to: ROUTES.attributes },
       again: "REMATCH",
+      next: null,
       hub: HUB,
     });
     expect(v.comm).toBe(content.commentary.yashWins[0]);
@@ -204,12 +205,16 @@ describe("buildBadmintonView", () => {
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
   });
 
-  it("once all three venues are played, the main button is SEE FULL TIME, ahead of the highlight (F3)", () => {
+  it("once all three venues are played, the main button stays the venue's page (or the highlight offer) and SEE FULL TIME is the quiet third link (F3)", () => {
     const state = play([CLEAR, SMASH, DROP, DROP]);
     for (const offerHighlight of [false, true]) {
       expect(view(state, { phase: "end", offerHighlight, fullTime: true }).end).toEqual({
-        primary: { label: "SEE FULL TIME", to: "/arena/full-time" },
+        primary: {
+          label: offerHighlight ? "WATCH THE HIGHLIGHT INSTEAD" : "SEE PLAYER ATTRIBUTES",
+          to: ROUTES.attributes,
+        },
         again: "REMATCH",
+        next: { label: "SEE FULL TIME", to: "/arena/full-time" },
         hub: HUB,
       });
     }

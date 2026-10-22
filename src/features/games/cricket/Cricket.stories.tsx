@@ -92,7 +92,7 @@ export const Offer: StoryObj = {
   },
 };
 
-/** All three venues played: SEE FULL TIME leads, play again stays. */
+/** All three venues played: the venue's page still leads, play again stays, and SEE FULL TIME is the quiet third link. */
 export const FullTime: StoryObj = {
   render: () => <CricketPage view={fullTimeView} phase="end" />,
   play: async ({ canvasElement }) => {

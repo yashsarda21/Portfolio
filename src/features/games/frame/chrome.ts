@@ -40,11 +40,13 @@ type Link = { label: string; to: string };
 
 /** What a game offers when it is over: `GameEnd` draws it as it is. */
 export interface GameEndView {
-  /** SEE FULL TIME once all three venues are played (F3); else the venue's page, or after the second loss the highlight (G9). */
+  /** The venue's page, or after the second loss the highlight (G9): the main button, always (owner, 2026-10-22). */
   primary: Link;
   /** Play again. */
   again: string;
-  /** Back to the Hub: the phone's column draws it as a quiet third link (the stage has the breadcrumb). */
+  /** SEE FULL TIME once all three venues are played (F3): a quiet third link after play again; else null. */
+  next: Link | null;
+  /** Back to the Hub: the phone's column draws it as a quiet third link when there is no `next` (the stage has the breadcrumb). */
   hub: Link;
 }
 
@@ -56,8 +58,9 @@ export const announceWith = (line: string, outcome: string | null) =>
   outcome ? `${line}. ${outcome}.` : line;
 
 /**
- * The end of a game, the same in all three: nothing while it is on; then play again and a main button: SEE FULL
- * TIME once the matchday is complete (F3), else the venue's page (`see`), or the highlight once `offerHighlight` (G9).
+ * The end of a game, the same in all three: nothing while it is on; then play again and a main button: the venue's
+ * page (`see`), or the highlight once `offerHighlight` (G9). Once the matchday is complete (F3) SEE FULL TIME joins
+ * as a quiet third link (`next`).
  */
 export function buildGameEnd(
   ui: UiCopy,
@@ -73,10 +76,9 @@ export function buildGameEnd(
 ): GameEndView | null {
   if (!over) return null;
   return {
-    primary: fullTime
-      ? { label: ui.games.fullTime, to: routes.fullTime }
-      : { label: offerHighlight ? ui.games.highlight : see, to: chrome.content },
+    primary: { label: offerHighlight ? ui.games.highlight : see, to: chrome.content },
     again,
+    next: fullTime ? { label: ui.games.fullTime, to: routes.fullTime } : null,
     hub: { label: ui.games.backToHub, to: routes.arena },
   };
 }

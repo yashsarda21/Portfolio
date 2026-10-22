@@ -193,11 +193,11 @@ test("the full matchday: cricket, tennis, badminton → SEE FULL TIME → YOU 0 
   await freezeClock(page);
   await playMatchday(page, phone);
 
-  // The third end: SEE FULL TIME leads, and the venue's own page is gone from the end (SKIP still goes to it).
+  // The third end: the venue's own page stays the main button, and SEE FULL TIME is the quiet third link.
   const seeFullTime = page.getByRole("link", { name: ui.games.fullTime });
   await expect(seeFullTime).toBeVisible();
   await expect(seeFullTime).toHaveAttribute("href", "/arena/full-time");
-  await expect(page.getByRole("link", { name: badminton.see })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: badminton.see })).toBeVisible();
   expect((await stored(page)).venuesPlayed).toEqual(["cricket", "tennis", "badminton"]);
 
   await page.clock.resume();

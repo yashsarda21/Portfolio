@@ -75,7 +75,7 @@ export const Lost: StoryObj = {
   },
 };
 
-/** All three venues played: SEE FULL TIME leads, the rematch stays. */
+/** All three venues played: the venue's page still leads, the rematch stays, and SEE FULL TIME is the quiet third link. */
 export const FullTime: StoryObj = {
   render: () => <BadmintonPage view={fullTimeView} phase="end" />,
   play: async ({ canvasElement }) => {
