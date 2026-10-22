@@ -361,13 +361,28 @@ describe("buildBadminton3dView", () => {
   it("3D: the aims are ↓ DROP then ↑ SMASH; in a window the open one is lit, reads OPEN COURT and is named 'Send it deep: smash — open court'", () => {
     const idle = view3d(MATCH_START).three.aims;
     expect(idle).toEqual([
-      { dir: "short", arrow: "↓", label: "↓ DROP", name: "Send it short: drop", open: false },
-      { dir: "deep", arrow: "↑", label: "↑ SMASH", name: "Send it deep: smash", open: false },
+      {
+        dir: "short",
+        arrow: "↓",
+        shot: "↓ DROP",
+        label: "↓ DROP",
+        name: "Send it short: drop",
+        open: false,
+      },
+      {
+        dir: "deep",
+        arrow: "↑",
+        shot: "↑ SMASH",
+        label: "↑ SMASH",
+        name: "Send it deep: smash",
+        open: false,
+      },
     ]);
     const lit = view3d(MATCH_START, { phase: "window", open: "deep" }).three.aims;
     expect(lit[1]).toEqual({
       dir: "deep",
       arrow: "↑",
+      shot: "↑ SMASH",
       label: "↑ OPEN COURT",
       name: "Send it deep: smash — open court",
       open: true,
@@ -450,7 +465,7 @@ describe("buildBadminton3dView", () => {
     expect(view3d(play3d(yours)).announce).toBe("WINNER. 17–20.");
     // The end adds how the game ended.
     expect(view3d(play3d([late], [late], [late], [late]), { phase: "end" }).announce).toMatch(
-      /^TOO LATE\. 21–19\. Craft charged: .+\. Game yash\. 21–19\.$/,
+      /^TOO LATE\. 21–19\. Craft charged: .+\. Game yash\.$/,
     );
   });
 });

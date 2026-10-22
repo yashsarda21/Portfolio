@@ -603,6 +603,7 @@ export const ui = {
           to: { deep: "Send it deep: smash", short: "Send it short: drop" },
           openName: "open court",
           dash: "—",
+          arrow: { deep: "↑", short: "↓" }, // derived
         },
         status: { yourMatchPoint: "YOUR MATCH POINT", all: "20 ALL" },
         calls: {

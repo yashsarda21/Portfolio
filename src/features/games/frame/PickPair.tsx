@@ -1,9 +1,9 @@
 import { Button } from "@/design-system";
 
 /**
- * The phone's two pick buttons side by side, big enough for a thumb (← and →): each shows its `arrow`, is read out as
- * its `name`, and is lit (primary) while it is the `open` one. A press calls `onPick` with its `key`; while not `live`
- * the buttons are marked disabled and the game decides what a press does.
+ * The phone's two pick buttons side by side, big enough for a thumb (← →, ↑ ↓ or a glyph with a word): each shows its
+ * `arrow` text, is read out as its `name`, and is lit (primary) while it is the `open` one. A press calls `onPick`
+ * with its `key`; while not `live` the buttons are marked disabled and the game decides what a press does.
  */
 export function PickPair<K extends string = string>({
   aims,

@@ -4,7 +4,7 @@ These are the words that are **not** in the design files or in your `content.jso
 
 **How to use this list.** Read each row on the page where it shows. If you want different words, type them in the last column. If it is fine, leave the box empty. Send the list back and the changes go in as one copy task before launch.
 
-**How it was made.** A script read `src/content/ui-copy.ts` and collected every entry marked `// derived` (or inside a block whose comment says derived), plus the strings spec section 12 calls derived that the code does not mark (the Source column says which), plus the trophy descriptions `content.json` flags with `draftCopy: true`. Count: 120 marked in the code, 21 more named in spec section 12, 4 trophy descriptions (145 in all).
+**How it was made.** A script read `src/content/ui-copy.ts` and collected every entry marked `// derived` (or inside a block whose comment says derived), plus the strings spec section 12 calls derived that the code does not mark (the Source column says which), plus the trophy descriptions `content.json` flags with `draftCopy: true`. Count: 121 marked in the code, 21 more named in spec section 12, 4 trophy descriptions (146 in all).
 
 Two things to keep in mind while you read: letters in capitals are drawn in capitals (the spoken text is the same words), and a few lines are built from parts, so the page shows them joined (for example "2 of 3 venues played. The final whistle blows after all three.").
 
@@ -146,6 +146,7 @@ The 3D Badminton Hall game. The Hub card's pitch and length and the page descrip
 | `games.badminton.three.aim.to.short` | Send it short: drop | The down button's name for screen readers (3D). | code mark | |
 | `games.badminton.three.aim.openName` | open court | Added to the lit button's name for screen readers (3D): "Send it deep: smash — open court". | code mark | |
 | `games.badminton.three.aim.dash` | — | The dash between a button's name and "open court" for screen readers (3D). | code mark | |
+| `games.badminton.three.aim.arrow` | ↑ ↓ | The arrows in front of the two buttons' words (3D): up for deep (SMASH), down for short (DROP); shown on the stage and on the phone. | code mark | |
 | `games.badminton.three.status.yourMatchPoint` | YOUR MATCH POINT | The score bug's status when you are on 20 and Yash is under 20 (3D). | code mark | |
 | `games.badminton.three.status.all` | 20 ALL | The score bug's status at 20–20, as the umpire calls it (3D). | code mark | |
 | `games.badminton.three.calls.early` | TOO EARLY. | The call when you pick before Yash hits (3D). | code mark | |
@@ -160,7 +161,7 @@ The 3D Badminton Hall game. The Hub card's pitch and length and the page descrip
 | `games.badminton.three.comm.drop` | Drop shot. Dead at the net. | The commentary line after Yash wins with the Frontend drop shot (3D); the charge follows. | code mark | |
 | `games.badminton.three.comm.dive` | Full stretch. He gets everything back. | The commentary line after Yash wins with the Data dive (3D); the charge follows. | code mark | |
 | `games.badminton.three.comm.placement` | Court vision. Into the empty corner. | The commentary line after Yash wins with the Craft placement (3D); the charge follows. | code mark | |
-| `games.badminton.three.comm.final` | Jump smash to finish it. | The commentary line after Yash's final jump smash, if the game is not yet announced as over (3D). | code mark | |
+| `games.badminton.three.comm.final` | Jump smash to finish it. | The commentary line after Yash's final jump smash (3D). It never shows today: the GAME line wins when the game ends; kept in case the final line is ever shown. | code mark | |
 | `games.badminton.three.comm.charged` | charged. | Ends a commentary line and the screen-reader line: "Jump smash. Backend charged." (3D). | code mark | |
 | `games.badminton.three.comm.anyway` | charged anyway. | Ends the commentary line after the OUT call: "Hawk-Eye says out. By a whisker. Backend charged anyway." (3D). | code mark | |
 | `games.badminton.three.comm.all` | Twenty all. Nerves of steel. | The commentary line when your rally takes the score to 20–20 (3D). | code mark | |
@@ -226,4 +227,4 @@ The first trophy (the cup) is yours from the design. The other four descriptions
 
 ---
 
-145 strings in total.
+146 strings in total.

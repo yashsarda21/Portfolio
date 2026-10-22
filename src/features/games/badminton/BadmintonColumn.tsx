@@ -82,7 +82,9 @@ export function BadmintonColumn({
     if (!from || from.id !== e.pointerId) return;
     const dx = e.clientX - from.x;
     const dy = e.clientY - from.y;
-    if (Math.abs(dy) > SWIPE_PX && Math.abs(dy) > Math.abs(dx)) choose(dy < 0 ? "deep" : "short");
+    if (phase === "window" && Math.abs(dy) > SWIPE_PX && Math.abs(dy) > Math.abs(dx)) {
+      choose(dy < 0 ? "deep" : "short");
+    }
   };
 
   const callOverlay = call ? (
@@ -110,7 +112,7 @@ export function BadmintonColumn({
         <PickPair
           aims={parts.aims.map((aim) => ({
             key: aim.dir,
-            arrow: aim.arrow,
+            arrow: aim.shot,
             name: aim.name,
             open: aim.open,
           }))}
@@ -147,7 +149,10 @@ export function BadmintonColumn({
             onPointerDown={down}
             onPointerUp={up}
             onPointerCancel={() => (start.current = null)}
-            className={cn("absolute inset-0", three.live ? "touch-none" : "touch-pan-y")}
+            className={cn(
+              "absolute inset-0",
+              three && phase === "window" ? "touch-none" : "touch-pan-y",
+            )}
           >
             {callOverlay}
           </div>

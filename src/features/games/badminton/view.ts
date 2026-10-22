@@ -39,6 +39,8 @@ export const LIVE_3D: readonly Badminton3dPhase[] = ["serve", "window", "rally"]
 export interface BadmintonAim {
   dir: Dir;
   arrow: "↑" | "↓";
+  /** The phone button's words: the arrow and the shot, "↓ DROP" (it stays the same when the button is lit). */
+  shot: string;
   label: string;
   /** The accessible name: "Send it deep: smash — open court". */
   name: string;
@@ -97,7 +99,7 @@ export interface BadmintonView {
   toasts: AttributeToastProps[];
   /** The newest charge as the phone's chip: null before the first rally. */
   latest: { eyebrow: string; title: string; meta: string } | null;
-  /** How many rallies have been played (0 to 4): a new call, a new charge. */
+  /** How many rallies have been played (0 to 4 in 2D, up to 6 in 3D): a new call, a new charge. */
   played: number;
   /** The big call for the last rally: only while it is being called. */
   call: { text: string; tone: Tone } | null;
@@ -226,16 +228,16 @@ export function buildBadmintonView(
   };
 }
 
-const ARROW = { deep: "↑", short: "↓" } as const;
-
 /** The two pick buttons, the short one then the deep one; `open` (if any) is lit. */
 function aimsFor(ui: UiCopy, open: Dir | null): [BadmintonAim, BadmintonAim] {
   const aim = ui.games.badminton.three.aim;
+  const ARROW = aim.arrow;
   const one = (dir: Dir): BadmintonAim => {
     const lit = open === dir;
     return {
       dir,
       arrow: ARROW[dir],
+      shot: `${ARROW[dir]} ${aim[dir]}`,
       label: `${ARROW[dir]} ${lit ? aim.open : aim[dir]}`,
       name: lit ? `${aim.to[dir]} ${aim.dash} ${aim.openName}` : aim.to[dir],
       open: lit,
@@ -377,7 +379,7 @@ export function buildBadminton3dView(
       ? announceWith(
           // The line already ends with its own full stop: when the game is over, announceWith adds the outcome after it.
           over ? spoken.slice(0, -1) : spoken,
-          over ? `${sentenceCase(status)}. ${score}` : null,
+          over ? sentenceCase(status) : null,
         )
       : "",
     end: buildGameEnd(ui, routes, base.chrome, {
