@@ -68,3 +68,37 @@ export const pickOpen = async (page: Page) => pickSide(page, await openSide(page
 /** Tennis: your shot to the side Yash covers. */
 export const pickWrong = async (page: Page) =>
   pickSide(page, (await openSide(page)) === "left" ? "right" : "left");
+
+export type Dir = "deep" | "short";
+const BAD_AIM = ui.games.badminton.three.aim;
+/** Badminton: the phone's ↑ / ↓ button for `dir` (its name starts with "Send it deep", the open one's adds "— open court"). */
+const button = (page: Page, dir: Dir) =>
+  page.locator(`[data-game-column] [data-part=thumb] button[aria-label^="${BAD_AIM.to[dir]}"]`);
+
+/** Badminton: sends your shot `dir`, with its arrow on the stage, a tap on its button on the phone (a click without touch). */
+export async function pickDir(page: Page, dir: Dir) {
+  if (await onStage(page)) {
+    await page.keyboard.press(dir === "deep" ? "ArrowUp" : "ArrowDown");
+    return;
+  }
+  const touch = await page.evaluate(() => "ontouchstart" in window);
+  if (touch) await button(page, dir).tap({ force: true });
+  else await button(page, dir).click({ force: true });
+}
+
+/** Badminton: the part lit as open now (the stage's button whose `data-state` is open, or the phone's lit button). */
+async function openDir(page: Page): Promise<Dir> {
+  const lit = (await onStage(page))
+    ? page.locator("[data-stage] [data-state=open]")
+    : page.locator(
+        `[data-game-column] [data-part=thumb] button[aria-label$="${BAD_AIM.dash} ${BAD_AIM.openName}"]`,
+      );
+  const name = await lit.getAttribute("aria-label");
+  return name?.startsWith(BAD_AIM.to.deep) ? "deep" : "short";
+}
+
+/** Badminton: your shot to the open part. */
+export const pickOpenDir = async (page: Page) => pickDir(page, await openDir(page));
+/** Badminton: your shot to the part Yash covers. */
+export const pickWrongDir = async (page: Page) =>
+  pickDir(page, (await openDir(page)) === "deep" ? "short" : "deep");

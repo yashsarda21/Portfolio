@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import { useRef, type PointerEvent, type Ref } from "react";
 import {
   CallOverlay,
   CourtBox,
@@ -13,11 +13,19 @@ import {
   TracerPath,
   TrackingRing,
 } from "@/design-system";
+import { cn } from "@/lib/cn";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
+import { PickPair } from "../frame/PickPair";
+import { GameLoader } from "../three/GameLoader";
+import type { Dir } from "./3d/match";
+import type { BadmintonThree } from "./BadmintonPage";
 import { ARC, PARKED, YASH_RING } from "./flight";
 import { HoldButton } from "./HoldButton";
-import type { BadmintonPhase, BadmintonView } from "./view";
+import type { Badminton3dPhase, BadmintonPhase, BadmintonView } from "./view";
+
+/** A swipe is a finger (or pen) that moves this far up or down, and more up or down than across. */
+const SWIPE_PX = 40;
 
 /**
  * Badminton below 1200px (derived from Mobile-Game and Badminton-Play): the hall's court rises away from your thumb.
@@ -26,6 +34,11 @@ import type { BadmintonPhase, BadmintonView } from "./view";
  * stage's, cropped and scaled to the width, so every part of the field is drawn in the stage's own coordinates inside
  * the same box as the court (the arc, the shuttle, Yash's ring) or on its centre line (x 720: the tag and the call),
  * and nothing drifts with the width (D-9).
+ *
+ * With `three` (the 3D game): the scene fills the screen behind everything once it is ready, and only the call is
+ * drawn on the field. The thumb zone has the hint and the two pick buttons (while the 3D loads, they hold their place,
+ * unseen, with the loader over them). A swipe up on the field is deep and a swipe down is short, only while a pick is
+ * taken: then the field takes the touch (`touch-none`); at any other time the page scrolls over it as usual.
  */
 export function BadmintonColumn({
   view,
@@ -33,19 +46,134 @@ export function BadmintonColumn({
   reduced,
   onCharge,
   onRelease,
+  onPick,
   onAgain,
   shuttleRef,
+  three,
 }: {
   view: BadmintonView;
-  phase: BadmintonPhase;
+  phase: BadmintonPhase | Badminton3dPhase;
   reduced: boolean;
   onCharge: () => void;
   onRelease: () => void;
+  onPick: (dir: Dir) => void;
   onAgain: () => void;
   shuttleRef?: Ref<SVGGElement>;
+  three?: BadmintonThree;
 }) {
   const { bug, call, end, hold, latest, meter } = view;
   const [smash, , drop] = meter.legend;
+  const ready = three?.status === "ready";
+  /** The 3D game takes a pick only while one is taken. */
+  const choose = (dir: Dir) => {
+    if (three?.live) onPick(dir);
+  };
+
+  const start = useRef<{ id: number; x: number; y: number } | null>(null);
+  const down = (e: PointerEvent) => {
+    start.current =
+      e.pointerType === "touch" || e.pointerType === "pen"
+        ? { id: e.pointerId, x: e.clientX, y: e.clientY }
+        : null;
+  };
+  const up = (e: PointerEvent) => {
+    const from = start.current;
+    start.current = null;
+    if (!from || from.id !== e.pointerId) return;
+    const dx = e.clientX - from.x;
+    const dy = e.clientY - from.y;
+    if (Math.abs(dy) > SWIPE_PX && Math.abs(dy) > Math.abs(dx)) choose(dy < 0 ? "deep" : "short");
+  };
+
+  const callOverlay = call ? (
+    <CallOverlay
+      key={view.played}
+      call={call.text}
+      tone={call.tone}
+      size="column"
+      className="absolute inset-x-0 top-82 short:top-48"
+    />
+  ) : null;
+
+  if (three) {
+    const parts = three.parts;
+    const controls = (
+      <>
+        <MonoLabel
+          data-part="hint"
+          variant="mono-chip"
+          tone="label"
+          className="text-center text-balance"
+        >
+          {parts.hint.phone}
+        </MonoLabel>
+        <PickPair
+          aims={parts.aims.map((aim) => ({
+            key: aim.dir,
+            arrow: aim.arrow,
+            name: aim.name,
+            open: aim.open,
+          }))}
+          live={three.live}
+          onPick={choose}
+        />
+      </>
+    );
+    return (
+      <GameColumn
+        chrome={view.chrome}
+        venue="hall"
+        scene={three.scene}
+        sceneHidden={!ready}
+        sceneDrawn={three.drawn}
+        heading={view.heading}
+        bug={
+          <ScoreBug label={bug.label} size="sm">
+            <ScoreBug.Name>{bug.name}</ScoreBug.Name>
+            <ScoreBug.Cell>{bug.yash}</ScoreBug.Cell>
+            <ScoreBug.Cell muted>{bug.you}</ScoreBug.Cell>
+            {bug.phoneBadge ? (
+              <ScoreBug.Status alert={bug.alert}>{bug.statusPhone}</ScoreBug.Status>
+            ) : (
+              <ScoreBug.Meta>{bug.statusPhone}</ScoreBug.Meta>
+            )}
+          </ScoreBug>
+        }
+        reveal={latest ? <RevealChip key={view.played} {...latest} /> : null}
+        field={
+          <div
+            aria-hidden="true"
+            data-part="field"
+            onPointerDown={down}
+            onPointerUp={up}
+            onPointerCancel={() => (start.current = null)}
+            className={cn("absolute inset-0", three.live ? "touch-none" : "touch-pan-y")}
+          >
+            {callOverlay}
+          </div>
+        }
+        thumb={
+          phase === "end" && end ? (
+            <GameEnd size="column" end={end} onAgain={onAgain} />
+          ) : !ready ? (
+            // While the 3D loads, the controls hold their place, unseen, with the loader over the buttons: when they
+            // appear, the thumb zone is already their height, so nothing moves.
+            <div className="relative flex w-full flex-col items-center gap-4 short:gap-2">
+              <div inert className="invisible flex w-full flex-col items-center gap-4 short:gap-2">
+                {controls}
+              </div>
+              <div className="absolute inset-x-0 bottom-0">
+                <GameLoader label={parts.loading} progress={three.progress} size="column" />
+              </div>
+            </div>
+          ) : (
+            controls
+          )
+        }
+      />
+    );
+  }
+
   return (
     <GameColumn
       chrome={view.chrome}
@@ -84,15 +212,7 @@ export function BadmintonColumn({
               {view.reading}
             </PlayerTag>
           </CourtBox>
-          {call ? (
-            <CallOverlay
-              key={view.played}
-              call={call.text}
-              tone={call.tone}
-              size="column"
-              className="absolute inset-x-0 top-82 short:top-48"
-            />
-          ) : null}
+          {callOverlay}
         </div>
       }
       thumb={

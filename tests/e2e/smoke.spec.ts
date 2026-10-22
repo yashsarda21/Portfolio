@@ -83,7 +83,7 @@ test.describe("first load", () => {
   }
 
   // three.js and the 3D scene come only through the game's dynamic import, after the page is up (spec §6.2).
-  for (const venue of ["cricket", "tennis"]) {
+  for (const venue of ["cricket", "tennis", "badminton"]) {
     test(`/arena/${venue} first-load chunks do not contain three`, () => {
       const three = threeChunks();
       expect(three.length).toBeGreaterThan(0);

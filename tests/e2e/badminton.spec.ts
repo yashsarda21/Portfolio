@@ -560,7 +560,8 @@ test.describe("without JavaScript", () => {
   test("the fresh game with SKIP and QUICK VIEW as plain links", async ({ page }) => {
     await page.goto("/arena/badminton");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(ui.routes.badminton.heading);
-    await expect(page.getByText("UP NEXT · RALLY 1").first()).toBeAttached();
+    // The route's prerender is the 3D game's board (its gate starts "loading"): its next card reads UP NEXT.
+    await expect(page.getByText("UP NEXT").first()).toBeAttached();
     const skip = page.getByRole("link", { name: badminton.skip });
     const quick = page.getByRole("link", { name: ui.hud.quickView });
     await expect(skip).toHaveAttribute("href", "/attributes");

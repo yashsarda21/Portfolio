@@ -138,7 +138,7 @@ The 3D Badminton Hall game. The Hub card's pitch and length and the page descrip
 | `games.badminton.three.keys` | ↑ ↓ | The keys shown in the how-to-play panel of the 3D game (desktop). | code mark | |
 | `games.badminton.three.hint.stage` | ↑ ↓ OR CLICK | The hint under the two buttons on the stage (3D). | code mark | |
 | `games.badminton.three.hint.phone` | TAP OR SWIPE ↑ ↓ | The hint above the thumb zone on a phone (3D). | code mark | |
-| `games.badminton.three.progress` | HIS RALLIES CHARGE THE ATTRIBUTES | The label above the progress bars in the 3D game. | code mark | |
+| `games.badminton.three.progress` | HIS RALLIES CHARGE THE ATTRIBUTES | The label at the top of the how-to-play panel in the 3D game (desktop), above the how-to text. | code mark | |
 | `games.badminton.three.aim.deep` | SMASH | The up button's words in the 3D game (deep and hard). | code mark | |
 | `games.badminton.three.aim.short` | DROP | The down button's words in the 3D game (short and soft). | code mark | |
 | `games.badminton.three.aim.open` | OPEN COURT | The lit button's words while a pick is open (3D): the part of his court he is not covering. | code mark | |

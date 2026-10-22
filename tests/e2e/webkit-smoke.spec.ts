@@ -24,7 +24,7 @@ for (const venue of ["cricket", "tennis", "badminton"] as const) {
     await expectPhoneBasics(page);
     const thumb = page.locator("[data-game-column] [data-part=thumb] button").first();
     // The 3D games' loader holds the thumb zone until the scene is ready (or the 2D game takes over).
-    await expect(thumb).toBeVisible({ timeout: venue === "badminton" ? undefined : 30_000 });
+    await expect(thumb).toBeVisible({ timeout: 30_000 });
     const box = await thumb.boundingBox();
     const view = page.viewportSize()!;
     expect(box, "the thumb button has a box").not.toBeNull();
