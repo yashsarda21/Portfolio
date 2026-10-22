@@ -31,7 +31,9 @@ export type SoundName =
   | "ooh"
   | "hit"
   | "court"
-  | "applause";
+  | "applause"
+  | "shuttle"
+  | "squeak";
 
 interface AudioApi {
   enabled: boolean;

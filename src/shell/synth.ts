@@ -179,6 +179,12 @@ const ooh: Recipe = (ctx, out, at) => {
   tone(ctx, "sine", { from: 330, to: 297, glide: 0.9 }, vowel, at, 0.9);
 };
 
+/** A court shoe on the hall floor: a short, quiet chirp, a sine sweeping up from 2.4 to 3.2 kHz over 60 ms. */
+const squeak: Recipe = (ctx, out, at) => {
+  const chirp = envelope(ctx, out, at, PEAK * 0.2, 0.005, 0.06);
+  tone(ctx, "sine", { from: 2400, to: 3200, glide: 0.06 }, chirp, at, 0.06);
+};
+
 export const RECIPES: Record<SoundName, Recipe> = {
   bat,
   net,
@@ -193,4 +199,7 @@ export const RECIPES: Record<SoundName, Recipe> = {
   hit: net,
   court: bounce,
   applause: crowd,
+  // The 3D badminton game's: the racket on the shuttle is the net's thump (ruling P9), the shoe its own chirp.
+  shuttle: net,
+  squeak,
 };
