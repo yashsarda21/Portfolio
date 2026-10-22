@@ -13,7 +13,7 @@ import {
   type Gait,
   type Leg,
 } from "../../three/footwork";
-import { clamp, feetFor, ground, smooth, toWorld } from "../../three/geometry";
+import { clamp, ground, smooth, toWorld } from "../../three/geometry";
 import {
   CROSSFADE_S,
   lerp3,
@@ -23,7 +23,7 @@ import {
 } from "../../three/track";
 import { BOX_X, boxX, CAMERA, FACE, RECEIVE_Z, SERVE_SPOT_Z, type Vec3 } from "./court";
 import { BADMINTON_3D_BEATS, type Dir, type Player } from "./match";
-import type { Flight, RallyScript, RallySetup, Recover, Swing } from "./rally";
+import type { RallyScript, RallySetup, Recover, Swing } from "./rally";
 // Type only: reach.ts imports three, and this file is reached from the first load (tennis ruling R3).
 import type { Reach } from "./reach";
 import { flyTo, heading, type ShuttlePath } from "./shuttle";
@@ -104,15 +104,28 @@ const TURN_IN = 0.3;
 /** A shuffle done before its stroke settles into ready over this long, as the stroke starts. */
 const SETTLE = 0.15;
 
+/**
+ * Badminton moves side-on (the chassé) up to this speed (m/s), where tennis jogs from FOOTWORK.shuffleSlower: a player
+ * moving back to block or to the rear court never turns his back on the shuttle.
+ */
+export const SHUFFLE_MAX = 3.2;
 /** Badminton's clips for the shared footwork: Yash and you move alike. */
 const GAIT: Gait<BadmintonClip> = {
   shuffleLeft: "shuffleL",
   shuffleRight: "shuffleR",
   shufflePace: SHUFFLE_PACE,
+  shuffleMax: SHUFFLE_MAX,
   jog: "jog",
   sprint: "sprint",
   walk: "walk",
   ready: "ready",
+};
+/** Moving back (away from the net) he stays side-on however quick, the chassé: he never turns his back on the shuttle. */
+const BACK_GAIT: Gait<BadmintonClip> = { ...GAIT, shuffleMax: Infinity };
+/** The gait for a move to `to` facing `face`: BACK_GAIT for a move more than 120° from the way he faces. */
+const gaitFor = (track: Track, at: number, to: Vec3, face: number) => {
+  const from = sampleTrack(track, at).position;
+  return Math.cos(Math.atan2(to[0] - from[0], to[2] - from[2]) - face) < -0.5 ? BACK_GAIT : GAIT;
 };
 /** Each stroke's contact and end (s into its clip). */
 const CLIP: Record<Stroke, { contact: number; end: number }> = {
@@ -195,7 +208,7 @@ function freeAt(track: Track, t: number): number {
  * way (the same clip) carries on in its stride, at the new speed.
  */
 function legTo(plan: Plan, face: number, leg: Leg): number | null {
-  const there = travel(plan.track, face, leg, GAIT);
+  const there = travel(plan.track, face, leg, gaitFor(plan.track, leg.start, leg.to, face));
   if (there === null) return null;
   const { clips } = plan.track;
   const [was, now] = [clips.at(-2), clips.at(-1)!];
@@ -210,18 +223,10 @@ function legTo(plan: Plan, face: number, leg: Leg): number | null {
 /**
  * One swing: the split step at the other's `hit`, the run (or shuffle) to the swing's spot arriving as the stroke
  * plants, turning to the swing's heading, the stroke on its contact, then ready. A late frame shot is the meeting
- * swing until its commit (the pick is only known then), then takes FRAME.late longer, the feet easing onto the frame's
- * spot. The dive plays where he stands, turned toward the shuttle; he stays where its slide leaves him and gets up.
+ * swing until its commit (the pick is only known then), then its forward swing takes FRAME.late longer, the feet where
+ * they are (rally.ts keeps the meeting swing's spot). The dive plays where he stands, turned toward the shuttle; he stays where its slide leaves him and gets up.
  */
-function swing(
-  plan: Plan,
-  p: Player,
-  w: Swing,
-  hit: number,
-  into: Flight,
-  reach: Reach,
-  read = false,
-) {
+function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
   const { track } = plan;
   const stretch = w.kind === "stretch";
   const k = w.kind as Exclude<Stroke, "serve">;
@@ -230,8 +235,7 @@ function swing(
   const plant = stretch ? STRETCH_CLIP.reach : PLANT[k];
   const clipAt = on - (stretch ? STRETCH_CLIP.reach : CLIP[k].contact);
   const arrive = clipAt + plant;
-  // A late frame shot's run goes where the meeting swing would have stood: the pick was not known yet.
-  const to = late ? feetFor(into.path.at(on - into.start), w.face, reach.overhead) : w.spot;
+  const to = w.spot;
 
   // Still getting up from a dive at the other's hit: no split step, he sets off once he is up. On a read he is not
   // answering a hit: he sets off at `hit` (your commit) with no split step.
@@ -244,8 +248,9 @@ function swing(
   // shuffle's pace, else at least at half its pace, into the stroke's fade. A run arrives as the stroke plants (R13).
   const far = ground(sampleTrack(track, go).position, to);
   const quick = clipAt - SETTLE;
-  const shuffle = far < FOOTWORK.shuffleUnder || far / (arrive - go) < FOOTWORK.shuffleSlower;
-  const fits = quick - go >= TURN.out - 1e-9 && far / (quick - go) <= FOOTWORK.shuffleSlower;
+  const most = gaitFor(track, go, to, w.face).shuffleMax!;
+  const shuffle = far < FOOTWORK.shuffleUnder || far / (arrive - go) < most;
+  const fits = quick - go >= TURN.out - 1e-9 && far / (quick - go) <= SHUFFLE_MAX;
   const slowest = clamp(go + far / (SLOWEST_STEP * SHUFFLE_PACE), clipAt, arrive);
   const leg: Leg = {
     clipAt: go,
@@ -301,18 +306,17 @@ function swing(
   }
   let done = w.contact + CLIP[k].end - CLIP[k].contact;
   if (late) {
-    // From the commit the forward swing takes FRAME.late longer, onto the frame's spot.
+    // From the commit the forward swing takes FRAME.late longer, the feet still: the frame meets the shuttle.
     const speed = SWING_LEAD / (w.contact - arrive);
     addClip(track, { clip, start: arrive, from: plant, speed, fade: RETIME });
-    track.moves.push({ start: arrive, end: w.contact, to: w.spot });
     done = arrive + (CLIP[k].end - plant) / speed;
   }
   addClip(track, { clip: "ready", start: done, loop: true, fade: 0.3 });
 }
 
 /** One player's rally: waiting in ready (the server with the shuttle), then each swing and recovery in turn. */
-function playerPlan(p: Player, script: RallyScript, reach: Reach): Plan {
-  const { setup, swings, flights, windows } = script;
+function playerPlan(p: Player, script: RallyScript): Plan {
+  const { setup, swings, windows } = script;
   const plan: Plan = {
     track: { home: placeOf(p, setup), face: FACE[p], clips: [], moves: [] },
     squeaks: [],
@@ -340,8 +344,7 @@ function playerPlan(p: Player, script: RallyScript, reach: Reach): Plan {
     } else {
       const theirs = swings.filter((x) => x.by !== p && x.meets && x.contact < w.contact).at(-1)!;
       const read = w === answer;
-      const into = flights.filter((f) => f.start < w.contact - 1e-9).at(-1)!;
-      swing(plan, p, w, read ? windows[0]!.commits : theirs.contact, into, reach, read);
+      swing(plan, p, w, read ? windows[0]!.commits : theirs.contact, read);
     }
     const next = mine[i + 1]?.contact ?? Infinity;
     const r = recs.find((r) => r.start > w.contact && r.start < next);
@@ -352,7 +355,7 @@ function playerPlan(p: Player, script: RallyScript, reach: Reach): Plan {
 /** A recovery (a shuffle or a run back toward his base), then ready. */
 function recover(plan: Plan, p: Player, r: Recover) {
   const from = plan.track.clips.length;
-  recoverTo(plan.track, FACE[p], r, GAIT);
+  recoverTo(plan.track, FACE[p], r, gaitFor(plan.track, r.start, r.to, FACE[p]));
   const run = plan.track.clips[from]?.clip;
   if (run === "jog" || run === "sprint") plan.squeaks.push(r.end);
 }
@@ -413,7 +416,7 @@ export function rallyShotlist(script: RallyScript, reach: Reach): Shotlist {
     return { at: f.path.at(t - f.start), heading: heading(prev, f.path, t - f.start) };
   };
 
-  const plans = { yash: playerPlan("yash", script, reach), you: playerPlan("you", script, reach) };
+  const plans = { yash: playerPlan("yash", script), you: playerPlan("you", script) };
   const cues: Cue[] = [
     ...script.contacts.map((at) => ({ at, sound: "shuttle" as const })),
     ...thin([...plans.yash.squeaks, ...plans.you.squeaks], end).map((at) => ({

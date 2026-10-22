@@ -41,7 +41,8 @@ export const SHUFFLE_PACE = 1.8;
 /**
  * A mistimed swing meets the shuttle off the frame this much later or earlier on its path (ruling P7). Kept short (Task
  * 7 fix ruling): the shuttle falls at up to about 5.3 m/s at your contact, so in 0.03 s it moves at most about 0.16 m
- * up or down, and the side of the frame (rally.ts FRAME_OFFSET) still meets it within 0.2 m of the sweet spot.
+ * up or down. The feet stay where the meeting swing planned them (Task 8 fix ruling), so the frame meets it 0.1–0.16 m
+ * from the sweet spot.
  */
 export const FRAME = { late: 0.03, early: 0.03 } as const;
 /** Your window closes when the forward swing must start: this long before contact. */

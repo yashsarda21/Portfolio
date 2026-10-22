@@ -260,7 +260,8 @@ describe("rallyShotlist: the players", () => {
             const sum = now.clips.reduce((sum, c) => sum + c.weight, 0);
             const step = ground(now.position, was.position);
             const turn = turnOf(was.face, now.face);
-            if (Math.abs(sum - 1) > 1e-9 || step >= 0.1 || turn >= 0.35)
+            // The walk's last turn to the net is the shared walkBack's (WALK.settle), bounded as tennis bounds it.
+            if (Math.abs(sum - 1) > 1e-9 || step >= 0.1 || turn >= (n === 0 ? 0.25 : 0.35))
               why(`t ${t.toFixed(3)}: sum ${sum} step ${step} turn ${turn}`);
             was = now;
           }
@@ -307,8 +308,27 @@ describe("rallyShotlist: the players", () => {
             checked++;
           }
         }
+    // A stroke stands still: from the run's arrival (the stroke at full weight) to its contact, the feet do not move.
+    let strokes = 0;
+    for (const r of RALLIES) {
+      const s = rallyShotlist(r.script, REACH);
+      for (const w of r.script.swings.filter((w) => w.meets)) {
+        const track = s.actors[w.by];
+        for (const t of frames(w.contact - 1, w.contact)) {
+          const now = sampleTrack(track, t);
+          const before = sampleTrack(track, t - 1e-4);
+          if (now.clips.length > 1 || now.clips[0]!.clip !== w.kind || before.clips.length > 1)
+            continue;
+          const speed = ground(now.position, before.position) / 1e-4;
+          if (speed > 0.2 && bad.length < 10)
+            bad.push(`${name(r)} ${w.by} ${w.kind} slides at ${speed} m/s at ${t}`);
+          strokes++;
+        }
+      }
+    }
     expect(bad).toEqual([]);
     expect(checked).toBeGreaterThan(0);
+    expect(strokes).toBeGreaterThan(0);
   }, 30_000);
 
   it("the dive's player stays down until DIVE_CLIP.up, then ready", () => {

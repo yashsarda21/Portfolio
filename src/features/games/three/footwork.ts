@@ -32,6 +32,8 @@ export interface Gait<C> {
   shuffleLeft: C;
   shuffleRight: C;
   shufflePace: number;
+  /** A move slower than this (m/s) is a side shuffle, facing the net, however long (default FOOTWORK.shuffleSlower). */
+  shuffleMax?: number;
   jog: C;
   sprint: C;
   walk: C;
@@ -81,7 +83,7 @@ export function travel<C extends string>(
   const d = Math.hypot(dx, dz);
   if (d < 1e-3) return null;
   const v = d / (leg.end - leg.start);
-  if (d < FOOTWORK.shuffleUnder || v < FOOTWORK.shuffleSlower) {
+  if (d < FOOTWORK.shuffleUnder || v < (gait.shuffleMax ?? FOOTWORK.shuffleSlower)) {
     // The player's left, in the world: x cos(face), z −sin(face).
     const left = dx * Math.cos(face) - dz * Math.sin(face) > 0;
     const clip = left ? gait.shuffleLeft : gait.shuffleRight;

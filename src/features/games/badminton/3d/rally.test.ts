@@ -191,8 +191,8 @@ describe("scriptRally: the shots", () => {
   }, 30_000);
 
   it("every flight from Yash to you reaches your contact at the window's end plus SWING_LEAD", () => {
-    // Each script, the ones before a pick included: a frame shot's feet are re-planned after its pick, so its planned
-    // swing is the one in the script before it.
+    // Each script, the ones before a pick included: a frame shot's contact moves after its pick, so its planned swing
+    // is the one in the script before it.
     const bad = sweep((_, __, scripts) => {
       for (const s of scripts)
         for (const [i, w] of s.windows.entries()) {

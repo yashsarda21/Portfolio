@@ -76,12 +76,6 @@ export const CARD = {
 export const RECOVER = { after: 0.4, takes: 0.8 } as const;
 /** The call comes this long after the rally's last shuttle lands (s). */
 export const CALL_AFTER_S = 0.9;
-/**
- * Where a frame shot meets the shuttle (ruling P7): the head's outer side rim, this far from the sweet spot (body
- * frame, m: −x is his right, away from the body). The head is 0.20 m wide (props.ts RACKET), so its side rim is 0.1 m
- * from the middle; the strings miss, the frame meets it.
- */
-export const FRAME_OFFSET: Vec3 = [-0.1, 0, 0];
 /** You recover this far off the centre line, on the side you last hit from (m). */
 const YOUR_BASE_X = 0.3;
 /** The cross-court corners Yash's placement aims at (m: across, and depth from the net). */
@@ -306,8 +300,9 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
 
   /**
    * Your overhead at a window: on the strings at `contact`, or (a frame shot) the same swing late or early, meeting the
-   * shuttle that much further along its path on the frame: the feet are re-planned (after the pick, so in the future)
-   * to put FRAME_OFFSET's point under the shuttle then. Returns when and where the shuttle leaves.
+   * shuttle FRAME further along its path, off the strings on the frame: the feet stay where the meeting swing planned
+   * them (T8 fix ruling: no slide after the commit), so the shuttle is 0.1–0.2 m from the sweet spot, below it when
+   * late and above it when early. Returns when and where the shuttle leaves.
    */
   const yours = (into: Flight, at: Vec3, contact: number, j: Judged | null) => {
     const w = hit("you", "overhead", at, contact);
@@ -315,12 +310,7 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
     if (!frame) return { t: contact, from: at };
     const t = contact + (frame === "late" ? FRAME.late : -FRAME.early);
     const from = into.path.at(t - into.start);
-    const rim: Vec3 = [
-      reach.overhead[0] + FRAME_OFFSET[0],
-      reach.overhead[1] + FRAME_OFFSET[1],
-      reach.overhead[2] + FRAME_OFFSET[2],
-    ];
-    Object.assign(w, { frame, contact: t, spot: feetFor(from, w.face, rim) });
+    Object.assign(w, { frame, contact: t });
     return { t, from };
   };
 

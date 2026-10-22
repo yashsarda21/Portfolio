@@ -149,6 +149,10 @@ const OPPOSITE = Math.sin((10 * Math.PI) / 180);
  * TURNOVER, on an ease. The flip is the short way round, except when the two are (nearly) opposite, which is the usual
  * case: then it flips over the top, about the horizontal axis across the new flight, so it is the same way every time.
  * With no `prev` (a serve) it is just the flight's direction.
+ *
+ * `prev` must end at the hit: the flip starts from `prev.velocity(prev.end)`. A scripted flight runs on to the floor
+ * past the racket that meets it, so callers cut it at the hit first (sequence.ts `until`); passed whole, the cork would
+ * snap at the hit to the way it would have met the floor.
  */
 export function heading(prev: ShuttlePath | null, path: ShuttlePath, t: number): Vec3 {
   const now = unit(path.velocity(t));
