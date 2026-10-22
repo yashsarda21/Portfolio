@@ -125,10 +125,11 @@ const CASES: Case[] = reachable().flatMap((s) =>
   ),
 );
 /** Runs `check` on every case's final script; returns the first failures. */
-function sweep(check: (script: RallyScript, c: Case) => string | null) {
+function sweep(check: (script: RallyScript, c: Case, scripts: RallyScript[]) => string | null) {
   const bad: string[] = [];
   for (const c of CASES) {
-    const why = check(play(c.setup, c.picks).script, c);
+    const { script, scripts } = play(c.setup, c.picks);
+    const why = check(script, c, scripts);
     if (why && bad.length < 10)
       bad.push(`${c.setup.kind} ${JSON.stringify(c.setup)} ${c.picks.map((p) => p.call)}: ${why}`);
   }
@@ -156,8 +157,11 @@ describe("scriptRally: the shots", () => {
         if (!out) return `${w.by} ${w.kind} sends nothing on`;
         const at = (f: typeof into) => f!.path.at(w.contact - f!.start);
         // A frame shot (ruling P7) meets the shuttle on its path, off the strings: it leaves from where it was met.
+        // Off the frame: near the sweet spot, but not on it.
         if (w.frame) {
-          if (into && out && gap(at(into), at(out)) > 0.01) return "the frame shot jumps";
+          if (!into || gap(at(into), at(out)) > 0.01) return "the frame shot jumps";
+          const off = gap(at(into), sweet(w));
+          if (off < 0.08 || off > 0.2) return `the frame shot meets ${off} m from the sweet spot`;
           continue;
         }
         for (const f of [into, out]) {
@@ -187,16 +191,21 @@ describe("scriptRally: the shots", () => {
   }, 30_000);
 
   it("every flight from Yash to you reaches your contact at the window's end plus SWING_LEAD", () => {
-    const bad = sweep((s) => {
-      for (const [i, w] of s.windows.entries()) {
-        if (Math.abs(w.commits - w.opens - s.setup.windows[i]!) > 1e-9) return `window ${i} is off`;
-        if (w.open !== s.setup.open[i]) return `window ${i} lights the wrong part`;
-        const f = leaving(s, w.opens);
-        const you = s.swings.find((x) => x.by === "you" && x.contact > w.opens);
-        if (!f || !you || you.kind !== "overhead") return `window ${i} has no shot to you`;
-        const off = gap(f.path.at(w.commits + SWING_LEAD - w.opens), sweet(you));
-        if (off > 0.01) return `window ${i}'s shuttle is ${off} m off your racket`;
-      }
+    // Each script, the ones before a pick included: a frame shot's feet are re-planned after its pick, so its planned
+    // swing is the one in the script before it.
+    const bad = sweep((_, __, scripts) => {
+      for (const s of scripts)
+        for (const [i, w] of s.windows.entries()) {
+          if (Math.abs(w.commits - w.opens - s.setup.windows[i]!) > 1e-9)
+            return `window ${i} is off`;
+          if (w.open !== s.setup.open[i]) return `window ${i} lights the wrong part`;
+          const f = leaving(s, w.opens);
+          const you = s.swings.find((x) => x.by === "you" && x.contact > w.opens);
+          if (!f || !you || you.kind !== "overhead") return `window ${i} has no shot to you`;
+          if (you.frame) continue;
+          const off = gap(f.path.at(w.commits + SWING_LEAD - w.opens), sweet(you));
+          if (off > 0.01) return `window ${i}'s shuttle is ${off} m off your racket`;
+        }
       return null;
     });
     expect(bad).toEqual([]);

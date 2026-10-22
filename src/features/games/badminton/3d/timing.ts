@@ -38,8 +38,12 @@ export const SPLIT_CLIP = { end: 0.3 } as const;
 export const FIST_PUMP_CLIP = { end: 1.4 } as const;
 /** The side shuffle's ground speed at clip speed 1 (m/s). */
 export const SHUFFLE_PACE = 1.8;
-/** A mistimed swing meets the shuttle off the frame this much later or earlier on its path (ruling P7). */
-export const FRAME = { late: 0.12, early: 0.1 } as const;
+/**
+ * A mistimed swing meets the shuttle off the frame this much later or earlier on its path (ruling P7). Kept short (Task
+ * 7 fix ruling): the shuttle falls at up to about 5.3 m/s at your contact, so in 0.03 s it moves at most about 0.16 m
+ * up or down, and the side of the frame (rally.ts FRAME_OFFSET) still meets it within 0.2 m of the sweet spot.
+ */
+export const FRAME = { late: 0.03, early: 0.03 } as const;
 /** Your window closes when the forward swing must start: this long before contact. */
 export const SWING_LEAD = OVERHEAD_CLIP.contact - OVERHEAD_CLIP.commit;
 export type BadmintonClip =
