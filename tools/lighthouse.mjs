@@ -92,7 +92,7 @@ const PAGES = [
     variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
   },
   // The three games (spec 11.13, G17): a game waits for the visitor and moves by transform only, so desktop
-  // carries the Hub's gates, and phones the floor. Cricket and Tennis are gated without WebGL, and their 3D only reported (above).
+  // carries the Hub's gates, and phones the floor. Cricket, Tennis and Badminton are gated without WebGL, and their 3D only reported (above).
   {
     path: "/arena/cricket",
     variants: [
@@ -113,7 +113,12 @@ const PAGES = [
   },
   {
     path: "/arena/badminton",
-    variants: [{ ...DESKTOP, gate: { ...FRESH, fcp: 1500, cls: 0.1 } }, MOBILE_FAST],
+    variants: [
+      { ...DESKTOP, chromeFlags: NO_3D, gate: { ...FRESH, fcp: 1500, cls: 0.1 } },
+      { ...MOBILE_FAST, chromeFlags: NO_3D },
+      { ...DESKTOP, name: "desktop, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
+      { ...MOBILE, name: "mobile, 3D (software WebGL)", chromeFlags: SWIFTSHADER },
+    ],
   },
   // Full Time (spec 11.14, F13): the matchday's last page, entered by CSS keyframes only, so desktop carries the Hub's gates.
   {

@@ -281,6 +281,8 @@ Resolved token drift (audit §2.10):
 
 ### 8.3 Badminton: Smash or Clear (rules designed from README)
 
+> **Phase 8 (2026-10-22):** badminton becomes a 3D game; see [`2026-10-22-phase-8-badminton-3d-design.md`](2026-10-22-phase-8-badminton-3d-design.md), which wins over this section and §11.13 for badminton. The rules below stay as the 2D backup's rules.
+
 - 4 rallies. Hold to charge the vertical power meter, release to play. Meter fills 8% → 86% over 1.4s and ping-pongs while held.
 - Zones (top to bottom, as drawn): SMASH top 20%, CLEAR 20–60%, DROP bottom 40%.
 - Rallies 1–3: any release plays the rally, and Yash wins the point. Score climbs to 20–19. Quality: a release inside a narrow "perfect weight" band (a 6%-tall band inside the DROP zone) counts as perfect.

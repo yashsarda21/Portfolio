@@ -373,3 +373,140 @@ These are cycle 1's settings: the pixel ratio caps, the shadows, the full or hal
 - Any paid asset or tool.
 - Changes to the 2D badminton game.
 - The leftovers from cycles 1 and 2 (open hands, crowd shimmer, kit seams), unless one blocks this game's look.
+
+## 10. As built (2026-10-22)
+
+### 10.1 The speed gate
+
+Same rule as cricket §9.1 and tennis §10.1. Lighthouse gates `/arena/badminton` on the page's first load: the prerendered page and the 2D game it falls back to, with WebGL off (`--disable-3d-apis`). The 3D game is measured with software WebGL (SwiftShader) and only reported. `tools/lighthouse.mjs` now gives badminton the same four runs as tennis. `LIGHTHOUSE_ONLY=/arena/badminton` runs just this page.
+
+### 10.2 Lighthouse (3 runs each; perf = median, a11y / bp / SEO = worst run, CLS = worst run)
+
+| `/arena/badminton` | perf | a11y | bp | SEO | FCP | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|---|
+| desktop, **gated** (WebGL off) | 100 | 100 | 100 | 100 | 471 ms | 607 ms | 0.001 | 0 ms |
+| phone, **gated** (WebGL off) | 83 | 100 | 100 | 100 | 2110 ms | 4391 ms | 0.001 | 0 ms |
+| desktop, 3D (software WebGL) | 63 | 100 | 100 | 100 | 471 ms | 892 ms | 0.001 | 1494 ms |
+| phone, 3D (software WebGL) | 47 | 100 | 100 | 100 | 2113 ms | 4400 ms | 0.001 | 4233 ms |
+
+Gates (unchanged): desktop performance ≥ 90, phone ≥ 80, accessibility 100, best practices and SEO ≥ 90, FCP ≤ 1500 ms (desktop), CLS ≤ 0.1. All were met on the first run, so no start-up fix was needed. The loader keeps the controls' place, so nothing moves when the 3D arrives (CLS 0.001 at most). The phone gate has 3 points of room (83 against 80). As in cricket and tennis, the first 3D run in a fresh Chrome is much slower (desktop 26, phone 43 on run 1): SwiftShader starts up and compiles every shader cold. Only `/arena/badminton` was re-run; the other pages are untouched by this cycle.
+
+### 10.3 Sizes (build/client)
+
+| File | raw | gzip -9 | brotli q5 |
+|---|---|---|---|
+| `assets/scene-*.js` (the badminton scene, lazy) | 63,758 | 13,412 | 12,085 |
+| `assets/groundSpots-*.js` (three + R3F + the shared 3D parts, lazy, shared with cricket and tennis; this was `Floodlight-*` in tennis §10.3) | 968,590 | 254,873 | 238,776 |
+| `assets/arena.badminton-*.js` (the route) | 32,681 | 12,709 | 12,329 |
+| `assets/PickPair-*.js` (the phone's two pick buttons, in the route's first load; no `three`) | 4,115 | 1,962 | 1,844 |
+| `assets/timing-*.js` (the clip beats, in the route's first load; no `three`) | 2,648 | 1,424 | 1,342 |
+| `public/audio/hall.mp3`, `shuttle.mp3`, `squeak.mp3` (lazy) | 96,906, 4,364, 5,228 | | |
+
+The shared 3D chunk is the same code as in tennis (516 bytes smaller raw, only because the code moved a little). The models (`athlete.glb`, `moves.glb`, `athlete-skin.jpg`) are shared and unchanged, and `public/models/*` and `tools/models.mjs` have no change on this branch. Badminton's own code on top of the shared parts is about 12 KB (brotli) for the scene. A visitor who has played cricket or tennis has already downloaded the rest. The smoke test checks that no first-load badminton chunk contains `three`.
+
+### 10.4 Camera (`court.ts`)
+
+- `CAMERA.tv`: position `[0, 9, 13]`, target `[0, 0.5, 0.5]` (the broadcast view from behind you, looking down about 32°).
+- `fov`: stage 38, column 56. `tilt`: stage 0, column 12°. `pan`: 0.2.
+- `CAMERA.game`: position `[0, 3.2, 4.5]`, target `[0, 1.2, -6]` (the push-in at GAME).
+- Stage at 1440×900: the whole court, both baselines and the net are in frame, Yash's head stays in frame even in his jump smash, and your whole body is in frame. Column at 390×844: the whole court sits in the top two thirds, your feet at about y 390–480, and the lower third is left clear of the thumb.
+- The first camera (`[0, 11, 21]`, fov 25 and 42) was too high and far. Yash saw it at the checkpoint, and the fix is the one above (§10.8, "Owner checkpoint").
+
+### 10.5 The measured reach and the shuttle's flight
+
+Reach, in the body frame from the feet (x is the player's left, y up, z the player's front), measured with the real clips and the racket:
+
+| | x | y | z |
+|---|---|---|---|
+| serve contact | −0.036 | 0.716 | 0.456 |
+| overhead contact | −0.212 | 2.476 | 0.190 |
+| jump smash contact | −0.223 | 2.896 | 0.419 |
+| net shot contact | −0.187 | 1.366 | 1.612 |
+| lift contact | −0.253 | 0.679 | 1.553 |
+| block contact | 0.163 | 1.203 | 0.622 |
+| dive contact | −0.215 | 0.239 | 2.782 |
+| hold (the shuttle in the left hand) | −0.038 | 1.100 | 0.455 |
+
+The three bounds from the plan were met: the overhead 2.476 m (at least 2.4), the jump smash 2.896 m (at least 2.8) and the serve 0.716 m (at most 1.15). Dropped from the hold, the shuttle falls onto the serve's racket within 4 mm.
+
+The shuttle's air drag has a time constant `TAU` of 0.65 s. So a shot leaves fast, slows hard and falls almost straight down. Every shot clears the net by at least 10 cm, except a net shot, which may skim it by 3 cm. An OUT lands 2 to 5 cm past the line. The cork turns over to face the new flight in 0.06 s after each hit. `CLIP_PACE` is the tennis table, and the side shuffle's pace is 1.8 m/s at clip speed 1.
+
+Windows (ms, by Yash's wins so far, 0 to 4): the first pick 1300 / 1200 / 1100 / 1000 / 900, the second pick 1000 / 950 / 900 / 850 / 800, each stretched on the phone by tennis's touch factor. The speed line reads 348 km/h for a smash and 365 for the final one. The call holds 1.8 s, and the first rally waits 1.5 s after the 3D shows.
+
+### 10.6 The moves and the sounds
+
+- Fourteen badminton clips are made from key poses with `poseClip` (ready, split step, two shuffles, the high serve, the overhead, the jump smash, the net shot, the lift, the block, the dive, two stretches and a fist pump), as tennis's are. No new model files. The clips were solved with a throwaway tool (not committed) that placed the feet, hips, racket and eyes on the real rig within joint limits. Yash approved the moves at the checkpoint in the finished 3D game (2026-10-22): "lgtm + your fixes".
+- The racket is built in code and fixed to the right hand. The shaft and frame take the player's colour (volt for Yash, light for you), because a dark shaft could not be seen. Yash wears a headband and a wristband, made in code.
+- Sounds, picked by Yash by ear and all CC0 (listed in `public/audio/CREDITS.md`):
+  - `shuttle` (the racket's hit): candidate shuttle-2, `Badminton.wav` by PerMagnusLindborg. Level 0.9.
+  - `squeak` (the shoe on the floor): candidate squeak-2, `Rubber Shoe Squeak.wav` by baidonovan. Level 0.5.
+  - `hall` (a new ambience loop, the hall's hum): candidate hall-3, `Sports Hall Ambience, Walla` by Kinoton. Level 0.3.
+  - `applause`: the applause-1 candidate, which is tennis's own `applause.mp3`. It is reused, so there is no new file and no `hallApplause`.
+  - `ooh` (at the OUT) is reused.
+- Until a recording is fetched and decoded on the first gesture, or if it fails to load, the code-made sound plays: `shuttle` falls back to tennis's `net` sound, and `squeak` to a new 60 ms chirp (a sine sweep from 2.4 to 3.2 kHz).
+- The squeak sounds at each lunge's heel, at the sharp stop of a jog or sprint, and at the dive's landing. Never two within 0.3 s. That gives 1 to 4 per rally.
+
+### 10.7 The hall
+
+- The mat is a dark green, with one mipmapped line texture (the lines were fixed this way in tennis §10.7) drawn to real sizes: 40 mm white lines, singles and doubles, short and long service lines. The net is a white tape that follows the real net's height, with a dark see-through mesh and posts on the doubles lines.
+- The boards are a slim 0.6 m LED band with a 3.5 cm volt strip on top. The stands sit 1.2 m beyond the boards on three sides, with the shared crowd. A dark ceiling at 12 m (the highest serve peaks near 4.65 m) carries 15 lamp panels. One shadow-casting light from above.
+- The shuttle is drawn 2.2 times real size on the stage and 3.0 times on the phone, with a faint soft halo, so it can be followed. In the server's hand it is 1.6 times and grows to full size as it falls, so it does not pop.
+- On a real GPU (Apple M1, Chromium on Metal) the scene held 60 fps on both layouts. Videos for the checkpoint were recorded that way.
+
+### 10.8 Rulings, in plain words
+
+From the plan (P1–P9):
+- **P1: The open part glows on Yash's half** (the front or the back), as tennis's open side glows. It is the third way the open part reads, with where he stands and the lit button.
+- **P2: The rally's kind comes from Yash's wins so far.** 0 wins: smash (Backend). 1: drop (Frontend). 2: dive (Data). 3: placement (Craft). 4: the final smash, only after 20 all. Your rally win does not change it, so the next rally tries the same card again. (A plan line said the dive came "after three late rallies". Under P2 it comes after two Yash wins, and the build and its tests use two.)
+- **P3: Pick judging is shared.** A generic `pickQuality` moved into `engine/pick.ts`. Tennis's `returnQuality` is now a mapping over it, with its tests unchanged. Badminton uses it directly.
+- **P4: The 3D view is `BadmintonView` plus a `three` part** (the buttons, the speed line, the hints). `buildBadmintonView`'s output did not change.
+- **P5: The phone's status reads `RALLY n`** with no total, because the number of rallies varies (4 to 6).
+- **P6: Calls follow your last pick:** `TOO EARLY.`, `TOO LATE.`, `WRONG SHOT.`, `HE READ IT.`, `WINNER.`, `OUT.`, and `WHAT A DIVE.` when your good drop is beaten by the Data dive. A late or early pick in the Data rally keeps its own call (the dive still happens).
+- **P7: A mistimed swing still meets the shuttle, off the frame.** It never whiffs, because Yash's card shot needs a shuttle to hit. The shuttle leaves as a weak float. (How far off the frame is in the building rulings below.)
+- **P8: The speed line** (`YASH · SMASH · 348 KM/H`) shows only while the call of a rally Yash won with a smash is up. Stage only. The phone shows no speed line.
+- **P9: Sound names.** The racket's hit is `shuttle`, with tennis's `net` recipe as its code-made fallback. The shoe squeak is `squeak`, with a new 60 ms chirp as its fallback. The hall's hum is a new ambience track `hall`, since Yash picked a new recording. A recording never changes an existing sound (the `court` ruling in tennis), and a new applause would have shipped as `hallApplause`. Yash kept today's applause, so that name was not needed (ruling F1 of the ledger, not triggered).
+
+While building:
+- **F2: Task 1 (the sound candidates) ran in parallel with Task 2**, as tennis's R8 did. They share no files.
+- **The turnover flips cork first.** The plan said the cork starts "reversed" from the last flight. That was wrong. An incoming shuttle points cork first along its own velocity, so at the hit the cork points the way the old flight was going, and it must flip about 180° to the new flight over 0.06 s, over the top. Fixed in `shuttle.ts` before the review.
+- **A caller must cut the old flight at the hit** before it asks for the cork's heading. Flights run on to the floor, past the next hit, and passed whole the cork would snap at each hit. `shuttle.ts` says so, and `sequence.ts` does it.
+- **Soft shots are slow and the smash is quick.** With the drag, a shuttle that must fall steeply just past the net has to lose its pace first. Your serve, Yash's drop, block and scoop and your dribble fly 1.6 s, his placement lift 2.0 s. Your smash, hit from 2.476 m high, flies 0.8 s: a straighter flight would pass under the tape. Yash's net shot is taken 0.4 to 0.6 m from the net, and the Data rally lands 0.3 to 0.7 m over the net, not 0.2.
+- **Frame shots (the mistimed swing).** The plan had the contact slide 0.12 s late or 0.1 s early along the path. But the shuttle falls at about 5 m/s, so that moves it 0.3 to 0.6 m up or down, and the feet could not close the gap. Ruling: `FRAME` is 0.03 s each way, and the feet keep the meeting swing's place (no re-plan). The shuttle meets the racket 0.10 to 0.16 m from the sweet spot, and the test bound is 0.08 to 0.2 m. The late or early read comes from the call and the weak float, not from a visibly late swing. No foot drifts after the pick (zero ground speed in every stroke over the sweep).
+- **Frame shots are exempt from the 1 cm sweet-spot rule.** Instead the test checks that the shuttle leaves from exactly where it was met.
+- **A contact is by either player.** The hit sound uses all of them. Your `buzz` uses only your meeting swings.
+- **Getting up from the dive.** Yash's next shot after the dive comes after he is up and has run to his place, so the float to him is made longer if needed (it never needs it today). The dive stands him 1.4 m forward (`DIVE_LANDS`), and the shotlist moves him that far as he gets up.
+- **Shuffles finish as the stroke starts,** where they fit at shuffle pace, so every stroke is fully planted. A run turns back to its swing's heading over at least 0.3 s.
+- **A read sets off at your commit,** the moment your forward swing starts, with no split step (on 20 after the OUT is used, and in the final). It is the earliest moment that can never change the past. Every read is a side-on shuffle at 2.2 to 3.2 m/s, never a sprint.
+- **Moves back are side-on.** A move more than 120° from the way he faces uses a chassé at any speed, so he does not jog away from the net. `travel` in `three/footwork.ts` gained an optional `shuffleMax` for this, and tennis does not set it, so tennis is unchanged. The turn cap in the rally lists is 0.25 rad per frame.
+- **Applause** starts 0.3 s before the end of the rally, unless that rally ends the game (the crowd is already up for GAME).
+- **Owner checkpoint (Task 9).** Yash watched the moves and the hall and said "lgtm + your fixes". The controller's own look added: camera lower and closer, slimmer boards and less empty floor, stands closer, a bigger shuttle with a halo. They are all in §10.4 and §10.7, and the controller checked the stills.
+- **The sounds** were not listened to by the builder; Yash chose by ear from the candidates (shuttle 1–3, squeak 1–3, hall 1–4, applause 1–3) and picked shuttle-2, squeak-2, hall-3 and applause-1. The shipped files are rebuilt from the same sources, trims and levels as the candidates.
+- **The 3D page's progress copy** is the label of the left how-to panel (`HIS RALLIES CHARGE THE ATTRIBUTES`), because badminton has no progress bars. The serve phase starts at the serve swing's start (`serveAt − SERVE_CLIP.contact`). The rally phase starts at your first contact. A hidden tab drops the rally, and the visible tab plays it again fresh. A resize takes effect from the next rally.
+- **One line of the 2D e2e changed** (`tests/e2e/badminton.spec.ts`). Its no-JavaScript test reads the prerendered page, which is now the 3D game's board (as tennis's is), and that board's next card says `UP NEXT`, not `UP NEXT · RALLY 1`. The test now looks for `UP NEXT`, which both views show. No 2D game code changed.
+- **Owner process:** Sonnet built most tasks. Opus (high effort) built the moves (T6), the rally script (T7), the shotlists (T8) and the game wiring (T11). Reviews only on T2, T3, T4, T5, T7 and T8. T6 and T9 were judged at the owner checkpoint. T1, T10 and T12 had no review. T11 is covered by the final review.
+- **Verify** could not run as one command, because its e2e step starts a server on port 4173, which is Yash's. Every step of `pnpm verify` was run in order with the same flags and a temporary config on 4183. The whole e2e run had 43 failures on the 2D projects under heavy load (the machine was overloaded), and all 43 passed on a re-run with 2 workers. The 3D e2e passed in the full run.
+
+### 10.9 Known and left for later
+
+- **Deferred minor findings from the reviews:**
+  - `footwork.ts` and `geometry.ts` have no direct unit tests (tennis's sequence test covers them).
+  - `sequence.ts` keeps its own `clamp01` beside the shared clamp.
+  - A comment is wanted on `Gait`: the run pace comes from `CLIP_PACE` by slot name.
+  - `useFirstPlay` and `useHiddenTab` keep the first render's handlers, so callers read the latest state by ref (badminton does).
+  - Venue boards are keyed by `at`, and the Hawk-Eye mark's size is fixed in the venue.
+  - The `played` comment in `view.ts` says 0 to 4, and 3D plays up to 6.
+  - `three.comm.final` is dead copy (the game-over line wins at 22–20). Use it in the GAME line, or drop it.
+  - There is no guard for empty shipped chips, and the Data-rally test lacks `early`.
+  - `Hub.stories.tsx` still shows `~10s` for badminton.
+  - The OUT test in `shuttle.test.ts` only re-checks its own input. The real OUT landing is tested in `rally.test.ts`. There is no heading test for equal or vertical directions, and `NET_CLEAR` is not enforced in `shuttle.ts` (callers supply it).
+  - The rally tests assert the count and the last stroke, not every middle shot.
+  - `endsGame` in the shotlists repeats the match rules (a test cross-checks it).
+- **Moves:** foot slide of 1 to 3.6 cm per frame at touchdowns; in the dive the toes drag and a fingertip dips 3.7 cm into the floor in the push-up. The right wrist is near its limits with the handshake grip (one line in `HOLD` and a re-solve would change it). Some forearm turns between keys are 100–160° (real pronation) and look smooth in the lab. The hands are open (no finger bones).
+- **Pace:** a 5 or 6 shot rally takes 10 to 12 s with the call, so a long game can run over the planned 45 s. The shortest rally is 5.4 s and the longest 11.6 s. The soft shots are slow by physics (§10.8). The shuffle can run up to 1.78 times the clip's pace for 3.0 to 3.2 m/s moves and may look frantic. Yash judges these in play.
+- **The walk between rallies** turns up to 0.262 rad per frame at its end, from the shared `walkBack` (settle 0.2 s). A per-game settle time on `walkBack` is the fix, a few lines. It was left to keep tennis unchanged.
+- **The tennis late-miss blend** blends a clip with itself over 0.05 s, which can glitch for about 3 frames. Badminton avoids it with a 1 µs handover. Not touched.
+- **The phone shows no speed line** (not asked for). The `pickWrongDir` e2e helper exists but no test uses it yet.
+- **The checkpoint videos** recorded before Yash's fixes are out of date (old camera and hall). Only new stills were taken after the fixes.
+- **The 3D e2e on desktop-3d is load-sensitive**, as in tennis §10.9. Under heavy load, software WebGL can miss the ready or show cap and fall back to 2D (as designed). The heavy sweep tests have a 30 s timeout each (tennis's final review).
+- **The shipped sound files** were not listened to again by the builder. Yash's by-ear check of them, and a check of the 3D's smoothness on his own phone before merge, are still wanted.
+- **Ledger and final review:** the whole-branch final review (it covers T11) and its fix wave come after this note, and anything it finds is added here.
