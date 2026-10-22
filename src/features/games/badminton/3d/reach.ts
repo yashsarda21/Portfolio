@@ -32,9 +32,9 @@ export interface Reach {
  * Where the left fingers pinch the feathers' rim, in the left hand's frame (its y runs to the knuckles, +x is the
  * palm and +z the thumb's side): under the fingers, near their middle.
  */
-const PINCH: Vec3 = [0.03, 0.105, 0.02];
+export const PINCH: Vec3 = [0.03, 0.105, 0.02];
 /** The shuttle hangs cork down from the pinch: the cork's middle is this far below it (m, drawn size). */
-const HANG = (SHUTTLE.length - SHUTTLE.cork) * DRAWN;
+export const HANG = (SHUTTLE.length - SHUTTLE.cork) * DRAWN;
 
 /**
  * Measured once, on the real body with the real clips: a throwaway athlete at the origin facing +z is posed at each beat

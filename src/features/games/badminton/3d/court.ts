@@ -54,9 +54,9 @@ export const CONTACT_Z = { overhead: [4.6, 5.6], mid: [3.0, 4.0] } as const;
  * `game` is where the camera has pushed in to at GAME. Tuned by eye in Task 9.
  */
 export const CAMERA = {
-  tv: { position: [0, 9.5, 15.5], target: [0, 1.0, -0.5] } as CameraPose,
-  fov: { stage: 34, column: 50 },
-  tilt: { stage: 0, column: 4 },
+  tv: { position: [0, 11, 21], target: [0, 0.8, 1] } as CameraPose,
+  fov: { stage: 25, column: 42 },
+  tilt: { stage: 0, column: 6 },
   pan: 0.2,
   game: { position: [0, 3.2, 4.5], target: [0, 1.2, -6] } as CameraPose,
 } as const;
