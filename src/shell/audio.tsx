@@ -11,6 +11,7 @@ import {
 import { safeStorage } from "@/lib/storage";
 import {
   AMBIENCE,
+  AMBIENCE_TRACKS,
   GAME_FILES,
   GAME_LEVELS,
   RECORDED,
@@ -71,6 +72,8 @@ interface AudioApi {
 /** Every recording: the show's two and the games'. */
 const FILES = { ...SHOW_FILES, ...GAME_FILES } as const;
 type RecordingName = keyof typeof FILES;
+const isAmbienceTrack = (name: string): name is AmbienceTrack =>
+  (AMBIENCE_TRACKS as readonly string[]).includes(name);
 
 /** The hum: whether a game wants it, which track, and its bus and loop while it plays. */
 interface Ambience {
@@ -345,7 +348,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     (names: readonly (SoundName | AmbienceTrack)[]) => {
       if (typeof window === "undefined") return;
       for (const name of names) {
-        const recording = name === "murmur" || name === "hush" ? name : RECORDED[name];
+        const recording = isAmbienceTrack(name) ? name : RECORDED[name];
         if (!recording) continue;
         wanted.current.add(recording);
         void fetchBytes(recording);
