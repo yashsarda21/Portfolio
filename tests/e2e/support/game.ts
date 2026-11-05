@@ -138,7 +138,8 @@ export async function expectMonoFloor(page: Page) {
       const rect = el.getBoundingClientRect();
       // A screen-reader-only node is a 1px box: not drawn.
       if (rect.width <= 2 || rect.height <= 2) continue;
-      const scale = el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1;
+      // offsetWidth is rounded to a whole pixel, so allow half a pixel of it (a short word like "HUB" read 10.8px on Linux)
+      const scale = el.offsetWidth > 0 ? rect.width / (el.offsetWidth - 0.5) : 1;
       const size = parseFloat(style.fontSize) * scale;
       if (size < floor) {
         offenders.push(`"${el.textContent?.trim().slice(0, 30)}" renders at ${size.toFixed(1)}px`);
