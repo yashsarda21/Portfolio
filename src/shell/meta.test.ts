@@ -9,7 +9,7 @@ const find = (tags: ReturnType<typeof pageMeta>, key: string, value: string) =>
 describe("pageMeta", () => {
   it("returns the title, description and share tags for a route", () => {
     const r = ui.routes.scout;
-    const tags = pageMeta("scout");
+    const tags = pageMeta("scout", {}, null);
     expect(tags).toContainEqual({ title: r.title });
     expect(find(tags, "name", "description")?.content).toBe(r.description);
     expect(find(tags, "property", "og:title")?.content).toBe(r.title);
