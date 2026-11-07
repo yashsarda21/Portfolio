@@ -4,7 +4,7 @@ These are the words that are **not** in the design files or in your `content.jso
 
 **How to use this list.** Read each row on the page where it shows. If you want different words, type them in the last column. If it is fine, leave the box empty. Send the list back and the changes go in as one copy task before launch.
 
-**How it was made.** A script read `src/content/ui-copy.ts` and collected every entry marked `// derived` (or inside a block whose comment says derived), plus the strings spec section 12 calls derived that the code does not mark (the Source column says which), plus the trophy descriptions `content.json` flags with `draftCopy: true`. Count: 121 marked in the code, 21 more named in spec section 12, 4 trophy descriptions (146 in all).
+**How it was made.** A script read `src/content/ui-copy.ts` and collected every entry marked `// derived` (or inside a block whose comment says derived), plus the strings spec section 12 calls derived that the code does not mark (the Source column says which), plus the trophy descriptions `content.json` flags with `draftCopy: true`. Count: 126 marked in the code, 21 more named in spec section 12, 4 trophy descriptions (151 in all).
 
 Two things to keep in mind while you read: letters in capitals are drawn in capitals (the spoken text is the same words), and a few lines are built from parts, so the page shows them joined (for example "2 of 3 venues played. The final whistle blows after all three.").
 
@@ -166,6 +166,18 @@ The 3D Badminton Hall game. The Hub card's pitch and length and the page descrip
 | `games.badminton.three.comm.anyway` | charged anyway. | Ends the commentary line after the OUT call: "Hawk-Eye says out. By a whisker. Backend charged anyway." (3D). | code mark | |
 | `games.badminton.three.comm.all` | Twenty all. Nerves of steel. | The commentary line when your rally takes the score to 20–20 (3D). | code mark | |
 
+## Phase 9 (derived)
+
+The centre spotlight and the BACK button. The visitor's three phrases replace the old shot words; they show in turn on the 1st, 2nd and 3rd point you win, then start again.
+
+| Key | Wording now | Where it shows | Source | Yash's wording |
+|---|---|---|---|---|
+| `games.yours[0]` | WELL PLAYED. | The big centre words after the first point you win, in all three games (shown, and read out). | code mark | |
+| `games.yours[1]` | GOOD POINT. | The same words after the second point you win. | code mark | |
+| `games.yours[2]` | NICE ONE. | The same words after the third point you win (then the list starts again). | code mark | |
+| `hud.back` | BACK | The button at the left of the top bar on every page after the Intro: goes to the previous page, else to the Hub. On a phone only an arrow shows. | code mark | |
+| `hud.backName` | Back | The BACK button's spoken name for screen readers (what a phone hears for the arrow). | code mark | |
+
 ## All three games
 
 | Key | Wording now | Where it shows | Source | Yash's wording |
@@ -227,4 +239,4 @@ The first trophy (the cup) is yours from the design. The other four descriptions
 
 ---
 
-146 strings in total.
+151 strings in total.
