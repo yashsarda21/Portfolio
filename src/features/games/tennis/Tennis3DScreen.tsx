@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
+import { VERDICT_MS } from "../engine/beats";
 import { perfectShare } from "../engine/form";
+import { holdFor } from "../engine/spotlight";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
 import { useGameKeys } from "../engine/useGameKeys";
@@ -212,23 +214,25 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
     const now = live.current;
     commit({ game: next, phase: "called", open: null });
     if (now.desktop) now.say(after.comm, { interrupt: true });
+    // Yash's unlock chimes as its spotlight appears; the spotlight holds SPOTLIGHT_MS, the visitor's words the call's time.
+    if (after.spotlight?.kind === "unlock") now.audio.play("reveal");
+    const hold = holdFor(after.spotlight, TENNIS_3D_BEATS.callMs);
     const was = world.current!.shotlist;
     if (matchOver(next)) {
       session.finish(
         next,
         { score: after.saved, form: perfectShare(allInputs(next)) },
         {},
-        {
-          cheer: true,
-        },
+        { cheer: true, endMs: holdFor(after.spotlight, VERDICT_MS) },
       );
       // GAME: the crowd stands, Yash pumps his fist and the camera pushes in.
       world.current!.crowdUp = true;
       show(walkShotlist(was, null));
       return;
     }
-    show(walkShotlist(was, places(next)));
-    timers.after(TENNIS_3D_BEATS.callMs, beginPoint);
+    // The walk keeps its length; both then wait in their clips until the next point.
+    show(walkShotlist(was, places(next), hold / 1000));
+    timers.after(hold, beginPoint);
   }
 
   // On arrival the visitor has the court to look at: the first point comes `firstMs` after the scene is shown and

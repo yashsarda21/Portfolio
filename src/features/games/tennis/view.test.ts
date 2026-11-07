@@ -207,14 +207,14 @@ describe("buildTennisView", () => {
     const up = view(state, { phase: "called" });
     expect(up.cards.map((c) => c.eyebrow)).toEqual(["HIGHLIGHT 01 · QF"]);
     expect(up.latest?.eyebrow).toBe("HIGHLIGHT 01 · QF UNLOCKED");
-    const after = view(state, { phase: "verdict" });
+    const after = view(state, { phase: "tell" });
     expect(after.cards).toHaveLength(2);
     expect(after.latest?.eyebrow).toBe("HIGHLIGHT 02 · SF UNLOCKED");
     expect(view(play([GOOD]), { phase: "called" }).cards).toEqual([]);
   });
 
   it("a miss still reveals a card", () => {
-    const v = view(play([ACE]), { phase: "verdict" });
+    const v = view(play([ACE]), { phase: "tell" });
     expect(v.cards).toHaveLength(1);
     expect(v.cards[0]).toMatchObject({ eyebrow: "HIGHLIGHT 01 · QF", title: "POWER BI DASHBOARD" });
     expect(v.latest?.eyebrow).toBe("HIGHLIGHT 01 · QF UNLOCKED");
@@ -343,7 +343,8 @@ describe("buildTennis3dView", () => {
     });
     expect(up.cards).toEqual([]);
     expect(up.latest).toBeNull();
-    const v = view3d(played([[ace]]), "verdict");
+    const v = view3d(played([[ace]]), "ready");
+    expect(v.spotlight).toBeNull();
     expect(v.cards.map((c) => [c.eyebrow, c.tag])).toEqual([["HIGHLIGHT 01 · QF", "POINT 1"]]);
     expect(v.cards[0]!.title).toBe(up.spotlight && "title" in up.spotlight && up.spotlight.title);
     expect(v.comm).toBe(ui.games.tennis.comm.missed);
@@ -373,7 +374,7 @@ describe("buildTennis3dView", () => {
     const v = view3d(played([[ace], [clean, clean], [ace], [ace]]));
     expect(v.bug.status).toBe("GAME POINT");
     expect(v.cards.map((c) => c.tag)).toEqual(["POINT 1", "POINT 3", "POINT 4"]);
-    const three3 = view3d(played([[ace], [ace], [ace]]), "verdict");
+    const three3 = view3d(played([[ace], [ace], [ace]]), "ready");
     expect(three3.bug.status).toBe("GAME POINT");
     expect(three3.cards).toHaveLength(3);
     expect(three3.marquee.map((m) => m.text)).toContain("ALL THREE ON THE BIG SCREEN");

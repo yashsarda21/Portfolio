@@ -20,6 +20,7 @@ import {
   forceLuck,
   openFrozen,
   pauseClock,
+  spotlight,
   stepUntil,
   VIEWPORTS,
 } from "./support/game";
@@ -29,8 +30,8 @@ const cricket = ui.games.cricket;
 // The stage is heavy to draw and the host is often loaded: a game is many fake-clock steps.
 test.describe.configure({ timeout: 90_000 });
 
-/** The big call of the layout on screen. */
-const call = (page: Page) => page.locator("[data-game] [data-tone]:visible");
+/** The innings in the centre of the layout on screen (every ball unlocks one). */
+const unlock = (page: Page) => page.locator("[data-game] [data-kind=unlock]:visible");
 /** The score bug's meta of the layout on screen: "BALL 2 OF 3" (stage) or "YOU BOWLING · 2/3" (column). */
 const bug = (page: Page) => page.locator("[data-game] [role=group]:visible");
 const openSlots = (page: Page) => page.locator("[data-game] li[data-state=open]:visible");
@@ -88,8 +89,9 @@ test.describe("perfect play still loses (F1)", () => {
     await openFrozen(page, "/arena/cricket");
     await perfectOver(page);
     await expect(page.getByText(/CLAIM/)).toHaveCount(0);
-    await expect(call(page)).toHaveText(cricket.calls.four);
-    await expect(call(page)).toHaveAttribute("data-tone", "floodlight");
+    // At the end the last spotlight has left: the innings stand and the end panel is up.
+    await expect(spotlight(page)).toHaveCount(0);
+    await expectUnlocked(page, 3);
     const see = page.getByRole("link", { name: cricket.see });
     await expect(see).toBeVisible();
     await expect(see).toHaveAttribute("href", "/career");
@@ -199,16 +201,17 @@ test("every input reveals: three misses open three innings, and each is announce
   });
   for (let ball = 1; ball <= 3; ball++) {
     await release(page, miss);
-    await pass(page);
+    // The last ball's innings holds the centre through the verdict: its slot is there once the end is.
+    await pass(page, ball === 3 ? ["end"] : undefined);
     await expectUnlocked(page, ball);
   }
   const said = await page.evaluate(() => (window as unknown as { __said: string[] }).__said);
   expect(said).toEqual([
     // The career is told from the start (owner, 2026-10-16): the academy, the internship, the current role.
-    "SIX. Innings 01 unlocked: PICT, PUNE, B.Tech, Information Technology, 2020 – 2024",
-    "SIX. Innings 02 unlocked: DEUTSCHE BANK, Graduate Analyst Intern, Jun – Jul 2023",
+    "Innings 01 unlocked: PICT, PUNE, B.Tech, Information Technology, 2020 – 2024",
+    "Innings 02 unlocked: DEUTSCHE BANK, Graduate Analyst Intern, Jun – Jul 2023",
     // The last ball also says how the over ended (m-4).
-    "SIX. Innings 03 unlocked: DEUTSCHE BANK, Software Engineer 1, Jul 2024 – now. Over complete. Yash 18 not out.",
+    "Innings 03 unlocked: DEUTSCHE BANK, Software Engineer 1, Jul 2024 – now. Over complete. Yash 18 not out.",
   ]);
   // Each ball is heard once: the commentary bar's own live region is not on the page while a game is.
   await expect(page.locator("[data-game] [aria-live]")).toHaveCount(0);
@@ -332,8 +335,9 @@ test.describe("reduced motion (G10)", () => {
     await expect(page.getByRole("button", { name: /BOWL/ })).toHaveCount(0);
     await expect(page.locator("[data-game] [data-part=cursor]")).toHaveCount(0);
     await page.clock.runFor(3000);
-    await expectUnlocked(page, 3);
+    // The last ball's spotlight holds its time before the end panel.
     await advanceTo(page, ["end"]);
+    await expectUnlocked(page, 3);
     await expect(page.getByRole("button", { name: cricket.again })).toBeVisible();
     await expect(page.getByRole("link", { name: cricket.see })).toBeVisible();
     expect((await stored(page)).lastScores.cricket).toBe("14* NOT OUT");
@@ -341,6 +345,7 @@ test.describe("reduced motion (G10)", () => {
     await page.getByRole("button", { name: cricket.again }).click();
     await expectUnlocked(page, 0);
     await page.clock.runFor(3000);
+    await advanceTo(page, ["end"]);
     await expectUnlocked(page, 3);
   });
 });
@@ -436,9 +441,9 @@ for (const [width, height] of SIDEWAYS) {
       await expectGameViewport(page);
       await release(page, perfect);
       await advanceTo(page, ["called"]);
-      await expect(call(page)).toBeVisible();
-      // The reveal and the call pop in: judge them once they have settled.
-      await waitForFiniteAnimations(page);
+      await expect(unlock(page)).toBeVisible();
+      // The reveal and the spotlight pop in: judge them once they have settled (not the exit, which leaves at 4.5 s).
+      await waitForFiniteAnimations(page, { maxMs: 4000 });
       await expectGameViewport(page);
     });
   });
@@ -488,7 +493,7 @@ test.describe("axe", () => {
 
     await release(page, miss);
     await advanceTo(page, ["called"]);
-    await expect(call(page)).toBeVisible();
+    await expect(unlock(page)).toBeVisible();
     await scan(page);
 
     await advanceTo(page, ["ready"]);

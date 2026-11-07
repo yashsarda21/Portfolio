@@ -9,6 +9,7 @@ import {
   forceLuck,
   openFrozen,
   pauseClock,
+  spotlight,
   VIEWPORTS,
 } from "./support/game";
 
@@ -22,8 +23,8 @@ test.describe.configure({ timeout: 90_000 });
 /** The game root: one per page. */
 const game = (page: Page) => page.locator("[data-game]");
 const phaseOf = (page: Page) => game(page).getAttribute("data-phase");
-/** The big call of the layout on screen. */
-const call = (page: Page) => page.locator("[data-game] [data-tone]:visible");
+/** The unlock in the centre of the layout on screen (every 2D return unlocks one): the card's eyebrow, its title, its result. */
+const unlock = (page: Page) => page.locator("[data-game] [data-kind=unlock]:visible");
 /** The score bug of the layout on screen. */
 const bug = (page: Page) => page.locator("[data-game] [role=group]:visible");
 /** The courtside cards the stage has turned in. */
@@ -68,7 +69,7 @@ async function advanceTo(page: Page, phases: string[], maxMs = 8000, step = 100)
 }
 
 /** Runs the clock up to the hit: the window is open, and a return now is judged at (nearly) 0 ms, a perfect one. */
-const toWindow = (page: Page) => advanceTo(page, ["window"], 5000, 20);
+const toWindow = (page: Page) => advanceTo(page, ["window"], 12_000, 20);
 
 /** The serve is judged: the game has left the serve's phases, then lets the call hold until the next serve or the end. */
 async function pass(page: Page, until: string[] = ["tell", "verdict", "end"]) {
@@ -94,8 +95,9 @@ test.describe("perfect play still loses (F1)", () => {
     await openFrozen(page, "/arena/tennis");
     await playGame(page, "ArrowLeft");
     await expect(page.getByText(/CLAIM/)).toHaveCount(0);
-    await expect(call(page)).toHaveText(tennis.calls.line);
-    await expect(call(page)).toHaveAttribute("data-tone", "floodlight");
+    // At the end the spotlight has left: the three cards stand and the end panel is up.
+    await expect(spotlight(page)).toHaveCount(0);
+    await expectUnlocked(page, 3);
     await expect(bug(page)).toContainText(tennis.status.game);
     const see = page.getByRole("link", { name: tennis.see });
     await expect(see).toBeVisible();
@@ -157,7 +159,7 @@ test.describe("perfect play still loses (F1)", () => {
 });
 
 test.describe("what a return reveals and says", () => {
-  test("a pick during the toss is TOO EARLY, and the card is revealed all the same", async ({
+  test("a pick during the toss still unlocks the card: the project shows in the centre, then at the side", async ({
     page,
   }) => {
     await forceLuck(page, 0.99); // open right, toss 895 ms
@@ -165,44 +167,48 @@ test.describe("what a return reveals and says", () => {
     await advanceTo(page, ["toss"], 3000, 20);
     await expect(page.getByRole("button", { name: OPEN_RIGHT }).first()).toBeVisible();
     await page.keyboard.press("ArrowRight");
-    await expect(call(page)).toHaveText(tennis.calls.early);
-    await expect(call(page)).toHaveAttribute("data-tone", "floodlight");
+    // The project is in the centre; its card waits until the spotlight has left.
+    await expect(unlock(page)).toContainText("POWER BI DASHBOARD");
+    await pass(page);
     await expectUnlocked(page, 1);
     await expect(
       page.locator("[data-game]").getByText("POWER BI DASHBOARD").locator("visible=true").first(),
     ).toBeVisible();
   });
 
-  test("a wrong side is WRONG SIDE, a late one is ACE", async ({ page }) => {
+  test("a wrong side and a late one each unlock the next card", async ({ page }) => {
     await forceLuck(page, 0.99);
     await openFrozen(page, "/arena/tennis");
     await toWindow(page);
     await page.keyboard.press("ArrowLeft");
-    await expect(call(page)).toHaveText(tennis.calls.wrong);
+    await expect(unlock(page)).toHaveCount(1);
     await advanceTo(page, ["tell"]);
+    await expectUnlocked(page, 1);
     await toWindow(page);
     await page.clock.runFor(1000); // the 700 ms window is over: nobody picked
-    await expect(call(page)).toHaveText(tennis.calls.ace);
+    await expect(unlock(page)).toHaveCount(1);
+    await advanceTo(page, ["tell"]);
     await expectUnlocked(page, 2);
   });
 
-  test("with no input the serves go by: ACE, ACE, ON THE LINE, three cards, the end", async ({
+  test("with no input the serves go by: three unlocks in the centre, three cards, the end", async ({
     page,
   }) => {
     await forceLuck(page, 0.99);
     await openFrozen(page, "/arena/tennis");
-    const calls: string[] = [];
+    const titles: string[] = [];
     let before: string | undefined;
-    for (let spent = 0; spent <= 20_000 && (await phaseOf(page)) !== "end"; spent += 100) {
-      const text = (await call(page).allTextContents()).at(0);
-      // A call is new when it appears after a gap or differs from the one before.
-      if (text && text !== before) calls.push(text);
-      before = text;
+    for (let spent = 0; spent <= 40_000 && (await phaseOf(page)) !== "end"; spent += 100) {
+      const title = (await unlock(page).locator("span").nth(1).allTextContents()).at(0);
+      // An unlock is new when it appears after a gap or differs from the one before.
+      if (title && title !== before) titles.push(title);
+      before = title;
       await page.clock.runFor(100);
     }
     expect(await phaseOf(page)).toBe("end");
     // The third serve is Yash's winner whether or not it was returned (referee: it clips the line).
-    expect(calls).toEqual([tennis.calls.ace, tennis.calls.ace, tennis.calls.line]);
+    expect(titles).toHaveLength(3);
+    expect(new Set(titles).size).toBe(3);
     await expectUnlocked(page, 3);
     expect((await stored(page)).lastScores.tennis).toBe("GAME YASH");
   });
@@ -228,9 +234,9 @@ test.describe("what a return reveals and says", () => {
     await advanceTo(page, ["end"]);
     const said = await page.evaluate(() => (window as unknown as { __said: string[] }).__said);
     expect(said.map((s) => s.slice(0, s.indexOf(":")))).toEqual([
-      "WRONG SIDE. Highlight 01 unlocked",
-      "WRONG SIDE. Highlight 02 unlocked",
-      "ON THE LINE. Highlight 03 unlocked",
+      "Highlight 01 unlocked",
+      "Highlight 02 unlocked",
+      "Highlight 03 unlocked",
     ]);
     expect(said[0]).toContain("POWER BI DASHBOARD");
     expect(said[2]).toContain("AI INTERVIEW GROOMING PLATFORM");
@@ -252,7 +258,7 @@ test.describe("racing inputs (Review Focus 1)", () => {
     await page.keyboard.down("ArrowRight");
     await page.keyboard.down("ArrowRight");
     await page.keyboard.up("ArrowRight");
-    await expect(call(page)).toHaveText(tennis.calls.clean);
+    await expect(unlock(page)).toHaveCount(1);
     await pass(page);
     await expectUnlocked(page, 1);
   });
@@ -268,8 +274,10 @@ test.describe("racing inputs (Review Focus 1)", () => {
     await page.getByRole("button", { name: NAMES.left }).first().click({ force: true });
     await page.keyboard.press("ArrowLeft");
     await page.clock.runFor(300);
+    await expect(unlock(page)).toHaveCount(1);
+    await expect(game(page)).toHaveAttribute("data-phase", "called");
+    await pass(page);
     await expectUnlocked(page, 1);
-    await expect(call(page)).toHaveText(tennis.calls.clean);
   });
 });
 
@@ -309,13 +317,14 @@ test.describe("hidden tab (Review Focus 2)", () => {
     await page.clock.runFor(5000);
     await expect(game(page)).toHaveAttribute("data-phase", "ready");
     await expectUnlocked(page, 0);
-    await expect(call(page)).toHaveCount(0);
+    await expect(spotlight(page)).toHaveCount(0);
 
     await hide(false);
     await expect(game(page)).toHaveAttribute("data-phase", "tell");
     await toWindow(page);
     await page.keyboard.press("ArrowRight");
-    await expect(call(page)).toHaveText(tennis.calls.clean);
+    await expect(unlock(page)).toHaveCount(1);
+    await pass(page);
     await expectUnlocked(page, 1);
   });
 
@@ -340,6 +349,7 @@ test.describe("hidden tab (Review Focus 2)", () => {
     await expect(game(page)).toHaveAttribute("data-phase", "tell");
     await toWindow(page);
     await page.keyboard.press("ArrowLeft");
+    await pass(page);
     await expectUnlocked(page, 2);
     await expect(game(page)).not.toHaveAttribute("data-phase", "end");
   });
@@ -360,7 +370,7 @@ test.describe("hidden tab (Review Focus 2)", () => {
     await expect(game(page)).toHaveAttribute("data-phase", "tell");
     await toWindow(page);
     await page.keyboard.press("ArrowRight");
-    await expect(call(page)).toHaveText(tennis.calls.clean);
+    await expect(unlock(page)).toHaveCount(1);
   });
 });
 
@@ -372,7 +382,8 @@ test.describe("click and swipe (G3)", () => {
     // The stage's zone, or under the thumb on the column.
     const scope = testInfo.project.name === "desktop" ? "[data-stage]" : "[data-part=thumb]";
     await page.locator(scope).getByRole("button", { name: OPEN_RIGHT }).click({ force: true });
-    await expect(call(page)).toHaveText(tennis.calls.clean);
+    await expect(unlock(page)).toHaveCount(1);
+    await pass(page);
     await expectUnlocked(page, 1);
   });
 
@@ -415,11 +426,11 @@ test.describe("click and swipe (G3)", () => {
     await expect(game(page)).toHaveAttribute("data-phase", "window");
     // A swipe right is the open side (right): clean.
     await swipe(90, 10);
-    await expect(call(page)).toHaveText(tennis.calls.clean);
+    await expect(unlock(page)).toHaveCount(1);
     await advanceTo(page, ["tell"]);
     await toWindow(page);
     await swipe(-90, -10);
-    await expect(call(page)).toHaveText(tennis.calls.wrong);
+    await expect(unlock(page)).toHaveCount(1);
   });
 });
 
@@ -433,8 +444,9 @@ test.describe("reduced motion (G10)", () => {
     await expect(page.getByRole("button", { name: NAMES.left })).toHaveCount(0);
     await expect(page.locator("[data-game] [data-part=tracer]")).toHaveCount(0);
     await page.clock.runFor(3000);
-    await expectUnlocked(page, 3);
+    // The last return's spotlight holds its time before the end panel.
     await advanceTo(page, ["end"]);
+    await expectUnlocked(page, 3);
     await expect(page.getByRole("button", { name: ui.hud.rematch })).toBeVisible();
     await expect(page.getByRole("link", { name: tennis.see })).toBeVisible();
     expect((await stored(page)).lastScores.tennis).toBe("GAME YASH");
@@ -442,6 +454,7 @@ test.describe("reduced motion (G10)", () => {
     await page.getByRole("button", { name: ui.hud.rematch }).click({ force: true });
     await expectUnlocked(page, 0);
     await page.clock.runFor(3000);
+    await advanceTo(page, ["end"]);
     await expectUnlocked(page, 3);
   });
 });
@@ -474,7 +487,8 @@ test("a resize across 1200px keeps the game and shows one layout (Review Focus 3
     .locator("[data-part=thumb]")
     .getByRole("button", { name: OPEN_RIGHT })
     .click({ force: true });
-  await expect(call(page)).toHaveText(tennis.calls.clean);
+  await expect(unlock(page)).toHaveCount(1);
+  await pass(page, ["tell"]);
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator("[data-stage]")).toBeVisible();
@@ -607,9 +621,9 @@ for (const [width, height] of SIDEWAYS) {
       await toWindow(page);
       await page.keyboard.press("ArrowRight");
       await advanceTo(page, ["called"]);
-      await expect(call(page)).toBeVisible();
-      // The reveal and the call pop in: judge them once they have settled.
-      await waitForFiniteAnimations(page);
+      await expect(unlock(page)).toBeVisible();
+      // The reveal and the spotlight pop in: judge them once they have settled (not the exit, which leaves at 4.5 s).
+      await waitForFiniteAnimations(page, { maxMs: 4000 });
       await expectGameViewport(page);
     });
   });
@@ -659,7 +673,7 @@ test.describe("axe", () => {
    * just before it, and the driver below carries on from wherever the game has got to.
    */
   async function finish(page: Page) {
-    for (let i = 0; i < 400 && (await phaseOf(page)) !== "end"; i++) {
+    for (let i = 0; i < 800 && (await phaseOf(page)) !== "end"; i++) {
       if ((await phaseOf(page)) === "window") await page.keyboard.press("ArrowRight");
       await page.clock.runFor(50);
     }
@@ -676,7 +690,7 @@ test.describe("axe", () => {
 
     await toWindow(page);
     await page.keyboard.press("ArrowRight");
-    await expect(call(page)).toBeVisible();
+    await expect(unlock(page)).toBeVisible();
     await scan(page);
 
     await finish(page);

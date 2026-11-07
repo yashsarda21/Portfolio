@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { autoRallyTimes } from "../engine/beats";
+import { VERDICT_MS } from "../engine/beats";
 import { perfectShare } from "../engine/form";
+import { holdFor } from "../engine/spotlight";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
 import { useAutoRally, useGameSession } from "../engine/useGameSession";
@@ -80,12 +82,19 @@ export function BadmintonScreen() {
     const after = build(next, { phase: "called", ...NO_END_FLAGS });
     const now = live.current;
     if (now.desktop) now.say(after.comm, { interrupt: true });
+    if (after.spotlight?.kind === "unlock") now.audio.play("reveal");
     if (!over) {
       commit({ game: next, phase: "called" });
-      timers.after(BADMINTON_BEATS.callMs, ready);
+      // The unlock holds SPOTLIGHT_MS in the centre, then leaves for its toast. Reduced motion plays the game by itself.
+      if (!now.reduced) timers.after(holdFor(after.spotlight, BADMINTON_BEATS.callMs), ready);
       return;
     }
-    session.finish(next, { score: after.saved, form: perfectShare(next.rallies) });
+    session.finish(
+      next,
+      { score: after.saved, form: perfectShare(next.rallies) },
+      {},
+      { endMs: holdFor(after.spotlight, VERDICT_MS) },
+    );
   };
 
   /** The shuttle from your ring over the net to Yash's, along the arc. Nothing but transform moves. */

@@ -67,7 +67,7 @@ describe("buildCricketView", () => {
   });
 
   it("after a miss: SIX for him, and innings 01 is open", () => {
-    const v = view(play(["miss"]), { phase: "verdict" });
+    const v = view(play(["miss"]), { phase: "ready" });
     expect(v.bug.score).toBe("6*");
     expect(v.bug.meta).toBe("BALL 2 OF 3");
     expect(v.bug.metaPhone).toBe("YOU BOWLING · 2/3");
@@ -126,7 +126,7 @@ describe("buildCricketView", () => {
     const up = view(state, { phase: "called" });
     expect(up.screen.slots.map((s) => s.state)).toEqual(["open", "locked", "locked"]);
     expect(up.latest?.title).toBe("PICT, PUNE");
-    const after = view(state, { phase: "verdict" });
+    const after = view(state, { phase: "ready" });
     expect(after.screen.slots.map((s) => s.state)).toEqual(["open", "open", "locked"]);
     expect(after.latest?.title).toBe("DEUTSCHE BANK");
     // the very first unlock: no slot open and no chip while it is up
@@ -184,7 +184,12 @@ describe("buildCricketView", () => {
     expect(v.bug.score).toBe("4*");
     expect(v.onStrike).toBe("YASH · ON STRIKE · 4*");
     expect(v.saved).toBe("4* NOT OUT");
-    expect(v.spotlight).toMatchObject({ kind: "unlock", title: "DEUTSCHE BANK" });
+    // The last ball's innings holds the centre through the verdict (and its slot waits); at the end it has left.
+    expect(v.spotlight).toBeNull();
+    expect(v.screen.slots.every((s) => s.state === "open")).toBe(true);
+    const verdict = view(play(["perfect", "perfect", "perfect"]), { phase: "verdict" });
+    expect(verdict.spotlight).toMatchObject({ kind: "unlock", title: "DEUTSCHE BANK" });
+    expect(verdict.screen.slots.map((s) => s.state)).toEqual(["open", "open", "locked"]);
     expect(v.comm).toBe(ui.games.cricket.comm.lastPerfect);
     expect(v.end?.primary).toEqual({ label: "SEE THE FULL SCORECARD", to: "/career" });
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);

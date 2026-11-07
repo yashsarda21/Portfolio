@@ -159,7 +159,7 @@ describe("buildBadmintonView", () => {
     expect(up.toasts[0]).toMatchObject({ accent: true });
     expect(up.toasts[1]).toEqual({ state: "next", label: "FRONTEND", hint: "UP NEXT · RALLY 2" });
     expect(up.latest?.title).toBe("BACKEND");
-    const after = view(state, { phase: "verdict" });
+    const after = view(state, { phase: "ready" });
     expect(after.toasts.map((t) => t.state)).toEqual(["charged", "charged", "next", "later"]);
     expect(after.latest?.title).toBe("FRONTEND");
     expect(view(play([CLEAR]), { phase: "called" }).latest).toBeNull();
@@ -218,7 +218,12 @@ describe("buildBadmintonView", () => {
     const v = view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "end" });
     expect(v.bug).toMatchObject({ yash: "21", you: "19", status: "GAME YASH", alert: false });
     expect(v.saved).toBe("21–19");
-    expect(v.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
+    // Its spotlight holds through the verdict (the toast waits); at the end it has left and all four toasts stand.
+    expect(v.spotlight).toBeNull();
+    expect(v.toasts.every((t) => t.state === "charged")).toBe(true);
+    const verdict = view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "verdict" });
+    expect(verdict.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
+    expect(verdict.toasts[3]).toMatchObject({ state: "next", label: "CRAFT" });
     expect(v.end?.primary).toEqual({ label: "SEE PLAYER ATTRIBUTES", to: ROUTES.attributes });
     expect(v.comm).toBe(content.commentary.yashWins[0]);
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
@@ -459,10 +464,10 @@ describe("buildBadminton3dView", () => {
     });
     expect(up.toasts.map((t) => t.state)).toEqual(["charged", "next", "later", "later"]);
     expect(up.latest?.title).toBe("BACKEND");
-    const after = view3d(state, { phase: "verdict" });
+    const after = view3d(state, { phase: "ready" });
     expect(after.toasts.map((t) => t.state)).toEqual(["charged", "charged", "next", "later"]);
     expect(after.latest?.title).toBe("FRONTEND");
-    expect(after.spotlight).toMatchObject({ kind: "unlock" });
+    expect(after.spotlight).toBeNull();
     expect(view3d(state, { phase: "rally" }).spotlight).toBeNull();
   });
 
@@ -472,12 +477,14 @@ describe("buildBadminton3dView", () => {
     expect(v.toasts.every((t) => t.state !== "charged")).toBe(true);
   });
 
-  it("3D: the last rally can charge the last group and end the game: the spotlight is there, with the end", () => {
+  it("3D: the last rally can charge the last group and end the game: the spotlight holds through the verdict, then the end", () => {
     const v = view3d(play3d([late], [late], [late], [late]), { phase: "end" });
-    expect(v.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
+    expect(v.spotlight).toBeNull();
     expect(v.end).not.toBeNull();
-    // while it is up, the Craft toast waits
-    const up = view3d(play3d([late], [late], [late], [late]), { phase: "called" });
+    expect(v.toasts[3]).toMatchObject({ state: "charged", title: "CRAFT" });
+    // The game ends with the spotlight up: the verdict holds it, and the Craft toast waits for it to leave.
+    const up = view3d(play3d([late], [late], [late], [late]), { phase: "verdict" });
+    expect(up.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
     expect(up.toasts[3]).toMatchObject({ state: "next", label: "CRAFT" });
   });
 

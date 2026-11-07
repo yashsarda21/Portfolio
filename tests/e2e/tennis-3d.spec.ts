@@ -3,7 +3,13 @@ import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
 import { waitForHydration } from "./support/contentPage";
 import { game, phaseOf, stored } from "./support/cricket";
-import { forceLuck, freezeClock, pauseClock } from "./support/game";
+import {
+  expectUnlockThenCard,
+  forceLuck,
+  freezeClock,
+  pauseClock,
+  spotlight,
+} from "./support/game";
 import { jump, open3d, pickOpen, pickSide, untilPhase } from "./support/three";
 
 // The 3D game in software WebGL (the desktop-3d and mobile-3d projects): slow to draw, so time moves in jumps. While
@@ -14,6 +20,7 @@ const expect = baseExpect.configure({ timeout: 20_000 });
 
 const tennis = ui.games.tennis;
 const three = tennis.three;
+const [WELL_PLAYED, GOOD_POINT] = ui.games.yours;
 const URL = "/arena/tennis";
 
 /** Collects the page's errors: the 3D game must never reach the console with one. */
@@ -28,8 +35,6 @@ function watchErrors(page: Page, allow: RegExp[] = []): string[] {
 }
 
 const onStage = (page: Page) => page.locator("[data-stage]").isVisible();
-/** The big call of the layout on screen. */
-const call = (page: Page) => page.locator("[data-game] [data-tone]:visible");
 const canvases = (page: Page) => page.locator("canvas");
 const bug = (page: Page) =>
   page.locator(`[data-game] [role=group][aria-label="${ui.games.bug}"]:visible`);
@@ -112,26 +117,42 @@ test("no input: four aces, 40–0, and GAME YASH is saved", async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
-test("perfect play: two WINNERs, then OUT by a whisker; 40–30, GAME YASH saved", async ({
+test("Yash's point puts its work in the centre; by SPOTLIGHT_MS + 500 the card stands at the side", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await forceLuck(page, 0.2);
+  await open3d(page, URL);
+  await untilPhase(page, ["called"], 60_000); // no input: an ace, Yash's first point
+  await expectUnlockThenCard(page, (ms) => jump(page, ms));
+  expect(errors).toEqual([]);
+});
+
+test("perfect play: two points to you, then Yash's three unlocks and the game; 40–30, GAME YASH saved", async ({
   page,
 }) => {
   const errors = watchErrors(page);
   await forceLuck(page, 0.2); // every open side is the left
   await open3d(page, URL);
-  const calls: string[] = [];
+  // What the centre showed after each point: your words, Yash's unlock, or nothing (the game point).
+  const shown: string[] = [];
   let was: string | null = null;
   for (let spent = 0; spent <= 120_000; spent += 250) {
     const phase = await phaseOf(page);
     if (phase === "end") break;
     const calling = phase === "called" || phase === "verdict";
-    if (calling && was !== "called" && was !== "verdict") calls.push(await call(page).innerText());
+    if (calling && was !== "called" && was !== "verdict") {
+      const panel = spotlight(page);
+      shown.push((await panel.count()) === 0 ? "none" : (await panel.getAttribute("data-kind"))!);
+      if (shown.at(-1) === "yours")
+        expect([WELL_PLAYED, GOOD_POINT]).toContain(await panel.innerText());
+    }
     was = phase;
     if (phase === "window") await pickSide(page, "left");
     else await jump(page, 250);
   }
   expect(await phaseOf(page)).toBe("end");
-  const { winner, out } = three.calls;
-  expect(calls).toEqual([winner, winner, out, out, out, out]);
+  expect(shown).toEqual(["yours", "yours", "unlock", "unlock", "unlock", "none"]);
   await expectScore(page, "40", "30");
   expect((await stored(page)).lastScores.tennis).toBe(tennis.status.game);
   expect(errors).toEqual([]);
@@ -154,7 +175,7 @@ test("Review Focus 1: mashing is TOO EARLY once; a press in the routine, the cal
   for (let k = 0; k < 3; k++) await pickSide(page, "left");
   await expect(game(page)).toHaveAttribute("data-phase", "struck");
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(tennis.calls.early);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await expectScore(page, "15", "0");
   // The call: a press does nothing.
   await pickSide(page, "left");
@@ -174,7 +195,7 @@ test("Review Focus 1: mashing is TOO EARLY once; a press in the routine, the cal
   for (let k = 0; k < 3; k++) await pickSide(page, "left");
   expect(await phaseOf(page)).toBe("struck");
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(tennis.calls.early);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await expectScore(page, "30", "0");
   expect(errors).toEqual([]);
 });
@@ -199,7 +220,7 @@ test("Review Focus 2: a hidden tab drops the point; back, it is played again fre
   await tab(page, "visible");
   await untilPhase(page, ["toss"]);
   await winPoint(page);
-  await expect(call(page)).toHaveText(three.calls.winner);
+  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "0", "15");
   expect((await stored(page)).lastScores?.tennis).toBeUndefined();
   expect(errors).toEqual([]);
@@ -222,7 +243,7 @@ test("Review Focus 3: resizing across 1200px mid-point keeps one canvas, and the
   await pickOpen(page);
   await untilPhase(page, ["called"]);
   await expect(canvases(page)).toHaveCount(1);
-  await expect(call(page)).toHaveText(three.calls.winner);
+  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "0", "15");
   await jump(page, 2000);
   await expectScore(page, "0", "15");
@@ -247,8 +268,7 @@ test("Review Focus 4: a model file that will not download gives the 2D game, whi
   await untilPhase(page, ["window"]);
   await pickOpen(page);
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toBeVisible();
-  expect([tennis.calls.clean, tennis.calls.returned]).toContain(await call(page).innerText());
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   expect(errors).toEqual([]);
 });
 

@@ -5,7 +5,6 @@ import { AimZone } from "./AimZone";
 import { AttributeToast } from "./AttributeToast";
 import { BallTracker } from "./BallTracker";
 import { CourtBox, CourtMark } from "../scene/CourtMark";
-import { CallOverlay } from "./CallOverlay";
 import { CourtsideCard } from "./CourtsideCard";
 import { LEDMarquee } from "./LEDMarquee";
 import { PowerMeter } from "./PowerMeter";
@@ -182,21 +181,6 @@ describe("BallTracker", () => {
       "against",
       "pending",
     ]);
-  });
-});
-
-describe("CallOverlay", () => {
-  it("is hidden from assistive tech (the announcer speaks) and carries its tone", () => {
-    render(<CallOverlay call="SIX." tone="floodlight" size="stage" className="extra" />);
-    const call = screen.getByText("SIX.");
-    expect(call).toHaveAttribute("aria-hidden", "true");
-    expect(call).toHaveAttribute("data-tone", "floodlight");
-    expect(call).toHaveClass("extra");
-  });
-
-  it("wraps to balanced lines inside the box its parent gives it", () => {
-    render(<CallOverlay call="BACK LINE. STILL HIS." tone="floodlight" size="stage" />);
-    expect(screen.getByText("BACK LINE. STILL HIS.")).toHaveClass("text-balance", "text-center");
   });
 });
 

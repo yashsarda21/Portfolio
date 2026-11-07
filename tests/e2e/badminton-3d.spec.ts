@@ -3,7 +3,13 @@ import { ui } from "../../src/content/ui-copy";
 import { expectNoA11yViolations } from "../support/a11y";
 import { waitForHydration } from "./support/contentPage";
 import { game, phaseOf, stored } from "./support/cricket";
-import { forceLuck, freezeClock, pauseClock } from "./support/game";
+import {
+  expectUnlockThenCard,
+  forceLuck,
+  freezeClock,
+  pauseClock,
+  spotlight,
+} from "./support/game";
 import { jump, open3d, pickDir, pickOpenDir, untilPhase } from "./support/three";
 
 // The 3D game in software WebGL (the desktop-3d and mobile-3d projects): slow to draw, so time moves in jumps. While
@@ -14,6 +20,7 @@ const expect = baseExpect.configure({ timeout: 20_000 });
 
 const badminton = ui.games.badminton;
 const three = badminton.three;
+const [WELL_PLAYED] = ui.games.yours;
 const URL = "/arena/badminton";
 
 /** Collects the page's errors: the 3D game must never reach the console with one. */
@@ -28,8 +35,6 @@ function watchErrors(page: Page, allow: RegExp[] = []): string[] {
 }
 
 const onStage = (page: Page) => page.locator("[data-stage]").isVisible();
-/** The big call of the layout on screen. */
-const call = (page: Page) => page.locator("[data-game] [data-tone]:visible");
 const canvases = (page: Page) => page.locator("canvas");
 const bug = (page: Page) =>
   page.locator(`[data-game] [role=group][aria-label="${ui.games.bug}"]:visible`);
@@ -88,7 +93,10 @@ async function winRally(page: Page) {
   await untilPhase(page, ["called", "verdict"]);
 }
 
-/** Plays to the end, every pick to the open part as its window opens; returns each rally's call. */
+/**
+ * Plays to the end, every pick to the open part as its window opens; returns what the centre showed after each rally:
+ * your words ("yours"), Yash's unlock ("unlock") or nothing ("none").
+ */
 async function playToEnd(page: Page, picks: boolean) {
   const calls: string[] = [];
   let was: string | null = null;
@@ -96,7 +104,10 @@ async function playToEnd(page: Page, picks: boolean) {
     const phase = await phaseOf(page);
     if (phase === "end") break;
     const calling = phase === "called" || phase === "verdict";
-    if (calling && was !== "called" && was !== "verdict") calls.push(await call(page).innerText());
+    if (calling && was !== "called" && was !== "verdict") {
+      const panel = spotlight(page);
+      calls.push((await panel.count()) === 0 ? "none" : (await panel.getAttribute("data-kind"))!);
+    }
     was = phase;
     if (picks && phase === "window") await pickOpenDir(page);
     else await jump(page, 250);
@@ -147,7 +158,7 @@ test("no input: four rallies, 21–19, the four cards charged, and 21–19 saved
   await forceLuck(page, 0.2);
   await open3d(page, URL);
   const calls = await playToEnd(page, false);
-  expect(calls).toEqual(Array(4).fill(three.calls.late));
+  expect(calls).toEqual(Array(4).fill("unlock"));
   await expectScore(page, "21", "19");
   if (await onStage(page)) {
     await expect(page.locator("[data-game] [data-state=charged]:visible")).toHaveCount(4);
@@ -161,14 +172,26 @@ test("no input: four rallies, 21–19, the four cards charged, and 21–19 saved
   expect(errors).toEqual([]);
 });
 
-test("perfect play: WINNER at 17–20, then OUT, and 22–20 saved", async ({ page }) => {
+test("Yash's rally puts its group in the centre; by SPOTLIGHT_MS + 500 the toast stands at the side", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await forceLuck(page, 0.2);
+  await open3d(page, URL);
+  await untilPhase(page, ["called"], 60_000); // no input: Yash's first rally
+  await expectUnlockThenCard(page, (ms) => jump(page, ms));
+  expect(errors).toEqual([]);
+});
+
+test("perfect play: your point at 17–20, then Yash's four unlocks and the game; 22–20 saved", async ({
+  page,
+}) => {
   const errors = watchErrors(page);
   await forceLuck(page, 0.2);
   await open3d(page, URL);
   const calls = await playToEnd(page, true);
-  // Your point; OUT by a whisker; on 20 he reads you; the Data dive; he reads you twice more.
-  const { winner, out, read, dive } = three.calls;
-  expect(calls).toEqual([winner, out, read, dive, read, read]);
+  // Your point; then each of Yash's rallies charges a group until all four are, and his last wins the game with none.
+  expect(calls).toEqual(["yours", "unlock", "unlock", "unlock", "unlock", "none"]);
   await expectScore(page, "22", "20");
   expect((await stored(page)).lastScores.badminton).toBe("22–20");
   expect(errors).toEqual([]);
@@ -186,7 +209,7 @@ test("Review Focus 1: mashing is TOO EARLY once; a press in the routine, the cal
   for (let k = 0; k < 3; k++) await pickDir(page, "deep");
   await expect(game(page)).toHaveAttribute("data-phase", "struck");
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(three.calls.early);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await expectScore(page, "18", "19");
   // The call: a press does nothing.
   await pickDir(page, "deep");
@@ -211,7 +234,7 @@ test("Review Focus 1: mashing is TOO EARLY once; a press in the routine, the cal
   for (let k = 0; k < 3; k++) await pickDir(page, "deep");
   expect(await phaseOf(page)).toBe("struck");
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(three.calls.early);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await expectScore(page, "19", "19");
   expect(errors).toEqual([]);
 });
@@ -235,7 +258,7 @@ test("Review Focus 2: a hidden tab drops the rally; back, it is played again fre
   await tab(page, "visible");
   await untilPhase(page, ["serve"]);
   await winRally(page);
-  await expect(call(page)).toHaveText(three.calls.winner);
+  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "17", "20");
   expect((await stored(page)).lastScores?.badminton).toBeUndefined();
   expect(errors).toEqual([]);
@@ -258,7 +281,7 @@ test("Review Focus 3: resizing across 1200px mid-rally keeps one canvas, and the
   await pickOpenDir(page);
   await untilPhase(page, ["called"]);
   await expect(canvases(page)).toHaveCount(1);
-  await expect(call(page)).toHaveText(three.calls.winner);
+  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "17", "20");
   await jump(page, 2000);
   await expectScore(page, "17", "20");
@@ -290,7 +313,7 @@ test("Review Focus 4: a swipe up in a window picks SMASH once; a swipe outside a
   await untilPhase(page, ["window"]);
   await swipe(page, -120);
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(three.calls.winner);
+  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "17", "20");
   // The call: the page scrolls over the field again, and a swipe does nothing.
   await expect(field(page)).toHaveCSS("touch-action", "pan-y");

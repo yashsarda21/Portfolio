@@ -467,9 +467,14 @@ export function rallyShotlist(script: RallyScript, reach: Reach): Shotlist {
 /**
  * After a rally, while the call shows: both walk (or, from far, jog) to `next`'s places, facing the walk, then face
  * the net, the next server with the shuttle; the camera settles back. With no `next` it is GAME: Yash pumps his fist
- * and the camera pushes in toward him.
+ * and the camera pushes in toward him. The walk is `callMs` long; when the call is held longer (`holdS`: a spotlight is
+ * up) they wait in their clips until the next rally, which begins on the loops' start.
  */
-export function walkShotlist(after: Shotlist, next: RallySetup | null): Shotlist {
+export function walkShotlist(
+  after: Shotlist,
+  next: RallySetup | null,
+  holdS = BADMINTON_3D_BEATS.callMs / 1000,
+): Shotlist {
   const callS = BADMINTON_3D_BEATS.callMs / 1000;
   const arrive = callS - WALK.settle;
   const actors = {} as Record<Player, Track>;
@@ -483,6 +488,7 @@ export function walkShotlist(after: Shotlist, next: RallySetup | null): Shotlist
       { clip: "ready", period: READY_PERIOD },
       callS,
       GAIT,
+      holdS,
     );
     actors[p] = track;
     if (!next && p === "yash")

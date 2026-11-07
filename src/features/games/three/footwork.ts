@@ -154,8 +154,9 @@ export function recoverTo<C extends string>(
  * One player's track for the call between points, from `was` (his track of the point just played, which ended at `at`).
  * What was playing carries on as it was (at its speed) from time 0. With a `to`, he walks (or, from far, jogs) there,
  * facing the walk, then faces `face` (the net), and `wait.clip` (a loop of `wait.period` s) starts as he arrives,
- * phased so the loop is at its start when the next point begins with it, `callS` s after time 0. With no `to` (the
- * game's end) he just carries on and the caller adds what comes next.
+ * phased so the loop is at its start when the next point begins with it, `holdS` s after time 0 (`callS` unless the
+ * call is held longer, as it is for a spotlight: the walk keeps its length and he waits in the loop until then). With
+ * no `to` (the game's end) he just carries on and the caller adds what comes next.
  */
 export function walkBack<C extends string>(
   was: ActorTrack<C>,
@@ -165,6 +166,7 @@ export function walkBack<C extends string>(
   wait: { clip: C; period: number },
   callS: number,
   gait: Gait<C>,
+  holdS: number = callS,
 ): ActorTrack<C> {
   const here = sampleTrack(was, at);
   const now = here.clips[0]!;
@@ -194,7 +196,7 @@ export function walkBack<C extends string>(
     });
   }
   track.moves.push({ start: there, end: there, to, face, turn: WALK.settle });
-  const from = (wait.period - ((callS - there) % wait.period)) % wait.period;
+  const from = (wait.period - ((holdS - there) % wait.period)) % wait.period;
   track.clips.push({ clip: wait.clip, start: there, from, loop: true, fade: WALK.settle });
   return track;
 }

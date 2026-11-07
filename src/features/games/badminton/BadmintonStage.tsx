@@ -187,7 +187,7 @@ export function BadmintonStage({
           spotlight={spotlight}
           size="stage"
           // The field between the panels (x 306 to 1044): a long call wraps there, over the court, never onto a panel.
-          className="absolute top-82 left-76.5 z-6 w-184.5"
+          className="absolute top-82 left-76.5 z-6 w-184.5 [--spot-y:-24vh]"
         />
       ) : null}
 

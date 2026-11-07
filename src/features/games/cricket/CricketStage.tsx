@@ -138,7 +138,7 @@ export function CricketStage({
           key={view.bowled}
           spotlight={spotlight}
           size="stage"
-          className="absolute inset-x-0 top-105 z-6"
+          className="absolute inset-x-0 top-105 z-6 [--spot-y:-26vh]"
         />
       ) : null}
 

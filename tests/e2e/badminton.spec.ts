@@ -9,6 +9,7 @@ import {
   forceLuck,
   openFrozen,
   pauseClock,
+  spotlight,
   stepUntil,
   VIEWPORTS,
 } from "./support/game";
@@ -28,8 +29,8 @@ test.describe.configure({ timeout: 90_000 });
 /** The game root: one per page. */
 const game = (page: Page) => page.locator("[data-game]");
 const phaseOf = (page: Page) => game(page).getAttribute("data-phase");
-/** The big call of the layout on screen. */
-const call = (page: Page) => page.locator("[data-game] [data-tone]:visible");
+/** The unlock in the centre of the layout on screen (every Yash rally in the 2D game charges one group). */
+const unlock = (page: Page) => page.locator("[data-game] [data-kind=unlock]:visible");
 /** The score bug of the layout on screen. */
 const bug = (page: Page) => page.locator("[data-game] [role=group]:visible");
 /** The attribute toasts the stage has charged. */
@@ -53,36 +54,28 @@ async function expectCharged(page: Page, count: number) {
   }
 }
 
-/** The box of the text itself (the call's own element may be wider than its words). */
-const textBox = (el: ReturnType<Page["locator"]>) =>
-  el.evaluate((node) => {
-    const range = document.createRange();
-    range.selectNodeContents(node);
-    const { x, y, width, height } = range.getBoundingClientRect();
-    return { x, y, width, height };
-  });
 type Box = { x: number; y: number; width: number; height: number };
 const meets = (a: Box, b: Box) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
 /**
- * The call on screen stays inside the field: on the stage between the power panel and the toast column (it wraps
- * to balanced lines there, at the same size), on the column inside the screen's width.
+ * The spotlight on screen stays inside the field: on the stage between the power panel and the toast column, on the
+ * column inside the screen's width.
  */
-async function expectCallFits(page: Page, lines: 1 | 2) {
-  const text = await textBox(call(page));
+async function expectSpotlightFits(page: Page) {
+  const panel = (await unlock(page).locator("> div").boundingBox())!;
   const onStage = await page.locator("[data-stage]").isVisible();
   if (onStage) {
     for (const part of ["power", "toasts"]) {
-      const panel = (await page.locator(`[data-stage] [data-part=${part}]`).boundingBox())!;
-      expect(meets(text, panel), `the call ${JSON.stringify(text)} meets the ${part}`).toBe(false);
+      const other = (await page.locator(`[data-stage] [data-part=${part}]`).boundingBox())!;
+      expect(meets(panel, other), `the spotlight ${JSON.stringify(panel)} meets the ${part}`).toBe(
+        false,
+      );
     }
-    // 120px display at line-height 1: one line is 120 tall, two are 240.
-    expect(Math.round(text.height / 120), "lines").toBe(lines);
   } else {
     const view = page.viewportSize()!;
-    expect(text.x, "call left").toBeGreaterThanOrEqual(0);
-    expect(text.x + text.width, "call right").toBeLessThanOrEqual(view.width);
+    expect(panel.x, "spotlight left").toBeGreaterThanOrEqual(0);
+    expect(panel.x + panel.width, "spotlight right").toBeLessThanOrEqual(view.width);
   }
 }
 
@@ -146,9 +139,9 @@ test.describe("perfect play still loses (F1)", () => {
     await openFrozen(page, "/arena/badminton");
     await perfectGame(page);
     await expect(page.getByText(/CLAIM/)).toHaveCount(0);
-    // At match point the last rally is a perfect drop that still loses: it is called as the shot.
-    await expect(call(page)).toHaveText(badminton.calls.drop);
-    await expectCallFits(page, 2);
+    // At the end the last spotlight has left: the four toasts stand and the end panel is up.
+    await expect(spotlight(page)).toHaveCount(0);
+    await expectCharged(page, 4);
     await expect(bug(page)).toContainText(badminton.status.game);
     await expect(bug(page)).toContainText("21");
     const see = page.getByRole("link", { name: badminton.see });
@@ -227,15 +220,22 @@ test("every rally reveals: four smashes charge four groups, and each is announce
   for (let rally = 1; rally <= 4; rally++) {
     await holdSpace(page, SMASH);
     await pass(page);
+    if (rally < 4) {
+      // The spotlight has left for its toast by the time the next hold can begin.
+      await expect(spotlight(page)).toHaveCount(0);
+    } else {
+      // The last rally ends the game: its group holds the centre through the verdict, its toast waits.
+      await expect(unlock(page)).toHaveCount(1);
+      await expectCharged(page, 3);
+      await advanceTo(page, ["end"]);
+    }
     await expectCharged(page, rally);
-    // The call goes once the next hold can begin; the last one stays through the verdict.
-    if (rally < 4) await expect(call(page)).toHaveCount(0);
   }
   const said = await page.evaluate(() => (window as unknown as { __said: string[] }).__said);
   expect(said).toEqual(
     GROUPS.map(
       ([name, chips], i) =>
-        `${badminton.calls.smash} Attribute charged, rally ${i + 1}: ${name}, ${chips}` +
+        `Attribute charged, rally ${i + 1}: ${name}, ${chips}` +
         // The last rally also says how the game ended (m-4).
         (i === GROUPS.length - 1 ? ". Game yash. 21–19." : ""),
     ),
@@ -277,24 +277,23 @@ test("at the end the four toasts stand in one column and each eyebrow is one lin
   expect(boxes[3]!.x + boxes[3]!.width, "inside the window").toBeLessThanOrEqual(1440);
 });
 
-test("the shots: drop and smash are called as released; a perfect weight is called, except at match point", async ({
+test("each rally puts its group in the centre, inside the field, and the match point shows on the board", async ({
   page,
 }) => {
   await forceLuck(page, 0.99);
   await openFrozen(page, "/arena/badminton");
-  const rally = async (band: [number, number], called: string, lines: 1 | 2) => {
+  const rally = async (band: [number, number]) => {
     await holdSpace(page, band);
     await advanceTo(page, ["called", "verdict"]);
-    await expect(call(page)).toHaveText(called);
-    await expectCallFits(page, lines);
+    await expect(unlock(page)).toHaveCount(1);
+    await expectSpotlightFits(page);
     if ((await phaseOf(page)) === "called") await advanceTo(page, ["ready"]);
   };
-  await rally(PERFECT, badminton.calls.perfect, 2);
-  await rally(DROP, badminton.calls.drop, 2);
-  await rally(SMASH, badminton.calls.smash, 1);
+  await rally(PERFECT);
+  await rally(DROP);
+  await rally(SMASH);
   await expect(bug(page)).toContainText(badminton.matchPoint);
-  // At match point only the 1 % is perfect: otherwise the shot is called, however well it was weighed.
-  await rally(PERFECT, badminton.calls.drop, 2);
+  await rally(PERFECT);
 });
 
 test.describe("holding (Review Focus 1)", () => {
@@ -368,7 +367,7 @@ test.describe("holding (Review Focus 1)", () => {
     );
     await page.mouse.up();
     await advanceTo(page, ["called"]);
-    await expect(call(page)).toHaveText(badminton.calls.clear);
+    await expect(unlock(page)).toHaveCount(1);
     await advanceTo(page, ["ready"]);
     await expectCharged(page, 1);
   });
@@ -505,8 +504,9 @@ test.describe("reduced motion (G10)", () => {
     await expect(page.getByRole("button", { name: badminton.hold })).toHaveCount(0);
     await expect(page.locator("[data-game] [data-part=fill]")).toHaveCount(0);
     await page.clock.runFor(3000);
-    await expectCharged(page, 4);
+    // The last rally's spotlight holds its time before the end panel.
     await advanceTo(page, ["end"]);
+    await expectCharged(page, 4);
     await expect(page.getByRole("button", { name: ui.hud.rematch })).toBeVisible();
     await expect(page.getByRole("link", { name: badminton.see })).toBeVisible();
     expect((await stored(page)).lastScores.badminton).toBe("21–19");
@@ -514,6 +514,7 @@ test.describe("reduced motion (G10)", () => {
     await page.getByRole("button", { name: ui.hud.rematch }).click({ force: true });
     await expectCharged(page, 0);
     await page.clock.runFor(3000);
+    await advanceTo(page, ["end"]);
     await expectCharged(page, 4);
   });
 });
@@ -663,9 +664,9 @@ for (const [width, height] of SIDEWAYS) {
       await expectGameViewport(page);
       await holdSpace(page, PERFECT);
       await pass(page, ["called"]);
-      await expect(call(page)).toBeVisible();
-      // The reveal and the call pop in: judge them once they have settled.
-      await waitForFiniteAnimations(page);
+      await expect(unlock(page)).toBeVisible();
+      // The reveal and the spotlight pop in: judge them once they have settled (not the exit, which leaves at 4.5 s).
+      await waitForFiniteAnimations(page, { maxMs: 4000 });
       await expectGameViewport(page);
     });
   });
@@ -720,7 +721,7 @@ test.describe("axe", () => {
 
     await holdSpace(page, SMASH);
     await advanceTo(page, ["called"]);
-    await expect(call(page)).toBeVisible();
+    await expect(unlock(page)).toBeVisible();
     await scan(page);
 
     await advanceTo(page, ["ready"]);

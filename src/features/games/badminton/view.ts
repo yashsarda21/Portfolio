@@ -157,8 +157,9 @@ export function buildBadmintonView(
   // Never LOCKED (§11.2 #24): the next group is UP NEXT, the others just name their rally.
   const newest = charged.at(-1);
   const last = state.rallies.at(-1);
-  // Each rally charges its group: the toast waits in the spotlight's place until the spotlight has left (phase "called").
-  const shown = phase === "called" && newest ? played - 1 : played;
+  // Each rally charges its group: the toast waits in the spotlight's place until the spotlight has left (the call and the verdict).
+  const calling = phase === "called" || phase === "verdict";
+  const shown = calling && newest ? played - 1 : played;
   const toasts: AttributeToastProps[] = groups.map((g, i) =>
     i < shown
       ? { state: "charged", ...charged[i]!, accent: i === shown - 1 }
@@ -172,7 +173,6 @@ export function buildBadmintonView(
 
   const status = over ? copy.status.game : null;
   const atMatchPoint = !over && matchPoint(state);
-  const calling = phase === "called" || phase === "verdict" || phase === "end";
 
   const comm = over
     ? content.commentary.yashWins[0]!
@@ -305,8 +305,9 @@ export function buildBadminton3dView(
   const newest = charged.at(-1);
   const last = state.rallies.at(-1);
   const lastGroup = last?.card != null ? groups[last.card] : undefined;
-  // The group your rally charged waits in the spotlight's place until the spotlight has left (phase "called").
-  const shown = phase === "called" && lastGroup && newest ? charged.length - 1 : charged.length;
+  // The group your rally charged waits in the spotlight's place until the spotlight has left (the call and the verdict).
+  const calling = phase === "called" || phase === "verdict";
+  const shown = calling && lastGroup && newest ? charged.length - 1 : charged.length;
   // Never LOCKED (§11.2 #24): the next group is UP NEXT. Rally numbers shift when you win one, so the later ones name their shot.
   const toasts: AttributeToastProps[] = groups.map((g, i) =>
     i < shown
@@ -336,7 +337,6 @@ export function buildBadminton3dView(
         : atMatchPoint
           ? copy.matchPoint
           : rallyName(played + 1);
-  const calling = phase === "called" || phase === "verdict" || phase === "end";
 
   // Too late or too early, you missed it (owner play-test ruling): he played no card shot, so the line names none.
   const missed = last?.call === "late" || last?.call === "early";
@@ -359,7 +359,7 @@ export function buildBadminton3dView(
   const kmh =
     last && last.winner === "yash" && last.call !== "out" && !missed ? smashKmh(last.kind) : null;
   const speed =
-    calling && kmh !== null
+    (calling || phase === "end") && kmh !== null
       ? [ui.hub.record.yash, three.speed, `${kmh} ${ui.games.kmh}`].join(` ${sep} `)
       : null;
   // "Backend charged: Java, Spring Boot, JUnit." Your own rally charges nothing.

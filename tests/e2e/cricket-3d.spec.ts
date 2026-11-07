@@ -16,7 +16,7 @@ import {
   untilPhase,
   type Press,
 } from "./support/cricket3d";
-import { freezeClock, pauseClock } from "./support/game";
+import { expectUnlockThenCard, freezeClock, pauseClock, spotlight } from "./support/game";
 
 // The 3D game in software WebGL (the desktop-3d and mobile-3d projects): slow to draw, so time moves in jumps. While
 // the software GPU catches up with the frames a jump drew, the browser's own frames wait (CSS animations, a media
@@ -41,8 +41,6 @@ function watchErrors(page: Page, allow: RegExp[] = []): string[] {
 const stage = (page: Page) => page.locator("[data-stage]").isVisible();
 /** The phone bowls with taps, the stage with Space. */
 const pressFor = async (page: Page): Promise<Press> => ((await stage(page)) ? space : tapBowl);
-/** The big call of the layout on screen. */
-const call = (page: Page) => page.locator("[data-game] [data-tone]:visible");
 const canvases = (page: Page) => page.locator("canvas");
 const line = (page: Page, name: string) =>
   page.locator(`[data-game] [data-part=lines]:visible`).getByRole("button", { name });
@@ -128,25 +126,34 @@ test("an over: a beaten dot on OFF, a FOUR, a SIX off a short one; 10 not out is
     new RegExp(`^14[2-5] ${ui.games.kmh}$`),
   );
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(cricket.calls.dot);
   await jump(page, 500); // the arrival line steps out for the ball's line
   if (desktop)
     await expect(page.locator("[data-commentary-bar]")).toContainText(cricket.comm.beaten);
+  // Yash's first innings is in the centre; by SPOTLIGHT_MS + 500 it is gone and its slot (the phone's chip) shows it.
+  await expectUnlockThenCard(page, (ms) => jump(page, ms));
   await untilPhase(page, ["ready"]);
   await expectBallNo(page, 2);
 
   await bowlAt(page, good, press);
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(cricket.calls.four);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await untilPhase(page, ["ready"]);
   await expectBallNo(page, 3);
 
+  // Review Focus 1: the last ball unlocks and ends the over; its spotlight holds its full time before the end panel.
+  const again = page.getByRole("button", { name: cricket.again });
   await bowlAt(page, early, press);
   await untilPhase(page, ["verdict"]);
-  await expect(call(page)).toHaveText(cricket.calls.six);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await expectBallNo(page, "over");
-  await untilPhase(page, ["end"]);
-  await expect(page.getByRole("button", { name: cricket.again })).toBeVisible();
+  await jump(page, 4000);
+  expect(await phaseOf(page)).toBe("verdict");
+  await expect(spotlight(page)).toHaveCount(1);
+  await expect(again).toHaveCount(0);
+  await jump(page, 500);
+  expect(await phaseOf(page)).toBe("end");
+  await expect(spotlight(page)).toHaveCount(0);
+  await expect(again).toBeVisible();
   await expect(page.getByRole("link", { name: cricket.see })).toBeVisible();
 
   const state = await stored(page);
@@ -228,7 +235,7 @@ test("Review Focus 2: a hidden tab mid run-up or mid-flight cancels the ball, un
   await tab(page, "visible");
   await bowlAt(page, good, press);
   await untilPhase(page, ["called"]);
-  await expect(call(page)).toHaveText(cricket.calls.four);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await untilPhase(page, ["ready"]);
   await expectBallNo(page, 2);
   expect(errors).toEqual([]);
@@ -248,7 +255,7 @@ test("Review Focus 3: resizing across 1200px mid-flight keeps one canvas, and th
   await expect(canvases(page)).toHaveCount(1);
   await untilPhase(page, ["called"]);
   await expect(canvases(page)).toHaveCount(1);
-  await expect(call(page)).toHaveText(cricket.calls.four);
+  await expect(spotlight(page)).toHaveAttribute("data-kind", "unlock");
   await untilPhase(page, ["ready"]);
   await expectBallNo(page, 2);
   await jump(page, 2000);

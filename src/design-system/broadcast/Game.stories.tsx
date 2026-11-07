@@ -3,7 +3,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { AimZone } from "./AimZone";
 import { AttributeToast } from "./AttributeToast";
 import { BallTracker } from "./BallTracker";
-import { CallOverlay } from "./CallOverlay";
 import { CourtsideCard } from "./CourtsideCard";
 import { LEDMarquee } from "./LEDMarquee";
 import { PowerMeter } from "./PowerMeter";
@@ -126,18 +125,6 @@ export const BallTrackerStates: Story = {
           ]}
         />
       </Row>
-    </div>
-  ),
-};
-
-/** The call, both tones, on the stage (120) and the column (64). */
-export const Calls: Story = {
-  render: () => (
-    <div className="flex flex-col gap-8">
-      <CallOverlay call="DOT BALL." tone="volt" size="stage" />
-      <CallOverlay call="SIX." tone="floodlight" size="stage" />
-      <CallOverlay call="SIX." tone="volt" size="column" />
-      <CallOverlay call="FOUR." tone="floodlight" size="column" />
     </div>
   ),
 };

@@ -21,7 +21,7 @@ interface SessionRun extends EndFlags {
  * What the three games share in how they run: the run (state and phase, with the ref timers read), the timers, the
  * ball's flight, the match record, the viewport and reduced-motion answers, and the view built from the run. It also
  * owns the one way a game ends: `finish` saves the result the moment it is known, calls the verdict and, `VERDICT_MS`
- * later, the end. `build` must be the same function each render (a module's own).
+ * later (longer when the last input unlocked something: its spotlight is up), the end. `build` must be the same function each render (a module's own).
  */
 export function useGameSession<R extends SessionRun, V>({
   venue,
@@ -61,20 +61,21 @@ export function useGameSession<R extends SessionRun, V>({
   const view = useMemo(() => build(run.game, run), [run, build]);
 
   /**
-   * The game is over: save the result (once, here, the moment it is known: G8), the crowd reacts, show the verdict, and `VERDICT_MS`
-   * later the end buttons. `extra` is whatever else the run changes with it. `cheer: false` leaves the crowd to the
-   * caller (the 3D cricket game has just cheered the last ball over the rope).
+   * The game is over: save the result (once, here, the moment it is known: G8), the crowd reacts, show the verdict, and `endMs`
+   * later (`VERDICT_MS`) the end buttons. `extra` is whatever else the run changes with it. `cheer: false` leaves the crowd to the
+   * caller (the 3D cricket game has just cheered the last ball over the rope). `endMs` is how long the verdict holds
+   * before the end buttons: `SPOTLIGHT_MS` when the last input unlocked something, so the end waits for its spotlight.
    */
   const finish = (
     next: R["game"],
     result: { score: string; form: number },
     extra: Partial<R> = {},
-    { cheer = true }: { cheer?: boolean } = {},
+    { cheer = true, endMs = VERDICT_MS }: { cheer?: boolean; endMs?: number } = {},
   ) => {
     const flags = live.current.save(result);
     if (cheer) live.current.audio.play("crowd");
     commit({ game: next, phase: "verdict", ...flags, ...extra } as unknown as Partial<R>);
-    timers.after(VERDICT_MS, () => commit({ phase: "end" } as unknown as Partial<R>));
+    timers.after(endMs, () => commit({ phase: "end" } as unknown as Partial<R>));
   };
 
   /** Nothing of the last game is left: its timers, its ball in the air, its run. */

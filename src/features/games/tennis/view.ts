@@ -219,18 +219,13 @@ export function buildTennisView(
   const tagFor = (i: number) => `${ui.games.rally} ${i + 1}`;
   const newest = highlightCards(content, ui, played, tagFor).at(-1);
   const last = state.returns.at(-1);
-  // Each return unlocks its project: the card waits in the spotlight's place until the spotlight has left (phase "called").
-  const cards = highlightCards(
-    content,
-    ui,
-    phase === "called" && newest ? played - 1 : played,
-    tagFor,
-  );
+  // Each return unlocks its project: the card waits in the spotlight's place until the spotlight has left (the call and the verdict).
+  const calling = phase === "called" || phase === "verdict";
+  const cards = highlightCards(content, ui, calling && newest ? played - 1 : played, tagFor);
   const latest = cards.at(-1);
 
   const open = LIVE_PHASES.includes(phase) ? state.serve?.open : undefined;
   const status = copy.status.game;
-  const calling = phase === "called" || phase === "verdict" || phase === "end";
 
   const comm = !last
     ? content.commentary.entrance[0]!
@@ -324,7 +319,7 @@ export function buildTennis3dView(
   const tagFor = (i: number) => `${three.point} ${unlockedBy[i]}`;
   const newest = highlightCards(content, ui, unlocked, tagFor).at(-1);
   const last = state.points.at(-1);
-  const calling = phase === "called" || phase === "verdict" || phase === "end";
+  const calling = phase === "called" || phase === "verdict";
   const score = `${yash}–${you}`;
 
   const comm = !last
@@ -344,14 +339,9 @@ export function buildTennis3dView(
   // Yash's point only unlocks a card while there are cards left (his fourth is the game).
   const unlock = last?.winner === "yash" && !over && newest ? newest : null;
   // The visitor's point says "WELL PLAYED." and so on in turn; Yash's game point shows nothing. The unlocked card waits
-  // in the spotlight's place until the spotlight has left (phase "called").
+  // in the spotlight's place until the spotlight has left (the call and the verdict).
   const yours = last?.winner === "you" ? yoursText(ui.games.yours, yourPoints(state)) : null;
-  const cards = highlightCards(
-    content,
-    ui,
-    phase === "called" && unlock ? unlocked - 1 : unlocked,
-    tagFor,
-  );
+  const cards = highlightCards(content, ui, calling && unlock ? unlocked - 1 : unlocked, tagFor);
   const latest = cards.at(-1);
   const spoken = `${yours ? `${yours} ` : ""}${score}.`;
 

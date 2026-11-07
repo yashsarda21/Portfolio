@@ -3,7 +3,9 @@ import { content, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { useArenaTransition } from "@/shell/transition";
 import { autoRallyTimes } from "../engine/beats";
+import { VERDICT_MS } from "../engine/beats";
 import { perfectShare } from "../engine/form";
+import { holdFor } from "../engine/spotlight";
 import { useArrival } from "../engine/useArrival";
 import { useGameClock } from "../engine/useGameClock";
 import { useAutoRally, useGameSession } from "../engine/useGameSession";
@@ -106,12 +108,19 @@ export function TennisScreen() {
     // The serve's line runs on to its end, and the ball goes back along its own.
     root.current?.style.setProperty("--serve", "1");
     if (side && !now.reduced) fly(side);
+    if (after.spotlight?.kind === "unlock") now.audio.play("reveal");
     if (!over) {
       commit({ game: next, phase: "called", shot: side });
-      timers.after(TENNIS_BEATS.callMs, beginServe);
+      // The unlock holds SPOTLIGHT_MS in the centre, then leaves for its card. Reduced motion plays the game by itself.
+      if (!now.reduced) timers.after(holdFor(after.spotlight, TENNIS_BEATS.callMs), beginServe);
       return;
     }
-    session.finish(next, { score: after.saved, form: perfectShare(next.returns) }, { shot: side });
+    session.finish(
+      next,
+      { score: after.saved, form: perfectShare(next.returns) },
+      { shot: side },
+      { endMs: holdFor(after.spotlight, VERDICT_MS) },
+    );
   };
 
   /** The window is over and nobody picked: Yash's serve was an ace. */

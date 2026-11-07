@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { ui } from "../../../src/content/ui-copy";
+import { SPOTLIGHT_MS } from "../../../src/features/games/engine/spotlight";
 import { waitForHydration } from "./contentPage";
 
 /**
@@ -83,6 +84,27 @@ export async function stepUntil(
   throw new Error("stepUntil: condition never met in 5 s of game time");
 }
 
+/** The centre panel of the layout on screen: Yash's unlock (`data-kind=unlock`) or the visitor's words (`yours`). */
+export const spotlight = (page: Page) => page.locator("[data-game] [data-kind]:visible");
+
+/**
+ * Phase 9: Yash's point puts the work it unlocked in the centre (the title is the panel's second line); `wait(ms)`
+ * moves the game on, and by SPOTLIGHT_MS + 500 the panel is gone and the card for that title stands at the side (the
+ * phone's chip). Returns the title.
+ */
+export async function expectUnlockThenCard(page: Page, wait: (ms: number) => Promise<void>) {
+  const panel = spotlight(page);
+  await expect(panel).toHaveAttribute("data-kind", "unlock");
+  const title = ((await panel.locator("span").nth(1).textContent()) ?? "").trim();
+  expect(title).not.toBe("");
+  await wait(SPOTLIGHT_MS + 500);
+  await expect(spotlight(page)).toHaveCount(0);
+  await expect(
+    page.locator("[data-game]").getByText(title, { exact: true }).filter({ visible: true }).first(),
+  ).toBeVisible();
+  return title;
+}
+
 /** The value of a CSS variable on the game root (`--meter` / `--power`). Exactly one `[data-game]` may be on the page. */
 export const cssVar = (page: Page, name: string) =>
   page
@@ -158,7 +180,7 @@ export async function expectMonoFloor(page: Page) {
  *  - SKIP or QUICK VIEW is missing, under 44 px tall, or the two overlap. On the stage the 44 px is judged in the
  *    1440×900 design space (the stage is a picture that scales to the window); in the column it is judged on screen;
  *  - on the column, the thumb zone or the meter (`[data-game-column] [data-part=thumb]`) reaches outside the viewport;
- *  - on the column, SKIP, QUICK VIEW or the call (when one is shown) is under the thumb zone's controls, or the call is off screen.
+ *  - on the column, SKIP, QUICK VIEW or the spotlight (when one is shown) is under the thumb zone's controls, or the call is off screen.
  */
 export async function expectGameViewport(page: Page) {
   const overflow = await page.evaluate(
@@ -218,7 +240,7 @@ export async function expectGameViewport(page: Page) {
     under("SKIP", a);
     under("QUICK VIEW", b);
 
-    const calls = page.locator("[data-game] [data-tone]:visible");
+    const calls = spotlight(page);
     if ((await calls.count()) > 0) {
       const at = await calls.first().boundingBox();
       expect(at, "the call has a box").not.toBeNull();

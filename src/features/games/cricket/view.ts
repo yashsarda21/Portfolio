@@ -130,10 +130,10 @@ export function buildCricketView(
     span: r.span,
   }));
 
-  // The spotlight shows the newest innings first; its slot and chip wait until the spotlight has left (phase "called").
-  const calling = phase === "called" || phase === "verdict" || phase === "end";
+  // The spotlight shows the newest innings first (the call, and the verdict when the last ball unlocked it); its slot and chip wait until it has left.
+  const calling = phase === "called" || phase === "verdict";
   const newest = bowled > 0 ? innings[bowled - 1] : undefined;
-  const shown = phase === "called" && newest ? bowled - 1 : bowled;
+  const shown = calling && newest ? bowled - 1 : bowled;
   const slots = innings.map((row, i): CricketSlot => {
     const ball = i + 1;
     return i < shown

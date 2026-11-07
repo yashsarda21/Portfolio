@@ -169,21 +169,23 @@
     box-shadow: 0 0 0 0 rgb(var(--rgb-volt) / 0);
   }
 }
+/* How far it goes: --spot-x sideways (a stage's card sits about 38vw from the centre), --spot-y up (negative) or down (a game
+   that has its cards high up sets it; the phone's column goes up 30vh to its chip under the top bar). */
 @keyframes spotlight-exit-left {
   to {
-    transform: translateX(-28vw) scale(0.6);
+    transform: translate(calc(var(--spot-x, 38vw) * -1), var(--spot-y, 0px)) scale(0.6);
     opacity: 0;
   }
 }
 @keyframes spotlight-exit-right {
   to {
-    transform: translateX(28vw) scale(0.6);
+    transform: translate(var(--spot-x, 38vw), var(--spot-y, 0px)) scale(0.6);
     opacity: 0;
   }
 }
-@keyframes spotlight-exit-down {
+@keyframes spotlight-exit-up {
   to {
-    transform: translateY(22vh) scale(0.6);
+    transform: translateY(var(--spot-y, -30vh)) scale(0.6);
     opacity: 0;
   }
 }
@@ -207,8 +209,8 @@
     animation: none;
   }
 }
-@utility animate-spotlight-down {
-  animation: spotlight-exit-down 450ms ease-in var(--spot-delay, 4050ms) forwards;
+@utility animate-spotlight-up {
+  animation: spotlight-exit-up 450ms ease-in var(--spot-delay, 4050ms) forwards;
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }

@@ -118,6 +118,7 @@ export default defineConfig(
       "test-results",
       "design",
       "temp_handoff",
+      ".claude",
       "tools/render-artboards/runtime.js",
     ],
   },

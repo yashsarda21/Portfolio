@@ -35,7 +35,6 @@ export { ScoreBug } from "./broadcast/ScoreBug";
 export { TimingMeter } from "./broadcast/TimingMeter";
 export { PowerMeter } from "./broadcast/PowerMeter";
 export { BallTracker } from "./broadcast/BallTracker";
-export { CallOverlay } from "./broadcast/CallOverlay";
 export { Spotlight } from "./broadcast/Spotlight";
 export type { SpotlightContent } from "./broadcast/Spotlight";
 export { AimZone } from "./broadcast/AimZone";

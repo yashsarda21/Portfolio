@@ -314,9 +314,14 @@ export function pointShotlist(script: PointScript, reach: Reach): Shotlist {
 /**
  * After a point, while the call shows: both walk (or, from far, jog) to `next`'s places, facing the walk, then face the
  * net, Yash with the next ball; the camera settles back. With no `next` it is GAME: Yash pumps his fist and the camera
- * pushes in toward him.
+ * pushes in toward him. The walk is `callMs` long; when the call is held longer (`holdS`: a spotlight is up) they wait
+ * in their clips until the next point, which begins on the loops' start.
  */
-export function walkShotlist(after: Shotlist, next: PointSetup | null): Shotlist {
+export function walkShotlist(
+  after: Shotlist,
+  next: PointSetup | null,
+  holdS = TENNIS_3D_BEATS.callMs / 1000,
+): Shotlist {
   const callS = TENNIS_3D_BEATS.callMs / 1000;
   const arrive = callS - WALK.settle;
   const actors = {} as Record<ActorId, Track>;
@@ -331,6 +336,7 @@ export function walkShotlist(after: Shotlist, next: PointSetup | null): Shotlist
       { clip: wait, period: PERIOD[wait]! },
       callS,
       GAIT,
+      holdS,
     );
     actors[id] = track;
     if (!next && id === "yash")
