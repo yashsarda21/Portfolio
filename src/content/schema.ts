@@ -70,12 +70,14 @@ export const ContentSchema = z.strictObject({
       )
       .nullable(),
     // `id` names a stat for code that needs one in particular (`problems`); `label` is only what the card prints.
+    // `value` is the figure everywhere it is quoted; `cardValue`, when set, is a shorter form for the card's tile only.
     cardStats: z
       .array(
         z.strictObject({
           id: z.string().regex(/^[a-z][a-z0-9-]*$/),
           label: z.string().min(1),
           value: z.string().min(1),
+          cardValue: z.string().min(1).optional(),
         }),
       )
       .length(6)

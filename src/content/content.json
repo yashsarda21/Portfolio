@@ -36,7 +36,8 @@
       {
         "id": "problems",
         "label": "PROBLEMS",
-        "value": "1250+"
+        "value": "1250+",
+        "cardValue": "1.2K+"
       },
       {
         "id": "cgpa",

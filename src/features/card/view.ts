@@ -117,9 +117,9 @@ export function buildCardView(
       portrait: { src: opts.portraitSrc, alt: player.name },
       name: player.name,
       line: `${player.title} ${sep} ${player.currentClub}`,
-      stats: player.cardStats.map(({ label, value }, i) => ({
+      stats: player.cardStats.map(({ label, value, cardValue }, i) => ({
         label,
-        value,
+        value: cardValue ?? value,
         accent: i < ACCENTED_STATS,
       })),
       footer,
