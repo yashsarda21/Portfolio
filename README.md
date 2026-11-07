@@ -2,8 +2,12 @@
 
 **A portfolio you play.** Walk into the arena, play three short games against me, and find out who I am while you do.
 
-<!-- The film: a short preview that plays right here; it links to the full video with sound. -->
-[![The Arena, a 30 second film](docs/media/arena-preview.gif)](docs/media/arena.mp4)
+<!-- The film. Browsers that can't play the video show the preview picture, which links to the file. -->
+<p align="center">
+  <video src="https://github.com/yashsarda21/Portfolio/raw/main/docs/media/arena.mp4" poster="https://github.com/yashsarda21/Portfolio/raw/main/docs/media/arena-poster.jpg" controls muted playsinline width="100%">
+    <a href="docs/media/arena.mp4"><img src="docs/media/arena-preview.gif" alt="The Arena, a 30 second film" width="100%"></a>
+  </video>
+</p>
 
 [Watch the full film with sound](docs/media/arena.mp4)
 
