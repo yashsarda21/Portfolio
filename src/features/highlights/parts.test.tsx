@@ -59,7 +59,8 @@ describe("ShotData links", () => {
 
 describe("Replay", () => {
   it("the placeholder (no recording yet) says the replay is coming and has no video", () => {
-    const { container } = render(<Replay item={finalItem(content)} />);
+    const item = buildHighlightsView(content, ui).items.find((i) => i.media.video === null)!;
+    const { container } = render(<Replay item={item} />);
     expect(container.querySelector("video")).toBeNull();
     expect(screen.getByText(/REPLAY COMING SOON/)).toBeInTheDocument();
   });

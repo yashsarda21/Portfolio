@@ -110,13 +110,18 @@
       "shortName": "TakeTray",
       "scoutTag": "Flutter · Android",
       "scoutShort": "Offline-first app that sorts raw clips into reels",
-      "kind": "Personal project · Android app",
+      "kind": "Personal project · Android app · In development",
       "line": "An Android app that turns a messy gallery of raw clips into planned short-form reels.",
       "serve": "Short-form creators shoot dozens of raw clips and lose track of which clip belongs to which reel.",
       "rally": "A Flutter app that groups clips into scenes by recording time and day, with one-tap reel tagging and undoable actions in a full-screen player. Offline-first: Riverpod for state, Drift (SQLite) for on-device storage.",
       "winner": "Works fully offline, with unit, widget, golden and end-to-end tests running in CI on every commit.",
       "stack": ["Flutter", "Dart", "Riverpod", "Drift · SQLite", "GitHub Actions"],
-      "media": null,
+      "media": {
+        "src": "/media/taketray/brag.mp4",
+        "poster": "/media/taketray/brag.jpg",
+        "captions": "/media/taketray/brag.vtt",
+        "silent": false
+      },
       "facts": [
         {
           "k": "TYPE",

@@ -1,6 +1,6 @@
 # Audio credits
 
-Every recording is Creative Commons 0 1.0 (public domain dedication,
+Every recording in this folder is Creative Commons 0 1.0 (public domain dedication,
 https://creativecommons.org/publicdomain/zero/1.0/). Credit is not required under CC0; listed for the record.
 They are trimmed, loudness-normalised and encoded to MP3 with ffmpeg.
 
@@ -38,3 +38,13 @@ The four tennis recordings (`hit`, `court`, `applause`, `hush`) were picked by Y
 The three badminton recordings (`shuttle`, `squeak`, `hall`) were picked by Yash by ear and are also made from the HQ preview MP3s; the badminton game's applause is tennis's `applause.mp3`.
 `shuttle.mp3` and `squeak.mp3` are peak-normalised at about -1.5 dBFS, with a fade in of 3 ms (`shuttle`) and 4 ms (`squeak`) and a fade out of 80 ms.
 `hall.mp3` is normalised to -24 LUFS and loops seamlessly: its end is crossfaded into its start over 1.5 s. It was lifted about 8 dB; it plays at a low level (0.3).
+
+## Music in the TakeTray video
+
+The TakeTray video (`public/media/taketray/brag.mp4`) has a music bed that is not CC0. Its outro credits it on screen too.
+
+| Track                                | Author                 | Licence                                                  | Used in            |
+| ------------------------------------ | ---------------------- | -------------------------------------------------------- | ------------------ |
+| Happy Beats — Business Moves Vol. 12 | Sascha Ende (ende.app) | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | the TakeTray video |
+
+Happy Beats — Business Moves Vol. 12, by Sascha Ende (ende.app), CC BY 4.0 — used in the TakeTray video.

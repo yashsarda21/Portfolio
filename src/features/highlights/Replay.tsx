@@ -13,7 +13,7 @@ export function Replay({ item }: { item: HighlightItemView }) {
         badge={media.badge}
         round={media.round}
         media={media.video}
-        // A recording has no captions of its own (it is silent), so the text next to it is its text alternative.
+        // The text next to the video (the line, then problem / approach / result) is its text alternative.
         describedBy={`${lineId} ${parId}`}
       />
       <div className="flex flex-col gap-1.5">

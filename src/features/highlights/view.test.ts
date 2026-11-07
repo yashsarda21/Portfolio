@@ -95,12 +95,23 @@ describe("buildHighlightsView", () => {
   });
 
   it("media: a placeholder labelled with the name and 'replay coming soon', no video", () => {
-    const { media } = build().items[2]!;
-    expect(media).toEqual({
-      label: "TakeTray · REPLAY COMING SOON",
+    const item = build().items[0]!;
+    expect(item.media).toEqual({
+      label: `${item.name} · REPLAY COMING SOON`,
       badge: "REPLAY",
-      round: "THE FINAL",
+      round: item.round,
       video: null,
+    });
+  });
+
+  it("media: TakeTray plays its video, with poster, captions and sound (not silent)", () => {
+    const item = build().items[2]!;
+    expect(item.media.label).toBe("TakeTray · REPLAY");
+    expect(item.media.video).toEqual({
+      src: "/media/taketray/brag.mp4",
+      poster: "/media/taketray/brag.jpg",
+      captions: { src: "/media/taketray/brag.vtt", label: "English", srcLang: "en" },
+      silent: false,
     });
   });
 
