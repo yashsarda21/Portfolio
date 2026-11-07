@@ -8,7 +8,7 @@ import { loadTennisAssets, TennisScene, type TennisAssets } from "./scene";
 import { pointShotlist, readyShotlist, walkShotlist, type Shotlist } from "./sequence";
 import type { WorldState } from "./world";
 
-const SCENARIOS = ["ace", "early", "wrongReturn", "late", "intoNet", "winner", "out"] as const;
+const SCENARIOS = ["ace", "early", "wrongReturn", "late", "intoNet", "winner", "netAt30"] as const;
 type Scenario = (typeof SCENARIOS)[number];
 const SHOWS = ["point", "ready", "walk", "game"] as const;
 
@@ -32,7 +32,7 @@ const INPUTS: Record<Scenario, TennisReturn[]> = {
   late: [GOOD, MISS("ace")],
   intoNet: [GOOD, MISS("wrong")],
   winner: [GOOD, GOOD],
-  out: [GOOD, GOOD],
+  netAt30: [GOOD, GOOD],
 };
 
 /** An input as the screen makes it: early during the toss, late as the window runs out, the rest at the open side. */
@@ -57,7 +57,7 @@ function stage(args: LabArgs, assets: TennisAssets): { script: PointScript; list
   const setup = {
     ...base,
     court: args.court,
-    capped: args.scenario === "out",
+    capped: args.scenario === "netAt30",
     gamePoint: args.show === "game",
   };
   const decided: Decided = {};
@@ -171,3 +171,17 @@ const meta: Meta<LabArgs> = {
 export default meta;
 
 export const Point: StoryObj<LabArgs> = {};
+
+// One story per losing case (Phase 9: you always reach the ball). Freeze one at your swing with `t` (see data-marks).
+/** No press: late at the first return; he lunges to the ball's line and is beaten by its pace. */
+export const Ace: StoryObj<LabArgs> = { args: { scenario: "ace" } };
+/** Too early: he is at the ball's place, swings before it comes. */
+export const Early: StoryObj<LabArgs> = { args: { scenario: "early" } };
+/** The wrong side: he hits it back to where Yash waits, and Yash puts it away. */
+export const WrongSide: StoryObj<LabArgs> = { args: { scenario: "wrongReturn" } };
+/** Too late on the rally ball (no press): he is there, the racket comes after the ball. */
+export const LateRally: StoryObj<LabArgs> = { args: { scenario: "late" } };
+/** The wrong side on the rally ball: the shot goes into the net. */
+export const WrongRally: StoryObj<LabArgs> = { args: { scenario: "intoNet" } };
+/** At 30 a good last shot goes into the net (it was drawn just OUT before Phase 9). */
+export const NetAt30: StoryObj<LabArgs> = { args: { scenario: "netAt30" } };

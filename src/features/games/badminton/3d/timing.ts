@@ -39,12 +39,15 @@ export const FIST_PUMP_CLIP = { end: 1.4 } as const;
 /** The side shuffle's ground speed at clip speed 1 (m/s). */
 export const SHUFFLE_PACE = 1.8;
 /**
- * Too early, your swing meets the shuttle this long before it reaches the sweet spot, on the frame (owner play-test
- * ruling: it goes into the net). Kept short (Task 7 fix ruling): the shuttle falls at up to about 5.3 m/s at your
- * contact, so in 0.03 s it is at most about 0.16 m above the sweet spot; the feet stay where the meeting swing planned
- * them, so the frame meets it 0.1–0.16 m from the sweet spot.
+ * A swing that misses reaches the shuttle's place this long after it went by (late), or up to this long before it came
+ * (early; sooner than a run there allows it is not, so you always get there). Phase 9, owner 2026-11-07: you always
+ * reach the shuttle; a wrong press swings and misses it (it replaces the early swing that framed it into the net).
  */
-export const EARLY_FRAME = 0.03;
+export const MISS = { late: 0.25, early: 0.3 } as const;
+/** A player sets off this long after the other's hit: the split step's push-off, blended into the run (tennis R13). */
+export const RUN_AFTER = 0.1;
+/** An early swing comes no sooner than a run to the shuttle's place at this speed (m/s) allows. */
+export const EARLY_RUN_CAP = 6;
 /** Your window closes when the forward swing must start: this long before contact. */
 export const SWING_LEAD = OVERHEAD_CLIP.contact - OVERHEAD_CLIP.commit;
 export type BadmintonClip =

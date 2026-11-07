@@ -1,10 +1,9 @@
 import type { GameLayout, Luck } from "../../engine/types";
+import { TURN } from "../../three/footwork";
 import { clamp, feetFor, ground, lerp, toWorld } from "../../three/geometry";
 import type { Side, TennisReturn } from "../referee";
 import { intoNet, shotTo, SPIN, toBounce, type BallPath } from "./ball";
 import {
-  BALL_RADIUS,
-  COURT,
   FACE,
   RECEIVE_SPOT,
   SERVE_SPOT,
@@ -26,7 +25,16 @@ import {
 } from "./match";
 // Type only: reach.ts imports three, and this file is reached from the first load (ruling R3).
 import type { Reach } from "./reach";
-import { MISS, ROUTINE, SERVE_CLIP, SWING_LEAD, type Stroke } from "./timing";
+import {
+  EARLY_RUN_CAP,
+  MISS,
+  ROUTINE,
+  RUN_AFTER,
+  SERVE_CLIP,
+  STROKE_CLIP,
+  SWING_LEAD,
+  type Stroke,
+} from "./timing";
 
 /** The serve bounces this deep in the box. */
 export const SERVE_BOUNCE_Z = 5.5;
@@ -44,8 +52,6 @@ export const RETURN = {
 export const YASH_CONTACT_Z = 13.2;
 /** Your last shot and Yash's put-away, to their bounce (s). */
 export const FINAL = { good: 0.85, perfect: 0.75, yash: 0.8 } as const;
-/** An OUT lands this far clear of the line (m, the ball's edge past the line's outside edge). */
-export const OUT_BY = { min: 0.02, max: 0.05 } as const;
 /** Into the net: how long it takes, and where it meets the net (height). */
 export const NET_SHOT = { flight: 0.45, height: 0.55 } as const;
 /** The call comes this long after the point's last ball. */
@@ -59,7 +65,7 @@ export interface PointSetup {
   court: Court;
   /** The game's first point (a shorter routine). */
   first: boolean;
-  /** You already have 30: your best shot is OUT. */
+  /** You already have 30: your best shot goes into the net. */
   capped: boolean;
   /** Yash has 40: if he wins this point, it is GAME. */
   gamePoint: boolean;
@@ -120,7 +126,7 @@ export interface PointScript {
   contacts: number[];
   /** When the point's last ball is done and the call comes; null while an input is still to come. */
   end: number | null;
-  /** The Hawk-Eye mark of an OUT ball, and when it lands. */
+  /** The Hawk-Eye mark of an OUT ball, and when it lands: always null since Phase 9 (no ball is drawn out). */
   mark: { at: Vec3; from: number } | null;
 }
 
@@ -167,10 +173,24 @@ const hit = (by: ActorId, m: Meet, contact: number): Swing => ({
   spot: m.spot,
   meets: true,
 });
+/** An early swing comes at least this long before the ball (s). */
+const EARLY_MIN = 0.03;
+/**
+ * The soonest your racket can be at the ball's place (s): you set off RUN_AFTER after the other's hit and run from
+ * `from` to `spot` at no more than EARLY_RUN_CAP, ending SWING_LEAD before contact, with the stroke's prep and the run's
+ * turn before that. An early swing comes no sooner, so you always get there (Phase 9, owner 2026-11-07).
+ */
+const soonest = (hit: number, from: Vec3, spot: Vec3) =>
+  hit +
+  RUN_AFTER +
+  Math.max(STROKE_CLIP.contact + TURN.out + 1e-3, SWING_LEAD + ground(from, spot) / EARLY_RUN_CAP);
 /** Your swing that misses: the racket reaches the ball's place after it went by (late) or before it came (early). */
-function missed(m: Meet, contact: number, r: TennisReturn): Swing {
+function missed(m: Meet, contact: number, r: TennisReturn, soon: number): Swing {
   const miss = r.call === "early" ? "early" : "late";
-  const at = miss === "early" ? contact - MISS.early : contact + MISS.late;
+  const at =
+    miss === "early"
+      ? Math.min(contact - EARLY_MIN, Math.max(contact - MISS.early, soon))
+      : contact + MISS.late;
   return { by: "you", kind: m.kind, contact: at, spot: m.spot, meets: false, miss };
 }
 const recover = (by: ActorId, shot: number, to: Vec3, after: number = RECOVER.after): Recover => ({
@@ -218,7 +238,7 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
   const serveClipAt = (setup.first ? ROUTINE.first : ROUTINE.bounces) * ROUTINE.period;
   const tossAt = serveClipAt + SERVE_CLIP.toss;
   const serveAt = serveClipAt + SERVE_CLIP.contact;
-  const done = (end: number | null, mark: PointScript["mark"] = null): PointScript => ({
+  const done = (end: number | null): PointScript => ({
     setup,
     serveClipAt,
     tossAt,
@@ -229,7 +249,7 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
     recovers,
     contacts: swings.filter((w) => w.by === "you" && w.meets).map((w) => w.contact),
     end,
-    mark,
+    mark: null,
   });
 
   // 2. The serve: into the box, to your racket as your window closes plus the swing.
@@ -261,7 +281,7 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
     return done(null);
   }
   if (missesTheBall(first.r)) {
-    swings.push(missed(c1, contact1, first.r));
+    swings.push(missed(c1, contact1, first.r, soonest(serveAt, RECEIVE_SPOT[court], c1.spot)));
     return done(contact1 + CALL_AFTER_S);
   }
 
@@ -315,11 +335,13 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
     return done(null);
   }
   if (missesTheBall(second.r)) {
-    swings.push(missed(c3, contact3, second.r));
+    swings.push(missed(c3, contact3, second.r, soonest(yashAt, you1, c3.spot)));
     return done(contact3 + CALL_AFTER_S);
   }
   swings.push(hit("you", c3, contact3));
-  if (second.r.q === "miss") {
+  // The wrong side, or your best shot at 30, goes into the net. The call at 30 is still "out", but it is drawn into the
+  // net since Phase 9 (owner 2026-11-07): you always reach the ball, and a good press that must lose nets it.
+  if (second.r.q === "miss" || setup.capped) {
     const toward = sideSign(second.side ?? other(open[1]));
     flights.push({
       start: contact3,
@@ -328,15 +350,12 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
     return done(contact3 + NET_SHOT.flight + CALL_AFTER_S);
   }
 
-  // Your last shot, to the side Yash left open: in, or (at 30) just OUT past the sideline or the baseline.
+  // Your last shot, to the side Yash left open, in: he lunges for it.
   const q = second.r.q;
-  const x = sideSign(open[1]);
-  const by = lerp(OUT_BY.min, OUT_BY.max, draws[1]!);
-  const land: [number, number] = !setup.capped
-    ? [x * lerp(2.8, 3.6, draws[5]!), -(q === "perfect" ? 10.6 : 9.8)]
-    : draws[5]! < 0.5
-      ? [x * (COURT.singles + BALL_RADIUS + by), -8.6]
-      : [x * 2.6, -(COURT.half + BALL_RADIUS + by)];
+  const land: [number, number] = [
+    sideSign(open[1]) * lerp(2.8, 3.6, draws[5]!),
+    -(q === "perfect" ? 10.6 : 9.8),
+  ];
   const last = toBounce(c3.at, land, FINAL[q], SPIN.rally);
   flights.push({ start: contact3, path: last });
   const lands = contact3 + FINAL[q];
@@ -344,5 +363,5 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
   const bounce: Vec3 = [land[0], 0, land[1]];
   const reachFor: Vec3 = [lerp(yash2[0], land[0], 0.45), 0, lerp(yash2[2], land[1], 0.45)];
   swings.push(stretch("yash", reachFor, bounce, lands));
-  return done(lands + CALL_AFTER_S, setup.capped ? { at: last.bounce!, from: lands } : null);
+  return done(lands + CALL_AFTER_S);
 }

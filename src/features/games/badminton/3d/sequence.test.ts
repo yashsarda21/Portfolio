@@ -44,6 +44,7 @@ import {
   DIVE_LANDS,
   JUMP_SMASH_CLIP,
   LIFT_CLIP,
+  MISS,
   NET_CLIP,
   OVERHEAD_CLIP,
   SERVE_CLIP,
@@ -329,6 +330,42 @@ describe("rallyShotlist: the players", () => {
     expect(bad).toEqual([]);
     expect(checked).toBeGreaterThan(0);
     expect(strokes).toBeGreaterThan(0);
+  }, 30_000);
+
+  it("you always reach the shuttle, a miss or a net shot included: your feet end within reach of its place, and the last step is toward it", () => {
+    const bad: string[] = [];
+    const kinds = new Set<string>();
+    for (const r of RALLIES) {
+      const s = rallyShotlist(r.script, REACH);
+      for (const w of r.script.swings.filter(
+        (w) => w.by === "you" && w.kind !== "serve" && w.kind !== "stretch",
+      )) {
+        // The shuttle's moment at your racket: the swing's own, or (a miss) the one planned before the pick was judged.
+        const planned =
+          w.miss === "late"
+            ? w.contact - MISS.late
+            : w.miss === "early"
+              ? r.scripts[r.picks.length - 1]!.swings.filter((x) => x.by === "you").at(-1)!.contact
+              : w.contact;
+        const f = r.script.flights.filter((f) => f.start < planned - 1e-9).at(-1)!;
+        const shuttle = f.path.at(planned - f.start);
+        const reach = Math.hypot(REACH[w.kind as "overhead"][0], REACH[w.kind as "overhead"][2]);
+        const pos = (t: number) => sampleTrack(s.actors.you, t).position;
+        const why = (m: string) =>
+          bad.length < 10 && bad.push(`${name(r)} ${w.miss ?? "hit"} ${w.kind}: ${m}`);
+        if (ground(pos(w.contact), shuttle) > reach + 0.15)
+          why(`${ground(pos(w.contact), shuttle)} m from the shuttle, reach ${reach}`);
+        // The feet that put the sweet spot on the shuttle: he is on them at the swing, and his last step went toward them.
+        if (ground(pos(w.contact), w.spot) > 0.01) why("he is not on his spot at the swing");
+        if (ground(pos(w.contact), w.spot) > ground(pos(w.contact - 0.4), w.spot) + 1e-6)
+          why("his last step is away from the shuttle");
+        kinds.add(`${w.miss ?? "hit"} ${r.script.setup.on20}`);
+      }
+    }
+    expect(bad).toEqual([]);
+    expect([...kinds].sort()).toEqual(
+      ["early false", "early true", "hit false", "hit true", "late false", "late true"].sort(),
+    );
   }, 30_000);
 
   it("the dive's player stays down until DIVE_CLIP.up, then ready", () => {

@@ -35,8 +35,10 @@ import {
   FIST_PUMP_CLIP,
   JUMP_SMASH_CLIP,
   LIFT_CLIP,
+  MISS,
   NET_CLIP,
   OVERHEAD_CLIP,
+  RUN_AFTER,
   SERVE_CLIP,
   SHUFFLE_PACE,
   SPLIT_CLIP,
@@ -72,8 +74,6 @@ export interface Shotlist {
   buzz: number[];
 }
 
-/** A player sets off this long after the other's hit: the split step's push-off, blended into the run (tennis R13). */
-export const RUN_AFTER = 0.1;
 /** The glow on the open part rises over this long. */
 export const GLOW_RISE = 0.15;
 /** At GAME the camera pushes in over this long. */
@@ -102,8 +102,6 @@ const CORK_DOWN: Vec3 = [0, -1, 0];
 const RETIME = 1e-6;
 /** A run turns back to the swing's heading over at least this long before it arrives (never a spin on the spot). */
 const TURN_IN = 0.3;
-/** A late miss turns from the overhead into the stretch over this long (s). */
-const LATE_TURN = 0.25;
 /** A shuffle done before its stroke settles into ready over this long, as the stroke starts. */
 const SETTLE = 0.15;
 
@@ -174,9 +172,9 @@ const reads = (s: RallySetup) => s.kind !== "dive" && s.on20 && (s.outUsed || s.
 /** Whether this rally ends the game: Yash wins the placement rally with you on 19, or the final. */
 function endsGame(script: RallyScript): boolean {
   const { kind, on20 } = script.setup;
-  // The rally is yours only when your last shot is the winner: met, not missed, and not OUT.
+  // The rally is yours only when your last shot is the winner: met, not missed, and not (on 20) into the net.
   const last = script.swings.at(-1);
-  const yours = last?.by === "you" && last.meets && !last.miss && script.mark === null;
+  const yours = last?.by === "you" && last.meets && !last.miss && !on20;
   return !yours && (kind === "final" || (kind === "placement" && !on20));
 }
 
@@ -228,15 +226,17 @@ function legTo(plan: Plan, face: number, leg: Leg): number | null {
 /**
  * One swing: the split step at the other's `hit`, the run (or shuffle) to the swing's spot arriving as the stroke
  * plants, turning to the swing's heading, the stroke on its contact, then ready. A late miss is the overhead he was set
- * for until its commit (the pick is known only then): he holds it there as the shuttle goes by, then stretches for it.
+ * for until its commit (the pick is known only then): he holds it there as the shuttle goes by, then swings on, the
+ * racket reaching its place MISS.late after the shuttle. An early one is the same overhead, planned sooner (rally.ts).
  * The dive plays where he stands, turned toward the shuttle; he stays where its slide leaves him and gets up.
  */
 function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
   const { track } = plan;
   const late = w.miss === "late";
-  const stretch = w.kind === "stretch" && !late;
-  const k = (late ? "overhead" : w.kind) as Exclude<Stroke, "serve">;
-  const on = late ? w.due! : w.contact;
+  const stretch = w.kind === "stretch";
+  const k = w.kind as Exclude<Stroke, "serve">;
+  // A late swing keeps the meeting swing's timing up to its commit (the shuttle's moment − SWING_LEAD).
+  const on = late ? w.contact - MISS.late : w.contact;
   const plant = stretch ? STRETCH_CLIP.reach : PLANT[k];
   const clipAt = on - (stretch ? STRETCH_CLIP.reach : CLIP[k].contact);
   const arrive = clipAt + plant;
@@ -310,23 +310,10 @@ function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
     return;
   }
   if (late) {
-    // From the commit he stretches across instead of swinging, slowed to be at full reach as it lands: his body and
-    // racket leave the shuttle's way down at once, so it drops clean past him (rally.ts picks the side).
-    const speed = STRETCH_CLIP.reach / (w.contact - arrive);
-    addClip(track, {
-      clip: stretchClip(p, w.side ?? "left"),
-      start: arrive,
-      speed,
-      fade: LATE_TURN,
-    });
-    plan.squeaks.push(arrive + LUNGE.heel / speed);
-    addClip(track, {
-      clip: "ready",
-      start: arrive + STRETCH_CLIP.end / speed,
-      loop: true,
-      fade: 0.3,
-    });
-    return;
+    // Frozen at the commit while the shuttle goes by, then on: the racket reaches its place MISS.late after the shuttle.
+    const commit = on - SWING_LEAD;
+    addClip(track, { clip, start: commit, from: OVERHEAD_CLIP.commit, speed: 0, fade: 0.05 });
+    addClip(track, { clip, start: commit + MISS.late, from: OVERHEAD_CLIP.commit, fade: 0.05 });
   }
   const done = w.contact + CLIP[k].end - CLIP[k].contact;
   addClip(track, { clip: "ready", start: done, loop: true, fade: 0.3 });
