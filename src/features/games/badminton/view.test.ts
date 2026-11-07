@@ -58,7 +58,7 @@ describe("buildBadmintonView", () => {
     ]);
     expect(v.latest).toBeNull();
     expect(v.comm).toBe(ui.games.badminton.comm.start);
-    expect(v.call).toBeNull();
+    expect(v.spotlight).toBeNull();
     expect(v.announce).toBe("");
     expect(v.end).toBeNull();
     expect(v.reading).toBe("YASH · READING YOUR GRIP");
@@ -132,18 +132,37 @@ describe("buildBadmintonView", () => {
     expect(two.toasts[2]).toEqual({ state: "next", label: "DATA", hint: "UP NEXT · RALLY 3" });
   });
 
-  it("calls each rally: the shot, or the perfect weight", () => {
+  it("puts the group a rally charged in the spotlight: its eyebrow, title and skills, going right", () => {
     const called = (powers: number[], phase: BadmintonPhase = "called") =>
-      view(play(powers), { phase }).call;
-    expect(called([SMASH])).toEqual({ text: "HE READS IT.", tone: "floodlight" });
-    expect(called([CLEAR])).toEqual({ text: "BACK LINE. STILL HIS.", tone: "floodlight" });
-    expect(called([DROP])).toEqual({ text: "AT THE NET. STILL HIS.", tone: "floodlight" });
-    expect(called([PERFECT])).toEqual({ text: "PERFECT WEIGHT.", tone: "volt" });
-    expect(called([PERFECT], "verdict")?.text).toBe("PERFECT WEIGHT.");
-    // The call is made only while it is being called.
+      view(play(powers), { phase }).spotlight;
+    const backend = {
+      kind: "unlock",
+      eyebrow: "ATTRIBUTE CHARGED · RALLY 1",
+      title: "BACKEND",
+      line: "Java · Spring Boot · JUnit",
+      to: "right",
+    };
+    // Every shot charges the same way: no shot word, only the work.
+    for (const power of [SMASH, CLEAR, DROP, PERFECT]) expect(called([power])).toEqual(backend);
+    expect(called([CLEAR, SMASH])).toMatchObject({ title: "FRONTEND", line: "React · Redux" });
+    expect(called([PERFECT], "verdict")).toEqual(backend);
+    // Only while it is being called.
     expect(called([SMASH], "ready")).toBeNull();
     expect(called([SMASH], "charging")).toBeNull();
     expect(called([SMASH], "flight")).toBeNull();
+  });
+
+  it("the newest toast and chip wait while the spotlight is up, and are back in the next phase", () => {
+    const state = play([CLEAR, SMASH]);
+    const up = view(state, { phase: "called" });
+    expect(up.toasts.map((t) => t.state)).toEqual(["charged", "next", "later", "later"]);
+    expect(up.toasts[0]).toMatchObject({ accent: true });
+    expect(up.toasts[1]).toEqual({ state: "next", label: "FRONTEND", hint: "UP NEXT · RALLY 2" });
+    expect(up.latest?.title).toBe("BACKEND");
+    const after = view(state, { phase: "verdict" });
+    expect(after.toasts.map((t) => t.state)).toEqual(["charged", "charged", "next", "later"]);
+    expect(after.latest?.title).toBe("FRONTEND");
+    expect(view(play([CLEAR]), { phase: "called" }).latest).toBeNull();
   });
 
   it("says the rally's line: a perfect weight, a plain rally, match point", () => {
@@ -153,12 +172,12 @@ describe("buildBadmintonView", () => {
     expect(view(play([PERFECT, PERFECT, PERFECT])).comm).toBe(ui.games.badminton.comm.matchPoint);
   });
 
-  it("announces the call and what it charged", () => {
+  it("announces what it charged, with no shot word", () => {
     expect(view(play([SMASH])).announce).toBe(
-      "HE READS IT. Attribute charged, rally 1: BACKEND, Java, Spring Boot, JUnit",
+      "Attribute charged, rally 1: BACKEND, Java, Spring Boot, JUnit",
     );
     expect(view(play([SMASH, CLEAR])).announce).toBe(
-      "BACK LINE. STILL HIS. Attribute charged, rally 2: FRONTEND, React, Redux",
+      "Attribute charged, rally 2: FRONTEND, React, Redux",
     );
   });
 
@@ -195,11 +214,11 @@ describe("buildBadmintonView", () => {
     expect(v.end?.again).toBe("REMATCH");
   });
 
-  it("four perfect drops still end 21–19: the last call is the shot (F1)", () => {
+  it("four perfect drops still end 21–19, and the last rally still charges Craft (F1)", () => {
     const v = view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "end" });
     expect(v.bug).toMatchObject({ yash: "21", you: "19", status: "GAME YASH", alert: false });
     expect(v.saved).toBe("21–19");
-    expect(v.call).toEqual({ text: "AT THE NET. STILL HIS.", tone: "floodlight" });
+    expect(v.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
     expect(v.end?.primary).toEqual({ label: "SEE PLAYER ATTRIBUTES", to: ROUTES.attributes });
     expect(v.comm).toBe(content.commentary.yashWins[0]);
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
@@ -309,7 +328,7 @@ describe("buildBadminton3dView", () => {
       { state: "later", label: "CRAFT", hint: "COURT VISION" },
     ]);
     expect(v.latest).toBeNull();
-    expect(v.call).toBeNull();
+    expect(v.spotlight).toBeNull();
     expect(v.announce).toBe("");
     expect(v.end).toBeNull();
     expect(v.three.speed).toBeNull();
@@ -428,6 +447,40 @@ describe("buildBadminton3dView", () => {
     });
   });
 
+  it("3D: Yash's charging rally puts its group in the spotlight; the toast and chip wait, then return", () => {
+    const state = play3d(yours, yours, [late]);
+    const up = view3d(state, { phase: "called" });
+    expect(up.spotlight).toEqual({
+      kind: "unlock",
+      eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
+      title: "FRONTEND",
+      line: "React · Redux",
+      to: "right",
+    });
+    expect(up.toasts.map((t) => t.state)).toEqual(["charged", "next", "later", "later"]);
+    expect(up.latest?.title).toBe("BACKEND");
+    const after = view3d(state, { phase: "verdict" });
+    expect(after.toasts.map((t) => t.state)).toEqual(["charged", "charged", "next", "later"]);
+    expect(after.latest?.title).toBe("FRONTEND");
+    expect(after.spotlight).toMatchObject({ kind: "unlock" });
+    expect(view3d(state, { phase: "rally" }).spotlight).toBeNull();
+  });
+
+  it("3D: your rally says WELL PLAYED. and charges nothing", () => {
+    const v = view3d(play3d(yours), { phase: "called" });
+    expect(v.spotlight).toEqual({ kind: "yours", text: "WELL PLAYED." });
+    expect(v.toasts.every((t) => t.state !== "charged")).toBe(true);
+  });
+
+  it("3D: the last rally can charge the last group and end the game: the spotlight is there, with the end", () => {
+    const v = view3d(play3d([late], [late], [late], [late]), { phase: "end" });
+    expect(v.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
+    expect(v.end).not.toBeNull();
+    // while it is up, the Craft toast waits
+    const up = view3d(play3d([late], [late], [late], [late]), { phase: "called" });
+    expect(up.toasts[3]).toMatchObject({ state: "next", label: "CRAFT" });
+  });
+
   it("3D: comm after a smash win is 'Jump smash. Backend charged.'; after your miss, 'Backend charged.'; after the OUT, 'Hawk-Eye says out. By a whisker. Backend charged anyway.'", () => {
     expect(view3d(play3d([wrong])).comm).toBe("Jump smash. Backend charged.");
     expect(view3d(play3d([wrong], [wrong])).comm).toBe(
@@ -467,15 +520,30 @@ describe("buildBadminton3dView", () => {
     expect(view3d(allPerfect(), { phase: "end" }).end?.again).toBe("REMATCH");
   });
 
-  it("3D: the announcement is the call and the score, then what was charged: 'TOO LATE. 18–19. Backend charged: Java, Spring Boot, JUnit.'", () => {
+  it("3D: the announcement is the score, then what was charged: '18–19. Backend charged: Java, Spring Boot, JUnit.'", () => {
     expect(view3d(play3d([late])).announce).toBe(
-      "TOO LATE. 18–19. Backend charged: Java, Spring Boot, JUnit.",
+      "18–19. Backend charged: Java, Spring Boot, JUnit.",
     );
-    // Your rally charges nothing.
-    expect(view3d(play3d(yours)).announce).toBe("WINNER. 17–20.");
+    // Your rally charges nothing, and says the visitor's words.
+    expect(view3d(play3d(yours)).announce).toBe("WELL PLAYED. 17–20.");
     // The end adds how the game ended.
     expect(view3d(play3d([late], [late], [late], [late]), { phase: "end" }).announce).toMatch(
-      /^TOO LATE\. 21–19\. Craft charged: .+\. Game yash\.$/,
+      /^21–19\. Craft charged: .+\. Game yash\.$/,
     );
+  });
+
+  it("3D: the announcer says none of the shot words", () => {
+    const states = [
+      play3d([late]),
+      play3d([wrong]),
+      play3d([wrong], [wrong]),
+      play3d(yours, yours),
+      play3d(yours),
+      allPerfect(),
+    ];
+    for (const state of states)
+      expect(view3d(state, { phase: "called" }).announce).not.toMatch(
+        /WINNER|OUT\.|WRONG|TOO LATE|TOO EARLY|HE READ IT|DIVE/,
+      );
   });
 });

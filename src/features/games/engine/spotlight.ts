@@ -15,3 +15,8 @@ export const SPOTLIGHT_EXIT_MS = 450;
 export function holdFor(s: GameSpotlight | null, callMs: number): number {
   return s?.kind === "unlock" ? SPOTLIGHT_MS : callMs;
 }
+
+/** The words for the visitor's `n`th point (1 for the first): the list in turn, then round again. */
+export function yoursText(words: readonly string[], n: number): string {
+  return words[(n - 1) % words.length]!;
+}

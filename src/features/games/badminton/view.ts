@@ -1,6 +1,7 @@
 import { getAttributeGroups, type Content, type UiCopy } from "@/content";
 import type { AttributeToastProps } from "@/design-system";
 import type { ROUTES } from "@/shell/routes";
+import { yoursText, type GameSpotlight } from "../engine/spotlight";
 import type { EndFlags } from "../engine/useMatchResult";
 import {
   buildGameChrome,
@@ -63,8 +64,6 @@ export interface Badminton3dParts {
 /** The 2D view's shape plus the 3D parts; the 2D's meter, hold and reading are kept, and not drawn in 3D. */
 export type Badminton3dView = BadmintonView & { three: Badminton3dParts };
 
-type Tone = "volt" | "floodlight";
-
 export interface BadmintonView {
   chrome: GameChrome;
   bug: {
@@ -95,17 +94,19 @@ export interface BadmintonView {
   hold: { label: string; phoneHint: string };
   /** "YASH · READING YOUR GRIP" */
   reading: string;
-  /** One per rally: the groups charged so far, the next one, and those after it. */
+  /** One per rally: the groups charged so far (the newest waits while its spotlight is up), the next one, and those after it. */
   toasts: AttributeToastProps[];
-  /** The newest charge as the phone's chip: null before the first rally. */
+  /** The newest charge as the phone's chip (it too waits while its spotlight is up): null before the first rally. */
   latest: { eyebrow: string; title: string; meta: string } | null;
   /** How many rallies have been played (0 to 4 in 2D, up to 6 in 3D): a new call, a new charge. */
   played: number;
-  /** The big call for the last rally: only while it is being called. */
-  call: { text: string; tone: Tone } | null;
+  /**
+   * The centre of the screen after a rally (owner, 2026-11-07): the group it charged with its skills, or the visitor's
+   * "WELL PLAYED." Null before a rally, during play, and when Yash wins a rally that charges nothing. */
+  spotlight: GameSpotlight | null;
   /** The commentary line for the last rally; the arrival line before the first. */
   comm: string;
-  /** What a screen reader hears of the last rally: the call and what it charged. "" before rally 1. */
+  /** What a screen reader hears of the last rally: what it charged. "" before rally 1. */
   announce: string;
   /** What the end offers; null while the game is still being played. */
   end: GameEndView | null;
@@ -114,8 +115,19 @@ export interface BadmintonView {
   heading: string;
 }
 
-/** The calls that go your way. */
-const FOR_YOU = new Set(["perfect"]);
+/** The charged group in the spotlight: the toast's own eyebrow and title, then its skills. It goes to the right, where the toasts are. */
+function unlockOf(
+  group: { eyebrow: string; title: string; chips: readonly string[] },
+  sep: string,
+): GameSpotlight {
+  return {
+    kind: "unlock",
+    eyebrow: group.eyebrow,
+    title: group.title,
+    line: group.chips.join(` ${sep} `),
+    to: "right",
+  };
+}
 
 /** Everything the badminton game shows, as plain words, from the content, the copy and the game so far (G6, G7, G8). */
 export function buildBadmintonView(
@@ -143,17 +155,20 @@ export function buildBadmintonView(
     chips: g.skills.filter((s) => s.level === "shipped").map((s) => s.name),
   }));
   // Never LOCKED (§11.2 #24): the next group is UP NEXT, the others just name their rally.
-  const toasts: AttributeToastProps[] = groups.map((g, i) =>
-    i < played
-      ? { state: "charged", ...charged[i]!, accent: i === played - 1 }
-      : {
-          state: i === played ? "next" : "later",
-          label: g.name.toUpperCase(),
-          hint: i === played ? `${copy.upNext} ${sep} ${rallyName(i + 1)}` : rallyName(i + 1),
-        },
-  );
   const newest = charged.at(-1);
   const last = state.rallies.at(-1);
+  // Each rally charges its group: the toast waits in the spotlight's place until the spotlight has left (phase "called").
+  const shown = phase === "called" && newest ? played - 1 : played;
+  const toasts: AttributeToastProps[] = groups.map((g, i) =>
+    i < shown
+      ? { state: "charged", ...charged[i]!, accent: i === shown - 1 }
+      : {
+          state: i === shown ? "next" : "later",
+          label: g.name.toUpperCase(),
+          hint: i === shown ? `${copy.upNext} ${sep} ${rallyName(i + 1)}` : rallyName(i + 1),
+        },
+  );
+  const latest = charged[shown - 1];
 
   const status = over ? copy.status.game : null;
   const atMatchPoint = !over && matchPoint(state);
@@ -195,23 +210,20 @@ export function buildBadmintonView(
     hold: { label: copy.hold, phoneHint: copy.phoneHint },
     reading: [ui.hub.record.yash, copy.reading].join(` ${sep} `),
     toasts,
-    latest: newest
+    latest: latest
       ? {
-          eyebrow: newest.eyebrow,
-          title: newest.title,
-          meta: newest.chips.join(` ${sep} `),
+          eyebrow: latest.eyebrow,
+          title: latest.title,
+          meta: latest.chips.join(` ${sep} `),
         }
       : null,
     played,
-    call:
-      calling && last
-        ? { text: copy.calls[last.call], tone: FOR_YOU.has(last.call) ? "volt" : "floodlight" }
-        : null,
+    spotlight: calling && last && newest ? unlockOf(newest, sep) : null,
     comm,
     announce:
       last && newest
         ? announceWith(
-            `${copy.calls[last.call]} ${sentenceCase(copy.charged)}, ${rallyName(played).toLowerCase()}: ${newest.title}, ${newest.chips.join(", ")}`,
+            `${sentenceCase(copy.charged)}, ${rallyName(played).toLowerCase()}: ${newest.title}, ${newest.chips.join(", ")}`,
             // "Game yash. 21–19."
             status ? `${sentenceCase(status)}. ${score.yash}–${score.you}` : null,
           )
@@ -290,19 +302,27 @@ export function buildBadminton3dView(
         ]
       : [],
   );
-  // Never LOCKED (§11.2 #24): the next group is UP NEXT. Rally numbers shift when you win one, so the later ones name their shot.
-  const toasts: AttributeToastProps[] = groups.map((g, i) =>
-    i < charged.length
-      ? { state: "charged", ...charged[i]!, accent: i === charged.length - 1 }
-      : {
-          state: i === charged.length ? "next" : "later",
-          label: g.name.toUpperCase(),
-          hint: i === charged.length ? copy.upNext : g.shot.toUpperCase(),
-        },
-  );
   const newest = charged.at(-1);
   const last = state.rallies.at(-1);
   const lastGroup = last?.card != null ? groups[last.card] : undefined;
+  // The group your rally charged waits in the spotlight's place until the spotlight has left (phase "called").
+  const shown = phase === "called" && lastGroup && newest ? charged.length - 1 : charged.length;
+  // Never LOCKED (§11.2 #24): the next group is UP NEXT. Rally numbers shift when you win one, so the later ones name their shot.
+  const toasts: AttributeToastProps[] = groups.map((g, i) =>
+    i < shown
+      ? { state: "charged", ...charged[i]!, accent: i === shown - 1 }
+      : {
+          state: i === shown ? "next" : "later",
+          label: g.name.toUpperCase(),
+          hint: i === shown ? copy.upNext : g.shot.toUpperCase(),
+        },
+  );
+  const latest = charged[shown - 1];
+  // Your rallies say "WELL PLAYED." and so on in turn; Yash's rally that charges nothing shows nothing.
+  const yours =
+    last?.winner === "you"
+      ? yoursText(ui.games.yours, state.rallies.filter((r) => r.winner === "you").length)
+      : null;
 
   const atAll = !over && yash === 20 && you === 20;
   const yourMatchPoint = !over && you === 20 && yash < 20;
@@ -334,7 +354,6 @@ export function buildBadminton3dView(
             ? `${missed ? "" : `${three.comm[last.kind]} `}${lastGroup.name} ${three.comm.charged}`
             : three.comm[last.kind];
 
-  const callText = last ? three.calls[last.call] : "";
   // Yash's smash win is on the speed gun while it is called; the OUT call is his by a whisker, and your miss is no
   // shot of his: neither is a smash.
   const kmh =
@@ -348,7 +367,7 @@ export function buildBadminton3dView(
     ? lastGroup.skills.filter((k) => k.level === "shipped").map((k) => k.name)
     : [];
   const spoken = [
-    `${callText} ${score}.`,
+    `${yours ? `${yours} ` : ""}${score}.`,
     lastGroup
       ? `${lastGroup.name} ${three.comm.charged.replace(/\.$/, "")}: ${lastChips.join(", ")}.`
       : null,
@@ -370,14 +389,17 @@ export function buildBadminton3dView(
       alert: atMatchPoint || yourMatchPoint,
     },
     toasts,
-    latest: newest
-      ? { eyebrow: newest.eyebrow, title: newest.title, meta: newest.chips.join(` ${sep} `) }
+    latest: latest
+      ? { eyebrow: latest.eyebrow, title: latest.title, meta: latest.chips.join(` ${sep} `) }
       : null,
     played,
-    call:
-      calling && last
-        ? { text: callText, tone: last.call === "winner" ? "volt" : "floodlight" }
-        : null,
+    spotlight: !calling
+      ? null
+      : yours
+        ? { kind: "yours", text: yours }
+        : lastGroup && newest
+          ? unlockOf(newest, sep)
+          : null,
     comm,
     announce: last
       ? announceWith(

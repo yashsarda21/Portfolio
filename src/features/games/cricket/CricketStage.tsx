@@ -1,13 +1,13 @@
 import type { Ref } from "react";
 import {
   BallTracker,
-  CallOverlay,
   Glass,
   Heading,
   MonoLabel,
   PlayerTag,
   RevealList,
   ScoreBug,
+  Spotlight,
   Text,
   TimingMeter,
   TracerPath,
@@ -49,7 +49,7 @@ export function CricketStage({
   ballRef?: Ref<HTMLSpanElement>;
   three?: CricketThree;
 }) {
-  const { bug, call, end } = view;
+  const { bug, spotlight, end } = view;
   const ready = three?.status === "ready";
   return (
     <GameStage
@@ -133,11 +133,10 @@ export function CricketStage({
         className="absolute top-27.5 right-9 z-5 w-90"
       />
 
-      {call ? (
-        <CallOverlay
+      {spotlight ? (
+        <Spotlight
           key={view.bowled}
-          call={call.text}
-          tone={call.tone}
+          spotlight={spotlight}
           size="stage"
           className="absolute inset-x-0 top-105 z-6"
         />

@@ -440,6 +440,8 @@ export const ui = {
     bug: "Score",
     rally: "RALLY",
     unlocked: "UNLOCKED",
+    /** The visitor's point, in the centre (owner, 2026-11-07): the 1st, 2nd, 3rd ... point they win say these in turn. */
+    yours: ["WELL PLAYED.", "GOOD POINT.", "NICE ONE."], // derived
     /** G9: after two losses at one venue. */
     highlight: "WATCH THE HIGHLIGHT INSTEAD",
     /** F3: the end's main button once all three venues are played. */
@@ -487,7 +489,6 @@ export const ui = {
       how3d:
         "Pick a line, run in, and release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.", // derived (Phase 8)
       touchHint: "WIDER YORKER ZONE ON TOUCH · HAPTIC ON RELEASE",
-      calls: { dot: "DOT BALL.", four: "FOUR.", six: "SIX." },
       comm: {
         start: "Your ball. Let's see what you've got.",
         dot: "Yorker. Dug out. I respect that.",
@@ -530,14 +531,6 @@ export const ui = {
         allIn: "ALL THREE ON THE BIG SCREEN", // derived
       },
       status: { game: "GAME YASH" }, // derived
-      calls: {
-        clean: "CLEAN RETURN.",
-        returned: "RETURNED.",
-        ace: "ACE.",
-        wrong: "WRONG SIDE.",
-        early: "TOO EARLY.",
-        line: "ON THE LINE.",
-      }, // derived
       comm: {
         // start: content.commentary.entrance[0]
         shipped: "Another project shipped. He's not letting up.",
@@ -551,7 +544,6 @@ export const ui = {
         progress: "HIS POINTS UNLOCK THE HIGHLIGHTS",
         point: "POINT",
         gamePoint: "GAME POINT",
-        calls: { late: "TOO LATE.", winner: "WINNER.", out: "OUT." },
         comm: {
           yourPoint: "Your point. He'll remember that.",
           out: "Hawk-Eye says out. By a whisker.",
@@ -576,12 +568,6 @@ export const ui = {
       upNext: "UP NEXT",
       matchPoint: "MATCH POINT",
       status: { game: "GAME YASH" }, // derived
-      calls: {
-        smash: "HE READS IT.",
-        clear: "BACK LINE. STILL HIS.",
-        drop: "AT THE NET. STILL HIS.",
-        perfect: "PERFECT WEIGHT.",
-      }, // derived
       comm: {
         start: "Your serve. He's reading your grip.", // derived
         rally: "He reads it. Another attribute charged.", // derived
@@ -606,15 +592,6 @@ export const ui = {
           arrow: { deep: "↑", short: "↓" }, // derived
         },
         status: { yourMatchPoint: "YOUR MATCH POINT", all: "20 ALL" },
-        calls: {
-          early: "TOO EARLY.",
-          late: "TOO LATE.",
-          wrong: "WRONG SHOT.",
-          read: "HE READ IT.",
-          winner: "WINNER.",
-          out: "OUT.",
-          dive: "WHAT A DIVE.",
-        },
         speed: "SMASH",
         comm: {
           smash: "Jump smash.",

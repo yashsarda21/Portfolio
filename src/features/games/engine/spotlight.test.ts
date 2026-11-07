@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { type GameSpotlight, SPOTLIGHT_EXIT_MS, SPOTLIGHT_MS, holdFor } from "./spotlight";
+import {
+  type GameSpotlight,
+  SPOTLIGHT_EXIT_MS,
+  SPOTLIGHT_MS,
+  holdFor,
+  yoursText,
+} from "./spotlight";
 
 const unlock: GameSpotlight = {
   kind: "unlock",
@@ -23,5 +29,18 @@ describe("holdFor", () => {
     expect(SPOTLIGHT_MS).toBe(4500);
     // motion.css starts the exit 4050 ms in (--spot-delay); keep the two in step.
     expect(SPOTLIGHT_MS - SPOTLIGHT_EXIT_MS).toBe(4050);
+  });
+});
+
+describe("yoursText", () => {
+  it("says the words in turn for the visitor's 1st, 2nd, 3rd point, then round again", () => {
+    const words = ["WELL PLAYED.", "GOOD POINT.", "NICE ONE."];
+    expect([1, 2, 3, 4, 5].map((n) => yoursText(words, n))).toEqual([
+      "WELL PLAYED.",
+      "GOOD POINT.",
+      "NICE ONE.",
+      "WELL PLAYED.",
+      "GOOD POINT.",
+    ]);
   });
 });

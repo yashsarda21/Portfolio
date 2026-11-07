@@ -46,7 +46,7 @@ describe("buildCricketView", () => {
       ["3", "pending"],
     ]);
     expect(v.latest).toBeNull();
-    expect(v.call).toBeNull();
+    expect(v.spotlight).toBeNull();
     expect(v.comm).toBe(ui.games.cricket.comm.start);
     expect(v.announce).toBe("");
     expect(v.end).toBeNull();
@@ -67,7 +67,7 @@ describe("buildCricketView", () => {
   });
 
   it("after a miss: SIX for him, and innings 01 is open", () => {
-    const v = view(play(["miss"]));
+    const v = view(play(["miss"]), { phase: "verdict" });
     expect(v.bug.score).toBe("6*");
     expect(v.bug.meta).toBe("BALL 2 OF 3");
     expect(v.bug.metaPhone).toBe("YOU BOWLING · 2/3");
@@ -85,7 +85,6 @@ describe("buildCricketView", () => {
       title: "PICT, PUNE",
       meta: "B.Tech, Information Technology · 2020 – 2024",
     });
-    expect(v.call).toEqual({ text: "SIX.", tone: "floodlight" });
     expect(v.comm).toBe(ui.games.cricket.comm.six);
     expect(v.balls.map((b) => [b.label, b.state])).toEqual([
       ["6", "against"],
@@ -94,22 +93,51 @@ describe("buildCricketView", () => {
     ]);
   });
 
-  it("after a perfect ball: a dot for you, DOT BALL in volt", () => {
+  it("after a perfect ball: a dot for you", () => {
     const v = view(play(["perfect"]));
     expect(v.balls[0]).toEqual({ label: "•", state: "for" });
-    expect(v.call).toEqual({ text: "DOT BALL.", tone: "volt" });
     expect(v.bug.score).toBe("0*");
     expect(v.comm).toBe(ui.games.cricket.comm.dot);
   });
 
-  it("holds the call only while it is being called, and its words for the screen reader", () => {
+  it("puts the innings the last ball unlocked in the spotlight, and says it for the screen reader", () => {
     const state = play(["perfect", "good"]);
-    expect(view(state, { phase: "ready" }).call).toBeNull();
-    expect(view(state, { phase: "flight" }).call).toBeNull();
-    expect(view(state, { phase: "called" }).call?.text).toBe("FOUR.");
+    expect(view(state, { phase: "ready" }).spotlight).toBeNull();
+    expect(view(state, { phase: "flight" }).spotlight).toBeNull();
+    expect(view(state, { phase: "called" }).spotlight).toEqual({
+      kind: "unlock",
+      eyebrow: "INNINGS 02 · DEBUT",
+      title: "DEUTSCHE BANK",
+      line: "Graduate Analyst Intern · Jun – Jul 2023",
+      to: "right",
+    });
     expect(view(state, { phase: "called" }).announce).toBe(
-      "FOUR. Innings 02 unlocked: DEUTSCHE BANK, Graduate Analyst Intern, Jun – Jul 2023",
+      "Innings 02 unlocked: DEUTSCHE BANK, Graduate Analyst Intern, Jun – Jul 2023",
     );
+  });
+
+  it("every ball unlocks one, even a dot ball: nothing is ever the visitor's win", () => {
+    for (const q of ["perfect", "good", "miss"] as const)
+      expect(view(play([q])).spotlight?.kind).toBe("unlock");
+  });
+
+  it("the newest slot and chip wait while the spotlight is up, and are back in the next phase", () => {
+    const state = play(["good", "good"]);
+    const up = view(state, { phase: "called" });
+    expect(up.screen.slots.map((s) => s.state)).toEqual(["open", "locked", "locked"]);
+    expect(up.latest?.title).toBe("PICT, PUNE");
+    const after = view(state, { phase: "verdict" });
+    expect(after.screen.slots.map((s) => s.state)).toEqual(["open", "open", "locked"]);
+    expect(after.latest?.title).toBe("DEUTSCHE BANK");
+    // the very first unlock: no slot open and no chip while it is up
+    const first = view(play(["good"]), { phase: "called" });
+    expect(first.screen.slots.every((s) => s.state === "locked")).toBe(true);
+    expect(first.latest).toBeNull();
+  });
+
+  it("the announcer says none of the old shot words", () => {
+    for (const q of ["perfect", "good", "miss"] as const)
+      expect(view(play([q])).announce).not.toMatch(/DOT BALL|SIX|FOUR/);
   });
 
   it("an over of good, miss, good: 14 not out, all three innings open", () => {
@@ -156,7 +184,7 @@ describe("buildCricketView", () => {
     expect(v.bug.score).toBe("4*");
     expect(v.onStrike).toBe("YASH · ON STRIKE · 4*");
     expect(v.saved).toBe("4* NOT OUT");
-    expect(v.call).toEqual({ text: "FOUR.", tone: "floodlight" });
+    expect(v.spotlight).toMatchObject({ kind: "unlock", title: "DEUTSCHE BANK" });
     expect(v.comm).toBe(ui.games.cricket.comm.lastPerfect);
     expect(v.end?.primary).toEqual({ label: "SEE THE FULL SCORECARD", to: "/career" });
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);

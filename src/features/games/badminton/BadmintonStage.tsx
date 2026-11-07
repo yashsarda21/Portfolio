@@ -2,13 +2,13 @@ import type { Ref } from "react";
 import {
   AimZone,
   AttributeToast,
-  CallOverlay,
   GAME_STAGE_VIEW,
   Glass,
   MonoLabel,
   PlayerTag,
   PowerMeter,
   ScoreBug,
+  Spotlight,
   ShuttleMark,
   Text,
   TracerPath,
@@ -54,7 +54,7 @@ export function BadmintonStage({
   shuttleRef?: Ref<SVGGElement>;
   three?: BadmintonThree;
 }) {
-  const { bug, call, end, hold, meter } = view;
+  const { bug, spotlight, end, hold, meter } = view;
   const ready = three?.status === "ready";
   return (
     <GameStage
@@ -181,11 +181,10 @@ export function BadmintonStage({
         ))}
       </div>
 
-      {call ? (
-        <CallOverlay
+      {spotlight ? (
+        <Spotlight
           key={view.played}
-          call={call.text}
-          tone={call.tone}
+          spotlight={spotlight}
           size="stage"
           // The field between the panels (x 306 to 1044): a long call wraps there, over the court, never onto a panel.
           className="absolute top-82 left-76.5 z-6 w-184.5"

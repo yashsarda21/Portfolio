@@ -1,10 +1,10 @@
 import type { Ref } from "react";
 import {
-  CallOverlay,
   MonoLabel,
   PlayerTag,
   RevealChip,
   ScoreBug,
+  Spotlight,
   TimingMeter,
   TracerPath,
   TrackingRing,
@@ -45,7 +45,7 @@ export function CricketColumn({
   ballRef?: Ref<HTMLSpanElement>;
   three?: CricketThree;
 }) {
-  const { bug, call, end, latest } = view;
+  const { bug, spotlight, end, latest } = view;
   const ready = three?.status === "ready";
   const controls = (
     <>
@@ -123,11 +123,10 @@ export function CricketColumn({
               />
             </>
           )}
-          {call ? (
-            <CallOverlay
+          {spotlight ? (
+            <Spotlight
               key={view.bowled}
-              call={call.text}
-              tone={call.tone}
+              spotlight={spotlight}
               size="column"
               className="absolute inset-x-0 top-70 short:top-48"
             />

@@ -1,7 +1,6 @@
 import type { Ref } from "react";
 import {
   AimZone,
-  CallOverlay,
   CourtsideCard,
   GAME_STAGE_VIEW,
   Glass,
@@ -10,6 +9,7 @@ import {
   MonoLabel,
   PlayerTag,
   ScoreBug,
+  Spotlight,
   Text,
   TracerPath,
   TrackingRing,
@@ -54,7 +54,7 @@ export function TennisStage({
   ballRef?: Ref<SVGCircleElement>;
   three?: TennisThree;
 }) {
-  const { bug, call, end, instructions, progress } = view;
+  const { bug, spotlight, end, instructions, progress } = view;
   const live = three ? three.live : (LIVE_PHASES as readonly string[]).includes(phase) && !reduced;
   const returning = shot !== null && (phase === "called" || phase === "verdict");
   const ready = three?.status === "ready";
@@ -206,11 +206,10 @@ export function TennisStage({
         </div>
       </div>
 
-      {call ? (
-        <CallOverlay
+      {spotlight ? (
+        <Spotlight
           key={view.returned}
-          call={call.text}
-          tone={call.tone}
+          spotlight={spotlight}
           size="stage"
           className="absolute inset-x-0 top-105 z-6"
         />

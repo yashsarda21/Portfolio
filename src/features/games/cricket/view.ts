@@ -1,5 +1,6 @@
 import { getInningsReveals, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
+import type { GameSpotlight } from "../engine/spotlight";
 import type { EndFlags } from "../engine/useMatchResult";
 import {
   buildGameChrome,
@@ -72,11 +73,11 @@ export interface CricketView {
   screen: { title: string; count: string; slots: CricketSlot[] };
   /** The newest open slot, as the phone's chip: null before the first ball. */
   latest: { eyebrow: string; title: string; meta: string } | null;
-  /** The big call for the last ball: only while it is being called. */
-  call: { text: string; tone: "volt" | "floodlight" } | null;
+  /** The innings the last ball unlocked, big in the centre: only while it is being called (owner, 2026-11-07). */
+  spotlight: GameSpotlight | null;
   /** The commentary line for the last ball; the arrival line before the first. */
   comm: string;
-  /** What a screen reader hears of the last ball: the call and what it unlocked. "" before ball 1. */
+  /** What a screen reader hears of the last ball: what it unlocked. "" before ball 1. */
   announce: string;
   meter: {
     labels: { start: string; target: string; end: string };
@@ -129,9 +130,13 @@ export function buildCricketView(
     span: r.span,
   }));
 
+  // The spotlight shows the newest innings first; its slot and chip wait until the spotlight has left (phase "called").
+  const calling = phase === "called" || phase === "verdict" || phase === "end";
+  const newest = bowled > 0 ? innings[bowled - 1] : undefined;
+  const shown = phase === "called" && newest ? bowled - 1 : bowled;
   const slots = innings.map((row, i): CricketSlot => {
     const ball = i + 1;
-    return i < bowled
+    return i < shown
       ? {
           state: "open",
           eyebrow: `${copy.innings} ${row.n} ${sep} ${row.status}`,
@@ -145,12 +150,8 @@ export function buildCricketView(
         };
   });
 
-  const newest = bowled > 0 ? innings[bowled - 1] : undefined;
   const last = state.balls[bowled - 1];
-  const call: CricketView["call"] = last
-    ? { text: copy.calls[last.call], tone: last.forYou ? "volt" : "floodlight" }
-    : null;
-  const calling = phase === "called" || phase === "verdict" || phase === "end";
+  const latest = shown > 0 ? innings[shown - 1] : undefined;
 
   const ballNo = Math.min(bowled + 1, CRICKET_BALLS);
 
@@ -179,19 +180,29 @@ export function buildCricketView(
       count: `${bowled} / ${CRICKET_BALLS} ${ui.games.unlocked}`,
       slots,
     },
-    latest: newest
+    latest: latest
       ? {
-          eyebrow: `${copy.innings} ${newest.n} ${ui.games.unlocked} ${sep} ${newest.status}`,
-          title: newest.team,
-          meta: `${newest.role} ${sep} ${newest.span}`,
+          eyebrow: `${copy.innings} ${latest.n} ${ui.games.unlocked} ${sep} ${latest.status}`,
+          title: latest.team,
+          meta: `${latest.role} ${sep} ${latest.span}`,
         }
       : null,
-    call: calling ? call : null,
+    // Every ball unlocks an innings (Yash always wins): the card's own eyebrow and title, then role and span.
+    spotlight:
+      calling && newest
+        ? {
+            kind: "unlock",
+            eyebrow: `${copy.innings} ${newest.n} ${sep} ${newest.status}`,
+            title: newest.team,
+            line: `${newest.role} ${sep} ${newest.span}`,
+            to: "right",
+          }
+        : null,
     comm: last ? commFor(copy.comm, last) : copy.comm.start,
     announce:
       last && newest
         ? announceWith(
-            `${copy.calls[last.call]} ${sentenceCase(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`,
+            `${sentenceCase(copy.innings)} ${newest.n} ${ui.games.unlocked.toLowerCase()}: ${newest.team}, ${newest.role}, ${newest.span}`,
             // "Over complete. Yash 14 not out."
             over
               ? `${sentenceCase(copy.over)}. ${sentenceCase(yash)} ${sentenceCase(`${runs} ${copy.notOut}`)}`

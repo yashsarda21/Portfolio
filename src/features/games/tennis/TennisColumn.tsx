@@ -2,12 +2,12 @@ import { useRef, type PointerEvent, type Ref } from "react";
 import {
   AimZone,
   GAME_COURT_VIEW,
-  CallOverlay,
   CourtBox,
   MonoLabel,
   PlayerTag,
   RevealChip,
   ScoreBug,
+  Spotlight,
   TracerPath,
   TrackingRing,
 } from "@/design-system";
@@ -54,7 +54,7 @@ export function TennisColumn({
   ballRef?: Ref<SVGCircleElement>;
   three?: TennisThree;
 }) {
-  const { bug, call, end, latest, instructions } = view;
+  const { bug, spotlight, end, latest, instructions } = view;
   const live = three ? three.live : (LIVE_PHASES as readonly string[]).includes(phase) && !reduced;
   const returning = shot !== null && (phase === "called" || phase === "verdict");
   const ready = three?.status === "ready";
@@ -79,11 +79,10 @@ export function TennisColumn({
     if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) choose(dx > 0 ? "right" : "left");
   };
 
-  const callOverlay = call ? (
-    <CallOverlay
+  const callOverlay = spotlight ? (
+    <Spotlight
       key={view.returned}
-      call={call.text}
-      tone={call.tone}
+      spotlight={spotlight}
       size="column"
       className="absolute inset-x-0 top-94 short:top-48"
     />

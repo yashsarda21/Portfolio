@@ -1,5 +1,6 @@
 import { getHighlights, type Content, type UiCopy } from "@/content";
 import type { ROUTES } from "@/shell/routes";
+import { yoursText, type GameSpotlight } from "../engine/spotlight";
 import type { EndFlags } from "../engine/useMatchResult";
 import {
   buildGameChrome,
@@ -16,6 +17,7 @@ import {
   serveKmh,
   unlockedOf,
   yashPoints,
+  yourPoints,
   type MatchState,
 } from "./3d/match";
 import {
@@ -87,19 +89,21 @@ export interface TennisView {
   returned: number;
   /** The left zone, then the right. */
   aims: [TennisAim, TennisAim];
-  /** The courtside cards so far, in the order they were unlocked. */
+  /** The courtside cards so far, in the order they were unlocked; the newest waits while its spotlight is up. */
   cards: TennisCard[];
-  /** The newest card as the phone's chip: null before the first return. */
+  /** The newest card as the phone's chip (it too waits while its spotlight is up): null before the first return. */
   latest: { eyebrow: string; title: string; meta: string } | null;
   progress: { label: string; bars: [Bar, Bar, Bar] };
   /** The far LED board. */
   marquee: { text: string; tone: "volt" | "floodlight" }[];
   instructions: { title: string; how: string; keys: string; tap: string; phoneHint: string };
-  /** The big call for the last return: only while it is being called. */
-  call: { text: string; tone: "volt" | "floodlight" } | null;
+  /**
+   * The centre of the screen after a point (owner, 2026-11-07): the project it unlocked with its result, or the visitor's
+   * "WELL PLAYED." Null before a point, during play, and on the game point, which unlocks nothing. */
+  spotlight: GameSpotlight | null;
   /** The commentary line for the last return; the arrival line before the first. */
   comm: string;
-  /** What a screen reader hears of the last return: the call and what it unlocked. "" before return 1. */
+  /** What a screen reader hears of the last return: what it unlocked. "" before return 1. */
   announce: string;
   /** What the end offers; null while the game is still being played. */
   end: GameEndView | null;
@@ -108,12 +112,10 @@ export interface TennisView {
   heading: string;
 }
 
-/** The calls that go your way. */
-const FOR_YOU = new Set(["clean", "returned"]);
-/** The phases in which a serve is in play: the open side is lit and a side can be picked (before the hit it is TOO EARLY). */
+/** The phases in which a serve is in play: the open side is lit and a side can be picked. */
 export const LIVE_PHASES: readonly TennisPhase[] = ["tell", "toss", "window"];
 
-/** The phases of the 3D game in which a window is open or about to be: a side can be picked (before the hit it is TOO EARLY). */
+/** The phases of the 3D game in which a window is open or about to be: a side can be picked. */
 export const LIVE_3D: readonly Tennis3dPhase[] = ["toss", "window", "rally"];
 
 const two = (n: number) => String(n).padStart(2, "0");
@@ -141,6 +143,11 @@ function highlightCards(
       title: h.name.toUpperCase(),
       line: h.line,
     }));
+}
+
+/** Yash's point in the spotlight: the card's own eyebrow and title, then the project's result (`winner`); it goes to the card's side. */
+function unlockOf(card: TennisCard, result: string): GameSpotlight {
+  return { kind: "unlock", eyebrow: card.eyebrow, title: card.title, line: result, to: card.side };
 }
 
 /** The two aim zones, the left then the right; `open` (if any) is lit. */
@@ -209,9 +216,17 @@ export function buildTennisView(
 
   // G7: the projects in round order, one per return, however many the content grows to.
   const highlights = getHighlights(content).slice(0, TENNIS_SERVES);
-  const cards = highlightCards(content, ui, played, (i) => `${ui.games.rally} ${i + 1}`);
-  const newest = cards.at(-1);
+  const tagFor = (i: number) => `${ui.games.rally} ${i + 1}`;
+  const newest = highlightCards(content, ui, played, tagFor).at(-1);
   const last = state.returns.at(-1);
+  // Each return unlocks its project: the card waits in the spotlight's place until the spotlight has left (phase "called").
+  const cards = highlightCards(
+    content,
+    ui,
+    phase === "called" && newest ? played - 1 : played,
+    tagFor,
+  );
+  const latest = cards.at(-1);
 
   const open = LIVE_PHASES.includes(phase) ? state.serve?.open : undefined;
   const status = copy.status.game;
@@ -244,11 +259,11 @@ export function buildTennisView(
     returned: played,
     aims: aimsFor(ui, open),
     cards,
-    latest: newest
+    latest: latest
       ? {
-          eyebrow: `${newest.eyebrow} ${ui.games.unlocked}`,
-          title: newest.title,
-          meta: newest.line,
+          eyebrow: `${latest.eyebrow} ${ui.games.unlocked}`,
+          title: latest.title,
+          meta: latest.line,
         }
       : null,
     progress: { label: copy.progress, bars: barsFor(played) },
@@ -260,15 +275,12 @@ export function buildTennisView(
       tap: copy.tap,
       phoneHint: copy.phoneHint,
     },
-    call:
-      calling && last
-        ? { text: copy.calls[last.call], tone: FOR_YOU.has(last.call) ? "volt" : "floodlight" }
-        : null,
+    spotlight: calling && last && newest ? unlockOf(newest, highlights[played - 1]!.winner) : null,
     comm,
     announce:
       last && newest
         ? announceWith(
-            `${copy.calls[last.call]} ${sentenceCase(copy.highlight)} ${two(played)} ${ui.games.unlocked.toLowerCase()}: ${newest.title}, ${newest.line}`,
+            `${sentenceCase(copy.highlight)} ${two(played)} ${ui.games.unlocked.toLowerCase()}: ${newest.title}, ${newest.line}`,
             over ? sentenceCase(status) : null,
           )
         : "",
@@ -309,8 +321,8 @@ export function buildTennis3dView(
 
   // Card i was unlocked by Yash's (i + 1)th point: its tag names that point (1-based, among all the points played).
   const unlockedBy = state.points.flatMap((p, i) => (p.winner === "yash" ? [i + 1] : []));
-  const cards = highlightCards(content, ui, unlocked, (i) => `${three.point} ${unlockedBy[i]}`);
-  const newest = cards.at(-1);
+  const tagFor = (i: number) => `${three.point} ${unlockedBy[i]}`;
+  const newest = highlightCards(content, ui, unlocked, tagFor).at(-1);
   const last = state.points.at(-1);
   const calling = phase === "called" || phase === "verdict" || phase === "end";
   const score = `${yash}–${you}`;
@@ -329,11 +341,19 @@ export function buildTennis3dView(
               ? copy.comm.missed
               : copy.comm.shipped;
 
-  // The call's words: the 2D game's for ace / early / wrong, the 3D game's for the rest.
-  const callText = last ? { ...copy.calls, ...three.calls }[last.call] : "";
   // Yash's point only unlocks a card while there are cards left (his fourth is the game).
   const unlock = last?.winner === "yash" && !over && newest ? newest : null;
-  const spoken = `${callText} ${score}.`;
+  // The visitor's point says "WELL PLAYED." and so on in turn; Yash's game point shows nothing. The unlocked card waits
+  // in the spotlight's place until the spotlight has left (phase "called").
+  const yours = last?.winner === "you" ? yoursText(ui.games.yours, yourPoints(state)) : null;
+  const cards = highlightCards(
+    content,
+    ui,
+    phase === "called" && unlock ? unlocked - 1 : unlocked,
+    tagFor,
+  );
+  const latest = cards.at(-1);
+  const spoken = `${yours ? `${yours} ` : ""}${score}.`;
 
   return {
     chrome,
@@ -352,11 +372,11 @@ export function buildTennis3dView(
     returned: played,
     aims: aimsFor(ui, phase === "window" ? open : null),
     cards,
-    latest: newest
+    latest: latest
       ? {
-          eyebrow: `${newest.eyebrow} ${ui.games.unlocked}`,
-          title: newest.title,
-          meta: newest.line,
+          eyebrow: `${latest.eyebrow} ${ui.games.unlocked}`,
+          title: latest.title,
+          meta: latest.line,
         }
       : null,
     progress: { label: three.progress, bars: barsFor(unlocked) },
@@ -368,10 +388,13 @@ export function buildTennis3dView(
       tap: copy.tap,
       phoneHint: copy.phoneHint,
     },
-    call:
-      calling && last
-        ? { text: callText, tone: last.call === "winner" ? "volt" : "floodlight" }
-        : null,
+    spotlight: !calling
+      ? null
+      : yours
+        ? { kind: "yours", text: yours }
+        : unlock
+          ? unlockOf(unlock, getHighlights(content)[unlocked - 1]!.winner)
+          : null,
     comm,
     announce: last
       ? announceWith(

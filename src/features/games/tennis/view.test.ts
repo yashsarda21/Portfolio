@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { content, ui } from "@/content";
+import { content, getHighlights, ui } from "@/content";
 import { ROUTES } from "@/shell/routes";
 import { MATCH_START, playPoint, type MatchState } from "./3d/match";
 import {
@@ -64,7 +64,7 @@ describe("buildTennisView", () => {
     expect(v.progress.bars).toEqual(["current", "todo", "todo"]);
     expect(v.progress.label).toBe("EACH RETURN UNLOCKS A HIGHLIGHT");
     expect(v.comm).toBe(content.commentary.entrance[0]);
-    expect(v.call).toBeNull();
+    expect(v.spotlight).toBeNull();
     expect(v.announce).toBe("");
     expect(v.end).toBeNull();
     expect(v.heading).toBe("RETURN OF SERVE");
@@ -169,22 +169,52 @@ describe("buildTennisView", () => {
     expect(lit("called")).toBe(false);
   });
 
-  it("holds the call only while it is being called, and says it with what it unlocked", () => {
+  it("puts the project a return unlocked in the spotlight, with its result, and says what it unlocked", () => {
     const state = play([PERFECT]);
-    expect(view(state, { phase: "tell" }).call).toBeNull();
-    expect(view(state, { phase: "called" }).call).toEqual({ text: "CLEAN RETURN.", tone: "volt" });
-    expect(view(state, { phase: "called" }).announce).toBe(
-      "CLEAN RETURN. Highlight 01 unlocked: POWER BI DASHBOARD, An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
-    );
-    expect(view(play([ACE]), { phase: "called" }).call).toEqual({
-      text: "ACE.",
-      tone: "floodlight",
+    expect(view(state, { phase: "tell" }).spotlight).toBeNull();
+    const first = content.matchHighlights.find((h) => h.name === "Power BI Dashboard")!;
+    expect(view(state, { phase: "called" }).spotlight).toEqual({
+      kind: "unlock",
+      eyebrow: "HIGHLIGHT 01 · QF",
+      title: "POWER BI DASHBOARD",
+      line: first.winner,
+      to: "left",
     });
+    expect(view(state, { phase: "called" }).announce).toBe(
+      "Highlight 01 unlocked: POWER BI DASHBOARD, An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
+    );
+    // a miss is still his point: the project is unlocked all the same
+    expect(view(play([ACE]), { phase: "called" }).spotlight).toMatchObject({ kind: "unlock" });
     expect(view(play([ACE]), { phase: "called" }).comm).toBe(ui.games.tennis.comm.missed);
   });
 
+  it("the second card's spotlight goes right, the third left, each with its project's result", () => {
+    const highlights = getHighlights(content);
+    for (const n of [1, 2, 3]) {
+      const sp = view(play(Array(n).fill(GOOD)), { phase: "called" }).spotlight;
+      expect(sp).toEqual({
+        kind: "unlock",
+        eyebrow: expect.stringContaining(`HIGHLIGHT 0${n}`),
+        title: highlights[n - 1]!.name.toUpperCase(),
+        line: highlights[n - 1]!.winner,
+        to: n === 2 ? "right" : "left",
+      });
+    }
+  });
+
+  it("the newest card and chip wait while the spotlight is up, and are back in the next phase", () => {
+    const state = play([GOOD, GOOD]);
+    const up = view(state, { phase: "called" });
+    expect(up.cards.map((c) => c.eyebrow)).toEqual(["HIGHLIGHT 01 · QF"]);
+    expect(up.latest?.eyebrow).toBe("HIGHLIGHT 01 · QF UNLOCKED");
+    const after = view(state, { phase: "verdict" });
+    expect(after.cards).toHaveLength(2);
+    expect(after.latest?.eyebrow).toBe("HIGHLIGHT 02 · SF UNLOCKED");
+    expect(view(play([GOOD]), { phase: "called" }).cards).toEqual([]);
+  });
+
   it("a miss still reveals a card", () => {
-    const v = view(play([ACE]), { phase: "called" });
+    const v = view(play([ACE]), { phase: "verdict" });
     expect(v.cards).toHaveLength(1);
     expect(v.cards[0]).toMatchObject({ eyebrow: "HIGHLIGHT 01 · QF", title: "POWER BI DASHBOARD" });
     expect(v.latest?.eyebrow).toBe("HIGHLIGHT 01 · QF UNLOCKED");
@@ -212,7 +242,6 @@ describe("buildTennisView", () => {
       statusPhone: "GAME YASH",
     });
     expect(v.saved).toBe("GAME YASH");
-    expect(v.call).toEqual({ text: "ON THE LINE.", tone: "floodlight" });
     expect(v.comm).toBe(ui.games.tennis.comm.line);
     expect(v.marquee.map((m) => m.text)).toEqual([
       "MATCH HIGHLIGHTS · 3 / 3 UNLOCKED",
@@ -229,11 +258,10 @@ describe("buildTennisView", () => {
     });
   });
 
-  it("three perfect returns still end ON THE LINE., GAME YASH (F1)", () => {
+  it("three perfect returns still end GAME YASH (F1)", () => {
     const v = view(play([PERFECT, PERFECT, PERFECT]), { phase: "end" });
     expect(v.bug).toMatchObject({ status: "GAME YASH", statusPhone: "GAME YASH" });
     expect(v.saved).toBe("GAME YASH");
-    expect(v.call).toEqual({ text: "ON THE LINE.", tone: "floodlight" });
     expect(v.comm).toBe(ui.games.tennis.comm.line);
     expect(v.end?.primary).toEqual({ label: "SEE MATCH HIGHLIGHTS", to: "/highlights" });
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
@@ -294,7 +322,7 @@ describe("buildTennis3dView", () => {
     const v = view3d(MATCH_START);
     expect(v.bug).toMatchObject({ yash: "0", you: "0", status: "POINT 1", statusPhone: "POINT 1" });
     expect(v.cards).toEqual([]);
-    expect(v.call).toBeNull();
+    expect(v.spotlight).toBeNull();
     expect(v.serving).toMatch(/178 KM\/H$/);
     expect(v.comm).toBe(content.commentary.entrance[0]);
     const lit = view3d(MATCH_START, "window", "left").aims[0];
@@ -302,27 +330,50 @@ describe("buildTennis3dView", () => {
     expect(lit.name).toMatch(/open court$/);
   });
 
-  it("after an ace: 15–0, a card, ACE. in floodlight", () => {
-    const v = view3d(played([[ace]]), "called");
-    expect(v.bug).toMatchObject({ yash: "15", you: "0" });
+  it("after an ace: 15–0, the project in the spotlight, and its card once the spotlight has left", () => {
+    const up = view3d(played([[ace]]), "called");
+    expect(up.bug).toMatchObject({ yash: "15", you: "0" });
+    const [first] = getHighlights(content);
+    expect(up.spotlight).toEqual({
+      kind: "unlock",
+      eyebrow: "HIGHLIGHT 01 · QF",
+      title: "POWER BI DASHBOARD",
+      line: first!.winner,
+      to: "left",
+    });
+    expect(up.cards).toEqual([]);
+    expect(up.latest).toBeNull();
+    const v = view3d(played([[ace]]), "verdict");
     expect(v.cards.map((c) => [c.eyebrow, c.tag])).toEqual([["HIGHLIGHT 01 · QF", "POINT 1"]]);
-    expect(v.call).toEqual({ text: "ACE.", tone: "floodlight" });
+    expect(v.cards[0]!.title).toBe(up.spotlight && "title" in up.spotlight && up.spotlight.title);
     expect(v.comm).toBe(ui.games.tennis.comm.missed);
   });
 
-  it("after your point: 0–15, no card, WINNER. in volt", () => {
+  it("after your point: 0–15, no card, WELL PLAYED.", () => {
     const v = view3d(played([[clean, clean]]), "called");
     expect(v.bug).toMatchObject({ yash: "0", you: "15" });
     expect(v.cards).toEqual([]);
-    expect(v.call).toEqual({ text: "WINNER.", tone: "volt" });
+    expect(v.spotlight).toEqual({ kind: "yours", text: "WELL PLAYED." });
     expect(v.comm).toBe(three.comm.yourPoint);
+  });
+
+  it("your 1st and 2nd points (the most you can win) say WELL PLAYED. then GOOD POINT.", () => {
+    const win = [clean, clean];
+    expect(view3d(played([win]), "called").spotlight).toEqual({
+      kind: "yours",
+      text: "WELL PLAYED.",
+    });
+    expect(view3d(played([win, [ace], win]), "called").spotlight).toEqual({
+      kind: "yours",
+      text: "GOOD POINT.",
+    });
   });
 
   it("after three Yash points: GAME POINT, three cards tagged by the point that unlocked them", () => {
     const v = view3d(played([[ace], [clean, clean], [ace], [ace]]));
     expect(v.bug.status).toBe("GAME POINT");
     expect(v.cards.map((c) => c.tag)).toEqual(["POINT 1", "POINT 3", "POINT 4"]);
-    const three3 = view3d(played([[ace], [ace], [ace]]), "called");
+    const three3 = view3d(played([[ace], [ace], [ace]]), "verdict");
     expect(three3.bug.status).toBe("GAME POINT");
     expect(three3.cards).toHaveLength(3);
     expect(three3.marquee.map((m) => m.text)).toContain("ALL THREE ON THE BIG SCREEN");
@@ -335,17 +386,23 @@ describe("buildTennis3dView", () => {
     expect(v.saved).toBe("GAME YASH");
     expect(v.end).not.toBeNull();
     expect(v.comm).toBe(three.comm.game);
-    expect(v.announce).toBe("ACE. 40–0. Game yash.");
+    expect(v.announce).toBe("40–0. Game yash.");
+    // the game point unlocks nothing, and the visitor has won nothing: the centre stays empty
+    expect(v.spotlight).toBeNull();
   });
 
-  it("announces a point with what it unlocked", () => {
+  it("announces a point with what it unlocked, and your point with the visitor's words; no shot word is ever said", () => {
     expect(view3d(played([[ace]]), "called").announce).toBe(
-      "ACE. 15–0. Highlight 01 unlocked: POWER BI DASHBOARD, An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
+      "15–0. Highlight 01 unlocked: POWER BI DASHBOARD, An analytics-driven web platform with interactive Power BI dashboards embedded inside it.",
     );
-    expect(view3d(played([[clean, clean]]), "called").announce).toBe("WINNER. 0–15.");
+    expect(view3d(played([[clean, clean]]), "called").announce).toBe("WELL PLAYED. 0–15.");
+    const all = played([[ace], [clean, clean], [good, good], [clean, clean], [ace]]);
+    expect(view3d(all, "called").announce).not.toMatch(
+      /WINNER|OUT\.|WRONG|TOO LATE|TOO EARLY|ACE\./,
+    );
   });
 
-  it("an OUT point: OUT. and the Hawk-Eye line", () => {
+  it("an OUT point: Yash's, with his project in the spotlight, and the Hawk-Eye line", () => {
     const v = view3d(
       played([
         [clean, clean],
@@ -355,7 +412,7 @@ describe("buildTennis3dView", () => {
       "called",
     );
     expect(v.bug).toMatchObject({ yash: "15", you: "30" });
-    expect(v.call?.text).toBe("OUT.");
+    expect(v.spotlight).toMatchObject({ kind: "unlock", eyebrow: "HIGHLIGHT 01 · QF" });
     expect(v.comm).toBe(three.comm.out);
   });
 });

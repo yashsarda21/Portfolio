@@ -1,6 +1,5 @@
 import { useRef, type PointerEvent, type Ref } from "react";
 import {
-  CallOverlay,
   CourtBox,
   CourtMark,
   GAME_COURT_VIEW,
@@ -9,6 +8,7 @@ import {
   PowerMeter,
   RevealChip,
   ScoreBug,
+  Spotlight,
   ShuttleMark,
   TracerPath,
   TrackingRing,
@@ -61,7 +61,7 @@ export function BadmintonColumn({
   shuttleRef?: Ref<SVGGElement>;
   three?: BadmintonThree;
 }) {
-  const { bug, call, end, hold, latest, meter } = view;
+  const { bug, spotlight, end, hold, latest, meter } = view;
   const [smash, , drop] = meter.legend;
   const ready = three?.status === "ready";
   /** The 3D game takes a pick only while one is taken. */
@@ -87,11 +87,10 @@ export function BadmintonColumn({
     }
   };
 
-  const callOverlay = call ? (
-    <CallOverlay
+  const callOverlay = spotlight ? (
+    <Spotlight
       key={view.played}
-      call={call.text}
-      tone={call.tone}
+      spotlight={spotlight}
       size="column"
       className="absolute inset-x-0 top-82 short:top-48"
     />
