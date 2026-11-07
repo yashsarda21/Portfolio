@@ -117,6 +117,24 @@ Calls made by me (Claude), for the owner to check:
 - [ ] **Step 4:** Run the three specs and `pnpm vitest run src/features/games`: PASS. Screenshot each game's spotlight on the stage (1440×900) and the phone (390×844) for the controller.
 - [ ] **Step 5:** Commit `feat(games): the spotlight holds, chimes, then goes to its card`.
 
+### Task 3B: Fair-looking losses (tennis and badminton 3D)
+
+Owner, 2026-11-07: the visitor's lost points look deliberate. **The visitor's player must always reach the ball / shuttle.** If the visitor pressed properly but the point has to go to Yash, **the shot goes into the net**; if the press was wrong (too early, too late, none), the player **still gets there and swings, but misses it**. Never a stretch away from the shuttle, never standing still while it goes past.
+
+**Files:**
+- Modify: `src/features/games/tennis/3d/rally.ts`, `tennis/3d/sequence.ts`, `tennis/3d/match.ts` (the call names), `src/features/games/badminton/3d/rally.ts`, `badminton/3d/sequence.ts`, `badminton/3d/match.ts`; their `*.test.ts`; `PointLab.stories.tsx`, `RallyLab.stories.tsx` (one story per losing case)
+
+**Interfaces:**
+- Consumes: each game's existing `Reach` (racket-hand reach measured from the clips) and contact maths.
+- Produces: the visitor's losing outcomes reduce to two: `"net"` (a good press on a point Yash must win: tennis's at-30 just-OUT becomes this) and `"miss"` (early, late, no press). `"wrong"` (a returned ball Yash puts away) stays: the visitor hit it, so it already reaches. Task 2's views see only who won; no copy depends on these names.
+
+- [ ] **Step 1:** Unit tests, per game, for every losing case (`net`, `miss` early, `miss` late, no press, `wrong`, tennis's ace): at the visitor's contact (or swing) time, the visitor's racket hand is within that game's reach of the ball / shuttle (distance ≤ `reach` + 0.15 m), and the visitor's last step moves toward the contact point, not away. For `net`: the ball / shuttle's flight ends at the net (z within 0.1 m of it, below the tape).
+- [ ] **Step 2:** Run `pnpm vitest run src/features/games/tennis/3d src/features/games/badminton/3d`: FAIL.
+- [ ] **Step 3:** Implement: the visitor always runs to the contact point the flight gives (as for a good shot); a `miss` swings at it with the timing error the press had (the racket passes the ball, it flies on behind); a `net` plays the good shot with a low trajectory that drops into the net. Tennis's ace case: the visitor still lunges to the ball's line and is beaten by its pace, racket close.
+- [ ] **Step 4:** Run: PASS. Check every losing case in `PointLab` / `RallyLab` at full speed (screenshots of the contact frame for the controller). Commit `feat(games): the visitor always reaches it: a good press finds the net, a bad one just misses`.
+
+Builder: Opus, high effort (motion and game logic).
+
 ### Task 4: The BACK button
 
 **Files:**
@@ -137,4 +155,4 @@ Calls made by me (Claude), for the owner to check:
 
 - [ ] Update `docs/superpowers/plans/phase-0-carryover.md` (Phase 9 rows done) and `docs/launch/copy-review.md` (new strings: the visitor's words, BACK).
 - [ ] `pnpm verify` green. Commit `docs: Phase 9 as built`.
-- [ ] One whole-branch review (Opus), at most one fix wave, then the owner plays it before the merge.
+- [ ] No whole-branch review this phase (owner, 2026-11-07): the controller checks each task's diff and screenshots, then the owner plays it before the merge.
