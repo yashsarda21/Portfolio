@@ -157,7 +157,12 @@ test.describe("desktop", () => {
         page.getByRole("tab").nth(0),
         page.getByRole("tab").nth(1),
         page.getByRole("tab").nth(2),
+        // Owner content change, 2026-11-07: the role's bullets and shots come from the new resume (longer, one more
+        // chip row), so the detail panel, the scorecard's foot and the NEXT VENUE button below sit lower than drawn.
+        page.getByRole("tabpanel"),
+        page.getByRole("link", { name: new RegExp(ui.hud.nextVenue) }),
       ],
+      maskRects: [{ x: 36, y: 765, width: 802, height: 60 }],
     });
     expect(ratio).toBeLessThanOrEqual(0.02);
   });

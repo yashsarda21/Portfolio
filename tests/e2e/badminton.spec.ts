@@ -17,10 +17,10 @@ import {
 const badminton = ui.games.badminton;
 /** The groups in content order, with their shipped skills (content: Attributes). */
 const GROUPS = [
-  ["BACKEND", "Java, Spring Boot, JUnit"],
-  ["FRONTEND", "React, Redux"],
+  ["BACKEND", "Java, Spring Boot, Spring Security, REST APIs"],
+  ["FRONTEND", "React, Redux, JavaScript"],
   ["DATA", "Oracle, SQL"],
-  ["CRAFT", "DSA, OOP"],
+  ["AI & CRAFT", "AI coding agents, DSA, OOP"],
 ] as const;
 
 // The stage is heavy to draw and the host is often loaded: a game is many fake-clock steps.

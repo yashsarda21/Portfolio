@@ -114,6 +114,10 @@ function inspectFocus(): Stop | "body" {
   // or one around it such as a radio card) are not what they were before it had focus. A permanent outline is not a ring.
   const off = id === null ? undefined : win.__ringOff[id];
   const on = win.__ring(el);
+  // A video with native controls keeps `activeElement` on the video while Tab walks the browser's own buttons inside
+  // it (play, time, mute, full screen, more), and the browser draws their ring in its shadow tree, out of reach of
+  // computed style. The recording is the owner's, 2026-11-07: those stops are the browser's to judge.
+  if (el instanceof HTMLVideoElement && el.controls) return { label, id, problems };
   if (on === "-" || on.split("|").every((part) => part === "-")) problems.push("no focus ring");
   else if (off !== undefined && off === on) problems.push("the outline is the same without focus");
   return { label, id, problems };

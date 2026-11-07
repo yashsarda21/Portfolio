@@ -26,7 +26,7 @@ const NEXT = new RegExp(ui.pages.attributes.next);
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("the heading, all 16 skills, the 4 groups and the portrait are in the HTML", async ({
+  test("the heading, all 20 skills, the 4 groups and the portrait are in the HTML", async ({
     page,
   }) => {
     await page.goto(ROUTES.attributes);
@@ -36,7 +36,7 @@ test.describe("without JavaScript", () => {
     for (const group of groups) {
       await expect(page.getByRole("heading", { level: 2, name: group.name })).toBeVisible();
     }
-    expect(SKILLS).toHaveLength(16);
+    expect(SKILLS).toHaveLength(20);
     for (const name of SKILLS) await expect(page.getByText(name, { exact: true })).toBeAttached();
     await expect(page.getByRole("img", { name: content.player.name })).toBeVisible();
     await expect(page.getByRole("img", { name: content.player.name })).toHaveAttribute(
@@ -86,9 +86,15 @@ test.describe("desktop", () => {
       .evaluate((img: HTMLImageElement) => img.decode());
     const ratio = await expectMatchesArtboard(page, "Badminton-Attributes", {
       maxDiffRatio: 0.02,
-      // The COMM line animates in and out, so its box is not stable. No other mask: the real copy is
-      // the artboard's copy (the segment bars are fast-forwarded by the compare).
-      mask: [commentaryBar(page)],
+      // The COMM line animates in and out, so its box is not stable. The segment bars are fast-forwarded by the compare.
+      mask: [
+        commentaryBar(page),
+        // Owner content change, 2026-11-07: the new resume gives each group five skills and the fourth group is
+        // "AI & Craft", so the four skill panels, and the name, role and kit bag beside them, no longer match the artboard.
+        ...groups.map((g) => page.getByRole("region", { name: g.name })),
+        page.getByRole("heading", { level: 2, name: content.player.name }).locator(".."),
+        page.getByRole("region", { name: content.player.name }).locator("dl"),
+      ],
     });
     expect(ratio).toBeLessThanOrEqual(0.02);
   });

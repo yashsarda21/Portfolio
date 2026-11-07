@@ -24,6 +24,7 @@ const content = JSON.parse(
     serve: string;
     rally: string;
     winner: string;
+    links?: { code?: string };
   }[];
 };
 const highlights = content.matchHighlights;
@@ -79,7 +80,7 @@ test.describe("the draw", () => {
     await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
     await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "false");
     await expect(page.getByRole("tabpanel")).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 2, name: "KUDO BOARD" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: semi.name })).toBeVisible();
     await expect(page.getByText(semi.winner, { exact: true })).toBeVisible();
     await expect(page.getByText(final.winner, { exact: true })).toBeHidden();
     await expectCommentary(page, "Another project shipped.");
@@ -119,7 +120,7 @@ test.describe("links", () => {
     const code = page.getByRole("link", { name: new RegExp(ui.pages.highlights.code) });
     // One per project (the unselected panels are hidden), so only the visible one is exposed.
     await expect(code).toHaveCount(1);
-    await expect(code).toHaveAttribute("href", content.player.contact.github);
+    await expect(code).toHaveAttribute("href", final.links!.code!);
     // Links stay in the same tab, as drawn; only a document (the resume PDF) opens a new one.
     await expect(code).not.toHaveAttribute("target");
 
@@ -142,8 +143,10 @@ test.describe("desktop", () => {
       mask: [
         // The COMM line animates in and out, so its box is not stable.
         commentaryBar(page),
-        // P1 (plan, spec §11): the placeholder says "REPLAY COMING SOON", the artboard "ADD A 10s SCREEN RECORDING".
-        page.getByRole("tabpanel").locator("p").first(),
+        // Owner content change, 2026-11-07: TakeTray is the final, with a video in place of the placeholder and its own
+        // name, line, serve, rally and winner; the AI Interview is the semi-final; the shot data (type, quality, stack) is
+        // TakeTray's. The artboard draws the earlier projects.
+        page.getByRole("tab", { name: new RegExp(semi.name, "i") }),
         // Content wording: the final's kind line reads "Published research · PICT", the artboard "Published research".
         page
           .getByRole("tab", { name: new RegExp(final.name, "i") })
@@ -154,6 +157,10 @@ test.describe("desktop", () => {
         // P2 (plan, spec §11): the content has no demo or case-study links, so the real page draws only the
         // CODE ON GITHUB row (pinned to the bottom); the artboard draws three rows here.
         { x: 1120, y: 605, width: 268, height: 170 },
+        // The final's panel: the video, name, line, serve, rally and winner (the panel itself has no box to mask).
+        { x: 360, y: 237, width: 720, height: 536 },
+        // The shot data panel's type, quality and stack rows (owner content change, 2026-11-07).
+        { x: 1120, y: 285, width: 268, height: 220 },
       ],
     });
     expect(ratio).toBeLessThanOrEqual(0.02);

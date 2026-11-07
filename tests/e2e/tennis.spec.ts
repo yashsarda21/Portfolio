@@ -239,7 +239,7 @@ test.describe("what a return reveals and says", () => {
       "Highlight 03 unlocked",
     ]);
     expect(said[0]).toContain("POWER BI DASHBOARD");
-    expect(said[2]).toContain("AI INTERVIEW GROOMING PLATFORM");
+    expect(said[2]).toContain("TAKETRAY");
     // The last return also says how the game ended (m-4).
     expect(said[2]).toMatch(/\. Game yash\.$/);
     await expectUnlocked(page, 3);
@@ -714,7 +714,7 @@ test.describe("every courtside card stays on screen", () => {
     const cardBoxes = cards(page);
     await expect(cardBoxes).toHaveCount(3);
     const titles = await cardBoxes.evaluateAll((els) => els.map((el) => el.textContent ?? ""));
-    for (const name of ["POWER BI DASHBOARD", "KUDO BOARD", "AI INTERVIEW GROOMING PLATFORM"]) {
+    for (const name of ["POWER BI DASHBOARD", "AI INTERVIEW GROOMING PLATFORM", "TAKETRAY"]) {
       expect(
         titles.some((t) => t.includes(name)),
         name,

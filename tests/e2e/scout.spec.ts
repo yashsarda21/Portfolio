@@ -119,7 +119,11 @@ test.describe("desktop", () => {
     await check("hero", heroSection(page), [inside(regions.heroCtas!, regions.hero!)]);
     await check("careerHead", page.locator("#career > div:first-child"));
     await check("highlightsHead", page.locator("#highlights > div:first-child"));
-    await check("attributes", page.locator("#attributes"));
+    // Owner content change, 2026-11-07: the new resume's four skill groups (five skills each, "AI & Craft") replace the
+    // artboard's group names and chips, so everything under the section title is masked.
+    await check("attributes", page.locator("#attributes"), [
+      { x: 0, y: 100, width: 1200, height: 400 },
+    ]);
     await check("trophiesHead", page.locator("#trophies h2").nth(0).locator(".."));
     await check("academyHead", page.locator("#trophies h2").nth(1).locator(".."));
     // R4: the resume row labels differ from the artboard.

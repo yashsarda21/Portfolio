@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
-import { expectBoxesMatchArtboard } from "../support/visual";
+import { expectBoxesMatchArtboard, localRects } from "../support/visual";
 import {
   expectMainLandmarks,
   expectNextButtonOneLine,
@@ -85,7 +85,7 @@ test.describe("trophy cabinet", () => {
     await waitForHydration(page);
     const tabs = page.getByRole("tab");
     await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByRole("tabpanel")).toContainText("750+ Problems Solved");
+    await expect(page.getByRole("tabpanel")).toContainText("1250+ Problems Solved");
 
     await tabs.first().focus();
     await page.keyboard.press("ArrowRight");
@@ -202,7 +202,7 @@ test.describe("motion", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(ROUTES.trophies);
     await waitForHydration(page);
-    const selected = tab(page, /750\+ Problems Solved/i);
+    const selected = tab(page, /1250\+ Problems Solved/i);
     await expect(selected).toHaveAttribute("aria-selected", "true");
     const figure = selected.locator("[data-kind] > span").first();
     await expect(figure).toHaveCSS("animation-name", "none");
@@ -268,12 +268,29 @@ test.describe("desktop", () => {
     // sit where they are drawn are compared, each with its own 2%, in artboard pixels: the header and title,
     // shelf 1, the plinth panel and the academy card down to where the real card ends (its contents are
     // top-anchored, so they do not move). The artboard-copy story compares the whole board, shelf 2 included.
-    const ratios = await expectBoxesMatchArtboard(page, "Trophy-Room", {
-      "header and title": { x: 0, y: 0, width: 1440, height: 236 },
-      "shelf 1": { x: 36, y: 236, width: 872, height: 322 },
-      "plinth panel": { x: 930, y: 236, width: 474, height: 262 },
-      academy: { x: 930, y: 514, width: 474, height: 276 },
-    });
+    const ratios = await expectBoxesMatchArtboard(
+      page,
+      "Trophy-Room",
+      {
+        "header and title": { x: 0, y: 0, width: 1440, height: 236 },
+        "shelf 1": { x: 36, y: 236, width: 872, height: 322 },
+        "plinth panel": { x: 930, y: 236, width: 474, height: 262 },
+        academy: { x: 930, y: 514, width: 474, height: 276 },
+      },
+      {
+        masks: {
+          // Owner content change, 2026-11-07: the problems-solved count and text and the academy's extra drills come from the new resume.
+          "plinth panel": await localRects(
+            [
+              page.getByRole("tabpanel").getByRole("heading", { level: 2 }),
+              page.getByRole("tabpanel").locator("p"),
+            ],
+            { x: 930, y: 236 },
+          ),
+          academy: [{ x: 0, y: 198, width: 474, height: 78 }],
+        },
+      },
+    );
     expect(Object.keys(ratios)).toHaveLength(4);
   });
 
