@@ -30,6 +30,7 @@ export { AudioToggle } from "./broadcast/AudioToggle";
 export { SkipChip } from "./broadcast/SkipChip";
 export { PlayerTag } from "./broadcast/PlayerTag";
 export { HUD } from "./broadcast/HUD";
+export { BackButton } from "./broadcast/BackButton";
 export { CommentaryBar } from "./broadcast/CommentaryBar";
 export { ScoreBug } from "./broadcast/ScoreBug";
 export { TimingMeter } from "./broadcast/TimingMeter";

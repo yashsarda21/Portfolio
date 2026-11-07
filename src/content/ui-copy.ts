@@ -14,6 +14,8 @@ export const ui = {
     replay: "REPLAY",
     rematch: "REMATCH",
     nextVenue: "NEXT VENUE",
+    back: "BACK", // derived
+    backName: "Back", // derived
   },
   venues: { cricket: "CRICKET GROUND", tennis: "CENTRE COURT", badminton: "BADMINTON HALL" },
   tabs: {

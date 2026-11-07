@@ -101,7 +101,14 @@ test.describe("desktop", () => {
       }
     };
 
-    await check("header", page.locator("header"));
+    // BACK, owner 2026-11-07: the button is new and the brand and label beside it move right, so the left group is masked.
+    const header = page.locator("header");
+    const headerBox = (await header.boundingBox())!;
+    const backGroup = (await page
+      .getByRole("button", { name: ui.hud.backName })
+      .locator("..")
+      .boundingBox())!;
+    await check("header", header, [inside(backGroup, headerBox)]);
     // R4: the primary CTA label differs from the artboard.
     await check("hero", heroSection(page), [inside(regions.heroCtas!, regions.hero!)]);
     await check("careerHead", page.locator("#career > div:first-child"));

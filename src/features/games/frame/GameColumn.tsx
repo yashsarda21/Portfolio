@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { GameBackdrop, SkipChip } from "@/design-system";
 import { cn } from "@/lib/cn";
 import { ArenaLink } from "@/shell/ArenaLink";
+import { BackChip } from "@/shell/BackChip";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import type { GameChrome } from "./chrome";
 
@@ -53,7 +54,10 @@ export function GameColumn({
           data-part="top"
           className="absolute inset-x-3 top-3.5 z-10 flex items-center justify-between md:inset-x-5 md:top-5"
         >
-          {bug}
+          <div className="flex min-w-0 items-center gap-2">
+            <BackChip />
+            {bug}
+          </div>
           <div className="flex items-center gap-2">
             <QuickViewChip tone="glass-line" className="hidden short:inline-flex" />
             {/* The name is the full "SKIP TO …" (it holds the visible word, 2.5.3); the chip draws SKIP →. */}

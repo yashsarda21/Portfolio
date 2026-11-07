@@ -22,6 +22,8 @@ import { MEDIA } from "@/lib/breakpoints";
 import { cn } from "@/lib/cn";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { ArenaLink, TunnelLink } from "@/shell/ArenaLink";
+import { BackChip } from "@/shell/BackChip";
+import { ROUTES } from "@/shell/routes";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import { HubIndex } from "./HubIndex";
 import type { HubView } from "./view";
@@ -119,7 +121,10 @@ export function HubColumn({ view, ready }: { view: HubView; ready: boolean }) {
       <SkyGlow w="100%" h="30%" alpha={0.14} />
       <div className="relative mx-auto w-full max-w-160 px-4 pt-4 tabbar-clearance md:pb-10">
         <div className="flex items-center justify-between">
-          <BrandLockup mark={view.brand.mark} size="sm" />
+          <div className="flex items-center gap-2">
+            <BackChip fallback={ROUTES.home} />
+            <BrandLockup mark={view.brand.mark} size="sm" />
+          </div>
           <div className="flex items-center gap-2">
             <HUDButton
               tone="glass-line"

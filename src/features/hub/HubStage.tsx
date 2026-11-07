@@ -19,9 +19,11 @@ import { cn } from "@/lib/cn";
 import { MEDIA } from "@/lib/breakpoints";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { ArenaLink, TunnelLink } from "@/shell/ArenaLink";
+import { BackChip } from "@/shell/BackChip";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
 import { QuickViewChip } from "@/shell/QuickViewChip";
+import { ROUTES } from "@/shell/routes";
 import { HubIndex } from "./HubIndex";
 import { hubHint, type HubView } from "./view";
 
@@ -107,12 +109,15 @@ export function HubStage({ view, ready }: { view: HubView; ready: boolean }) {
       <HUD
         className="absolute inset-x-0 top-0 z-10"
         left={
-          <BrandLockup
-            as={ArenaLink}
-            to={view.brand.to}
-            mark={view.brand.mark}
-            label={view.brand.label}
-          />
+          <>
+            <BackChip fallback={ROUTES.home} className="mr-3" />
+            <BrandLockup
+              as={ArenaLink}
+              to={view.brand.to}
+              mark={view.brand.mark}
+              label={view.brand.label}
+            />
+          </>
         }
         center={
           <MonoLabel variant="mono-eyebrow" tone="primary">

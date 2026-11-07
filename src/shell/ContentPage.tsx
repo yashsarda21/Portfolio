@@ -13,6 +13,7 @@ import {
 } from "@/design-system";
 import { ArenaLink } from "./ArenaLink";
 import { ArenaTabBar } from "./ArenaTabBar";
+import { BackChip } from "./BackChip";
 import { CommentarySlot, useCommentary } from "./commentary";
 import { QuickViewChip } from "./QuickViewChip";
 import { ROUTES } from "./routes";
@@ -140,14 +141,17 @@ export function ContentPage({
             // The phone artboards draw a 44px bar (the 16px above comes from the layout).
             className="max-md:h-11"
             left={
-              <Breadcrumb
-                as={ArenaLink}
-                to={ROUTES.arena}
-                mark={ui.brand.mark}
-                hubLabel={ui.breadcrumb.hub}
-                label={ui.pages.breadcrumb}
-                trail={[...trail, heading]}
-              />
+              <>
+                <BackChip className="mr-3" />
+                <Breadcrumb
+                  as={ArenaLink}
+                  to={ROUTES.arena}
+                  mark={ui.brand.mark}
+                  hubLabel={ui.breadcrumb.hub}
+                  label={ui.pages.breadcrumb}
+                  trail={[...trail, heading]}
+                />
+              </>
             }
             right={
               <>
