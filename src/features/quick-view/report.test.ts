@@ -4,10 +4,7 @@ import { ROUTES } from "@/shell/routes";
 import { buildScoutReport } from "./report";
 
 const build = (c: Content = content) => buildScoutReport(c, ui, ROUTES);
-const withPdf = (): Content => ({
-  ...content,
-  player: { ...content.player, resumePdf: "/yash-sarda-public.pdf" },
-});
+const noPdf = (): Content => ({ ...content, player: { ...content.player, resumePdf: null } });
 
 function collectHrefs(value: unknown, out: string[] = []): string[] {
   if (Array.isArray(value)) value.forEach((v) => collectHrefs(v, out));
@@ -94,7 +91,7 @@ describe("buildScoutReport", () => {
   });
 
   it("team up links (no resume file)", () => {
-    const { teamUp } = build();
+    const { teamUp } = build(noPdf());
     expect(teamUp.links.map((l) => l.label)).toEqual([
       "yashsarda2002@gmail.com",
       "LinkedIn · yash-sarda2107",
@@ -104,7 +101,7 @@ describe("buildScoutReport", () => {
   });
 
   it("resume null: request by email, no .pdf anywhere", () => {
-    const report = build();
+    const report = build(noPdf());
     expect(report.hero.primary.label).toBe("REQUEST RESUME");
     expect(report.hero.primary.href.startsWith("mailto:")).toBe(true);
     const hrefs = collectHrefs(report);
@@ -112,11 +109,11 @@ describe("buildScoutReport", () => {
     expect(hrefs.some((h) => h.endsWith(".pdf"))).toBe(false);
   });
 
-  it("resume set: view in a new tab and download row", () => {
-    const report = build(withPdf());
+  it("published resume: view in a new tab and download row", () => {
+    const report = build();
     expect(report.hero.primary).toMatchObject({
       label: "VIEW PLAYER CARD (PDF)",
-      href: "/yash-sarda-public.pdf",
+      href: "/Yash_Sarda_Resume_SDE1.pdf",
       newTab: true,
     });
     expect(report.hero.newTabHint).toBe(ui.a11y.newTab);
@@ -129,9 +126,9 @@ describe("buildScoutReport", () => {
   });
 
   it("links with no trailing mark have no glyph key at all", () => {
-    const { hero } = build();
+    const { hero } = build(noPdf());
     expect("glyph" in hero.primary).toBe(false);
-    expect(build(withPdf()).hero.primary).not.toHaveProperty("glyph");
+    expect(build().hero.primary).not.toHaveProperty("glyph");
   });
 
   it("career compact titles read the short role from the row, not by index", () => {

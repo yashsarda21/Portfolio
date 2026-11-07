@@ -18,6 +18,7 @@ const content = JSON.parse(
 ) as {
   player: {
     name: string;
+    resumePdf: string | null;
     cardStats: { label: string; value: string }[];
     contact: { email: string };
   };
@@ -39,7 +40,7 @@ const backLinks = (page: Page) => back(page).locator("ul a");
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("the title, the card, the stats and the resume request are in the HTML; no PDF is linked", async ({
+  test("the title, the card, the stats and the resume view and download links are in the HTML", async ({
     page,
   }) => {
     await page.goto(ROUTES.card);
@@ -48,9 +49,13 @@ test.describe("without JavaScript", () => {
     expect(content.player.cardStats).toHaveLength(6);
     for (const { label } of content.player.cardStats)
       await expect(front(page).getByText(label, { exact: true })).toBeAttached();
-    const request = page.getByRole("link", { name: new RegExp(t.request.title) });
-    await expect(request).toHaveAttribute("href", /^mailto:/);
-    await expect(page.locator("a[href*='.pdf' i]")).toHaveCount(0);
+    const view = page.getByRole("link", { name: new RegExp(t.view.title) });
+    await expect(view).toHaveAttribute("href", content.player.resumePdf!);
+    await expect(view).toHaveAttribute("target", "_blank");
+    const download = page.getByRole("link", { name: new RegExp(t.download.title) });
+    await expect(download).toHaveAttribute("href", content.player.resumePdf!);
+    await expect(download).toHaveAttribute("download", ui.scout.resume.fileName);
+    await expect(page.getByRole("link", { name: new RegExp(t.request.title) })).toHaveCount(0);
     // The way on and the back's index are plain links too.
     await expect(nextLink(page)).toHaveAttribute("href", ROUTES.teamUp);
     await expect(backLinks(page)).toHaveCount(5);
@@ -74,17 +79,18 @@ test.describe("page", () => {
     ).toHaveText(ui.routes.card.heading);
   });
 
-  test("while there is no public PDF the volt row is the email request, and the copy row follows", async ({
+  test("with the public PDF the volt row views it in a new tab, the download row follows, then the copy row", async ({
     page,
   }) => {
     await page.goto(ROUTES.card);
     const section = page.getByRole("region", { name: t.take });
     const rows = section.getByRole("link");
-    await expect(rows).toHaveCount(1);
-    await expect(rows.first()).toContainText(t.request.title);
-    await expect(rows.first()).not.toHaveAttribute("target");
+    await expect(rows).toHaveCount(2);
+    await expect(rows.first()).toContainText(t.view.title);
+    await expect(rows.first()).toHaveAttribute("target", "_blank");
+    await expect(rows.nth(1)).toContainText(t.download.title);
+    await expect(rows.nth(1)).toHaveAttribute("download", ui.scout.resume.fileName);
     await expect(section.getByRole("button", { name: new RegExp(t.copy.title) })).toBeVisible();
-    await expect(page.getByText(t.download.title)).toHaveCount(0);
   });
 
   test("the season shows the year, the visitor's own once the page has loaded", async ({
@@ -266,8 +272,7 @@ test.describe("desktop", () => {
         // COMM: the line animates in and out (4s on air), so its box is not stable. A fixed area, not the
         // element: it may already be gone when the compare looks for it.
         { x: 24, y: 812, width: 392, height: 60 },
-        // C1: with no public PDF the real page shows the email request and the copy row only, so the actions
-        // column differs from the artboard's three rows, and its note below the rows rises to meet them.
+        // C1: the actions column (view, download, copy) and the note below it differ in copy from the artboard.
         { x: 984, y: 262, width: 420, height: 404 },
         // SEASON {year}: the card shows the visitor's year, the artboard 2026. Only masked once they differ.
         ...(new Date().getFullYear() === ARTBOARD_YEAR

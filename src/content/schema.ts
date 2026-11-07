@@ -18,7 +18,9 @@ const AssetPath = z
   .string()
   .regex(/^(https:\/\/|\/(?![/\\]))/, "Must start with https:// or a single / (not // or /\\)");
 
-const PRIVATE_RESUME_NAME = "yash-sarda-resume.pdf"; // the original PDF contains a phone number
+// The old private resume file name. The owner chose to publish the new resume, phone number included (2026-11-07),
+// so this only guards against linking that old file by mistake.
+const PRIVATE_RESUME_NAME = "yash-sarda-resume.pdf";
 const Lines = z.array(z.string().min(1)).min(1);
 
 const isUnique = (values: readonly string[]) => new Set(values).size === values.length;
@@ -58,7 +60,8 @@ export const ContentSchema = z.strictObject({
       codeforces: Url,
       codechef: Url,
     }),
-    // Only a public file under /public may be linked (the original PDF contains a phone number).
+    // The owner chose to publish the resume with his phone number on it (2026-11-07). The file lives in /public;
+    // the check below now only guards against the old private file name.
     resumePdf: z
       .string()
       .regex(/^\/[\w./-]+\.pdf$/, "Must be a public path like /Yash-Sarda-Resume-public.pdf")

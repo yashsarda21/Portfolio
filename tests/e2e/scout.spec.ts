@@ -1,7 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ui } from "../../src/content/ui-copy";
 import { ROUTES } from "../../src/shell/routes";
 import { expectRegionMatchesArtboard, readRegions, type Rect } from "../support/visual";
+
+// The e2e runner loads plain TS (no JSON imports), so read the resume content from disk.
+const content = JSON.parse(
+  readFileSync(join(process.cwd(), "src/content/content.json"), "utf8"),
+) as { player: { resumePdf: string | null } };
 
 const REFERENCE = { width: 1440, height: 3300 } as const;
 const ARTBOARD = "QuickView";
@@ -45,7 +52,7 @@ test.describe("without JavaScript", () => {
     }
   });
 
-  test("section links are anchors, and the resume is a mailto request", async ({ page }) => {
+  test("section links are anchors, and the resume is the published PDF", async ({ page }) => {
     await page.goto(ROUTES.scout);
     if ((page.viewportSize()?.width ?? 0) >= 768) {
       const nav = page.getByRole("navigation", { name: ui.scout.sectionsNav });
@@ -62,10 +69,9 @@ test.describe("without JavaScript", () => {
         );
       }
     }
-    await expect(page.locator('a[href$=".pdf"]')).toHaveCount(0);
-    await expect(
-      page.locator("#teamup").getByRole("link", { name: ui.scout.resume.rowRequest }),
-    ).toHaveAttribute("href", /^mailto:/);
+    const row = page.locator("#teamup").getByRole("link", { name: ui.scout.resume.row });
+    await expect(row).toHaveAttribute("href", content.player.resumePdf!);
+    await expect(row).toHaveAttribute("download", ui.scout.resume.fileName);
   });
 });
 

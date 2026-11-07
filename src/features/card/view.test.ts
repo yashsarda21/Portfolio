@@ -9,8 +9,8 @@ const OPTS = {
   buildYear: 2026,
 };
 const build = (c: Content = content, opts = OPTS) => buildCardView(c, ui, ROUTES, opts);
-const withResume = (): Content =>
-  ({ ...content, player: { ...content.player, resumePdf: "/files/resume.pdf" } }) as Content;
+const noResume = (): Content =>
+  ({ ...content, player: { ...content.player, resumePdf: null } }) as Content;
 
 describe("buildCardView", () => {
   it("title, bio and the profile rows: home ground, pro debut (long month), club, academy (accent)", () => {
@@ -98,7 +98,7 @@ describe("buildCardView", () => {
 
   describe("take away", () => {
     it("with no public PDF there is exactly one action: a mailto request, and no .pdf anywhere", () => {
-      const { take } = build();
+      const { take } = build(noResume());
       expect(take.actions).toHaveLength(1);
       const [request] = take.actions;
       expect(request).toMatchObject({ kind: "request", title: "REQUEST RESUME" });
@@ -109,18 +109,18 @@ describe("buildCardView", () => {
     });
 
     it("with a PDF: view opens a new tab, download carries the file name", () => {
-      const { take } = build(withResume());
+      const { take } = build();
       expect(take.actions.map((a) => a.kind)).toEqual(["pdf-view", "pdf-download"]);
       const [view, download] = take.actions;
       expect(view).toMatchObject({
         title: "VIEW PLAYER CARD",
-        href: "/files/resume.pdf",
+        href: "/Yash_Sarda_Resume_SDE1.pdf",
         newTab: true,
       });
       expect(view!.download).toBeUndefined();
       expect(download).toMatchObject({
         title: "DOWNLOAD PDF",
-        href: "/files/resume.pdf",
+        href: "/Yash_Sarda_Resume_SDE1.pdf",
         download: ui.scout.resume.fileName,
       });
       expect(download!.newTab).toBeUndefined();

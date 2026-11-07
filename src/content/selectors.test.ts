@@ -81,21 +81,15 @@ describe("selectors", () => {
     expect(trophies.every((t) => !("locked" in t))).toBe(true);
   });
 
-  it("resume falls back to a request email while no public PDF exists", () => {
-    const action = getResumeAction(c);
-    expect(action.kind).toBe("request");
-    expect(action.href).toMatch(/^mailto:yashsarda2002@gmail\.com\?subject=/);
+  it("resume links the published PDF", () => {
+    expect(getResumeAction(c)).toEqual({ kind: "pdf", href: "/Yash_Sarda_Resume_SDE1.pdf" });
   });
 
-  it("resume links the public PDF once one is set", () => {
-    const withPdf = parseContent({
-      ...raw,
-      player: { ...raw.player, resumePdf: "/Yash-Sarda-Resume-public.pdf" },
-    });
-    expect(getResumeAction(withPdf)).toEqual({
-      kind: "pdf",
-      href: "/Yash-Sarda-Resume-public.pdf",
-    });
+  it("resume falls back to a request email when no PDF is set", () => {
+    const noPdf = parseContent({ ...raw, player: { ...raw.player, resumePdf: null } });
+    const action = getResumeAction(noPdf);
+    expect(action.kind).toBe("request");
+    expect(action.href).toMatch(/^mailto:yashsarda2002@gmail\.com\?subject=/);
   });
 
   it("first name is the first word of the player name", () => {

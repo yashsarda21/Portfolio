@@ -130,9 +130,9 @@ describe("content schema", () => {
       expect(() => parseContent(broken)).toThrow(/player\.resumePdf/);
     });
 
-    it("still accepts the public resume file name", () => {
+    it("accepts the published resume file name", () => {
       const ok = clone();
-      ok.player.resumePdf = "/Yash-Sarda-Resume-public.pdf";
+      ok.player.resumePdf = "/Yash_Sarda_Resume_SDE1.pdf";
       expect(() => parseContent(ok)).not.toThrow();
     });
 
