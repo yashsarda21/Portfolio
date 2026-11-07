@@ -1,5 +1,6 @@
 import { BrandLockup, FluidContainer, HUDButton, MonoLabel, Text } from "@/design-system";
 import { ArenaLink } from "@/shell/ArenaLink";
+import { BackChip } from "@/shell/BackChip";
 import type { ScoutReport } from "./report";
 
 export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
@@ -8,6 +9,7 @@ export function ScoutHeader({ header }: { header: ScoutReport["header"] }) {
     <header className="sticky top-0 z-20 border-b border-line bar max-md:-mb-px max-md:bg-ground-a92 md:backdrop-blur-glass">
       <FluidContainer className="flex min-h-17 flex-wrap items-center justify-between gap-5 max-md:h-15 max-md:min-h-0">
         <div className="flex items-center gap-3">
+          <BackChip />
           <BrandLockup size="md" mark={header.mark} className="max-md:hidden" />
           <MonoLabel variant="mono-kicker" leading="font">
             {header.label}

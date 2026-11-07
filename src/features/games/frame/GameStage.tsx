@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AudioToggle, Breadcrumb, GameBackdrop, HUD, SkipChip, Stage } from "@/design-system";
 import { cn } from "@/lib/cn";
 import { ArenaLink } from "@/shell/ArenaLink";
+import { BackChip } from "@/shell/BackChip";
 import { useAudio } from "@/shell/audio";
 import { CommentarySlot } from "@/shell/commentary";
 import { QuickViewChip } from "@/shell/QuickViewChip";
@@ -52,7 +53,12 @@ export function GameStage({
         // The boards space the three groups out (justify-content: space-between), so the score bug sits where the
         // breadcrumb's and the controls' widths put it, not on the centre line.
         className="absolute inset-x-0 top-0 z-10 flex justify-between"
-        left={<Breadcrumb as={ArenaLink} {...chrome.breadcrumb} />}
+        left={
+          <>
+            <BackChip className="mr-3" />
+            <Breadcrumb as={ArenaLink} {...chrome.breadcrumb} />
+          </>
+        }
         center={bug}
         right={
           <>

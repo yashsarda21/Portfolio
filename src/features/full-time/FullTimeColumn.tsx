@@ -10,6 +10,7 @@ import {
   Text,
 } from "@/design-system";
 import { ArenaLink, TunnelLink } from "@/shell/ArenaLink";
+import { BackChip } from "@/shell/BackChip";
 import { QuickViewChip } from "@/shell/QuickViewChip";
 import type { FullTimeView } from "./view";
 
@@ -28,7 +29,10 @@ export function FullTimeColumn({ view, ready }: { view: FullTimeView; ready: boo
       data-full-time-column=""
       top={
         <>
-          <BrandLockup mark={view.brand.mark} size="sm" />
+          <div className="flex items-center gap-2">
+            <BackChip />
+            <BrandLockup mark={view.brand.mark} size="sm" />
+          </div>
           <QuickViewChip tone="glass-line" />
         </>
       }
