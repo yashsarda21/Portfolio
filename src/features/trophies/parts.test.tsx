@@ -210,7 +210,7 @@ describe("TrophiesPage", () => {
     expect(within(academy).getByRole("heading", { level: 2 })).toBeInTheDocument();
     expect(within(academy).getByText("Pune Institute of Computer Technology")).toBeVisible();
     const list = within(academy).getByRole("list", { name: ui.pages.trophies.academy.extras });
-    expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
     expect(container.querySelector("[data-zone='trophy']")).not.toBeNull();
   });
 

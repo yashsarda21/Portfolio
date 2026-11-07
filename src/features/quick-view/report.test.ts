@@ -44,7 +44,7 @@ describe("buildScoutReport", () => {
       stackLine: content.careerStats[0]!.stack.join(" · "),
       bullets: content.careerStats[0]!.ballByBall,
       compactTitle: "Deutsche Bank",
-      compactLine: "Software Engineer 1 · bulk upload cut manual entry 60%",
+      compactLine: "Software Engineer 1 · submissions 98% faster: minutes to under 2 s",
     });
     expect(intern!.compactTitle).toBe("Deutsche Bank · Intern");
     expect(intern!.compactLine).toBeUndefined();

@@ -91,6 +91,7 @@ describe("buildCareerView", () => {
         "CGPA 8.94",
         "Published paper: AI-Enhanced Interview Grooming Platform",
         "MHT-CET 99.5 percentile, State Merit Rank 709",
+        "PCSB (PICT CSI Student Branch) member: organised college technical events",
       ],
       footer: { kind: "link", label: "SEE IT IN THE TROPHY ROOM", to: "/trophies#academy" },
     });
