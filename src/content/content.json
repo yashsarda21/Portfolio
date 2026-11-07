@@ -106,6 +106,34 @@
   "matchHighlights": [
     {
       "round": "THE FINAL",
+      "name": "TakeTray",
+      "shortName": "TakeTray",
+      "scoutTag": "Flutter · Android",
+      "scoutShort": "Offline-first app that sorts raw clips into reels",
+      "kind": "Personal project · Android app",
+      "line": "An Android app that turns a messy gallery of raw clips into planned short-form reels.",
+      "serve": "Short-form creators shoot dozens of raw clips and lose track of which clip belongs to which reel.",
+      "rally": "A Flutter app that groups clips into scenes by recording time and day, with one-tap reel tagging and undoable actions in a full-screen player. Offline-first: Riverpod for state, Drift (SQLite) for on-device storage.",
+      "winner": "Works fully offline, with unit, widget, golden and end-to-end tests running in CI on every commit.",
+      "stack": ["Flutter", "Dart", "Riverpod", "Drift · SQLite", "GitHub Actions"],
+      "media": null,
+      "facts": [
+        {
+          "k": "TYPE",
+          "v": "Personal project · Android"
+        },
+        {
+          "k": "QUALITY",
+          "v": "4 test layers + CI on every commit"
+        }
+      ],
+      "scoutLine": "An offline-first Flutter app for short-form creators: clips grouped into scenes by recording time, one-tap reel tagging, Riverpod and Drift (SQLite), tested at four levels with CI on every commit.",
+      "links": {
+        "code": "https://github.com/yashsarda21/taketray"
+      }
+    },
+    {
+      "round": "SEMI-FINAL",
       "name": "AI Interview Grooming Platform",
       "shortName": "AI Interview Platform",
       "scoutTag": "Published research",
@@ -128,31 +156,6 @@
         }
       ],
       "scoutLine": "A conversational AI interviewer: Google Gemini generates questions, asks follow-ups based on your answers, evaluates them and scores you at the end. Published in a journal."
-    },
-    {
-      "round": "SEMI-FINAL",
-      "name": "Kudo Board",
-      "shortName": "Kudo Board",
-      "scoutTag": "Deutsche Bank",
-      "scoutShort": "Recognition platform for 10,000+ employees",
-      "kind": "Deutsche Bank · built from scratch",
-      "line": "A recognition platform celebrating individual and team wins for 10,000+ employees.",
-      "serve": "Recognition across a 10,000+ person organisation was scattered and generic.",
-      "rally": "Built from the ground up with 4+ interaction types — messages, GIFs, short videos and gesture-based responses.",
-      "winner": "Personalised delivery to the right person or team, across 10,000+ employees.",
-      "stack": ["React", "Spring Boot", "Oracle"],
-      "media": null,
-      "facts": [
-        {
-          "k": "TYPE",
-          "v": "Internship project · Deutsche Bank"
-        },
-        {
-          "k": "REACH",
-          "v": "10,000+ employees"
-        }
-      ],
-      "scoutLine": "A recognition platform built from the ground up for 10,000+ employees, with messages, GIFs, short videos and gesture-based responses."
     },
     {
       "round": "QUARTER-FINAL",

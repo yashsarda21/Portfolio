@@ -118,8 +118,8 @@ describe("buildTennisView", () => {
         eyebrow: "HIGHLIGHT 02 · SF",
         tag: "RALLY 2",
         media: "[SCREEN RECORDING]",
-        title: "KUDO BOARD",
-        line: "A recognition platform celebrating individual and team wins for 10,000+ employees.",
+        title: "AI INTERVIEW GROOMING PLATFORM",
+        line: "A conversational AI interviewer that asks real follow-ups and scores you at the end.",
         moved: false,
       },
     ]);
@@ -132,8 +132,8 @@ describe("buildTennisView", () => {
     expect(v.progress.bars).toEqual(["done", "done", "current"]);
     expect(v.latest).toEqual({
       eyebrow: "HIGHLIGHT 02 · SF UNLOCKED",
-      title: "KUDO BOARD",
-      meta: "A recognition platform celebrating individual and team wins for 10,000+ employees.",
+      title: "AI INTERVIEW GROOMING PLATFORM",
+      meta: "A conversational AI interviewer that asks real follow-ups and scores you at the end.",
     });
     expect(v.comm).toBe(ui.games.tennis.comm.shipped);
   });
@@ -228,7 +228,7 @@ describe("buildTennisView", () => {
       ["right", "HIGHLIGHT 02 · SF", "RALLY 2"],
       ["left", "HIGHLIGHT 03 · F", "RALLY 3"],
     ]);
-    expect(v.cards[2]!.title).toBe("AI INTERVIEW GROOMING PLATFORM");
+    expect(v.cards[2]!.title).toBe("TAKETRAY");
     // The third card takes the drawn place on the left; the first moves up out of its way. The right one stays.
     expect(v.cards.map((c) => c.moved)).toEqual([true, false, false]);
   });

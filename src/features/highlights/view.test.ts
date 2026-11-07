@@ -32,10 +32,10 @@ describe("buildHighlightsView", () => {
     const { items, defaultId } = build();
     expect(items.map((i) => i.id)).toEqual([
       "power-bi-dashboard",
-      "kudo-board",
       "ai-interview-grooming-platform",
+      "taketray",
     ]);
-    expect(defaultId).toBe("ai-interview-grooming-platform");
+    expect(defaultId).toBe("taketray");
   });
 
   it("carries the labels and the unlocked count", () => {
@@ -62,12 +62,12 @@ describe("buildHighlightsView", () => {
     });
   });
 
-  it("links: one CODE ON GITHUB link to the GitHub profile when the content has no links", () => {
-    for (const item of build().items) {
+  it("links: one CODE ON GITHUB link, to the project repo when the content has one, else the GitHub profile", () => {
+    for (const [i, item] of build().items.entries()) {
       expect(item.links).toEqual([
         {
           label: "CODE ON GITHUB",
-          href: content.player.contact.github,
+          href: final!.links?.code && i === 2 ? final!.links.code : content.player.contact.github,
           tone: "outline",
           glyph: "↗",
         },
@@ -97,7 +97,7 @@ describe("buildHighlightsView", () => {
   it("media: a placeholder labelled with the name and 'replay coming soon', no video", () => {
     const { media } = build().items[2]!;
     expect(media).toEqual({
-      label: "AI Interview Grooming Platform · REPLAY COMING SOON",
+      label: "TakeTray · REPLAY COMING SOON",
       badge: "REPLAY",
       round: "THE FINAL",
       video: null,
@@ -128,7 +128,7 @@ describe("buildHighlightsView", () => {
       ),
     };
     const { media } = build(withVideo).items[2]!;
-    expect(media.label).toBe("AI Interview Grooming Platform · REPLAY");
+    expect(media.label).toBe("TakeTray · REPLAY");
     expect(media.label).not.toMatch(/coming soon/i);
     // The placeholder keeps its own label for the projects with no recording yet.
     expect(build(withVideo).items[0]!.media.label).toMatch(/REPLAY COMING SOON$/);
@@ -168,6 +168,6 @@ describe("buildHighlightsView", () => {
     const view = build(extra);
     expect(view.items).toHaveLength(4);
     expect(view.unlocked).toBe("4 OF 4 UNLOCKED");
-    expect(view.defaultId).toBe("ai-interview-grooming-platform");
+    expect(view.defaultId).toBe("taketray");
   });
 });
