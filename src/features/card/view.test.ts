@@ -40,7 +40,7 @@ describe("buildCardView", () => {
       const { stats } = build().front;
       expect(stats).toHaveLength(6);
       expect(stats.map((s) => s.accent)).toEqual([true, true, true, false, false, false]);
-      expect(stats[0]).toEqual({ label: "PROBLEMS", value: "750+", accent: true });
+      expect(stats[0]).toEqual({ label: "PROBLEMS", value: "1250+", accent: true });
     });
 
     it("the build year is the one passed in", () => {

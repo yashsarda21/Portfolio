@@ -40,7 +40,7 @@ describe("Cabinet", () => {
 
   it("names each tab by its title and shelf line; the art is hidden from assistive tech", () => {
     renderWith(<Harness />);
-    expect(screen.getByRole("tab", { name: /750\+ Problems Solved/i })).toHaveAccessibleName(
+    expect(screen.getByRole("tab", { name: /1250\+ Problems Solved/i })).toHaveAccessibleName(
       /LeetCode · Codeforces · CodeChef/i,
     );
     expect(screen.getByRole("tab", { name: /99\.5 Percentile/i })).toHaveAccessibleName(
@@ -171,7 +171,7 @@ describe("PlinthDetail", () => {
     expect(within(panel).getByText(ui.pages.trophies.plinth)).toBeVisible();
     expect(within(panel).getByText("1 / 5")).toBeVisible();
     expect(within(panel).getByRole("heading", { level: 2 })).toHaveTextContent(
-      "750+ Problems Solved",
+      "1250+ Problems Solved",
     );
     expect(within(panel).getByText(content.trophyRoom[0]!.description)).toBeVisible();
   });

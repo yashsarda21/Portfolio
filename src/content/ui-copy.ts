@@ -279,7 +279,7 @@ export const ui = {
     trophies: {
       title: "Trophy Room — Yash Sarda",
       description:
-        "Achievements and education: 750+ problems solved, 99.5 percentile, published research.",
+        "Achievements and education: 1250+ problems solved, 99.5 percentile, published research.",
       heading: "TROPHY ROOM",
     },
     card: {

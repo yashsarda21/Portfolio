@@ -43,7 +43,7 @@ describe("buildTeamUpView", () => {
 
   it("fills the coding line with the problems solved from the card stats", () => {
     const coding = view.channels.find((ch) => ch.id === "coding")!;
-    expect(coding.sub).toBe("LeetCode · Codeforces · CodeChef — 750+ solved");
+    expect(coding.sub).toBe("LeetCode · Codeforces · CodeChef — 1250+ solved");
     expect(coding.sub).not.toContain("{");
   });
 

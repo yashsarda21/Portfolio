@@ -28,7 +28,7 @@ describe("buildScoutReport", () => {
       { label: "Pune, India" },
       { label: "Software Engineer 1 · SINCE JUL 2024", short: "SE1 · SINCE JUL 2024" },
       { label: "B.Tech IT · PICT · CGPA 8.94", desktopOnly: true },
-      { label: "750+ PROBLEMS SOLVED", short: "750+ SOLVED", highlight: true },
+      { label: "1250+ PROBLEMS SOLVED", short: "1250+ SOLVED", highlight: true },
     ]);
   });
 
@@ -82,7 +82,7 @@ describe("buildScoutReport", () => {
     const { trophies } = build();
     expect(trophies.rows).toHaveLength(5);
     expect(trophies.rows[0]).toEqual({
-      title: "750+ Problems Solved",
+      title: "1250+ Problems Solved",
       sub: "LeetCode · Codeforces · CodeChef",
     });
   });

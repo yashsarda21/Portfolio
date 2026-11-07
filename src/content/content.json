@@ -36,7 +36,7 @@
       {
         "id": "problems",
         "label": "PROBLEMS",
-        "value": "750+"
+        "value": "1250+"
       },
       {
         "id": "cgpa",
@@ -207,7 +207,7 @@
           ["Redux", "shipped"],
           ["JavaScript", "shipped"],
           ["HTML / CSS", "built"],
-          ["Flutter", "built", "TakeTray"]
+          ["Flutter", "built", "Android app"]
         ]
       },
       {
@@ -219,7 +219,7 @@
           ["SQL", "shipped"],
           ["MySQL", "kit"],
           ["MongoDB", "kit"],
-          ["SQLite · Drift", "built", "TakeTray"]
+          ["SQLite · Drift", "built", "offline storage"]
         ]
       },
       {
@@ -253,7 +253,7 @@
   "trophyRoom": [
     {
       "type": "cup",
-      "title": "750+ Problems Solved",
+      "title": "1250+ Problems Solved",
       "sub": "LeetCode · Codeforces · CodeChef",
       "description": "Competitive programming across three platforms — the daily practice behind fast, clean problem-solving on the job.",
       "links": [

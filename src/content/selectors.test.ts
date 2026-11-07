@@ -154,7 +154,10 @@ describe("selectors", () => {
           ),
         },
       };
-      expect(getCardStat(relabelled, "problems")).toMatchObject({ label: "SOLVED", value: "750+" });
+      expect(getCardStat(relabelled, "problems")).toMatchObject({
+        label: "SOLVED",
+        value: "1250+",
+      });
     });
 
     it("throws when the id is missing", () => {
