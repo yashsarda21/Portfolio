@@ -23,3 +23,5 @@ test-results/
 design/references/
 # Never commit the resume PDF (contains a phone number)
 design/handoff/assets/*.pdf
+# Owner resume dropped at the root (contains a phone number): never commit
+/*.pdf
