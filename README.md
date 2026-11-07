@@ -3,6 +3,7 @@
 **A portfolio you play.** Walk into the arena, play three short games against me, and find out who I am while you do.
 
 <!-- The film, uploaded through GitHub so it plays right here, with sound. -->
+
 https://github.com/user-attachments/assets/5bfabce9-cf22-4203-b3cb-125e4fe31593
 
 ## Why an arena?
@@ -11,11 +12,11 @@ I have been a sports person since I was a kid. I played a lot of cricket, tennis
 
 So when it was time to build my portfolio, a plain page with a list of projects felt wrong. I wanted it to feel like the places I grew up in: the floodlights coming on, the crowd, the scoreboard. So I built it as an arena, and each sport tells one part of my story.
 
-| The game | What it shows about me |
-| --- | --- |
-| **Cricket**: you bowl, three balls | My career, one innings per ball: college, my internship and my work as a software engineer |
-| **Tennis**: you return my serve | My projects, one for each point I win |
-| **Badminton**: you rally against me | My skills, charged up one rally at a time: backend, frontend, data, and AI & craft |
+| The game                            | What it shows about me                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Cricket**: you bowl, three balls  | My career, one innings per ball: college, my internship and my work as a software engineer |
+| **Tennis**: you return my serve     | My projects, one for each point I win                                                      |
+| **Badminton**: you rally against me | My skills, charged up one rally at a time: backend, frontend, data, and AI & craft         |
 
 After all three, a scoreboard says **You 0, Yash 3**, with a "good try". It is my portfolio, so I always win.
 
@@ -42,7 +43,7 @@ React, React Router, TypeScript, Tailwind CSS and Three.js (through React Three 
 
 ## Credits
 
-- **The film's music:** *Happy Beats, Business Moves Vol. 12* by Sascha Ende ([ende.app](https://ende.app)), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **The film's music:** _Happy Beats, Business Moves Vol. 12_ by Sascha Ende ([ende.app](https://ende.app)), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - **The 3D players and their moves:** Universal Base Characters and Universal Animation Library by [Quaternius](https://quaternius.itch.io/), CC0.
 - **The crowd, bat, ball and shuttle sounds:** free recordings from [Freesound](https://freesound.org), CC0. Each one is listed in [`public/audio/CREDITS.md`](public/audio/CREDITS.md).
 
