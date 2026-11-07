@@ -88,6 +88,18 @@ export async function stepUntil(
 export const spotlight = (page: Page) => page.locator("[data-game] [data-kind]:visible");
 
 /**
+ * What the centre shows right now: "unlock", "yours" or "none". Read at once, without waiting: the visitor's words pop in
+ * from nothing, so for their first frame Playwright's `:visible` calls the panel hidden; a panel with layout is on screen.
+ */
+export const spotlightKind = (page: Page) =>
+  page
+    .locator("[data-game] [data-kind]")
+    .evaluateAll(
+      (els) =>
+        els.find((el) => el.getClientRects().length > 0)?.getAttribute("data-kind") ?? "none",
+    );
+
+/**
  * Phase 9: Yash's point puts the work it unlocked in the centre (the title is the panel's second line); `wait(ms)`
  * moves the game on, and by SPOTLIGHT_MS + 500 the panel is gone and the card for that title stands at the side (the
  * phone's chip). Returns the title.

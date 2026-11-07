@@ -9,6 +9,7 @@ import {
   freezeClock,
   pauseClock,
   spotlight,
+  spotlightKind,
 } from "./support/game";
 import { jump, open3d, pickOpen, pickSide, untilPhase } from "./support/three";
 
@@ -142,10 +143,9 @@ test("perfect play: two points to you, then Yash's three unlocks and the game; 4
     if (phase === "end") break;
     const calling = phase === "called" || phase === "verdict";
     if (calling && was !== "called" && was !== "verdict") {
-      const panel = spotlight(page);
-      shown.push((await panel.count()) === 0 ? "none" : (await panel.getAttribute("data-kind"))!);
+      shown.push(await spotlightKind(page));
       if (shown.at(-1) === "yours")
-        expect([WELL_PLAYED, GOOD_POINT]).toContain(await panel.innerText());
+        expect([WELL_PLAYED, GOOD_POINT]).toContain(await spotlight(page).innerText());
     }
     was = phase;
     if (phase === "window") await pickSide(page, "left");

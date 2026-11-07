@@ -9,6 +9,7 @@ import {
   freezeClock,
   pauseClock,
   spotlight,
+  spotlightKind,
 } from "./support/game";
 import { jump, open3d, pickDir, pickOpenDir, untilPhase } from "./support/three";
 
@@ -105,8 +106,7 @@ async function playToEnd(page: Page, picks: boolean) {
     if (phase === "end") break;
     const calling = phase === "called" || phase === "verdict";
     if (calling && was !== "called" && was !== "verdict") {
-      const panel = spotlight(page);
-      calls.push((await panel.count()) === 0 ? "none" : (await panel.getAttribute("data-kind"))!);
+      calls.push(await spotlightKind(page));
     }
     was = phase;
     if (picks && phase === "window") await pickOpenDir(page);
