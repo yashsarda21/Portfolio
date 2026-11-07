@@ -57,7 +57,7 @@ describe("selectors", () => {
 
   it("attribute skills map levels to evidence segments and labels", () => {
     const groups = getAttributeGroups(c);
-    expect(groups.map((g) => g.name)).toEqual(["Backend", "Frontend", "Data", "Craft"]);
+    expect(groups.map((g) => g.name)).toEqual(["Backend", "Frontend", "Data", "AI & Craft"]);
     const backend = groups[0]!;
     expect(backend.skills[0]).toEqual({
       name: "Java",
@@ -65,14 +65,14 @@ describe("selectors", () => {
       segments: 9,
       tierLabel: "SHIPPED",
     });
-    expect(backend.skills[2]).toEqual({
-      name: "JUnit",
+    expect(backend.skills[3]).toEqual({
+      name: "REST APIs",
       level: "shipped",
       segments: 9,
-      tierLabel: "75+ TESTS",
+      tierLabel: "SWAGGER / OPENAPI",
     });
-    expect(backend.skills[3]).toMatchObject({ level: "kit", segments: 5, tierLabel: "KIT BAG" });
-    expect(groups[1]!.skills[2]).toMatchObject({ level: "built", segments: 7, tierLabel: "BUILT" });
+    expect(backend.skills[4]).toMatchObject({ level: "kit", segments: 5, tierLabel: "KIT BAG" });
+    expect(groups[1]!.skills[3]).toMatchObject({ level: "built", segments: 7, tierLabel: "BUILT" });
   });
 
   it("returns Yash's five trophies, none of them hidden", () => {

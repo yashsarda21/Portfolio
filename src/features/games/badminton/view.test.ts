@@ -54,7 +54,7 @@ describe("buildBadmintonView", () => {
       { state: "next", label: "BACKEND", hint: "UP NEXT · RALLY 1" },
       { state: "later", label: "FRONTEND", hint: "RALLY 2" },
       { state: "later", label: "DATA", hint: "RALLY 3" },
-      { state: "later", label: "CRAFT", hint: "RALLY 4" },
+      { state: "later", label: "AI & CRAFT", hint: "RALLY 4" },
     ]);
     expect(v.latest).toBeNull();
     expect(v.comm).toBe(ui.games.badminton.comm.start);
@@ -89,7 +89,7 @@ describe("buildBadmintonView", () => {
         eyebrow: "ATTRIBUTE CHARGED · RALLY 1",
         tag: "SMASH",
         title: "BACKEND",
-        chips: ["Java", "Spring Boot", "JUnit"],
+        chips: ["Java", "Spring Boot", "Spring Security", "REST APIs"],
         accent: false,
       },
       {
@@ -97,7 +97,7 @@ describe("buildBadmintonView", () => {
         eyebrow: "ATTRIBUTE CHARGED · RALLY 2",
         tag: "DROP SHOT",
         title: "FRONTEND",
-        chips: ["React", "Redux"],
+        chips: ["React", "Redux", "JavaScript"],
         accent: false,
       },
       {
@@ -108,7 +108,7 @@ describe("buildBadmintonView", () => {
         chips: ["Oracle", "SQL"],
         accent: true,
       },
-      { state: "next", label: "CRAFT", hint: "UP NEXT · RALLY 4" },
+      { state: "next", label: "AI & CRAFT", hint: "UP NEXT · RALLY 4" },
     ]);
     expect(v.latest).toEqual({
       eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
@@ -139,12 +139,15 @@ describe("buildBadmintonView", () => {
       kind: "unlock",
       eyebrow: "ATTRIBUTE CHARGED · RALLY 1",
       title: "BACKEND",
-      line: "Java · Spring Boot · JUnit",
+      line: "Java · Spring Boot · Spring Security · REST APIs",
       to: "right",
     };
     // Every shot charges the same way: no shot word, only the work.
     for (const power of [SMASH, CLEAR, DROP, PERFECT]) expect(called([power])).toEqual(backend);
-    expect(called([CLEAR, SMASH])).toMatchObject({ title: "FRONTEND", line: "React · Redux" });
+    expect(called([CLEAR, SMASH])).toMatchObject({
+      title: "FRONTEND",
+      line: "React · Redux · JavaScript",
+    });
     expect(called([PERFECT], "verdict")).toEqual(backend);
     // Only while it is being called.
     expect(called([SMASH], "ready")).toBeNull();
@@ -174,10 +177,10 @@ describe("buildBadmintonView", () => {
 
   it("announces what it charged, with no shot word", () => {
     expect(view(play([SMASH])).announce).toBe(
-      "Attribute charged, rally 1: BACKEND, Java, Spring Boot, JUnit",
+      "Attribute charged, rally 1: BACKEND, Java, Spring Boot, Spring Security, REST APIs",
     );
     expect(view(play([SMASH, CLEAR])).announce).toBe(
-      "Attribute charged, rally 2: FRONTEND, React, Redux",
+      "Attribute charged, rally 2: FRONTEND, React, Redux, JavaScript",
     );
   });
 
@@ -214,7 +217,7 @@ describe("buildBadmintonView", () => {
     expect(v.end?.again).toBe("REMATCH");
   });
 
-  it("four perfect drops still end 21–19, and the last rally still charges Craft (F1)", () => {
+  it("four perfect drops still end 21–19, and the last rally still charges AI & Craft (F1)", () => {
     const v = view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "end" });
     expect(v.bug).toMatchObject({ yash: "21", you: "19", status: "GAME YASH", alert: false });
     expect(v.saved).toBe("21–19");
@@ -222,8 +225,8 @@ describe("buildBadmintonView", () => {
     expect(v.spotlight).toBeNull();
     expect(v.toasts.every((t) => t.state === "charged")).toBe(true);
     const verdict = view(play([PERFECT, PERFECT, PERFECT, PERFECT]), { phase: "verdict" });
-    expect(verdict.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
-    expect(verdict.toasts[3]).toMatchObject({ state: "next", label: "CRAFT" });
+    expect(verdict.spotlight).toMatchObject({ kind: "unlock", title: "AI & CRAFT" });
+    expect(verdict.toasts[3]).toMatchObject({ state: "next", label: "AI & CRAFT" });
     expect(v.end?.primary).toEqual({ label: "SEE PLAYER ATTRIBUTES", to: ROUTES.attributes });
     expect(v.comm).toBe(content.commentary.yashWins[0]);
     expect(JSON.stringify(v)).not.toMatch(/CLAIM|BOWLED|BROKE|GETS THROUGH/);
@@ -255,7 +258,7 @@ describe("buildBadmintonView", () => {
     };
     const v = view(play([CLEAR]), {}, renamed);
     expect(v.toasts).toHaveLength(4);
-    expect(v.toasts[0]).toMatchObject({ title: "CRAFT", tag: "COURT VISION" });
+    expect(v.toasts[0]).toMatchObject({ title: "AI & CRAFT", tag: "COURT VISION" });
     expect(v.toasts[1]).toMatchObject({ state: "next", label: "DATA" });
   });
 
@@ -330,7 +333,7 @@ describe("buildBadminton3dView", () => {
       { state: "next", label: "BACKEND", hint: "UP NEXT" },
       { state: "later", label: "FRONTEND", hint: "DROP SHOT" },
       { state: "later", label: "DATA", hint: "DEFENCE" },
-      { state: "later", label: "CRAFT", hint: "COURT VISION" },
+      { state: "later", label: "AI & CRAFT", hint: "COURT VISION" },
     ]);
     expect(v.latest).toBeNull();
     expect(v.spotlight).toBeNull();
@@ -431,7 +434,7 @@ describe("buildBadminton3dView", () => {
         eyebrow: "ATTRIBUTE CHARGED · RALLY 2",
         tag: "SMASH",
         title: "BACKEND",
-        chips: ["Java", "Spring Boot", "JUnit"],
+        chips: ["Java", "Spring Boot", "Spring Security", "REST APIs"],
         accent: false,
       },
       {
@@ -439,16 +442,16 @@ describe("buildBadminton3dView", () => {
         eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
         tag: "DROP SHOT",
         title: "FRONTEND",
-        chips: ["React", "Redux"],
+        chips: ["React", "Redux", "JavaScript"],
         accent: true,
       },
       { state: "next", label: "DATA", hint: "UP NEXT" },
-      { state: "later", label: "CRAFT", hint: "COURT VISION" },
+      { state: "later", label: "AI & CRAFT", hint: "COURT VISION" },
     ]);
     expect(v.latest).toEqual({
       eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
       title: "FRONTEND",
-      meta: "React · Redux",
+      meta: "React · Redux · JavaScript",
     });
   });
 
@@ -459,7 +462,7 @@ describe("buildBadminton3dView", () => {
       kind: "unlock",
       eyebrow: "ATTRIBUTE CHARGED · RALLY 3",
       title: "FRONTEND",
-      line: "React · Redux",
+      line: "React · Redux · JavaScript",
       to: "right",
     });
     expect(up.toasts.map((t) => t.state)).toEqual(["charged", "next", "later", "later"]);
@@ -481,11 +484,11 @@ describe("buildBadminton3dView", () => {
     const v = view3d(play3d([late], [late], [late], [late]), { phase: "end" });
     expect(v.spotlight).toBeNull();
     expect(v.end).not.toBeNull();
-    expect(v.toasts[3]).toMatchObject({ state: "charged", title: "CRAFT" });
-    // The game ends with the spotlight up: the verdict holds it, and the Craft toast waits for it to leave.
+    expect(v.toasts[3]).toMatchObject({ state: "charged", title: "AI & CRAFT" });
+    // The game ends with the spotlight up: the verdict holds it, and the AI & Craft toast waits for it to leave.
     const up = view3d(play3d([late], [late], [late], [late]), { phase: "verdict" });
-    expect(up.spotlight).toMatchObject({ kind: "unlock", title: "CRAFT" });
-    expect(up.toasts[3]).toMatchObject({ state: "next", label: "CRAFT" });
+    expect(up.spotlight).toMatchObject({ kind: "unlock", title: "AI & CRAFT" });
+    expect(up.toasts[3]).toMatchObject({ state: "next", label: "AI & CRAFT" });
   });
 
   it("3D: comm after a smash win is 'Jump smash. Backend charged.'; after your miss, 'Backend charged.'; after the OUT, 'Hawk-Eye says out. By a whisker. Backend charged anyway.'", () => {
@@ -527,15 +530,15 @@ describe("buildBadminton3dView", () => {
     expect(view3d(allPerfect(), { phase: "end" }).end?.again).toBe("REMATCH");
   });
 
-  it("3D: the announcement is the score, then what was charged: '18–19. Backend charged: Java, Spring Boot, JUnit.'", () => {
+  it("3D: the announcement is the score, then what was charged: '18–19. Backend charged: Java, Spring Boot, Spring Security, REST APIs.'", () => {
     expect(view3d(play3d([late])).announce).toBe(
-      "18–19. Backend charged: Java, Spring Boot, JUnit.",
+      "18–19. Backend charged: Java, Spring Boot, Spring Security, REST APIs.",
     );
     // Your rally charges nothing, and says the visitor's words.
     expect(view3d(play3d(yours)).announce).toBe("WELL PLAYED. 17–20.");
     // The end adds how the game ended.
     expect(view3d(play3d([late], [late], [late], [late]), { phase: "end" }).announce).toMatch(
-      /^21–19\. Craft charged: .+\. Game yash\.$/,
+      /^21–19\. AI & Craft charged: .+\. Game yash\.$/,
     );
   });
 

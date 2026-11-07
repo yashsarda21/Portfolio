@@ -193,7 +193,8 @@
         "skills": [
           ["Java", "shipped"],
           ["Spring Boot", "shipped"],
-          ["JUnit", "shipped", "75+ tests"],
+          ["Spring Security", "shipped"],
+          ["REST APIs", "shipped", "Swagger / OpenAPI"],
           ["Apache Kafka", "kit"]
         ]
       },
@@ -204,8 +205,9 @@
         "skills": [
           ["React", "shipped"],
           ["Redux", "shipped"],
-          ["JavaScript", "built"],
-          ["HTML / CSS", "built"]
+          ["JavaScript", "shipped"],
+          ["HTML / CSS", "built"],
+          ["Flutter", "built", "TakeTray"]
         ]
       },
       {
@@ -213,26 +215,40 @@
         "shot": "Defence",
         "note": "Consistent, reliable, never gives away a cheap point.",
         "skills": [
-          ["Oracle", "shipped"],
+          ["Oracle", "shipped", "async jobs: 98% faster"],
           ["SQL", "shipped"],
           ["MySQL", "kit"],
-          ["MongoDB", "kit"]
+          ["MongoDB", "kit"],
+          ["SQLite · Drift", "built", "TakeTray"]
         ]
       },
       {
-        "name": "Craft",
+        "name": "AI & Craft",
         "shot": "Court vision",
-        "note": "Reading the whole court before the shuttle lands.",
+        "note": "Reading the whole court — with AI agents as a second pair of eyes.",
         "skills": [
-          ["DSA", "shipped", "750+ solved"],
+          ["AI coding agents", "shipped", "agentic development"],
+          ["Gen AI · Gemini", "built", "published paper"],
+          ["DSA", "shipped", "1250+ solved"],
           ["OOP", "shipped"],
-          ["System Design", "built", "Blogs"],
-          ["Gen AI · Gemini", "built"]
+          ["System Design", "built", "Blogs"]
         ]
       }
     ],
     "languages": ["Java", "JavaScript", "Python"],
-    "kitBag": ["Git", "Google Cloud", "CI/CD", "Postman", "Cursor", "Gen AI", "TeamCity", "uDeploy"]
+    "kitBag": [
+      "Git",
+      "Google Cloud",
+      "CI/CD",
+      "GitHub Actions",
+      "Postman",
+      "Swagger",
+      "Workday APIs",
+      "Cursor",
+      "Gen AI",
+      "TeamCity",
+      "uDeploy"
+    ]
   },
   "trophyRoom": [
     {

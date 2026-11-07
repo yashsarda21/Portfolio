@@ -65,14 +65,20 @@ describe("buildAttributesView", () => {
     it("kit bag items are joined in content order", () => {
       expect(build().profile.kitBag).toEqual({
         label: "Kit bag",
-        items: "Git · Google Cloud · CI/CD · Postman · Cursor · Gen AI · TeamCity · uDeploy",
+        items:
+          "Git · Google Cloud · CI/CD · GitHub Actions · Postman · Swagger · Workday APIs · Cursor · Gen AI · TeamCity · uDeploy",
       });
     });
   });
 
   describe("groups", () => {
-    it("come in content order: Backend, Frontend, Data, Craft", () => {
-      expect(build().groups.map((g) => g.name)).toEqual(["Backend", "Frontend", "Data", "Craft"]);
+    it("come in content order: Backend, Frontend, Data, AI & Craft", () => {
+      expect(build().groups.map((g) => g.name)).toEqual([
+        "Backend",
+        "Frontend",
+        "Data",
+        "AI & Craft",
+      ]);
     });
 
     it("shot line is SHOT, a dot and the shot (the case is the page's)", () => {
@@ -90,13 +96,14 @@ describe("buildAttributesView", () => {
       expect(backend.skills).toEqual([
         { name: "Java", level: "shipped", tierLabel: "SHIPPED" },
         { name: "Spring Boot", level: "shipped", tierLabel: "SHIPPED" },
-        { name: "JUnit", level: "shipped", tierLabel: "75+ TESTS" },
+        { name: "Spring Security", level: "shipped", tierLabel: "SHIPPED" },
+        { name: "REST APIs", level: "shipped", tierLabel: "SWAGGER / OPENAPI" },
         { name: "Apache Kafka", level: "kit", tierLabel: "KIT BAG" },
       ]);
     });
 
-    it("has 16 skills in all", () => {
-      expect(build().groups.flatMap((g) => g.skills)).toHaveLength(16);
+    it("has 20 skills in all", () => {
+      expect(build().groups.flatMap((g) => g.skills)).toHaveLength(20);
     });
   });
 

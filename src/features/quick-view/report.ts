@@ -97,7 +97,7 @@ export interface ScoutReport {
 }
 
 /** Content group that the report replaces with the curated "craft and tools" list. */
-const CRAFT_GROUP = "Craft";
+const CRAFT_GROUP = "AI & Craft";
 const TEAM_UP_HREF = "#teamup";
 
 /** Last non-empty path segment of a URL (a profile handle). */

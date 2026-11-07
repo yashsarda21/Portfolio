@@ -72,7 +72,8 @@ describe("buildScoutReport", () => {
     expect(attributes.groups[0]!.chips).toEqual([
       { label: "Java", filled: true },
       { label: "Spring Boot", filled: true },
-      { label: "JUnit", filled: true },
+      { label: "Spring Security", filled: true },
+      { label: "REST APIs", filled: true },
       { label: "Apache Kafka", filled: false },
     ]);
   });
@@ -140,17 +141,17 @@ describe("buildScoutReport", () => {
     );
   });
 
-  it("throws if content has no Craft attribute group", () => {
+  it("throws if content has no AI & Craft attribute group", () => {
     const renamed: Content = {
       ...content,
       playerAttributes: {
         ...content.playerAttributes,
         groups: content.playerAttributes.groups.map((g) =>
-          g.name === "Craft" ? { ...g, name: "Skills" } : g,
+          g.name === "AI & Craft" ? { ...g, name: "Skills" } : g,
         ),
       },
     };
-    expect(() => build(renamed)).toThrow(/Craft/);
+    expect(() => build(renamed)).toThrow(/AI & Craft/);
   });
 
   it("routes and anchors", () => {
