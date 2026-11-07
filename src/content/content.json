@@ -76,13 +76,13 @@
       "start": "2024-07",
       "end": null,
       "ballByBall": [
-        "Improving the sanctions compliance system that keeps restricted people and entities in line with each country's law.",
-        "Supporting 200+ country-specific sanctions lists for global regulatory adherence.",
-        "Designed Excel bulk upload: 10,000+ records validated per upload across 50+ fields — manual entry down 60%.",
-        "Shipped dashboard features end-to-end; 75+ JUnit tests raised coverage and cut production defects."
+        "Owned end-to-end development of an internal employee mobility platform on Java Spring Boot, Workday APIs and Adaptive Sheets: 10,000+ employee records, job applications, transfers and approvals.",
+        "Cut submission wait from 4–5 minutes to under 2 seconds (98% faster) with Oracle-backed asynchronous processing and scheduled background jobs.",
+        "Built an automated severance cost calculator with single and bulk Excel upload: 1,000+ employee calculations in one batch, manual effort cut from days to hours.",
+        "Added Spring Security authentication and authorisation across REST APIs and fixed identified Java security vulnerabilities in a regulated banking environment."
       ],
       "stack": ["Java", "Spring Boot", "React", "Redux", "Oracle", "JUnit", "TeamCity", "uDeploy"],
-      "scoutLine": "bulk upload cut manual entry 60%"
+      "scoutLine": "submissions 98% faster: minutes to under 2 s"
     },
     {
       "innings": "02",
@@ -94,12 +94,12 @@
       "start": "2023-06",
       "end": "2023-07",
       "ballByBall": [
-        "Built a Kudo Board platform from the ground up to celebrate individual and team wins for 10,000+ employees.",
-        "Drove engagement with 4+ interaction types — messages, GIFs, short videos and gesture-based responses.",
-        "Enabled personalised delivery so recognition lands with the right person or team."
+        "Built an end-to-end Kudo Board platform on React, Spring Boot and Oracle so 10,000+ employees can celebrate individual and team achievements.",
+        "Shipped 4+ recognition formats: messages, GIFs, short videos and gesture-based reactions.",
+        "Added targeted delivery so recognition reaches the right person or team."
       ],
       "stack": ["React", "Spring Boot", "Oracle"],
-      "scoutLine": "Built a Kudo Board recognition platform from scratch for 10,000+ employees."
+      "scoutLine": "Built an end-to-end Kudo Board recognition platform for 10,000+ employees."
     }
   ],
   "matchHighlights": [
@@ -308,8 +308,10 @@
     "honours": "Distinction, SPPU",
     "honoursShort": "Distinction",
     "extras": [
+      "CGPA 8.94 with Distinction, Savitribai Phule Pune University",
       "Published paper: AI-Enhanced Interview Grooming Platform",
-      "MHT-CET 99.5 percentile, State Merit Rank 709"
+      "MHT-CET 99.5 percentile, State Merit Rank 709",
+      "PCSB (PICT CSI Student Branch) member: organised college technical events"
     ]
   },
   "commentary": {

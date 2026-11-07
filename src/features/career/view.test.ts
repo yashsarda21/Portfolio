@@ -89,8 +89,10 @@ describe("buildCareerView", () => {
       roleLine: "B.Tech, Information Technology · Distinction, SPPU",
       balls: [
         "CGPA 8.94",
+        "CGPA 8.94 with Distinction, Savitribai Phule Pune University",
         "Published paper: AI-Enhanced Interview Grooming Platform",
         "MHT-CET 99.5 percentile, State Merit Rank 709",
+        "PCSB (PICT CSI Student Branch) member: organised college technical events",
       ],
       footer: { kind: "link", label: "SEE IT IN THE TROPHY ROOM", to: "/trophies#academy" },
     });
