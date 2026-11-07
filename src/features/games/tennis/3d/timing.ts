@@ -14,6 +14,10 @@ export const STROKE_CLIP = { commit: 0.4, contact: 0.6, end: 1.3 } as const;
 export const SWING_LEAD = STROKE_CLIP.contact - STROKE_CLIP.commit;
 /** A missed swing meets the ball's place this long after it went by (late), or before it came (early). */
 export const MISS = { late: 0.25, early: 0.3 } as const;
+/** A player sets off this long after the other's hit: the split-step's push-off, blended into the run. */
+export const RUN_AFTER = 0.1;
+/** An early swing comes no sooner than a run to the ball's place at this speed (m/s) allows: he always gets there (Phase 9, owner 2026-11-07). */
+export const EARLY_RUN_CAP = 6;
 /** The stretch (beaten): the racket is at full reach this far into the clip. */
 export const STRETCH_CLIP = { reach: 0.35, end: 1.1 } as const;
 /** The split-step when the other player hits, and the side shuffle's ground speed at clip speed 1 (m/s). */

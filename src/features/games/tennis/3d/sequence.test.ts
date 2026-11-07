@@ -235,23 +235,63 @@ describe("pointShotlist: the players", () => {
     expect(checked).toBeGreaterThan(0);
   }, 30_000);
 
-  it("a late swing reaches the ball's place MISS.late after the ball; an early one MISS.early before", () => {
+  it("a late swing reaches the ball's place MISS.late after the ball; an early one up to MISS.early before", () => {
     let seen = 0;
-    for (const { script } of POINTS) {
+    for (const { script, scripts, inputs } of POINTS) {
       const s = pointShotlist(script, REACH);
       for (const w of script.swings.filter((w) => w.miss)) {
         const clipAt = (t: number) =>
           sampleTrack(s.actors.you, t).clips.find((c) => c.clip === w.kind)!.time;
-        const ball = w.miss === "late" ? w.contact - MISS.late : w.contact + MISS.early;
         expect(clipAt(w.contact)).toBeCloseTo(STROKE_CLIP.contact, 9);
         if (w.miss === "late")
-          expect(clipAt(ball)).toBeLessThanOrEqual(STROKE_CLIP.contact - SWING_LEAD + 1e-9);
-        else expect(clipAt(ball)).toBeCloseTo(STROKE_CLIP.contact + MISS.early, 9);
+          expect(clipAt(w.contact - MISS.late)).toBeLessThanOrEqual(
+            STROKE_CLIP.contact - SWING_LEAD + 1e-9,
+          );
+        else {
+          // The ball's moment is the provisional swing's (before the input was judged).
+          const ball = scripts[inputs.length - 1]!.swings.filter((x) => x.by === "you").at(-1)!;
+          expect(ball.contact - w.contact).toBeGreaterThan(0.03 - 1e-9);
+          expect(ball.contact - w.contact).toBeLessThanOrEqual(MISS.early + 1e-9);
+        }
         seen++;
       }
     }
     expect(seen).toBeGreaterThan(0);
   });
+
+  it("you always reach the ball, a miss or a net shot included: your feet end within reach of its place, and the last step is toward it", () => {
+    const bad: string[] = [];
+    const kinds = new Set<string>();
+    for (const { script, scripts, inputs } of POINTS) {
+      const s = pointShotlist(script, REACH);
+      for (const w of script.swings.filter((w) => w.by === "you" && w.kind !== "stretch")) {
+        // The ball's moment at your racket: the swing's own, or (a miss) the one planned before the input was judged.
+        const planned =
+          w.miss === "late"
+            ? w.contact - MISS.late
+            : w.miss === "early"
+              ? scripts[inputs.length - 1]!.swings.filter((x) => x.by === "you").at(-1)!.contact
+              : w.contact;
+        const f = script.flights.filter((f) => f.start < planned - 1e-9).at(-1)!;
+        const ball = f.path.at(planned - f.start);
+        const reach = Math.hypot(REACH[w.kind as "forehand"][0], REACH[w.kind as "forehand"][2]);
+        const pos = (t: number) => sampleTrack(s.actors.you, t).position;
+        const why = (m: string) =>
+          bad.length < 10 && bad.push(`${inputs.map((r) => r.call)} ${w.miss ?? "hit"}: ${m}`);
+        if (ground(pos(w.contact), ball) > reach + 0.15)
+          why(`${ground(pos(w.contact), ball)} m from the ball, reach ${reach}`);
+        // The feet that put the sweet spot on the ball: he is on them at the swing, and his last step went toward them.
+        if (ground(pos(w.contact), w.spot) > 0.01) why("he is not on his spot at the swing");
+        if (ground(pos(w.contact), w.spot) > ground(pos(w.contact - 0.4), w.spot) + 1e-6)
+          why("his last step is away from the ball");
+        kinds.add(`${w.miss ?? "hit"} ${script.setup.capped}`);
+      }
+    }
+    expect(bad).toEqual([]);
+    expect([...kinds].sort()).toEqual(
+      ["early false", "early true", "hit false", "hit true", "late false", "late true"].sort(),
+    );
+  }, 30_000);
 });
 
 describe("pointShotlist: the rebuild and the cues", () => {

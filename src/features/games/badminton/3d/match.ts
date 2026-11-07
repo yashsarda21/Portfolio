@@ -6,7 +6,7 @@ export type Dir = "deep" | "short";
 export type Player = "yash" | "you";
 /** Yash's card shot for a rally: Backend smash, Frontend drop, Data dive, Craft placement, then the final smash. */
 export type RallyKind = "smash" | "drop" | "dive" | "placement" | "final";
-/** How a rally ended, in the words the call shows. */
+/** How a rally ended, in the words the call shows. "out" (your best shot on 20) is drawn into the net since Phase 9 (owner 2026-11-07). */
 export type RallyCall = "early" | "late" | "wrong" | "read" | "winner" | "out" | "dive";
 
 /** The game opens at 17–19, and you can never pass 20. */

@@ -14,8 +14,8 @@ import {
   type Gait,
   type Leg,
 } from "../../three/footwork";
-import { ground, smooth, toWorld } from "../../three/geometry";
-import { lerp3, sampleTrack, type ActorTrack, type CameraPose } from "../../three/track";
+import { smooth, toWorld } from "../../three/geometry";
+import { lerp3, type ActorTrack, type CameraPose } from "../../three/track";
 import type { Side } from "../referee";
 import {
   ACTORS,
@@ -37,6 +37,7 @@ import {
   FIST_PUMP_CLIP,
   MISS,
   ROUTINE,
+  RUN_AFTER,
   SERVE_CLIP,
   SERVE_LANDS,
   SHUFFLE_PACE,
@@ -71,8 +72,6 @@ export interface Shotlist {
   buzz: number[];
 }
 
-/** A player sets off this long after the other's hit: the split-step's push-off, blended into the run. */
-export const RUN_AFTER = 0.1;
 /**
  * The stroke takes over from the run over this long: the racket is prepared on the move, and the stroke has its full
  * weight as the feet stop, at the forward swing's start (the run arrives at contact − SWING_LEAD).
@@ -80,8 +79,6 @@ export const RUN_AFTER = 0.1;
 export const STROKE_FADE = STROKE_CLIP.contact - SWING_LEAD;
 // The footwork constants moved to `three/footwork.ts`; tests and the scene still read them here.
 export { FOOTWORK, PAN, SLOWEST_STEP, TURN, WALK };
-/** An early (missed) swing's run goes no faster than this (m/s): he stops short of the ball's line. */
-export const EARLY_RUN_CAP = 6;
 /** The serve hands over to the recovery this long before its end, while he settles inside the line. */
 export const SERVE_HANDOVER = 0.2;
 /** The glow on the open side rises over this long. */
@@ -138,16 +135,12 @@ function swing(track: Track, id: ActorId, w: Swing, hit: number) {
 
   cutMoves(track, go);
   addClip(track, { clip: "split", start: hit, fade: 0.1 });
-  const from = sampleTrack(track, go).position;
-  let to = w.spot;
-  const far = ground(from, to);
-  if (w.miss === "early" && far > EARLY_RUN_CAP * (arrive - go))
-    to = lerp3(from, to, (EARLY_RUN_CAP * (arrive - go)) / far);
+  // He always runs all the way to the ball's place, even for a swing that misses (an early one is planned late enough).
   const leg: Leg = {
     clipAt: go,
     start: go,
     end: arrive,
-    to,
+    to: w.spot,
     fade: 0.15,
     backAt: clipAt,
     back: fade,

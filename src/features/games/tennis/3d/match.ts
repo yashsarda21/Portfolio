@@ -20,7 +20,7 @@ export const TENNIS_3D_BEATS = { callMs: 1800, firstMs: 1500 } as const;
 
 /** Which of Yash's hits a window follows. */
 export type Hit = keyof typeof WINDOW_MS;
-/** How a point ended (§3.2). */
+/** How a point ended (§3.2). "out" (your best shot at 30) is drawn into the net since Phase 9 (owner 2026-11-07). */
 export type PointCall = "ace" | "early" | "wrong" | "late" | "winner" | "out";
 export type Court = "deuce" | "ad";
 export interface Point {

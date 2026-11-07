@@ -3,7 +3,7 @@ import type { Judged, PickCall } from "../../engine/pick";
 import type { GameLayout, Luck, Quality } from "../../engine/types";
 import { FOOTWORK } from "../../three/footwork";
 import { ground, toWorld } from "../../three/geometry";
-import { COURT, type Vec3 } from "./court";
+import { COURT, netHeightAt, type Vec3 } from "./court";
 import {
   decideRally,
   judge,
@@ -28,8 +28,8 @@ import {
   type Swing,
   type Window,
 } from "./rally";
-import { netGap, NET_CLEAR, NET_SKIM, OUT_BY } from "./shuttle";
-import { DIVE_CLIP, DIVE_LANDS, SWING_LEAD } from "./timing";
+import { netGap, NET_CLEAR, NET_SKIM } from "./shuttle";
+import { DIVE_CLIP, DIVE_LANDS, MISS, SWING_LEAD } from "./timing";
 
 /** The reach Task 6 measured on the real athlete (body frame: x his left, y up, z his front). */
 const REACH: Reach = {
@@ -143,13 +143,14 @@ const arriving = (s: RallyScript, t: number) => s.flights.filter((f) => f.start 
 const leaving = (s: RallyScript, t: number) => s.flights.find((f) => Math.abs(f.start - t) < 1e-9);
 const SKIMS = new Set(["net", "dive", "block"]);
 const yashMeets = (s: RallyScript) => s.swings.filter((w) => w.by === "yash" && w.meets);
-/** Flight `i` drops off the net: the one after your early shot into it. */
-const offNet = (s: RallyScript, i: number) => Math.abs(s.flights[i]!.path.at(0)[2]) < 1e-9;
+/** Flight `i` drops off the net: the one after your best shot on 20 goes into it. */
+const offNet = (s: RallyScript, i: number) =>
+  s.flights[i] !== undefined && Math.abs(s.flights[i]!.path.at(0)[2]) < 1e-9;
 
 describe("scriptRally: the shots", () => {
   it("the shuttle is at the striker's sweet spot at every contact", () => {
     const bad = sweep((s) => {
-      // Every flight leaves a racket, except the drop off the net after your early, framed shot.
+      // Every flight leaves a racket, except the drop off the net after your best shot on 20 goes into it.
       for (const [i, f] of s.flights.entries())
         if (!s.swings.some((w) => w.meets && Math.abs(w.contact - f.start) < 1e-9) && !offNet(s, i))
           return `the flight at ${f.start} leaves no racket`;
@@ -159,14 +160,6 @@ describe("scriptRally: the shots", () => {
         const out = leaving(s, w.contact);
         if (!out) return `${w.by} ${w.kind} sends nothing on`;
         const at = (f: typeof into) => f!.path.at(w.contact - f!.start);
-        // Too early, the frame meets the shuttle on its path, off the strings: it leaves from where it was met, near the
-        // sweet spot but not on it.
-        if (w.miss === "early") {
-          if (!into || gap(at(into), at(out)) > 0.01) return "the frame shot jumps";
-          const off = gap(at(into), sweet(w));
-          if (off < 0.08 || off > 0.2) return `the frame shot meets ${off} m from the sweet spot`;
-          continue;
-        }
         for (const f of [into, out]) {
           if (!f || (f === into && w.kind === "serve")) continue;
           const off = gap(at(f), sweet(w));
@@ -182,8 +175,8 @@ describe("scriptRally: the shots", () => {
     const bad = sweep((s) => {
       for (const [i, f] of s.flights.entries()) {
         const by = s.swings.find((w) => w.meets && Math.abs(w.contact - f.start) < 1e-9);
-        // Your early shot goes into the net (the misses test).
-        if (!by || by.miss) continue;
+        // Your best shot on 20 goes into the net (the misses test).
+        if (!by || offNet(s, i + 1)) continue;
         const skim = SKIMS.has(by.kind);
         const lift = netGap(f.path);
         if (lift === null) return `flight ${i} never crosses the net`;
@@ -260,7 +253,9 @@ describe("scriptRally: the rules", () => {
       if (setup.kind === "dive") expect(setup.open[0]).toBe("short");
       expect(setup.draws).toHaveLength(8);
       const { scripts, script } = play(setup, picks);
-      expect(script.contacts.length).toBe(decideRally(s, picks).shots);
+      // match.ts counts an early pick's shot as played; since Phase 9 the racket misses it (no contact), as with a late one.
+      const early = decideRally(s, picks).call === "early" ? 1 : 0;
+      expect(script.contacts.length).toBe(decideRally(s, picks).shots - early);
       expect(script.end).toEqual(expect.any(Number));
       scripts.slice(0, -1).forEach((pending) => expect(pending.end).toBeNull());
     }
@@ -285,55 +280,66 @@ describe("scriptRally: the rules", () => {
     expect(bad).toEqual([]);
   }, 30_000);
 
-  it("a late pick: the shuttle goes by your racket and lands in your court as you reach; an early one is framed into the net and drops on your side", () => {
-    let misses = 0;
-    const bad = sweep((s, { s: state, picks }) => {
+  it("a late or an early pick: you reach the shuttle's place and swing, the racket misses, and it lands in your court", () => {
+    let late = 0;
+    let early = 0;
+    const bad = sweep((s, { s: state, picks }, scripts) => {
       const { call } = decideRally(state, picks);
       if (call !== "late" && call !== "early") return null;
-      misses++;
       const last = s.swings.at(-1)!;
       const f = s.flights.at(-1)!;
-      const lands = f.path.lands!;
       if (last.by !== "you" || last.miss !== call) return `ends on ${last.by} ${last.kind}`;
+      if (last.kind !== "overhead" || last.meets)
+        return "the missed swing is not an overhead that misses";
+      // The shuttle's moment at your racket is the one planned before the pick was judged.
+      const planned = scripts[picks.length - 1]!.swings.filter((w) => w.by === "you").at(
+        -1,
+      )!.contact;
+      if (gap(sweet(last), f.path.at(planned - f.start)) > 0.01) return "he is not at its place";
       if (call === "late") {
-        if (last.kind !== "stretch" || last.meets) return "the late swing is not a stretch";
-        const by = f.path.at(last.due! - f.start);
-        if (gap(by, toWorld(last.spot, last.face, REACH.overhead)) > 0.01)
-          return "he was not set for it";
-        if (Math.abs(last.contact - (f.start + f.path.end)) > 1e-9) return "he reaches as it lands";
-        const inside = Math.abs(lands[0]) < COURT.singles && lands[2] > 0 && lands[2] < COURT.half;
-        return inside ? null : `it lands out at ${lands.join(", ")}`;
+        late++;
+        if (Math.abs(last.contact - (planned + MISS.late)) > 1e-9) return "not MISS.late after it";
+      } else {
+        early++;
+        const by = planned - last.contact;
+        if (by < 0.03 - 1e-9 || by > MISS.early + 1e-9) return `${by} s before the shuttle`;
       }
+      // Nothing else is flown: it goes on to the floor in your court.
+      if (s.swings.some((w) => w.meets && w.contact > last.contact - 1e-9))
+        return "something is met";
+      const lands = f.path.lands!;
+      const inside = Math.abs(lands[0]) < COURT.singles && lands[2] > 0 && lands[2] < COURT.half;
+      return inside ? null : `it lands out at ${lands.join(", ")}`;
+    });
+    expect(bad).toEqual([]);
+    expect(late).toBeGreaterThan(0);
+    expect(early).toBeGreaterThan(0);
+  }, 30_000);
+
+  it("your winner lands in the empty court; on 20 your best shot goes into the net instead (low, below the tape, no mark)", () => {
+    let nets = 0;
+    const bad = sweep((s, { s: state, picks }) => {
+      const { call } = decideRally(state, picks);
+      if (s.mark !== null) return "a mark: nothing is drawn OUT";
+      if (call !== "winner" && call !== "out") return null;
+      if (call === "winner") {
+        const lands = s.flights.at(-1)!.path.lands!;
+        const past = Math.max(Math.abs(lands[0]) - COURT.singles, -lands[2] - COURT.half);
+        return lands[2] < 0 && past < 0 ? null : `the winner is out by ${past}`;
+      }
+      nets++;
+      // The flight before the drop off the mesh ends at the net.
       const net = s.flights.at(-2)!;
-      const hits = net.path.at(f.start - net.start);
-      if (Math.abs(hits[2]) > 1e-9 || hits[1] < 0.8 || hits[1] > COURT.net.centre - 0.2)
-        return `it meets the net at ${hits.join(", ")}`;
+      const [x, y, z] = net.path.at(s.flights.at(-1)!.start - net.start);
+      if (Math.abs(z) > 0.1 || y > netHeightAt(x) - 0.2)
+        return `it meets the net at ${x}, ${y}, ${z}`;
+      if (!s.swings.at(-1)!.meets || s.swings.at(-1)!.by !== "you")
+        return "the last swing is not yours";
+      const lands = s.flights.at(-1)!.path.lands!;
       return lands[2] > 0 && lands[2] < 0.5 ? null : `it drops off the net to ${lands[2]}`;
     });
     expect(bad).toEqual([]);
-    expect(misses).toBeGreaterThan(0);
-  }, 30_000);
-
-  it("your winner lands in the empty court; on 20 it lands just OUT, with the mark there", () => {
-    let outs = 0;
-    const bad = sweep((s, { s: state, picks }) => {
-      const { call } = decideRally(state, picks);
-      if (call !== "winner" && call !== "out") return s.mark === null ? null : "a mark with no OUT";
-      const last = s.flights.at(-1)!;
-      const lands = last.path.lands!;
-      const past = Math.max(Math.abs(lands[0]) - COURT.singles, -lands[2] - COURT.half);
-      if (lands[2] >= 0) return "it lands on your side";
-      if (call === "winner")
-        return past < 0 && s.mark === null ? null : `the winner is out by ${past}`;
-      outs++;
-      if (past < OUT_BY.min - 1e-9 || past > OUT_BY.max + 1e-9) return `OUT by ${past}`;
-      if (!s.mark || gap(s.mark.at, lands) > 1e-9) return "the mark is not where it lands";
-      return Math.abs(s.mark.from - (last.start + last.path.end)) < 1e-9
-        ? null
-        : "the mark is early";
-    });
-    expect(bad).toEqual([]);
-    expect(outs).toBeGreaterThan(0);
+    expect(nets).toBeGreaterThan(0);
   }, 30_000);
 
   it("a rebuild never changes the past", () => {

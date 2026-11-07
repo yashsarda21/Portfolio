@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { TOUCH_STRETCH, type Side, type TennisReturn } from "../referee";
 import { NET_CLEAR, type BallPath } from "./ball";
 import {
-  BALL_RADIUS,
   BOX,
   COURT,
   FACE,
@@ -15,7 +14,6 @@ import {
 } from "./court";
 import { decidePoint, MATCH_START, WINDOW_MS, type Court } from "./match";
 import {
-  OUT_BY,
   scriptPoint,
   type Decided,
   type Decision,
@@ -294,7 +292,7 @@ describe("scriptPoint: the rules", () => {
     }
   });
 
-  it("your winner lands in on the side you picked; at 30 it lands just OUT, with the mark there", () => {
+  it("your winner lands in on the side you picked; at 30 it goes into the net, below the tape (no OUT, no mark)", () => {
     for (const base of FEW)
       for (const capped of [false, true])
         for (const inputs of [
@@ -303,22 +301,19 @@ describe("scriptPoint: the rules", () => {
         ]) {
           const { script, decided } = play({ ...base, capped }, inputs);
           const last = script.flights.at(-1)!;
-          const bounce = last.path.bounce!;
-          expect(bounce[2]).toBeLessThan(0);
-          if (!capped) {
-            expect(inSingles(bounce)).toBe(true);
-            expect(Math.sign(bounce[0])).toBe(decided.second!.side === "right" ? 1 : -1);
-            expect(script.mark).toBeNull();
+          expect(script.mark).toBeNull();
+          if (capped) {
+            const [x, y, z] = last.path.at(last.path.reach);
+            expect(Math.abs(z)).toBeLessThan(0.1);
+            expect(y).toBeLessThan(netHeightAt(x));
+            // Nothing of Yash's after it: his point comes at once.
+            expect(script.swings.at(-1)!.by).toBe("you");
             continue;
           }
-          const past = Math.max(
-            Math.abs(bounce[0]) - BALL_RADIUS - COURT.singles,
-            Math.abs(bounce[2]) - BALL_RADIUS - COURT.half,
-          );
-          expect(past).toBeGreaterThanOrEqual(OUT_BY.min - 1e-9);
-          expect(past).toBeLessThanOrEqual(OUT_BY.max + 1e-9);
-          expect(gap(script.mark!.at, bounce)).toBeLessThan(1e-9);
-          expect(script.mark!.from).toBeCloseTo(last.start + last.path.bounces[0]!, 9);
+          const bounce = last.path.bounce!;
+          expect(bounce[2]).toBeLessThan(0);
+          expect(inSingles(bounce)).toBe(true);
+          expect(Math.sign(bounce[0])).toBe(decided.second!.side === "right" ? 1 : -1);
         }
   });
 

@@ -29,6 +29,8 @@ interface LabArgs {
   pick2: Pick;
   server: Player;
   box: "right" | "left";
+  /** You are on 20: a good last shot goes into the net. */
+  on20: boolean;
   layout: GameLayout;
   /** What to play: a whole rally, the stand-by before one, the walk between rallies, or the GAME push-in. */
   show: (typeof SHOWS)[number];
@@ -77,7 +79,13 @@ function stateFor(kind: RallyKind) {
 /** What the lab plays for these args: the script (for the marks) and its shotlist. */
 function stage(args: LabArgs, assets: BadmintonAssets): { script: RallyScript; list: Shotlist } {
   const base = setupRally(stateFor(args.kind), args.layout, luck);
-  const setup: RallySetup = { ...base, server: args.server, box: args.box, first: false };
+  const setup: RallySetup = {
+    ...base,
+    server: args.server,
+    box: args.box,
+    first: false,
+    on20: args.on20,
+  };
   const decided: Decided = {};
   let script = scriptRally(setup, decided, assets.reach);
   if (args.pick1 !== "none") {
@@ -115,10 +123,11 @@ function RallyLab(args: LabArgs) {
       live = false;
     };
   }, []);
-  const { kind, pick1, pick2, server, box, layout, show, t } = args;
+  const { kind, pick1, pick2, server, box, on20, layout, show, t } = args;
   const shown = useMemo(
-    () => (assets ? stage({ kind, pick1, pick2, server, box, layout, show, t }, assets) : null),
-    [assets, kind, pick1, pick2, server, box, layout, show, t],
+    () =>
+      assets ? stage({ kind, pick1, pick2, server, box, on20, layout, show, t }, assets) : null,
+    [assets, kind, pick1, pick2, server, box, on20, layout, show, t],
   );
   const started = useRef(0);
   const world = useRef<WorldState | null>(null);
@@ -185,6 +194,7 @@ const meta: Meta<LabArgs> = {
     pick2: "late",
     server: "yash",
     box: "right",
+    on20: false,
     layout: "stage",
     show: "rally",
     t: "",
@@ -195,6 +205,7 @@ const meta: Meta<LabArgs> = {
     pick2: { control: "select", options: PICKS },
     server: { control: "inline-radio", options: ["yash", "you"] },
     box: { control: "inline-radio", options: ["right", "left"] },
+    on20: { control: "boolean" },
     layout: { control: "inline-radio", options: ["stage", "column"] },
     show: { control: "inline-radio", options: SHOWS },
     t: { control: "text" },
@@ -203,3 +214,15 @@ const meta: Meta<LabArgs> = {
 export default meta;
 
 export const Rally: StoryObj<LabArgs> = {};
+
+// One story per losing case (Phase 9: you always reach the shuttle). Freeze one at your swing with `t` (see data-marks).
+/** No press at the first pick: he is at the shuttle's place, the racket comes after it. */
+export const LateFirst: StoryObj<LabArgs> = { args: { pick1: "late", pick2: "none" } };
+/** Too early at the first pick: he swings before the shuttle comes. */
+export const EarlyFirst: StoryObj<LabArgs> = { args: { pick1: "early", pick2: "none" } };
+/** A good first pick, no press at the second: late at the scoop. */
+export const LateSecond: StoryObj<LabArgs> = { args: { pick1: "good", pick2: "late" } };
+/** A good first pick, too early at the second. */
+export const EarlySecond: StoryObj<LabArgs> = { args: { pick1: "good", pick2: "early" } };
+/** On 20 a good last shot goes into the net (it was drawn just OUT before Phase 9). */
+export const NetOn20: StoryObj<LabArgs> = { args: { pick1: "good", pick2: "good", on20: true } };

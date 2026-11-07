@@ -1,14 +1,14 @@
 import type { Judged } from "../../engine/pick";
 import type { GameLayout, Luck } from "../../engine/types";
-import { FOOTWORK } from "../../three/footwork";
+import { FOOTWORK, TURN } from "../../three/footwork";
 import { clamp, feetFor, ground, lerp, toWorld } from "../../three/geometry";
 import {
   BASE_Z,
   BOX_X,
   boxX,
   CONTACT_Z,
-  COURT,
   FACE,
+  RECEIVE_Z,
   SERVE_SPOT_Z,
   SET_Z,
   type Vec3,
@@ -28,13 +28,15 @@ import {
 } from "./match";
 // Type only: reach.ts imports three, and this file is reached from the first load (tennis ruling R3).
 import type { Reach } from "./reach";
-import { flyTo, flyToFloor, offTheNet, OUT_BY, type ShuttlePath } from "./shuttle";
+import { flyTo, flyToFloor, offTheNet, type ShuttlePath } from "./shuttle";
 import {
   DIVE_CLIP,
   DIVE_LANDS,
-  EARLY_FRAME,
+  EARLY_RUN_CAP,
   JUMP_SMASH_CLIP,
+  MISS,
   OVERHEAD_CLIP,
+  RUN_AFTER,
   SWING_LEAD,
   type Stroke,
 } from "./timing";
@@ -120,12 +122,10 @@ export interface Swing {
   face: number;
   meets: boolean;
   /**
-   * Your pick missed (owner play-test ruling): late, a stretch whose racket reaches just after the shuttle went by
-   * (`meets` false); early, the overhead EARLY_FRAME too soon, the shuttle on the frame and into the net.
+   * Your pick missed (`meets` false): the overhead he was set for, with its racket at the shuttle's place late (just
+   * after the shuttle went by) or early (before it came). He always gets to its place (Phase 9, owner 2026-11-07).
    */
   miss?: "late" | "early";
-  /** A late miss: the contact of the overhead he was set for. He plays it to its commit (the pick is known only then). */
-  due?: number;
   /** Stretch only: which way, as the screen shows it (+x is your right). */
   side?: "left" | "right";
 }
@@ -158,7 +158,7 @@ export interface RallyScript {
   dive: number | null;
   /** When the rally's last shuttle is down and the call comes; null while a pick is still to come. */
   end: number | null;
-  /** The Hawk-Eye mark of an OUT shuttle, and when it lands. */
+  /** The Hawk-Eye mark of an OUT shuttle, and when it lands: always null since Phase 9 (no shuttle is drawn out). */
   mark: { at: Vec3; from: number } | null;
 }
 
@@ -189,6 +189,20 @@ const missOf = (j: Judged) => (j.call === "late" || j.call === "early" ? j.call 
 const sideOf = (x: number, from: Vec3): "left" | "right" => (x >= from[0] ? "right" : "left");
 /** The heading (0 faces +z) from `a` toward `b` along the ground. */
 const headingTo = (a: Vec3, b: Vec3) => Math.atan2(b[0] - a[0], b[2] - a[2]);
+/** An early swing comes at least this long before the shuttle (s). */
+const EARLY_MIN = 0.03;
+/**
+ * The soonest your racket can be at the shuttle's place (s): you set off RUN_AFTER after the other's hit and run from
+ * `from` to `spot` at no more than EARLY_RUN_CAP, ending SWING_LEAD before contact, with the overhead's prep and the
+ * run's turn before that. An early swing comes no sooner, so you always get there (Phase 9, owner 2026-11-07).
+ */
+const soonest = (after: number, from: Vec3, spot: Vec3) =>
+  after +
+  RUN_AFTER +
+  Math.max(
+    OVERHEAD_CLIP.contact + TURN.out + 1e-3,
+    SWING_LEAD + ground(from, spot) / EARLY_RUN_CAP,
+  );
 /** When a flight passes nearest `spot`, seen from above (sampled every 10 ms): the moment a beaten player lunges. */
 function nearest(f: Flight, spot: Vec3): number {
   let best = 0;
@@ -215,7 +229,7 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
   const windows: Window[] = [];
   let dive: number | null = null;
   const serveAt = setup.first ? SERVE_AT.first : SERVE_AT.rest;
-  const done = (end: number | null, mark: RallyScript["mark"] = null): RallyScript => ({
+  const done = (end: number | null): RallyScript => ({
     setup,
     serveAt,
     windows,
@@ -225,7 +239,7 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
     contacts: swings.filter((w) => w.meets).map((w) => w.contact),
     dive,
     end,
-    mark,
+    mark: null,
   });
 
   /** A swing that meets the shuttle at `at` with `kind`: the feet that put the sweet spot there. */
@@ -307,38 +321,35 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
   const you: Vec3 = [Math.sign(youX) * YOUR_BASE_X, 0, BASE_Z];
 
   /**
-   * Your pick that misses ends the rally at once, his point (owner play-test ruling). Late: he was set for the overhead
-   * at `at` (the pick is known only at its commit); the shuttle goes by the sweet spot on to the floor in your court,
-   * and he stretches for it too late, at full reach as it lands. Early: the same swing EARLY_FRAME too soon meets the
-   * shuttle on the frame (the feet where the meeting swing planned them, T8 fix ruling), and it goes into the net and
-   * drops off the mesh on your side.
+   * Your pick that misses ends the rally at once, his point (owner play-test ruling). You always reach the shuttle
+   * (Phase 9, owner 2026-11-07): you stand where the meeting swing plans (`at`, the feet as for a good shot) and swing
+   * at its place, late (the shuttle has gone by; the pick is known only at the commit) or early (it has not come), and
+   * the racket finds nothing: the shuttle flies on to the floor in your court. `after` is the other's hit, `from` where
+   * you stand then.
    */
-  const missed = (into: Flight, at: Vec3, contact: number, miss: "late" | "early") => {
-    if (miss === "late") {
-      const spot = feetFor(at, FACE.you, reach.overhead);
-      const lands = into.start + into.path.end;
-      swings.push({
-        by: "you",
-        kind: "stretch",
-        contact: lands,
-        spot,
-        face: FACE.you,
-        meets: false,
-        miss,
-        due: contact,
-        // He reaches across to the side away from where it falls (it falls by his racket shoulder), so his body and
-        // racket are out of its way and it drops clean past him.
-        side: sideOf(into.path.lands![0], spot) === "right" ? "left" : "right",
-      });
-      return done(lands + CALL_AFTER_S);
-    }
-    const t = contact - EARLY_FRAME;
-    const from = into.path.at(t - into.start);
-    Object.assign(hit("you", "overhead", at, contact), { miss, contact: t });
-    const net: Vec3 = [from[0], lerp(...NET_HIT, d(6)), 0];
-    fly(t, flyTo(from, net, FLIGHT.net));
-    const off = fly(t + FLIGHT.net, offTheNet(net, 1));
-    return done(off.start + off.path.end + CALL_AFTER_S);
+  const missed = (
+    into: Flight,
+    at: Vec3,
+    contact: number,
+    miss: "late" | "early",
+    after: number,
+    from: Vec3,
+  ) => {
+    const spot = feetFor(at, FACE.you, reach.overhead);
+    const t =
+      miss === "late"
+        ? contact + MISS.late
+        : Math.min(contact - EARLY_MIN, Math.max(contact - MISS.early, soonest(after, from, spot)));
+    swings.push({
+      by: "you",
+      kind: "overhead",
+      contact: t,
+      spot,
+      face: FACE.you,
+      meets: false,
+      miss,
+    });
+    return done(into.start + into.path.end + CALL_AFTER_S);
   };
 
   // 2. Your first pick: still to come.
@@ -348,7 +359,10 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
     return done(null);
   }
   const miss1 = missOf(first.j);
-  if (miss1) return missed(incoming, yourAt, contact1, miss1);
+  if (miss1) {
+    const from: Vec3 = [sign("you") * BOX_X, 0, setup.server === "yash" ? RECEIVE_Z : SERVE_SPOT_Z];
+    return missed(incoming, yourAt, contact1, miss1, opens, from);
+  }
   hit("you", "overhead", yourAt, contact1);
   recover("you", contact1, you);
   const ys = Math.sign(youX);
@@ -461,21 +475,22 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
     return done(null);
   }
   const miss2 = missOf(second.j);
-  if (miss2) return missed(scoop, yourAt2, contact2, miss2);
+  if (miss2) return missed(scoop, yourAt2, contact2, miss2, dived.contact, you);
   hit("you", "overhead", yourAt2, contact2);
   recover("you", contact2, you);
   if (isGood(second.j)) {
+    // On 20 your best shot goes into the net: the call is still "out", but it is drawn into the net since Phase 9
+    // (owner 2026-11-07), low from your racket and dropping off the mesh on your side.
+    if (setup.on20) {
+      const net: Vec3 = [yourAt2[0], lerp(...NET_HIT, d(6)), 0];
+      fly(contact2, flyTo(yourAt2, net, FLIGHT.net));
+      const off = fly(contact2 + FLIGHT.net, offTheNet(net, 1));
+      return done(off.start + off.path.end + CALL_AFTER_S);
+    }
     const away = diveAt[0] < 0 ? 1 : -1;
-    const by = lerp(OUT_BY.min, OUT_BY.max, d(6));
-    const x = away * lerp(1.0, 2.0, d(6));
-    const land: [number, number] = !setup.on20
-      ? [x, -lerp(5.2, 6.0, d(5))]
-      : d(7) < 0.5
-        ? [x, -(COURT.half + by)]
-        : [away * (COURT.singles + by), -lerp(4.5, 5.5, d(5))];
-    const last = fly(contact2, flyToFloor(yourAt2, land, FLIGHT.smash));
-    const lands = contact2 + FLIGHT.smash;
-    return done(lands + CALL_AFTER_S, setup.on20 ? { at: last.path.lands!, from: lands } : null);
+    const land: [number, number] = [away * lerp(1.0, 2.0, d(6)), -lerp(5.2, 6.0, d(5))];
+    fly(contact2, flyToFloor(yourAt2, land, FLIGHT.smash));
+    return done(contact2 + FLIGHT.smash + CALL_AFTER_S);
   }
   // Wrong: your shot floats; he gets up where the dive left him, moves, and plays his card from it.
   const k: Stroke = smashes(kind) ? "jumpSmash" : "overhead";
