@@ -43,8 +43,9 @@ The three badminton recordings (`shuttle`, `squeak`, `hall`) were picked by Yash
 
 The TakeTray video (`public/media/taketray/brag.mp4`) has a music bed that is not CC0. Its outro credits it on screen too.
 
-| Track                                | Author                 | Licence                                                  | Used in            |
-| ------------------------------------ | ---------------------- | -------------------------------------------------------- | ------------------ |
-| Happy Beats — Business Moves Vol. 12 | Sascha Ende (ende.app) | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | the TakeTray video |
+| Track                                | Author                 | Licence                                                  | Used in                                 |
+| ------------------------------------ | ---------------------- | -------------------------------------------------------- | --------------------------------------- |
+| Happy Beats — Business Moves Vol. 12 | Sascha Ende (ende.app) | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | the TakeTray video                      |
+| Happy Beats — Business Moves Vol. 12 | Sascha Ende (ende.app) | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | the Arena film (`docs/media/arena.mp4`) |
 
 Happy Beats — Business Moves Vol. 12, by Sascha Ende (ende.app), CC BY 4.0 — used in the TakeTray video.
