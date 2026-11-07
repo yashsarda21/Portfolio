@@ -1,0 +1,15 @@
+{
+  // The site is only files (no Worker script): Cloudflare serves build/client as is.
+  "name": "portfolio",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    // The folder the build writes (react-router build + tools/postbuild.mjs).
+    "directory": "./build/client",
+    // The build writes /404.html (see tools/postbuild.mjs). "404-page" sends the nearest 404.html with status 404
+    // for every unknown address, instead of a 200 fallback.
+    "not_found_handling": "404-page",
+    // Pages are prerendered as folder/index.html, but the canonical links, sitemap and routes have no trailing slash.
+    // "drop-trailing-slash" serves /arena as 200 and redirects /arena/ to /arena.
+    "html_handling": "drop-trailing-slash",
+  },
+}

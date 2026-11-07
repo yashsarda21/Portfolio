@@ -8,7 +8,7 @@ import { ROUTES } from "../../src/shell/routes";
 import { waitForHydration } from "./support/contentPage";
 
 /*
- * The planned host (vercel.json) is a plain static host: a real file, or a folder's index.html, or else
+ * The planned host (Cloudflare, wrangler.jsonc) is a plain static host: a real file, or a folder's index.html, or else
  * `404.html` with status 404, and no rewrite to the SPA fallback. The other specs run against sirv with
  * `--single`, which never serves 404.html for an unknown path, so this file serves build/client the way the host does.
  */

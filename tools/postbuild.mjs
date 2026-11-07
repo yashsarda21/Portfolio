@@ -5,7 +5,7 @@
 //     OUT OF BOUNDS content (build/client/404/index.html) is added in a <noscript> for visitors without JavaScript
 //     (see tools/notfound.mjs).
 //  2. Every prerendered page gets its own Content-Security-Policy <meta>, listing the exact hash of each of its
-//     inline scripts (see tools/csp.mjs). The host-only headers (frame-ancestors, upgrade-insecure-requests and the rest) are in vercel.json.
+//     inline scripts (see tools/csp.mjs). The host-only headers (frame-ancestors, upgrade-insecure-requests and the rest) are in public/_headers (Cloudflare).
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

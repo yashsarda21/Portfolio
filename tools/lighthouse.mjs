@@ -181,7 +181,7 @@ function fileFor(pathname) {
 }
 
 /**
- * The static server, standing in for the production host (Vercel serves brotli): text responses are
+ * The static server, standing in for the production host (Cloudflare serves brotli): text responses are
  * brotli-compressed, each file once and kept in memory; everything else is sent as is. Nothing is written into
  * build/client. Without this the phone numbers are dominated by uncompressed transfer sizes.
  */
