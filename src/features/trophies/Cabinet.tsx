@@ -1,6 +1,13 @@
 import { Fragment } from "react";
 import { cn } from "@/lib/cn";
-import { CabinetGlass, SelectableList, ShelfLight, Spotlight, Text, Trophy } from "@/design-system";
+import {
+  CabinetGlass,
+  SelectableList,
+  FloorSpotlight,
+  ShelfLight,
+  Text,
+  Trophy,
+} from "@/design-system";
 import type { TrophiesView, TrophyView } from "./view";
 
 /** Three trophies to a shelf; on the phone, two. A short last shelf is centred. */
@@ -48,7 +55,7 @@ function Cell({
         centring(index, count),
       )}
     >
-      <Spotlight
+      <FloorSpotlight
         index={index}
         size={topShelf ? "lg" : "md"}
         intensity={selected ? "lead" : "support"}

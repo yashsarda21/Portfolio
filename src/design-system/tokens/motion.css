@@ -153,6 +153,67 @@
   animation-delay: var(--d, 0s);
 }
 
+/* The spotlight (owner, 2026-11-07): the unlock panel pops in with one soft volt glow pulse, holds, then in its last
+   450 ms (--spot-delay is the hold minus that) shrinks to 60% and goes toward its card's side while fading out.
+   The exit sits on the outer part and the pop on the panel, so the two never fight over one transform. Reduced
+   motion removes both (the global rule would cut the delay to 0 and hide the panel at once): it just appears, and
+   the game takes it away when its time is up. */
+@keyframes spotlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(var(--rgb-volt) / 0);
+  }
+  35% {
+    box-shadow: 0 0 36px 4px rgb(var(--rgb-volt) / 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(var(--rgb-volt) / 0);
+  }
+}
+@keyframes spotlight-exit-left {
+  to {
+    transform: translateX(-28vw) scale(0.6);
+    opacity: 0;
+  }
+}
+@keyframes spotlight-exit-right {
+  to {
+    transform: translateX(28vw) scale(0.6);
+    opacity: 0;
+  }
+}
+@keyframes spotlight-exit-down {
+  to {
+    transform: translateY(22vh) scale(0.6);
+    opacity: 0;
+  }
+}
+@utility animate-spotlight-in {
+  animation:
+    pop-in var(--dur-pop) var(--ease-follow) both,
+    spotlight-pulse 1400ms ease-out both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@utility animate-spotlight-left {
+  animation: spotlight-exit-left 450ms ease-in var(--spot-delay, 4050ms) forwards;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@utility animate-spotlight-right {
+  animation: spotlight-exit-right 450ms ease-in var(--spot-delay, 4050ms) forwards;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@utility animate-spotlight-down {
+  animation: spotlight-exit-down 450ms ease-in var(--spot-delay, 4050ms) forwards;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* ---------- the boot (Landing) ----------
    Main's per-part entrances. --d is a part's turn in seconds; --pace is the page's speed: 1 unless the page sets
    another (the Landing sets .25 for a return visit, features/landing/pace.css). Both multiply into the delay,

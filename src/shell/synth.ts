@@ -185,6 +185,13 @@ const squeak: Recipe = (ctx, out, at) => {
   tone(ctx, "sine", { from: 2400, to: 3200, glide: 0.06 }, chirp, at, 0.06);
 };
 
+/** The spotlight appears (owner, 2026-11-07): one bright bell tone that steps up a fifth (880 to 1320 Hz) after 120 ms, half a second in all. */
+const reveal: Recipe = (ctx, out, at) => {
+  const bell = envelope(ctx, out, at, PEAK * 0.3, 0.005, 0.5);
+  const osc = tone(ctx, "triangle", { from: 880 }, bell, at, 0.5);
+  osc.frequency.setValueAtTime(1320, at + 0.12);
+};
+
 export const RECIPES: Record<SoundName, Recipe> = {
   bat,
   net,
@@ -202,4 +209,5 @@ export const RECIPES: Record<SoundName, Recipe> = {
   // The 3D badminton game's: the racket on the shuttle is the net's thump (ruling P9), the shoe its own chirp.
   shuttle: net,
   squeak,
+  reveal,
 };

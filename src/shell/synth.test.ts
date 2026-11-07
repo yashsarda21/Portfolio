@@ -90,6 +90,7 @@ const CAPS: Record<SoundName, number> = {
   applause: 1.8,
   shuttle: 0.2,
   squeak: 0.07,
+  reveal: 0.6,
 };
 const AT = 2;
 
