@@ -36,7 +36,7 @@ Every page can also be read without a game. **Quick View** is the 90 second vers
 
 ## Made to work for everyone
 
-It runs on a laptop and on a phone. The games are in 3D, and phones get a lighter version. If your device can't run 3D, or you ask for less motion, you get a simple 2D version of the same games instead. You can play with only a keyboard, and the pages work with a screen reader.
+It runs on a laptop and on a phone. The games are in 3D, and phones get a lighter version. If your device can't run 3D, or you ask for less motion, you get a simple 2D version of the same games instead. You can play with only a keyboard, and the pages are built with screen readers in mind.
 
 ## Built with
 
