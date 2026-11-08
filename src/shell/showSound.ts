@@ -1,5 +1,5 @@
 import { LANDING_BEATS } from "@/features/landing/beats";
-import { INTRO_BEATS } from "@/features/intro/beats";
+import { INTRO_BANKS, INTRO_BEATS } from "@/features/intro/beats";
 
 /** The two recordings (public/audio, CC0, credited in CREDITS.md). Fetched and decoded only after a visitor's click. */
 export const SHOW_FILES = {
@@ -55,7 +55,10 @@ function landingShow({ pace = 1 }: ShowOptions): ShowCue[] {
 
 function introShow({ tier = "desktop" }: ShowOptions): ShowCue[] {
   const lights = (start: number, gap: number): ShowCue[] =>
-    [0, 1, 2, 3].map((i) => ({ at: round(start + i * gap), sound: "light" }));
+    Array.from({ length: INTRO_BANKS[tier] }, (_, i) => ({
+      at: round(start + i * gap),
+      sound: "light",
+    }));
   if (tier === "mobile") {
     const t = INTRO_BEATS.mobile;
     return [

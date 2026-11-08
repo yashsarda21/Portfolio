@@ -39,9 +39,9 @@ describe("showSchedule: the Intro", () => {
     expect(crowd(cues)[0]!.at + crowd(cues)[0]!.fadeIn!).toBeCloseTo(d.flash);
   });
 
-  it("phone: 0.075 + i x 0.3 for the clunks; the crowd from the name, full by the title, faded from the call to action", () => {
+  it("phone: two clunks (it draws two banks), at 0.075 + i x 0.3; the crowd from the name, full by the title, faded from the call to action", () => {
     const cues = showSchedule("intro", { tier: "mobile" });
-    expect(lights(cues)).toEqual([0.075, 0.375, 0.675, 0.975]);
+    expect(lights(cues)).toEqual([0.075, 0.375]);
     expect(crowd(cues)).toEqual([
       { at: 0.9, sound: "crowd", fadeIn: 0.75, holdUntil: 2.25, fadeOut: 1.2 },
     ]);

@@ -60,6 +60,9 @@ export const INTRO_BEATS = {
   },
 } as const satisfies Record<IntroTier, Partial<Record<Beat, number>>>;
 
+/** How many floodlight banks each layout draws (the stage has bank-1..4, the phone column bank-1..2); the sound has one clunk per bank. */
+export const INTRO_BANKS: Record<IntroTier, number> = { desktop: 4, mobile: 2 };
+
 /**
  * How long each reveal lasts, as a multiple of the board's durations. Both tiers play them as drawn: the phone's
  * beats are the 2 s cut's spread to 3 s (D-6), so its reveals no longer need squeezing.
