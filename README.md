@@ -2,6 +2,8 @@
 
 **A portfolio you play.** Walk into the arena, play three short games against me, and find out who I am while you do.
 
+**Play it now: [yashsarda.dev](https://yashsarda.dev)**
+
 <!-- The film, uploaded through GitHub so it plays right here, with sound. -->
 
 https://github.com/user-attachments/assets/5bfabce9-cf22-4203-b3cb-125e4fe31593
