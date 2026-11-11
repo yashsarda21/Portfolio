@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/content/ui-copy";
+import { INTRO_BANKS } from "../../src/features/intro/beats";
 import { ROUTES } from "../../src/shell/routes";
 import { waitForHydration } from "./support/contentPage";
 
@@ -80,6 +81,12 @@ test("the sound toggle starts the sound when it turns it on (before any call to 
 
 const html = (page: Page) => page.locator("html");
 
+/** The Intro's show: one clunk per floodlight bank its layout draws (4 on the stage from 1200px, 2 on the column below it), and the crowd. */
+function introShowSounds(page: Page): string {
+  const tier = (page.viewportSize()?.width ?? 0) < 1200 ? "mobile" : "desktop";
+  return String(INTRO_BANKS[tier] + 1);
+}
+
 test("a first visit to the Home is silent: both recordings are fetched, no sound context is made, no show is scheduled", async ({
   page,
 }) => {
@@ -98,7 +105,7 @@ test("a first visit to the Home is silent: both recordings are fetched, no sound
   await expect(html(page)).not.toHaveAttribute("data-show-scheduled");
 });
 
-test("the Intro reached directly plays its show on the first gesture (four clunks and the crowd)", async ({
+test("the Intro reached directly plays its show on the first gesture (one clunk per floodlight bank and the crowd)", async ({
   page,
 }) => {
   await countAudioContexts(page);
@@ -106,7 +113,7 @@ test("the Intro reached directly plays its show on the first gesture (four clunk
   await waitForHydration(page);
   expect(await contexts(page), "no sound before a gesture").toBe(0);
   await page.mouse.click(5, 5);
-  await expect(html(page)).toHaveAttribute("data-show-scheduled", "5");
+  await expect(html(page)).toHaveAttribute("data-show-scheduled", introShowSounds(page));
   await expect.poll(() => contexts(page)).toBe(1);
 });
 
@@ -119,7 +126,7 @@ test("ENTER THE ARENA unlocks the sound, and the Intro it opens plays the full s
   await expect(enter).toBeVisible({ timeout: 10_000 });
   await enter.click();
   await expect(page).toHaveURL(ROUTES.intro);
-  await expect(html(page)).toHaveAttribute("data-show-scheduled", "5");
+  await expect(html(page)).toHaveAttribute("data-show-scheduled", introShowSounds(page));
 });
 
 test("sound saved as off: the Intro's first gesture schedules nothing audible", async ({

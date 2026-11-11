@@ -34,9 +34,12 @@ test("the game page, the Scout report and Full Time show BACK; Home and the Intr
   for (const path of [ROUTES.tennis, ROUTES.scout, ROUTES.fullTime]) {
     await page.goto(path);
     await expect(back(page)).toBeVisible();
-    const box = await back(page).boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(44);
-    expect(box?.width).toBeGreaterThanOrEqual(44);
+    // The button is re-mounted as the page settles, so the box is read again until it is there.
+    for (const side of ["height", "width"] as const) {
+      await expect
+        .poll(async () => (await back(page).boundingBox())?.[side] ?? 0)
+        .toBeGreaterThanOrEqual(44);
+    }
   }
   for (const path of [ROUTES.home, ROUTES.intro]) {
     await page.goto(path);
