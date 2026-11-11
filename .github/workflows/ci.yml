@@ -22,7 +22,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # chromium for the desktop and mobile projects, webkit for the Safari smoke (P10)
-      - run: pnpm exec playwright install --with-deps chromium webkit
+      - name: Install browsers (retries on network trouble)
+        run: |
+          for i in 1 2 3; do
+            timeout 10m pnpm exec playwright install --with-deps chromium webkit && exit 0
+            echo "browser install failed (try $i of 3)"; sleep 20
+          done
+          exit 1
       - run: pnpm verify
         env:
           # A reserved test name, so the canonical, sitemap and robots specs have an address to check (P3)
