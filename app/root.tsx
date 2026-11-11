@@ -10,6 +10,10 @@ import "./app.css";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preload", href: displayFont, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+  // The tab icon: the YS mark in the volt border. The .ico (16, 32 and 48 inside) is for older browsers, the .svg for modern ones.
+  { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
