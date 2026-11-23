@@ -16,6 +16,8 @@ export interface SceneProps<A, W> {
   assets: A;
   world: RefObject<W | null>;
   layout: GameLayout;
+  /** The banner is still up: compile, but draw no frames yet (a hidden scene drawing for seconds only loads the GPU). */
+  hold?: boolean;
   onShown?: () => void;
   onDrawn?: () => void;
 }
@@ -34,7 +36,9 @@ export const BANNER_MIN_MS = 2500;
  * canvas's own: the board's backdrop stays over a new canvas until its first frame is on it (a resize across 1200px
  * mounts a new one). Once the files are in, the scene gets THREE_SHOW_TIMEOUT_MS to show, or the 2D game takes over.
  * The banner stays at least BANNER_MIN_MS: `ready` (the game's clock, its controls, the hum) waits for it too, so
- * nothing starts under the banner. The stadium hums under the game while it is on screen.
+ * nothing starts under the banner, and the canvas draws no frames until then (`hold`: a hidden scene drawing for
+ * seconds only queues work for the GPU, which on a slow one stalls the page's own frames). The stadium hums under the
+ * game while it is on screen.
  */
 export function useThreeScreen<A, W>({
   gate,
@@ -89,6 +93,7 @@ export function useThreeScreen<A, W>({
             assets: loaded.assets,
             world,
             layout,
+            hold: !read,
             onShown: () => setShown(true),
             onDrawn: () => setDrawn({ layout, on: true }),
           }),

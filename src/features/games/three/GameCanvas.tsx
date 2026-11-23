@@ -63,6 +63,7 @@ export function GameCanvas({
   fov,
   position,
   antialias,
+  hold = false,
   onShown,
   onDrawn,
   children,
@@ -73,6 +74,8 @@ export function GameCanvas({
   position: Vec3;
   /** Smooth the edges of the geometry: a game can ask for it on the column, whose setting leaves it off. */
   antialias?: boolean;
+  /** Draw no frames yet (the scene is compiled and waits, hidden, under the banner). */
+  hold?: boolean;
   onShown?: () => void;
   onDrawn?: () => void;
   children: ReactNode;
@@ -98,14 +101,14 @@ export function GameCanvas({
       shadows={settings.shadows ? "percentage" : false}
       gl={{ antialias: antialias ?? settings.antialias, powerPreference: "high-performance" }}
       camera={{ fov, near: 0.1, far: 500, position: [...position] }}
-      frameloop={drawing ? "always" : "never"}
+      frameloop={drawing && !hold ? "always" : "never"}
       onCreated={({ scene }) => {
         scene.background = tokenColor("--ref-night");
       }}
     >
       {children}
       <WarmUp onWarm={onWarm} />
-      {drawing ? <FirstFrame onDrawn={onFirstFrame} /> : null}
+      {drawing && !hold ? <FirstFrame onDrawn={onFirstFrame} /> : null}
     </Canvas>
   );
 }

@@ -101,6 +101,7 @@ export function TennisScene({
   assets,
   world,
   layout,
+  hold,
   onShown,
   onDrawn,
 }: SceneProps<TennisAssets, WorldState>) {
@@ -115,6 +116,7 @@ export function TennisScene({
       fov={CAMERA.fov[layout]}
       position={CAMERA.tv.position}
       antialias
+      hold={hold}
       onShown={onShown}
       onDrawn={onDrawn}
     >

@@ -184,6 +184,7 @@ export function BadmintonScene({
   assets,
   world,
   layout,
+  hold,
   onShown,
   onDrawn,
 }: SceneProps<BadmintonAssets, WorldState>) {
@@ -198,6 +199,7 @@ export function BadmintonScene({
       fov={CAMERA.fov[layout]}
       position={CAMERA.tv[layout].position}
       antialias
+      hold={hold}
       onShown={onShown}
       onDrawn={onDrawn}
     >

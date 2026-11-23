@@ -93,6 +93,7 @@ export function CricketScene({
   assets,
   world,
   layout,
+  hold,
   onShown,
   onDrawn,
 }: SceneProps<CricketAssets, WorldState>) {
@@ -101,6 +102,7 @@ export function CricketScene({
       layout={layout}
       fov={CAMERA.fov[layout]}
       position={CAMERA.aim.position}
+      hold={hold}
       onShown={onShown}
       onDrawn={onDrawn}
     >
