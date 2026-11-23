@@ -241,7 +241,7 @@ describe("pointShotlist: the players", () => {
       const s = pointShotlist(script, REACH);
       for (const w of script.swings.filter((w) => w.miss)) {
         const clipAt = (t: number) =>
-          sampleTrack(s.actors.you, t).clips.find((c) => c.clip === w.kind)!.time;
+          sampleTrack(s.actors[w.by], t).clips.find((c) => c.clip === w.kind)!.time;
         expect(clipAt(w.contact)).toBeCloseTo(STROKE_CLIP.contact, 9);
         if (w.miss === "late")
           expect(clipAt(w.contact - MISS.late)).toBeLessThanOrEqual(
@@ -264,7 +264,7 @@ describe("pointShotlist: the players", () => {
     const kinds = new Set<string>();
     for (const { script, scripts, inputs } of POINTS) {
       const s = pointShotlist(script, REACH);
-      for (const w of script.swings.filter((w) => w.by === "you" && w.kind !== "stretch")) {
+      for (const w of script.swings.filter((w) => w.by === "you" && w.kind !== "serve")) {
         // The ball's moment at your racket: the swing's own, or (a miss) the one planned before the input was judged.
         const planned =
           w.miss === "late"

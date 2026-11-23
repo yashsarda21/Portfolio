@@ -17,6 +17,11 @@ export const JUMP_SMASH_CLIP = {
 export const NET_CLIP = { contact: 0.45, end: 1.2 } as const;
 /** The underarm lift, from a lunge. */
 export const LIFT_CLIP = { contact: 0.45, end: 1.2 } as const;
+/**
+ * The lunges (the net shot, the lift and the block, moves.ts): the right foot drives out at `drive`, its heel lands at
+ * `heel` (s into the clip).
+ */
+export const LUNGE = { drive: 0.12, heel: 0.28 } as const;
 /** The block, the racket in front. */
 export const BLOCK_CLIP = { contact: 0.25, end: 0.9 } as const;
 /**
@@ -30,6 +35,8 @@ export const DIVE_CLIP = { launch: 0.15, contact: 0.4, floor: 0.6, up: 1.5, end:
  * dive hands over, and he does not slide back to his spot.
  */
 export const DIVE_LANDS = [0, 0, 1.4] as const;
+/** Back on his feet after a dive, he turns to face the net over this long (s). */
+export const GET_UP_TURN = 0.4;
 /** The stretch (beaten): the racket is at full reach this far into the clip. */
 export const STRETCH_CLIP = { reach: 0.35, end: 1.1 } as const;
 /** The split step when the other player hits. */

@@ -29,7 +29,18 @@ import {
   type Window,
 } from "./rally";
 import { netGap, NET_CLEAR, NET_SKIM } from "./shuttle";
-import { DIVE_CLIP, DIVE_LANDS, MISS, SWING_LEAD } from "./timing";
+import {
+  BLOCK_CLIP,
+  DIVE_CLIP,
+  DIVE_LANDS,
+  EARLY_RUN_CAP,
+  LIFT_CLIP,
+  LUNGE,
+  MISS,
+  OVERHEAD_CLIP,
+  RUN_AFTER,
+  SWING_LEAD,
+} from "./timing";
 
 /** The reach Task 6 measured on the real athlete (body frame: x his left, y up, z his front). */
 const REACH: Reach = {
@@ -255,7 +266,9 @@ describe("scriptRally: the rules", () => {
       const { scripts, script } = play(setup, picks);
       // match.ts counts an early pick's shot as played; since Phase 9 the racket misses it (no contact), as with a late one.
       const early = decideRally(s, picks).call === "early" ? 1 : 0;
-      expect(script.contacts.length).toBe(decideRally(s, picks).shots - early);
+      // The beaten player's net shot at the winning shot is one contact more (owner 2026-11-23).
+      const netted = script.swings.some((w) => w.beaten && w.meets) ? 1 : 0;
+      expect(script.contacts.length).toBe(decideRally(s, picks).shots - early + netted);
       expect(script.end).toEqual(expect.any(Number));
       scripts.slice(0, -1).forEach((pending) => expect(pending.end).toBeNull());
     }
@@ -271,7 +284,7 @@ describe("scriptRally: the rules", () => {
         return `ends on ${last.kind}`;
       if (kind === "dive" && last.kind !== "dive" && last.kind !== "block")
         return `ends on ${last.kind}`;
-      const lands = s.flights.at(-1)!.path.lands!;
+      const lands = leaving(s, last.contact)!.path.lands!;
       if (kind === "drop" && !(lands[2] > 0 && lands[2] <= 1.2))
         return `the drop lands at ${lands[2]}`;
       const inside = Math.abs(lands[0]) < COURT.singles && lands[2] > 0 && lands[2] < COURT.half;
@@ -323,7 +336,8 @@ describe("scriptRally: the rules", () => {
       if (s.mark !== null) return "a mark: nothing is drawn OUT";
       if (call !== "winner" && call !== "out") return null;
       if (call === "winner") {
-        const lands = s.flights.at(-1)!.path.lands!;
+        const yours = s.swings.filter((w) => w.by === "you" && w.meets).at(-1)!;
+        const lands = leaving(s, yours.contact)!.path.lands!;
         const past = Math.max(Math.abs(lands[0]) - COURT.singles, -lands[2] - COURT.half);
         return lands[2] < 0 && past < 0 ? null : `the winner is out by ${past}`;
       }
@@ -340,6 +354,65 @@ describe("scriptRally: the rules", () => {
     });
     expect(bad).toEqual([]);
     expect(nets).toBeGreaterThan(0);
+  }, 30_000);
+
+  it("the beaten player always gets to the winning shot (owner 2026-11-23): his racket is on it, or a beat late", () => {
+    const seen = new Set<string>();
+    const bad = sweep((s, { s: state, picks }) => {
+      // Every rally that ends on a winning shot: yours, or Yash's card (wrong, dive, read).
+      const { call } = decideRally(state, picks);
+      if (call === "late" || call === "early" || call === "out") return null;
+      const w = s.swings.at(-1)!;
+      if (!w.beaten || w.by !== (call === "winner" ? "yash" : "you"))
+        return `${w.by}'s last swing is not the beaten one`;
+      if (!w.meets && w.miss !== "late") return "a miss that is not late";
+      // The shuttle's moment at his racket: the swing's own, or MISS.late before a late one.
+      const moment = w.meets ? w.contact : w.contact - MISS.late;
+      const f = arriving(s, moment)!;
+      const off = gap(f.path.at(moment - f.start), sweet(w));
+      if (off > 0.01) return `${w.by}'s racket is ${off} m off the shuttle`;
+      const lands = f.path.lands!;
+      if (Math.abs(lands[0]) > COURT.singles || Math.abs(lands[2]) > COURT.half)
+        return `the winning shot lands out at ${lands.join(", ")}`;
+      // The run: from the other's hit (+ RUN_AFTER, or up from a dive) until the stroke plants, from where he hit last
+      // (where a dive left him) or where he recovered to.
+      const hit = s.swings.filter((x) => x.by !== w.by && x.meets && x.contact < moment).at(-1)!;
+      const last = s.swings.filter((x) => x.by === w.by && x.contact < hit.contact).at(-1)!;
+      const rec = s.recovers.filter((r) => r.by === w.by && r.start < hit.contact).at(-1);
+      const dived = last.kind === "dive";
+      const from = dived ? toWorld(last.spot, last.face, DIVE_LANDS) : last.spot;
+      const sets = Math.max(
+        hit.contact + RUN_AFTER,
+        dived ? last.contact - DIVE_CLIP.contact + DIVE_CLIP.end : 0,
+      );
+      const clip = { block: BLOCK_CLIP, lift: LIFT_CLIP, overhead: OVERHEAD_CLIP }[
+        w.kind as "block"
+      ];
+      const plant = w.kind === "overhead" ? OVERHEAD_CLIP.commit : LUNGE.drive;
+      const time = moment - (clip.contact - plant) - sets;
+      // Recovered by the hit, he runs from where he recovered to; else from anywhere on the way.
+      const settled = rec !== undefined && !dived && rec.end <= hit.contact;
+      const far = Math.max(
+        settled ? 0 : ground(from, w.spot),
+        rec && !dived ? ground(rec.to, w.spot) : 0,
+      );
+      if (far / time > EARLY_RUN_CAP + 1e-9) return `${w.by} runs at ${far / time} m/s`;
+      seen.add(`${w.by} ${w.kind} ${w.meets ? "net" : "late"}`);
+      return null;
+    });
+    expect(bad).toEqual([]);
+    expect([...seen].sort()).toEqual(
+      [
+        "yash overhead late",
+        "yash overhead net",
+        "you block late",
+        "you block net",
+        "you lift late",
+        "you lift net",
+        "you overhead late",
+        "you overhead net",
+      ].sort(),
+    );
   }, 30_000);
 
   it("a rebuild never changes the past", () => {

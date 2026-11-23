@@ -337,9 +337,7 @@ describe("rallyShotlist: the players", () => {
     const kinds = new Set<string>();
     for (const r of RALLIES) {
       const s = rallyShotlist(r.script, REACH);
-      for (const w of r.script.swings.filter(
-        (w) => w.by === "you" && w.kind !== "serve" && w.kind !== "stretch",
-      )) {
+      for (const w of r.script.swings.filter((w) => w.by === "you" && w.kind !== "serve")) {
         // The shuttle's moment at your racket: the swing's own, or (a miss) the one planned before the pick was judged.
         const planned =
           w.miss === "late"

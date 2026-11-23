@@ -25,7 +25,6 @@ import {
   GRAVITY,
   RECEIVE_SPOT,
   SERVE_SPOT,
-  sideSign,
   type ActorId,
   type Vec3,
 } from "./court";
@@ -42,7 +41,6 @@ import {
   SERVE_LANDS,
   SHUFFLE_PACE,
   SPLIT_CLIP,
-  STRETCH_CLIP,
   STROKE_CLIP,
   SWING_LEAD,
   type TennisClip,
@@ -117,21 +115,18 @@ const GAIT: Gait<TennisClip> = {
 const recover = (track: Track, id: ActorId, r: Recover, clipAt = r.start, fade = 0.2) =>
   recoverTo(track, FACE[id], r, GAIT, clipAt, fade);
 
-/** The stretch toward the player's own right is the forehand lunge; `side` is the screen's (ruling R5). */
-const stretchClip = (id: ActorId, side: Side): TennisClip =>
-  // The player's right, in the world, has x −cos(face).
-  sideSign(side) * -Math.cos(FACE[id]) > 0 ? "stretchF" : "stretchB";
-
-/** One swing: the split-step at the other's hit, the run, the stroke on its contact (or a miss's), then ready. */
+/**
+ * One swing: the split-step at the other's hit, the run, the stroke on its contact (or a miss's), then ready. The
+ * beaten player's swing at the point's winning ball is one too (owner 2026-11-23): he runs to it as to any.
+ */
 function swing(track: Track, id: ActorId, w: Swing, hit: number) {
   const go = hit + RUN_AFTER;
-  const stretch = w.kind === "stretch";
   // A late swing keeps the meeting swing's timing up to its commit (the ball's moment − SWING_LEAD).
   const on = w.miss === "late" ? w.contact - MISS.late : w.contact;
-  const clip: TennisClip = stretch ? stretchClip(id, w.side ?? "right") : (w.kind as TennisClip);
-  const clipAt = stretch ? w.contact - STRETCH_CLIP.reach : on - STROKE_CLIP.contact;
-  const fade = stretch ? STRETCH_CLIP.reach : STROKE_FADE;
-  const arrive = stretch ? w.contact : on - SWING_LEAD;
+  const clip = w.kind as TennisClip;
+  const clipAt = on - STROKE_CLIP.contact;
+  const fade = STROKE_FADE;
+  const arrive = on - SWING_LEAD;
 
   cutMoves(track, go);
   addClip(track, { clip: "split", start: hit, fade: 0.1 });
@@ -159,9 +154,7 @@ function swing(track: Track, id: ActorId, w: Swing, hit: number) {
     addClip(track, { clip, start: commit, from: STROKE_CLIP.commit, speed: 0, fade: 0.05 });
     addClip(track, { clip, start: commit + MISS.late, from: STROKE_CLIP.commit, fade: 0.05 });
   }
-  const done = stretch
-    ? clipAt + STRETCH_CLIP.end
-    : w.contact + STROKE_CLIP.end - STROKE_CLIP.contact;
+  const done = w.contact + STROKE_CLIP.end - STROKE_CLIP.contact;
   addClip(track, { clip: "ready", start: done, loop: true, fade: 0.3 });
 }
 
@@ -225,7 +218,7 @@ function tossBall(spot: Vec3, reach: Reach, takes: number) {
   ];
 }
 
-/** Whether this point ends the game: Yash wins it at 40 (you win only the points where Yash stretches for your last ball). */
+/** Whether this point ends the game: Yash wins it at 40 (you win only the points where Yash is beaten by your last ball). */
 function endsGame(script: PointScript): boolean {
   const { gamePoint, capped } = script.setup;
   const youWin = !capped && script.swings.at(-1)?.by === "yash";

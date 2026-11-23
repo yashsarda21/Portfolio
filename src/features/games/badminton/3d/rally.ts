@@ -30,10 +30,14 @@ import {
 import type { Reach } from "./reach";
 import { flyTo, flyToFloor, offTheNet, type ShuttlePath } from "./shuttle";
 import {
+  BLOCK_CLIP,
   DIVE_CLIP,
   DIVE_LANDS,
   EARLY_RUN_CAP,
+  GET_UP_TURN,
   JUMP_SMASH_CLIP,
+  LIFT_CLIP,
+  LUNGE,
   MISS,
   OVERHEAD_CLIP,
   RUN_AFTER,
@@ -51,8 +55,10 @@ export const SERVE_AT = { first: 1.2, rest: 2.0 } as const;
 export const FLIGHT = {
   /** Your automatic high serve, to Yash's overhead. */
   serve: 1.6,
-  /** Your smash: at Yash, past him into his dive, or into the empty court. */
+  /** Your smash: at Yash, or past him into his dive. */
   smash: 0.8,
+  /** Your high clear into the court he left as he dived (owner 2026-11-23: he gets up and gets to it at the back). */
+  clear: 1.8,
   /** Your drop: at Yash by the net, or short of him into his dive. */
   drop: 1.1,
   /** A wrong shot of yours in a smash rally (or a wrong second shot) floating up to Yash's mid-court. */
@@ -84,6 +90,23 @@ const NET_HIT = [1.0, 1.3] as const;
 const YOUR_BASE_X = 0.3;
 /** The cross-court corners Yash's placement aims at (m: across, and depth from the net). */
 const CORNER = { x: 2.2, front: [0.6, 1.0], back: [5.9, 6.3] } as const;
+/**
+ * The beaten player's strokes at the winning shot (owner 2026-11-23): each one's contact (s into its clip) and its
+ * plant, where his run arrives (sequence.ts PLANT). A smash he blocks, a shot to the front he lifts, one to the back he
+ * plays overhead.
+ */
+const ANSWER = {
+  block: { contact: BLOCK_CLIP.contact, plant: LUNGE.drive },
+  lift: { contact: LIFT_CLIP.contact, plant: LUNGE.drive },
+  overhead: { contact: OVERHEAD_CLIP.contact, plant: OVERHEAD_CLIP.commit },
+} as const;
+type Answer = keyof typeof ANSWER;
+/** A recovery's ready stance fades in over this long (footwork.ts recoverTo): he may set off this much later. */
+const SETTLING = 0.2;
+/** A smash comes at most this far (m) from where you wait: you block it at your body. */
+const AT_BODY = 1.0;
+/** A shot lands this near the net (m) or nearer: it is to the front. */
+const FRONT = 2.5;
 
 export interface RallySetup {
   server: Player;
@@ -113,7 +136,7 @@ export interface Decided {
 }
 export interface Swing {
   by: Player;
-  kind: Stroke | "stretch";
+  kind: Stroke;
   /** s from the rally's start: when the racket is (or would be) at the shuttle's place. */
   contact: number;
   /** The feet at contact (a dive: where he launches from). */
@@ -126,8 +149,8 @@ export interface Swing {
    * after the shuttle went by) or early (before it came). He always gets to its place (Phase 9, owner 2026-11-07).
    */
   miss?: "late" | "early";
-  /** Stretch only: which way, as the screen shows it (+x is your right). */
-  side?: "left" | "right";
+  /** The beaten player's swing at the rally's winning shot (owner 2026-11-23): into the net, or a beat late. */
+  beaten?: true;
 }
 export interface Flight {
   start: number;
@@ -186,7 +209,6 @@ const smashes = (kind: RallyKind) => kind === "smash" || kind === "final";
 const isGood = (j: Judged) => j.q !== "miss";
 /** A pick that misses the shuttle (too late or too early), as opposed to a wrong shot that is played. */
 const missOf = (j: Judged) => (j.call === "late" || j.call === "early" ? j.call : undefined);
-const sideOf = (x: number, from: Vec3): "left" | "right" => (x >= from[0] ? "right" : "left");
 /** The heading (0 faces +z) from `a` toward `b` along the ground. */
 const headingTo = (a: Vec3, b: Vec3) => Math.atan2(b[0] - a[0], b[2] - a[2]);
 /** An early swing comes at least this long before the shuttle (s). */
@@ -203,15 +225,17 @@ const soonest = (after: number, from: Vec3, spot: Vec3) =>
     OVERHEAD_CLIP.contact + TURN.out + 1e-3,
     SWING_LEAD + ground(from, spot) / EARLY_RUN_CAP,
   );
-/** When a flight passes nearest `spot`, seen from above (sampled every 10 ms): the moment a beaten player lunges. */
-function nearest(f: Flight, spot: Vec3): number {
-  let best = 0;
-  let gap = Infinity;
-  for (let t = 0; t <= f.path.end; t += 0.01) {
-    const d = ground(f.path.at(t), spot);
-    if (d < gap) [best, gap] = [t, d];
+/** When `path` last comes down through height `h` (s from its hit): a step back from the floor, then by halving. */
+function comesDown(path: ShuttlePath, h: number): number {
+  let t = path.end;
+  while (t > 0 && path.at(t)[1] < h) t -= 0.01;
+  let [lo, hi] = [Math.max(t, 0), Math.min(t + 0.01, path.end)];
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (path.at(mid)[1] >= h) lo = mid;
+    else hi = mid;
   }
-  return f.start + best;
+  return lo;
 }
 
 /**
@@ -260,20 +284,60 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
       end: shot + RECOVER.after + RECOVER.takes,
       to,
     });
-  /** The end of a rally Yash wins: you stretch for his last shot as it goes by, and the call follows its landing. */
-  const beaten = (last: Flight): RallyScript => {
-    const lunge = nearest(last, you);
-    const at = last.path.at(lunge - last.start);
-    swings.push({
-      by: "you",
-      kind: "stretch",
-      contact: lunge,
-      spot: you,
-      face: FACE.you,
-      meets: false,
-      side: sideOf(at[0], you),
-    });
-    return done(last.start + last.path.end + CALL_AFTER_S);
+  /**
+   * The rally's winning shot, `win` as designed (from its striker's racket to the floor), and the beaten player's
+   * answer (owner 2026-11-23): he always gets to it. The shuttle comes to his racket in stroke `k`, at `at` (by default
+   * where the designed shot comes down through the stroke's height), no sooner than his run there allows at
+   * EARLY_RUN_CAP from any place he may be (`from`), setting off at `after`; then on to the floor (a later one flies
+   * higher and comes down shorter, still in). He plays it into the net, or swings a beat late (MISS.late) as it goes
+   * by: draw 7 picks. The call follows the last shuttle down.
+   */
+  const chase = (
+    by: Player,
+    win: Flight,
+    k: Answer,
+    from: Vec3[],
+    after: number,
+    at?: Vec3,
+  ): RallyScript => {
+    const due = at ? win.path.end : comesDown(win.path, reach[k][1]);
+    const to = at ?? win.path.at(due);
+    const spot = feetFor(to, FACE[by], reach[k]);
+    const far = Math.max(...from.map((f) => ground(f, spot)));
+    const { contact: c, plant } = ANSWER[k];
+    const contact = Math.max(
+      win.start + due,
+      after + Math.max(c + TURN.out + 1e-3, c - plant + far / EARLY_RUN_CAP),
+    );
+    const shot = fly(win.start, flyTo(win.path.at(0), to, contact - win.start));
+    const w: Swing = { by, kind: k, contact, spot, face: FACE[by], meets: true, beaten: true };
+    if (d(7) < 0.5) {
+      swings.push(w);
+      const net: Vec3 = [to[0], lerp(...NET_HIT, d(6)), 0];
+      fly(contact, flyTo(to, net, FLIGHT.net));
+      const off = fly(contact + FLIGHT.net, offTheNet(net, by === "you" ? 1 : -1));
+      return done(off.start + off.path.end + CALL_AFTER_S);
+    }
+    swings.push({ ...w, contact: contact + MISS.late, meets: false, miss: "late" });
+    return done(shot.start + shot.path.end + CALL_AFTER_S);
+  };
+  /**
+   * The end of a rally Yash wins with his card shot: you get to it, from where you hit last or from your base. His
+   * smash comes at your body (AT_BODY from your base, toward where it was aimed), and you block it.
+   */
+  const beaten = (win: Flight & { k: Stroke }): RallyScript => {
+    // Recovered by his hit, you set off from your base once your ready stance has faded in; else from on the way.
+    const back = recovers.filter((r) => r.by === "you").at(-1)!.end;
+    const from =
+      back <= win.start ? [you] : [swings.filter((w) => w.by === "you").at(-1)!.spot, you];
+    const after = win.start + RUN_AFTER + clamp(back + SETTLING - win.start, 0, SETTLING);
+    const [x, , z] = win.path.lands!;
+    if (win.k === "jumpSmash") {
+      const s = Math.min(1, AT_BODY / Math.hypot(x - you[0], z - you[2]));
+      const body: Vec3 = [you[0] + (x - you[0]) * s, 0, you[2] + (z - you[2]) * s];
+      return chase("you", win, "block", from, after, toWorld(body, FACE.you, reach.block));
+    }
+    return chase("you", win, z <= FRONT ? "lift" : "overhead", from, after);
   };
 
   // 1. The serve, underarm (contact below 1.15 m), high and deep. When you serve, Yash's high clear stands in for his.
@@ -367,8 +431,8 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
   recover("you", contact1, you);
   const ys = Math.sign(youX);
 
-  /** Yash's card shot from `at` (his stroke `k`) to the floor, where the rally's kind puts it. */
-  const card = (k: Exclude<Stroke, "serve">, at: Vec3, t: number, face = FACE.yash): Flight => {
+  /** Yash's card shot from `at` (his stroke `k`) to the floor, where the rally's kind puts it: as designed (`beaten` flies it). */
+  const card = (k: Exclude<Stroke, "serve">, at: Vec3, t: number, face = FACE.yash) => {
     const across = (lo: number, hi: number) => -ys * lerp(lo, hi, d(6));
     const deep = (lo: number, hi: number) => lerp(lo, hi, d(5));
     const placement = k === "block" ? CORNER.front : CORNER.back;
@@ -381,7 +445,7 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
           : [-ys * CORNER.x, deep(placement[0], placement[1])];
     const flight = k === "overhead" ? (kind === "drop" ? CARD.drop : CARD.clear) : CARD[k];
     hit("yash", k, at, t, face);
-    return fly(t, flyToFloor(at, land, flight));
+    return { start: t, path: flyToFloor(at, land, flight), k };
   };
   /** Where Yash meets a shot floating up to his mid-court with stroke `k`, his feet near (x, z): inside CONTACT_Z.mid. */
   const midAt = (k: Stroke, x: number, z: number): Vec3 => [
@@ -487,10 +551,14 @@ export function scriptRally(setup: RallySetup, decided: Decided, reach: Reach): 
       const off = fly(contact2 + FLIGHT.net, offTheNet(net, 1));
       return done(off.start + off.path.end + CALL_AFTER_S);
     }
+    // Your clear into the court he left: he gets up from his dive, runs back and gets to it (owner 2026-11-23; your
+    // smash there was gone before he was up).
     const away = diveAt[0] < 0 ? 1 : -1;
     const land: [number, number] = [away * lerp(1.0, 2.0, d(6)), -lerp(5.2, 6.0, d(5))];
-    fly(contact2, flyToFloor(yourAt2, land, FLIGHT.smash));
-    return done(contact2 + FLIGHT.smash + CALL_AFTER_S);
+    const win = { start: contact2, path: flyToFloor(yourAt2, land, FLIGHT.clear) };
+    // He sets off once he is up and turned to the net.
+    const stand = dived.contact - DIVE_CLIP.contact + DIVE_CLIP.end + GET_UP_TURN;
+    return chase("yash", win, "overhead", [up], Math.max(contact2 + RUN_AFTER, stand));
   }
   // Wrong: your shot floats; he gets up where the dive left him, moves, and plays his card from it.
   const k: Stroke = smashes(kind) ? "jumpSmash" : "overhead";
