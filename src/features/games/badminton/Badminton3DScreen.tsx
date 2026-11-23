@@ -295,6 +295,7 @@ export function Badminton3DScreen({ gate }: { gate: ThreeGate<Badminton3d> }) {
         status: ready ? "ready" : "loading",
         drawn,
         progress: gate.progress,
+        banner: ui.games.badminton.three.banner,
         scene,
         layout,
         live: LIVE_3D.includes(run.phase),

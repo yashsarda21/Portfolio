@@ -23,6 +23,7 @@ export function GameColumn({
   reveal,
   field,
   thumb,
+  banner,
   heading,
   scene,
   sceneHidden = false,
@@ -34,6 +35,8 @@ export function GameColumn({
   reveal: ReactNode;
   field?: ReactNode;
   thumb: ReactNode;
+  /** The 3D game's banner while it loads: centred between the top row and the thumb zone, never taking a tap. */
+  banner?: ReactNode;
   heading: string;
   /** The 3D scene, when there is one: it replaces the backdrop and fills the screen's width. */
   scene?: ReactNode;
@@ -77,6 +80,11 @@ export function GameColumn({
           <QuickViewChip tone="glass-line" className="short:hidden" />
         </div>
         {field ? <div className="absolute inset-0 z-5">{field}</div> : null}
+        {banner ? (
+          <div className="pointer-events-none absolute inset-x-0 top-28 bottom-72 z-6 flex items-center short:top-14 short:bottom-14">
+            {banner}
+          </div>
+        ) : null}
         <div
           data-part="thumb"
           className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex min-h-75 flex-col justify-end bg-linear-to-b from-ground/0 to-ground/92 to-30% px-5 pb-[calc(34px+env(safe-area-inset-bottom))] short:min-h-0 short:pb-[calc(12px+env(safe-area-inset-bottom))]"

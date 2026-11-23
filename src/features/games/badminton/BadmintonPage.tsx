@@ -1,6 +1,7 @@
 import type { ReactNode, Ref } from "react";
 import type { GameLayout } from "../engine/types";
 import { GamePage } from "../frame/GamePage";
+import type { BannerCopy } from "../three/GameBanner";
 import type { ThreeStatus } from "../three/useThreeGate";
 import type { Dir } from "./3d/match";
 import { BadmintonColumn } from "./BadmintonColumn";
@@ -13,6 +14,8 @@ export interface BadmintonThree {
   /** The canvas on screen has drawn its first frame: until then the board keeps its backdrop over it. */
   drawn: boolean;
   progress: number;
+  /** What the game reveals, shown over the loading game. */
+  banner: BannerCopy;
   /** Drawn by `layout`'s board only, so there is one canvas. */
   scene: ReactNode | null;
   layout: GameLayout;

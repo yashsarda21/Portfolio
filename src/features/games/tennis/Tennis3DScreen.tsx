@@ -292,6 +292,7 @@ export function Tennis3DScreen({ gate }: { gate: ThreeGate<Tennis3d> }) {
         status: ready ? "ready" : "loading",
         drawn,
         progress: gate.progress,
+        banner: ui.games.tennis.three.banner,
         scene,
         layout,
         live: LIVE_3D.includes(run.phase),

@@ -25,12 +25,16 @@ export interface Loaded3d<A, W> {
   assets: A;
 }
 
+/** The least time the banner stays up, so a visitor can read it even when the scene loads at once (cached). */
+export const BANNER_MIN_MS = 2500;
+
 /**
  * The part of a 3D game's screen that is the same for every venue: the scene mounts hidden while its shaders compile
  * (the loader stays up), then it is shown and the game takes input for the rest of the visit. `drawn` is this
  * canvas's own: the board's backdrop stays over a new canvas until its first frame is on it (a resize across 1200px
  * mounts a new one). Once the files are in, the scene gets THREE_SHOW_TIMEOUT_MS to show, or the 2D game takes over.
- * The stadium hums under it while it is on screen.
+ * The banner stays at least BANNER_MIN_MS: `ready` (the game's clock, its controls, the hum) waits for it too, so
+ * nothing starts under the banner. The stadium hums under the game while it is on screen.
  */
 export function useThreeScreen<A, W>({
   gate,
@@ -50,7 +54,13 @@ export function useThreeScreen<A, W>({
   // The files are in: the scene mounts, hidden, and compiles its shaders; the loader stays until then. Once shown, the
   // game takes input for the rest of the visit.
   const [shown, setShown] = useState(false);
-  const ready = gate.status === "ready" && shown;
+  // The banner has been up long enough to read.
+  const [read, setRead] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setRead(true), BANNER_MIN_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  const ready = gate.status === "ready" && shown && read;
   const [drawn, setDrawn] = useState<{ layout: GameLayout; on: boolean }>({ layout, on: false });
   if (drawn.layout !== layout) setDrawn({ layout, on: false });
 

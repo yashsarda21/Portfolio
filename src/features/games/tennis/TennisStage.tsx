@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/cn";
 import { GameEnd } from "../frame/GameEnd";
 import { GameStage } from "../frame/GameStage";
-import { GameLoader } from "../three/GameLoader";
+import { GameBanner } from "../three/GameBanner";
 import { returnPath, SERVE } from "./flight";
 import type { Side } from "./referee";
 import type { TennisThree } from "./TennisPage";
@@ -144,17 +144,26 @@ export function TennisStage({
       )}
 
       {three ? (
+        <GameBanner
+          copy={three.banner}
+          label={three.loading}
+          progress={three.progress}
+          size="stage"
+          leaving={ready}
+          className="absolute inset-x-0 top-1/2 z-6 -translate-y-1/2"
+        />
+      ) : null}
+
+      {three ? (
         phase === "end" && end ? null : (
-          // The two zones' place (60 tall), held by the loader while the 3D loads, so nothing moves when they appear.
+          // The two zones' place (60 tall), held empty while the 3D loads, so nothing moves when they appear.
           <div className="absolute inset-x-0 bottom-39.5 z-6 flex h-15 items-center justify-center gap-3">
             {ready ? (
               <>
                 {aim("left")}
                 {aim("right")}
               </>
-            ) : (
-              <GameLoader label={three.loading} progress={three.progress} size="stage" />
-            )}
+            ) : null}
           </div>
         )
       ) : (

@@ -15,7 +15,7 @@ import { cn } from "@/lib/cn";
 import { GameColumn } from "../frame/GameColumn";
 import { GameEnd } from "../frame/GameEnd";
 import { PickPair } from "../frame/PickPair";
-import { GameLoader } from "../three/GameLoader";
+import { GameBanner } from "../three/GameBanner";
 import { returnPath, SERVE } from "./flight";
 import type { Side } from "./referee";
 import type { TennisThree } from "./TennisPage";
@@ -117,6 +117,17 @@ export function TennisColumn({
       scene={three?.scene}
       sceneHidden={!ready}
       sceneDrawn={three?.drawn}
+      banner={
+        three ? (
+          <GameBanner
+            copy={three.banner}
+            label={three.loading}
+            progress={three.progress}
+            size="column"
+            leaving={ready}
+          />
+        ) : undefined
+      }
       heading={view.heading}
       bug={
         <ScoreBug label={bug.label} size="sm">
@@ -201,15 +212,10 @@ export function TennisColumn({
         phase === "end" && end ? (
           <GameEnd size="column" end={end} onAgain={onAgain} />
         ) : reduced ? null : three && !ready ? (
-          // While the 3D loads, the controls hold their place, unseen, with the loader over the halves: when they
-          // appear, the thumb zone is already their height, so nothing moves.
-          <div className="relative flex w-full flex-col items-center gap-4 short:gap-2">
-            <div inert className="invisible flex w-full flex-col items-center gap-4 short:gap-2">
-              {controls}
-            </div>
-            <div className="absolute inset-x-0 bottom-0">
-              <GameLoader label={three.loading} progress={three.progress} size="column" />
-            </div>
+          // While the 3D loads, the controls hold their place, unseen: when they appear, the thumb zone is already
+          // their height, so nothing moves.
+          <div inert className="invisible flex w-full flex-col items-center gap-4 short:gap-2">
+            {controls}
           </div>
         ) : (
           controls

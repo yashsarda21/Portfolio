@@ -16,7 +16,7 @@ import {
 } from "@/design-system";
 import { GameEnd } from "../frame/GameEnd";
 import { GameStage } from "../frame/GameStage";
-import { GameLoader } from "../three/GameLoader";
+import { GameBanner } from "../three/GameBanner";
 import type { Dir } from "./3d/match";
 import type { BadmintonThree } from "./BadmintonPage";
 import { ARC, PARKED } from "./flight";
@@ -144,24 +144,33 @@ export function BadmintonStage({
         </Glass>
       )}
 
+      {three ? (
+        <GameBanner
+          copy={three.banner}
+          label={three.parts.loading}
+          progress={three.progress}
+          size="stage"
+          leaving={ready}
+          className="absolute inset-x-0 top-1/2 z-6 -translate-y-1/2"
+        />
+      ) : null}
+
       {three && !(phase === "end" && end) ? (
-        // The two buttons' place (60 tall), held by the loader while the 3D loads, so nothing moves when they appear.
+        // The two buttons' place (60 tall), held empty while the 3D loads, so nothing moves when they appear.
         <>
           <div className="absolute inset-x-0 bottom-39.5 z-6 flex h-15 items-center justify-center gap-3">
-            {ready ? (
-              three.parts.aims.map((aim) => (
-                <AimZone
-                  key={aim.dir}
-                  label={aim.label}
-                  name={aim.name}
-                  open={aim.open}
-                  disabled={!three.live}
-                  onPick={() => onPick(aim.dir)}
-                />
-              ))
-            ) : (
-              <GameLoader label={three.parts.loading} progress={three.progress} size="stage" />
-            )}
+            {ready
+              ? three.parts.aims.map((aim) => (
+                  <AimZone
+                    key={aim.dir}
+                    label={aim.label}
+                    name={aim.name}
+                    open={aim.open}
+                    disabled={!three.live}
+                    onPick={() => onPick(aim.dir)}
+                  />
+                ))
+              : null}
           </div>
           <MonoLabel
             aria-hidden="true"

@@ -221,6 +221,7 @@ export function Cricket3DScreen({ gate }: { gate: ThreeGate<Cricket3d> }) {
         status: ready ? "ready" : "loading",
         drawn,
         progress: gate.progress,
+        banner: ui.games.cricket.banner,
         scene,
         layout,
         controls,

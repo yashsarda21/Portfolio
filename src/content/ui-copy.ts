@@ -488,6 +488,12 @@ export const ui = {
         said: "LINE: {line}",
       }, // derived (Phase 8)
       loading: "PREPARING THE PITCH", // derived (Phase 8)
+      /** The banner over the loading game: what this game reveals, so the visitor knows why they play. */
+      banner: {
+        eyebrow: "THIS GAME REVEALS",
+        headline: "MY CAREER",
+        line: "Bowl to me. Every ball I hit opens a chapter of where I've worked.",
+      }, // derived
       how3d:
         "Pick a line, run in, and release when the marker hits the yorker zone. Every ball you bowl — dot ball or six — unlocks an innings of my career.", // derived (Phase 8)
       touchHint: "WIDER YORKER ZONE ON TOUCH · HAPTIC ON RELEASE",
@@ -542,6 +548,11 @@ export const ui = {
       /** The 3D game (Phase 8): real points to 40, Yash always wins. */
       three: {
         loading: "PREPARING THE COURT",
+        banner: {
+          eyebrow: "THIS GAME REVEALS",
+          headline: "MY PROJECTS",
+          line: "Rally with me. Every point I win puts one of my projects centre court.",
+        }, // derived
         how: "Pick the open side as he hits.",
         progress: "HIS POINTS UNLOCK THE HIGHLIGHTS",
         point: "POINT",
@@ -580,6 +591,11 @@ export const ui = {
       /** The 3D game (Phase 8): real rallies to 21, Yash always wins. */
       three: {
         loading: "PREPARING THE HALL",
+        banner: {
+          eyebrow: "THIS GAME REVEALS",
+          headline: "MY SKILLS",
+          line: "Play me. Every point I win shows one skill I bring to a team.",
+        }, // derived
         how: "Send it where he isn't: deep or short.",
         keys: "↑ ↓",
         hint: { stage: "↑ ↓ OR CLICK", phone: "TAP OR SWIPE ↑ ↓" },

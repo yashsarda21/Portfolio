@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/cn";
 import { GameEnd } from "../frame/GameEnd";
 import { GameStage } from "../frame/GameStage";
-import { GameLoader } from "../three/GameLoader";
+import { GameBanner } from "../three/GameBanner";
 import { BowlButton } from "./BowlButton";
 import type { CricketThree } from "./CricketPage";
 import { TRACER } from "./flight";
@@ -142,11 +142,20 @@ export function CricketStage({
         />
       ) : null}
 
+      {three ? (
+        <GameBanner
+          copy={three.banner}
+          label={three.controls.loading}
+          progress={three.progress}
+          size="stage"
+          leaving={ready}
+          className="absolute inset-x-0 top-1/2 z-6 -translate-y-1/2"
+        />
+      ) : null}
+
       {reduced && phase !== "end" ? null : (
         <div className="absolute inset-x-100 top-152.5 z-7 flex flex-col items-center gap-3.5">
-          {three && !ready && phase !== "end" ? (
-            <GameLoader label={three.controls.loading} progress={three.progress} size="stage" />
-          ) : (
+          {three && !ready && phase !== "end" ? null : (
             <>
               {three ? (
                 // The speed gun, just above the meter's right end, out of the flow: the block is as tall as the 2D one.
