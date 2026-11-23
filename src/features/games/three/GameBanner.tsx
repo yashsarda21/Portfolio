@@ -46,12 +46,12 @@ export function GameBanner({
       )}
     >
       <Glass
-        // Near-opaque, like the point's panel: the scene's lines never show through the words.
+        // Fully opaque (the point's panel is 90%): the scene's lines never show through the words.
         surface="none"
         edge="volt"
         elevation="toast"
         className={cn(
-          "flex flex-col items-center border bg-bar text-center",
+          "flex flex-col items-center border bg-ground text-center",
           size === "stage"
             ? "w-160 gap-3 px-10 py-8"
             : "mx-4 w-full max-w-[calc(100%-2rem)] gap-2 px-5 py-6 short:gap-1 short:py-3",
