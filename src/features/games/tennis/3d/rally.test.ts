@@ -22,7 +22,7 @@ import {
   type Swing,
 } from "./rally";
 import type { Reach } from "./reach";
-import { STROKE_CLIP, SWING_LEAD } from "./timing";
+import { EARLY_RUN_CAP, MISS, RUN_AFTER, STROKE_CLIP, SWING_LEAD } from "./timing";
 
 /** The reach Task 5 measured on the real athlete (body frame: x its left, y up, z its front). */
 const REACH: Reach = {
@@ -269,7 +269,9 @@ describe("scriptPoint: the rules", () => {
           const state = capped
             ? { points: [0, 1].map(() => decidePoint(MATCH_START, [good, good])) }
             : MATCH_START;
-          expect(script.flights.length).toBe(decidePoint(state, inputs).shots);
+          // The beaten player's net shot at the winning ball is one flight more (owner 2026-11-23).
+          const netted = script.swings.some((w) => w.beaten && w.meets) ? 1 : 0;
+          expect(script.flights.length).toBe(decidePoint(state, inputs).shots + netted);
           expect(script.end).toEqual(expect.any(Number));
           scripts.slice(0, -1).forEach((pending) => expect(pending.end).toBeNull());
         }
@@ -310,12 +312,45 @@ describe("scriptPoint: the rules", () => {
             expect(script.swings.at(-1)!.by).toBe("you");
             continue;
           }
-          const bounce = last.path.bounce!;
+          // Your winner is the flight Yash is beaten by (after it, his net shot, if he plays it).
+          const beaten = script.swings.at(-1)!;
+          expect(beaten.by).toBe("yash");
+          expect(beaten.beaten).toBe(true);
+          const winner = script.flights.filter((f) => f.start < beaten.contact - 1e-9).at(-1)!;
+          const bounce = winner.path.bounce!;
           expect(bounce[2]).toBeLessThan(0);
           expect(inSingles(bounce)).toBe(true);
           expect(Math.sign(bounce[0])).toBe(decided.second!.side === "right" ? 1 : -1);
         }
   });
+
+  it("the beaten player always gets to the winning ball (owner 2026-11-23): his racket is on it, or a beat late", () => {
+    const seen = new Set<string>();
+    const bad = sweep(SETUPS, [[wrong], [good, good], [perfect, perfect]], (s) => {
+      const w = s.swings.at(-1)!;
+      if (s.setup.capped && w.by === "you" && !w.beaten) return null;
+      if (!w.beaten) return `${w.by}'s last swing is not the beaten one`;
+      // The ball's moment at his racket: the swing's own, or MISS.late before a late one.
+      const moment = w.meets ? w.contact : w.contact - MISS.late;
+      if (!w.meets && w.miss !== "late") return "a miss that is not late";
+      const f = arriving(s, moment)!;
+      const racket = toWorld(w.spot, FACE[w.by], REACH[w.kind as "forehand"]);
+      const off = gap(f.path.at(moment - f.start), racket);
+      if (off > 1e-3) return `${w.by}'s racket is ${off} m off the ball`;
+      if (!inSingles(f.path.bounce!) || Math.sign(f.path.bounce![2]) !== Math.sign(w.spot[2]))
+        return "the winning ball does not bounce in";
+      // The run: from the other's hit (+ RUN_AFTER) to SWING_LEAD before the ball, from wherever he was.
+      const hit = s.swings.filter((x) => x.by !== w.by && x.meets && x.contact < moment).at(-1)!;
+      const last = s.swings.filter((x) => x.by === w.by && x.contact < hit.contact).at(-1)!;
+      const time = moment - SWING_LEAD - hit.contact - RUN_AFTER;
+      const pace = Math.max(ground(stood(s, w), w.spot), ground(last.spot, w.spot)) / time;
+      if (pace > EARLY_RUN_CAP + 1e-9) return `${w.by} runs at ${pace} m/s`;
+      seen.add(`${w.by} ${w.meets ? "net" : "late"}`);
+      return null;
+    });
+    expect(bad).toEqual([]);
+    expect([...seen].sort()).toEqual(["yash late", "yash net", "you late", "you net"]);
+  }, 30_000);
 
   it("a rebuild never changes the past", () => {
     const same = (a: PointScript, b: PointScript, before: number) => {

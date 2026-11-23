@@ -33,8 +33,10 @@ import {
   DIVE_CLIP,
   DIVE_LANDS,
   FIST_PUMP_CLIP,
+  GET_UP_TURN,
   JUMP_SMASH_CLIP,
   LIFT_CLIP,
+  LUNGE,
   MISS,
   NET_CLIP,
   OVERHEAD_CLIP,
@@ -42,7 +44,6 @@ import {
   SERVE_CLIP,
   SHUFFLE_PACE,
   SPLIT_CLIP,
-  STRETCH_CLIP,
   SWING_LEAD,
   type BadmintonClip,
   type Stroke,
@@ -82,13 +83,6 @@ export const GAME_PUSH_S = 3;
 export const SQUEAK_GAP = 0.3;
 /** The applause comes this long before a rally's end. */
 export const APPLAUSE_LEAD = 0.3;
-/** Back on his feet after a dive, he turns to face the net over this long (s). */
-export const GET_UP_TURN = 0.4;
-/**
- * The lunges (the net shot, the lift and the beaten stretches, moves.ts): the right foot drives out at `drive`, its heel
- * lands at `heel` (s into the clip).
- */
-export const LUNGE = { drive: 0.12, heel: 0.28 } as const;
 
 const PLAYERS: readonly Player[] = ["yash", "you"];
 /** The ready stance's sway loop (s): the walk back phases it so it is at its start when the rally begins. */
@@ -174,7 +168,10 @@ function endsGame(script: RallyScript): boolean {
   const { kind, on20 } = script.setup;
   // The rally is yours only when your last shot is the winner: met, not missed, and not (on 20) into the net.
   const last = script.swings.at(-1);
-  const yours = last?.by === "you" && last.meets && !last.miss && !on20;
+  // A beaten player's swing at the winning shot (owner 2026-11-23) ends the rally too: the other one won it.
+  const yours = last?.beaten
+    ? last.by === "yash"
+    : last?.by === "you" && last.meets && !last.miss && !on20;
   return !yours && (kind === "final" || (kind === "placement" && !on20));
 }
 
@@ -185,11 +182,6 @@ const until = (path: ShuttlePath, end: number): ShuttlePath => ({
   at: (t) => path.at(Math.min(t, end)),
   velocity: (t) => path.velocity(Math.min(t, end)),
 });
-
-/** The stretch toward the player's own right is the forehand lunge; `side` is the screen's (+x is your right). */
-const stretchClip = (p: Player, side: "left" | "right"): BadmintonClip =>
-  // The player's right, in the world, has x −cos(face).
-  (side === "right" ? 1 : -1) * -Math.cos(FACE[p]) > 0 ? "stretchF" : "stretchB";
 
 interface Plan {
   track: Track;
@@ -225,20 +217,21 @@ function legTo(plan: Plan, face: number, leg: Leg): number | null {
 
 /**
  * One swing: the split step at the other's `hit`, the run (or shuffle) to the swing's spot arriving as the stroke
- * plants, turning to the swing's heading, the stroke on its contact, then ready. A late miss is the overhead he was set
+ * plants, turning to the swing's heading, the stroke on its contact, then ready. A late miss is the stroke he was set
  * for until its commit (the pick is known only then): he holds it there as the shuttle goes by, then swings on, the
  * racket reaching its place MISS.late after the shuttle. An early one is the same overhead, planned sooner (rally.ts).
- * The dive plays where he stands, turned toward the shuttle; he stays where its slide leaves him and gets up.
+ * The beaten player's swing at the winning shot is one too (owner 2026-11-23): he runs to it as to any, and plays it
+ * into the net or a beat late. The dive plays where he stands, turned toward the shuttle; he stays where its slide
+ * leaves him and gets up.
  */
 function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
   const { track } = plan;
   const late = w.miss === "late";
-  const stretch = w.kind === "stretch";
   const k = w.kind as Exclude<Stroke, "serve">;
   // A late swing keeps the meeting swing's timing up to its commit (the shuttle's moment − SWING_LEAD).
   const on = late ? w.contact - MISS.late : w.contact;
-  const plant = stretch ? STRETCH_CLIP.reach : PLANT[k];
-  const clipAt = on - (stretch ? STRETCH_CLIP.reach : CLIP[k].contact);
+  const plant = PLANT[k];
+  const clipAt = on - CLIP[k].contact;
   const arrive = clipAt + plant;
   const to = w.spot;
 
@@ -277,21 +270,7 @@ function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
   if (settled !== null && clipAt >= settled + SETTLE - 1e-9)
     addClip(track, { clip: "ready", start: settled, loop: true, fade: SETTLE });
 
-  const clip: BadmintonClip = stretch ? stretchClip(p, w.side ?? "right") : k;
-  if (stretch) {
-    // Beaten, he lunges as the shuttle goes by: once the clip before has faded in, a little quicker if it must be.
-    const from = freeAt(track, clipAt);
-    const speed = STRETCH_CLIP.reach / (w.contact - from);
-    addClip(track, { clip, start: from, speed, fade: w.contact - from });
-    plan.squeaks.push(from + LUNGE.heel / speed);
-    addClip(track, {
-      clip: "ready",
-      start: from + STRETCH_CLIP.end / speed,
-      loop: true,
-      fade: 0.3,
-    });
-    return;
-  }
+  const clip: BadmintonClip = k;
   addClip(track, { clip, start: clipAt, fade: plant });
   if (k === "net" || k === "lift") plan.squeaks.push(clipAt + LUNGE.heel);
 
@@ -311,9 +290,10 @@ function swing(plan: Plan, p: Player, w: Swing, hit: number, read = false) {
   }
   if (late) {
     // Frozen at the commit while the shuttle goes by, then on: the racket reaches its place MISS.late after the shuttle.
-    const commit = on - SWING_LEAD;
-    addClip(track, { clip, start: commit, from: OVERHEAD_CLIP.commit, speed: 0, fade: 0.05 });
-    addClip(track, { clip, start: commit + MISS.late, from: OVERHEAD_CLIP.commit, fade: 0.05 });
+    // A beaten block's commit is no sooner than its plant (owner 2026-11-23), so the hold never cuts its fade in.
+    const hold = Math.max(plant, CLIP[k].contact - SWING_LEAD);
+    addClip(track, { clip, start: clipAt + hold, from: hold, speed: 0, fade: 0.05 });
+    addClip(track, { clip, start: clipAt + hold + MISS.late, from: hold, fade: 0.05 });
   }
   const done = w.contact + CLIP[k].end - CLIP[k].contact;
   addClip(track, { clip: "ready", start: done, loop: true, fade: 0.3 });

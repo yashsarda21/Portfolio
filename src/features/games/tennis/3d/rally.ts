@@ -2,7 +2,7 @@ import type { GameLayout, Luck } from "../../engine/types";
 import { TURN } from "../../three/footwork";
 import { clamp, feetFor, ground, lerp, toWorld } from "../../three/geometry";
 import type { Side, TennisReturn } from "../referee";
-import { intoNet, shotTo, SPIN, toBounce, type BallPath } from "./ball";
+import { intoNet, KH, shotTo, SPIN, type BallPath } from "./ball";
 import {
   FACE,
   RECEIVE_SPOT,
@@ -54,6 +54,11 @@ export const YASH_CONTACT_Z = 13.2;
 export const FINAL = { good: 0.85, perfect: 0.75, yash: 0.8 } as const;
 /** Into the net: how long it takes, and where it meets the net (height). */
 export const NET_SHOT = { flight: 0.45, height: 0.55 } as const;
+/**
+ * Where a beaten player meets the point's winning ball (owner 2026-11-23): this far past its bounce (|z|; nearer, it
+ * would have to kick up too high), and this far across on the ball's side (m).
+ */
+export const CHASE = { past: [4.0, 4.8], x: [2.9, 3.7] } as const;
 /** The call comes this long after the point's last ball. */
 export const CALL_AFTER_S = 0.9;
 /** A player recovers (side shuffle) from this long after his shot, taking this long. */
@@ -88,15 +93,15 @@ export interface Decided {
 }
 export interface Swing {
   by: ActorId;
-  kind: "serve" | Stroke | "stretch";
-  /** Stretch only: which way, as the screen shows it (your view; ruling R5). */
-  side?: Side;
+  kind: "serve" | Stroke;
   /** s from the point's start: when the racket is (or would be) at the ball's place. */
   contact: number;
   /** The feet at contact. */
   spot: Vec3;
   meets: boolean;
   miss?: "late" | "early";
+  /** The beaten player's swing at the point's winning ball (owner 2026-11-23): into the net, or a beat late. */
+  beaten?: true;
 }
 export interface Flight {
   start: number;
@@ -146,8 +151,6 @@ export function setupPoint(s: MatchState, layout: GameLayout, luck: Luck): Point
   };
 }
 
-/** The screen side `x` lies on, seen from `from` (+x is your right). */
-const sideOf = (x: number, from: Vec3): Side => (x >= from[0] ? "right" : "left");
 const other = (side: Side): Side => (side === "left" ? "right" : "left");
 /** Where Yash recovers to after a shot: the side away from the one he leaves open. */
 const yashCover = (open: Side): Vec3 => [-sideSign(open) * YASH_BASE.cover, 0, YASH_BASE.z];
@@ -199,25 +202,6 @@ const recover = (by: ActorId, shot: number, to: Vec3, after: number = RECOVER.af
   end: shot + after + RECOVER.takes,
   to,
 });
-/** When a flight passes nearest `spot`, seen from above (sampled every 10 ms): the moment a beaten player lunges. */
-function nearest(f: Flight, spot: Vec3): number {
-  let best = 0;
-  let gap = Infinity;
-  for (let t = 0; t <= f.path.end; t += 0.01) {
-    const d = ground(f.path.at(t), spot);
-    if (d < gap) [best, gap] = [t, d];
-  }
-  return f.start + best;
-}
-/** A beaten player's lunge from `spot` toward the ball at `ball`, at `contact`. */
-const stretch = (by: ActorId, spot: Vec3, ball: Vec3, contact: number): Swing => ({
-  by,
-  kind: "stretch",
-  side: sideOf(ball[0], spot),
-  contact,
-  spot,
-  meets: false,
-});
 /** A miss that ends the point at once (too late or too early), as opposed to a wrong-side shot that is played. */
 const missesTheBall = (r: TennisReturn) => r.q === "miss" && r.call !== "wrong";
 
@@ -251,6 +235,52 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
     end,
     mark: null,
   });
+
+  /**
+   * The point's winning ball, from `at` (hit at `t0`), and the beaten player's answer (owner 2026-11-23): he always
+   * gets to it. It bounces in at depth `bounceZ` and comes to his racket at (x, z), past the bounce. It keeps its pace
+   * to the bounce (`pace` s; the time after it follows, as the court keeps KH of its speed), but comes no sooner than
+   * his run there allows at EARLY_RUN_CAP, from where he hit last (`from`) or from his recovery's end (`to`, where he
+   * picks his stroke). He then plays it into the net, or swings a beat late (MISS.late) as it goes by: `draw` picks.
+   * Returns when the call comes.
+   */
+  const chase = (
+    by: ActorId,
+    at: Vec3,
+    t0: number,
+    bounceZ: number,
+    [x, z]: [number, number],
+    pace: number,
+    [from, to]: [Vec3, Vec3],
+    draw: number,
+  ): number => {
+    const m = meet(by, x, z, to, reach);
+    const f = (bounceZ - at[2]) / (m.at[2] - at[2]);
+    const contact = Math.max(
+      t0 + pace * (1 + (1 - f) / (KH * f)),
+      soonest(t0, from, m.spot),
+      soonest(t0, to, m.spot),
+    );
+    flights.push({ start: t0, path: shotTo(at, m.at, bounceZ, contact - t0, SPIN.rally) });
+    if (draw < 0.5) {
+      swings.push({ ...hit(by, m, contact), beaten: true });
+      flights.push({
+        start: contact,
+        path: intoNet(m.at, [Math.sign(m.at[0]) * 1.2, NET_SHOT.height], NET_SHOT.flight),
+      });
+      return contact + NET_SHOT.flight + CALL_AFTER_S;
+    }
+    swings.push({
+      by,
+      kind: m.kind,
+      contact: contact + MISS.late,
+      spot: m.spot,
+      meets: false,
+      miss: "late",
+      beaten: true,
+    });
+    return contact + CALL_AFTER_S;
+  };
 
   // 2. The serve: into the box, to your racket as your window closes plus the swing.
   const flight1 = window.serve + SWING_LEAD;
@@ -304,15 +334,11 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
   swings.push(hit("yash", c2, yashAt));
 
   if (wrong1) {
-    // Yash puts it away to the side you are not on; you stretch for it as it goes by.
-    const putAway: Flight = {
-      start: yashAt,
-      path: toBounce(c2.at, [-Math.sign(you1[0]) * 3.3, 9.2], FINAL.yash, SPIN.rally),
-    };
-    flights.push(putAway);
-    const lunge = nearest(putAway, you1);
-    swings.push(stretch("you", you1, putAway.path.at(lunge - yashAt), lunge));
-    return done(yashAt + FINAL.yash + CALL_AFTER_S);
+    // Yash puts it away to the side you are not on; you run and get to it (owner 2026-11-23). Draw 1 (the OUT's margin
+    // before Phase 9) picks how you lose it.
+    const x = -Math.sign(you1[0]) * lerp(...CHASE.x, draws[5]!);
+    const z = 9.2 + lerp(...CHASE.past, draws[4]!);
+    return done(chase("you", c2.at, yashAt, 9.2, [x, z], FINAL.yash, [c1.spot, you1], draws[1]!));
   }
 
   // 6. Yash's rally shot (shot 3): to your racket as your window closes plus the swing.
@@ -350,18 +376,12 @@ export function scriptPoint(setup: PointSetup, decided: Decided, reach: Reach): 
     return done(contact3 + NET_SHOT.flight + CALL_AFTER_S);
   }
 
-  // Your last shot, to the side Yash left open, in: he lunges for it.
+  // Your last shot, to the side Yash left open, in; he runs and gets to it (owner 2026-11-23).
   const q = second.r.q;
-  const land: [number, number] = [
-    sideSign(open[1]) * lerp(2.8, 3.6, draws[5]!),
-    -(q === "perfect" ? 10.6 : 9.8),
-  ];
-  const last = toBounce(c3.at, land, FINAL[q], SPIN.rally);
-  flights.push({ start: contact3, path: last });
-  const lands = contact3 + FINAL[q];
-  // Yash chases it: a lunge 45 % of the way from where he recovered to toward the bounce, as it lands.
-  const bounce: Vec3 = [land[0], 0, land[1]];
-  const reachFor: Vec3 = [lerp(yash2[0], land[0], 0.45), 0, lerp(yash2[2], land[1], 0.45)];
-  swings.push(stretch("yash", reachFor, bounce, lands));
-  return done(lands + CALL_AFTER_S);
+  const x = sideSign(open[1]) * lerp(...CHASE.x, draws[5]!);
+  const bounceZ = -(q === "perfect" ? 10.6 : 9.8);
+  const z = bounceZ - lerp(...CHASE.past, draws[4]!);
+  return done(
+    chase("yash", c3.at, contact3, bounceZ, [x, z], FINAL[q], [c2.spot, yash2], draws[1]!),
+  );
 }
