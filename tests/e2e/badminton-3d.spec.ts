@@ -4,6 +4,7 @@ import { expectNoA11yViolations } from "../support/a11y";
 import { waitForHydration } from "./support/contentPage";
 import { game, phaseOf, stored } from "./support/cricket";
 import {
+  centre,
   expectUnlockThenCard,
   forceLuck,
   freezeClock,
@@ -258,7 +259,7 @@ test("Review Focus 2: a hidden tab drops the rally; back, it is played again fre
   await tab(page, "visible");
   await untilPhase(page, ["serve"]);
   await winRally(page);
-  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
+  await expect(centre(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "17", "20");
   expect((await stored(page)).lastScores?.badminton).toBeUndefined();
   expect(errors).toEqual([]);
@@ -313,7 +314,7 @@ test("Review Focus 4: a swipe up in a window picks SMASH once; a swipe outside a
   await untilPhase(page, ["window"]);
   await swipe(page, -120);
   await untilPhase(page, ["called"]);
-  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
+  await expect(centre(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "17", "20");
   // The call: the page scrolls over the field again, and a swipe does nothing.
   await expect(field(page)).toHaveCSS("touch-action", "pan-y");

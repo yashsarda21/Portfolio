@@ -4,6 +4,7 @@ import { expectNoA11yViolations } from "../support/a11y";
 import { waitForHydration } from "./support/contentPage";
 import { game, phaseOf, stored } from "./support/cricket";
 import {
+  centre,
   expectUnlockThenCard,
   forceLuck,
   freezeClock,
@@ -145,7 +146,7 @@ test("perfect play: two points to you, then Yash's three unlocks and the game; 4
     if (calling && was !== "called" && was !== "verdict") {
       shown.push(await spotlightKind(page));
       if (shown.at(-1) === "yours")
-        expect([WELL_PLAYED, GOOD_POINT]).toContain(await spotlight(page).innerText());
+        expect([WELL_PLAYED, GOOD_POINT]).toContain(await centre(page).textContent());
     }
     was = phase;
     if (phase === "window") await pickSide(page, "left");
@@ -220,7 +221,7 @@ test("Review Focus 2: a hidden tab drops the point; back, it is played again fre
   await tab(page, "visible");
   await untilPhase(page, ["toss"]);
   await winPoint(page);
-  await expect(spotlight(page)).toHaveText(WELL_PLAYED);
+  await expect(centre(page)).toHaveText(WELL_PLAYED);
   await expectScore(page, "0", "15");
   expect((await stored(page)).lastScores?.tennis).toBeUndefined();
   expect(errors).toEqual([]);

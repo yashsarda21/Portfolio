@@ -88,6 +88,17 @@ export async function stepUntil(
 export const spotlight = (page: Page) => page.locator("[data-game] [data-kind]:visible");
 
 /**
+ * The layout on screen: the stage or the phone's column (both are mounted, the other is not displayed). The 3D specs
+ * check what it holds, not whether a part has been drawn yet: in software WebGL the browser's own frames wait for the
+ * GPU, so a part that pops or slides in from `visibility: hidden` (the visitor's words, a toast, the phone's chip) can
+ * stay undrawn for many seconds after the game put it there (CI run 45198364350).
+ */
+export const onScreen = (page: Page) =>
+  page.locator("[data-game] :is([data-stage], [data-game-column])").filter({ visible: true });
+/** The centre panel of the layout on screen, drawn yet or not (see `onScreen`). */
+export const centre = (page: Page) => onScreen(page).locator("[data-kind]");
+
+/**
  * What the centre shows right now: "unlock", "yours" or "none". Read at once, without waiting: the visitor's words pop in
  * from nothing, so for their first frame Playwright's `:visible` calls the panel hidden; a panel with layout is on screen.
  */
@@ -102,18 +113,17 @@ export const spotlightKind = (page: Page) =>
 /**
  * Phase 9: Yash's point puts the work it unlocked in the centre (the title is the panel's second line); `wait(ms)`
  * moves the game on, and by SPOTLIGHT_MS + 500 the panel is gone and the card for that title stands at the side (the
- * phone's chip). Returns the title.
+ * phone's chip). Returns the title. Only the 3D specs use it: what the layout on screen holds, drawn yet or not
+ * (`onScreen`).
  */
 export async function expectUnlockThenCard(page: Page, wait: (ms: number) => Promise<void>) {
-  const panel = spotlight(page);
+  const panel = centre(page);
   await expect(panel).toHaveAttribute("data-kind", "unlock");
   const title = ((await panel.locator("span").nth(1).textContent()) ?? "").trim();
   expect(title).not.toBe("");
   await wait(SPOTLIGHT_MS + 500);
-  await expect(spotlight(page)).toHaveCount(0);
-  await expect(
-    page.locator("[data-game]").getByText(title, { exact: true }).filter({ visible: true }).first(),
-  ).toBeVisible();
+  await expect(centre(page)).toHaveCount(0);
+  await expect(onScreen(page).getByText(title, { exact: true }).first()).toBeAttached();
   return title;
 }
 
